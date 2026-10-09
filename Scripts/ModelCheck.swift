@@ -27,13 +27,15 @@ private func trace(_ value: String) { try? FileHandle.standardError.write(conten
         }
         let foods = try JSONDecoder().decode([PhotoFood].self, from: Data(contentsOf: Bundle.module.url(forResource: "photo-foods", withExtension: "json")!))
         let image = try Data(contentsOf: URL(fileURLWithPath: CommandLine.arguments[1]))
+        let compact = CommandLine.arguments.contains("--compact")
         let start = Date()
-        let result = try await VisionAnalyzer.shared.analyze(image, description: "", foods: foods, diagnostics: trace) { stage in
+        let result = try await VisionAnalyzer.shared.analyze(image, description: "", foods: foods, preferCompact: compact, diagnostics: trace) { stage in
             if !stage.hasPrefix("download:") { trace("STAGE: " + stage) }
         }
         let components = result.parts.map { ["id": $0.food.id, "grams": $0.grams, "low": $0.low, "high": $0.high] as [String: Any] }
         trace("RESULT COMPONENTS: " + result.parts.map { $0.food.id + "=" + String($0.grams) }.joined(separator: ", "))
         var report: [String: Any] = ["tested": true, "passed": false, "platform": "macOS Apple Silicon Metal", "fixture": "USDA 20241025-USDA-FNS-UNK-0017 (public domain)", "image_sha256": "8c6f9cd2cdc344817c70091072a2c42f86c39ac83807040c184c137da1560b2d", "components": components, "limits": "Runtime fixture check only; not measured calorie accuracy, comparative benchmark, or physical-iPhone validation."]
+        report["model_requested"] = compact ? "Qwen3-VL-2B" : "Qwen3-VL-4B"
         try JSONSerialization.data(withJSONObject: report, options: [.prettyPrinted, .sortedKeys]).write(to: destination)
         // The photograph proves broad visible dishes, not a particular shawarma
         // recipe or the identity of the white dip. Accept honestly marked unknown
@@ -58,7 +60,7 @@ private func trace(_ value: String) { try? FileHandle.standardError.write(conten
         }
         let blank = CIImage(color: CIColor(red: 0.5, green: 0.5, blue: 0.5)).cropped(to: CGRect(x: 0, y: 0, width: 512, height: 512))
         let png = CIContext().pngRepresentation(of: blank, format: .RGBA8, colorSpace: CGColorSpaceCreateDeviceRGB())!
-        let empty = try await VisionAnalyzer.shared.analyze(png, description: "", foods: foods, allowDownloads: false, diagnostics: trace) { stage in trace("CACHED STAGE: " + stage) }
+        let empty = try await VisionAnalyzer.shared.analyze(png, description: "", foods: foods, allowDownloads: false, preferCompact: compact, diagnostics: trace) { stage in trace("CACHED STAGE: " + stage) }
         guard empty.parts.isEmpty else { throw AppError.invalid("اختلق النموذج طعامًا في صورة فارغة.", "The model invented food in an empty fixture.") }
         report["passed"] = true; report["cached_without_downloads"] = true; report["no_food_fixture_rejected"] = true
         report["elapsed_seconds"] = Date().timeIntervalSince(start)

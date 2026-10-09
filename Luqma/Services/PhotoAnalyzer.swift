@@ -38,8 +38,8 @@ actor PhotoAnalyzer {
         guard let http=response as? HTTPURLResponse,http.statusCode==200,try correct(temp) else {throw AppError.invalid("تعذّر تنزيل نموذج سليم. اتصل بالإنترنت وأعد المحاولة.", "The model download failed verification. Connect to the internet and retry.")}
         try FileManager.default.moveItem(at:temp,to:dest);verified.insert(hash);return dest
     }
-    static func image(_ data:Data) throws -> CGImage {
-        guard data.count<=40*1024*1024,let source=CGImageSourceCreateWithData(data as CFData,nil),let image=CGImageSourceCreateThumbnailAtIndex(source,0,[kCGImageSourceCreateThumbnailFromImageAlways:true,kCGImageSourceCreateThumbnailWithTransform:true,kCGImageSourceThumbnailMaxPixelSize:2048] as CFDictionary) else { throw AppError.invalid("تعذّر فتح الصورة. اختر صورة JPEG أو PNG أو HEIC أصغر.", "The image could not be opened. Choose a smaller JPEG, PNG or HEIC image.") }; return image
+    static func image(_ data:Data,maxPixels:Int=2048) throws -> CGImage {
+        guard data.count<=40*1024*1024,let source=CGImageSourceCreateWithData(data as CFData,nil),let image=CGImageSourceCreateThumbnailAtIndex(source,0,[kCGImageSourceCreateThumbnailFromImageAlways:true,kCGImageSourceCreateThumbnailWithTransform:true,kCGImageSourceThumbnailMaxPixelSize:maxPixels] as CFDictionary) else { throw AppError.invalid("تعذّر فتح الصورة. اختر صورة JPEG أو PNG أو HEIC أصغر.", "The image could not be opened. Choose a smaller JPEG, PNG or HEIC image.") }; return image
     }
     private func pixels(_ image:CGImage,box:PhotoBox) throws -> [Float] {
         let rect=CGRect(x:box.x*Double(image.width),y:box.y*Double(image.height),width:box.width*Double(image.width),height:box.height*Double(image.height)).integral

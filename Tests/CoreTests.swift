@@ -2,6 +2,34 @@ import XCTest
 @testable import LuqmaCore
 
 final class CoreTests: XCTestCase {
+    func testVisionUsesAppAllowanceAndCompactModelOnEightGBPhones() {
+        let compact = 1_782_040_921, full = 3_093_767_283
+        // An 8 GB phone can still give this app a much smaller allowance.
+        XCTAssertEqual(VisionResources.choose(available: 3_300_000_000, physical: 8_000_000_000, mobile: true,
+                                             compactWeights: compact, fullWeights: full), .compact)
+        XCTAssertEqual(VisionResources.choose(available: 6_000_000_000, physical: 8_000_000_000, mobile: true,
+                                             compactWeights: compact, fullWeights: full), .compact)
+        XCTAssertNil(VisionResources.choose(available: 2_000_000_000, physical: 8_000_000_000, mobile: true,
+                                            compactWeights: compact, fullWeights: full))
+        XCTAssertNil(VisionResources.choose(available: 0, physical: 12_000_000_000, mobile: true,
+                                            compactWeights: compact, fullWeights: full))
+    }
+    func testVisionAdmissionRechecksShrinkingBudgetAndKeepsSafetyReserve() {
+        let compact = 1_782_040_921, full = 3_093_767_283
+        let required = VisionResources.requiredBytes(weights: full, tier: .full)
+        XCTAssertEqual(VisionResources.choose(available: required, physical: 12_000_000_000, mobile: true,
+                                             compactWeights: compact, fullWeights: full), .full)
+        XCTAssertEqual(VisionResources.choose(available: required - 1, physical: 12_000_000_000, mobile: true,
+                                             compactWeights: compact, fullWeights: full), .compact)
+        XCTAssertEqual(VisionResources.choose(available: required, physical: 12_000_000_000, mobile: true,
+                                             compactWeights: compact, fullWeights: full, preferCompact: true), .compact)
+        let minimum = VisionResources.requiredBytes(weights: compact, tier: .compact)
+        XCTAssertNil(VisionResources.choose(available: minimum - 1, physical: 12_000_000_000, mobile: true,
+                                            compactWeights: compact, fullWeights: full))
+        XCTAssertGreaterThan(minimum - compact, VisionResources.stopHeadroom)
+        XCTAssertLessThan(VisionResources.imagePixels(.compact), VisionResources.imagePixels(.full))
+        XCTAssertLessThan(VisionResources.prefillStep(.compact), VisionResources.prefillStep(.full))
+    }
     func testLiveHealthWeightDeletionFallsBackAndPreservesManual() throws {
         let date = try XCTUnwrap(ISO8601DateFormatter().date(from: "2026-10-08T12:00:00Z"))
         let earlier = HealthWeightSample(id: UUID(), kg: 81, end: date.timeIntervalSince1970)

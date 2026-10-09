@@ -30,7 +30,7 @@ with tempfile.TemporaryDirectory(prefix='luqma-model-check-') as directory:
         shutil.copy2(path, source / path.name)
     service = (ROOT / 'Luqma/Services/VisionAnalyzer.swift').read_text().replace('Bundle.main.url', 'Bundle.module.url')
     (source / 'VisionAnalyzer.swift').write_text(service)
-    for name in ['photo-foods.json', 'vision-model.json']:
+    for name in ['photo-foods.json', 'vision-model.json', 'vision-model-mobile.json']:
         shutil.copy2(ROOT / 'Luqma/Resources' / name, resource / name)
     url = 'https://upload.wikimedia.org/wikipedia/commons/1/18/MyPlate_gov_Cultural_Food_(20241025-USDA-FNS-UNK-0017).jpg'
     with urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'LuqmaAppValidation/1.1'}), timeout=90) as response:
@@ -62,7 +62,18 @@ let package = Package(name: "ModelCheck", platforms: [.macOS(.v14)], dependencie
         if result.returncode == 0:
             apply_vision_compat(derived / 'SourcePackages', verify_only=True)
             binary = derived / 'Build/Products/Release/ModelCheck'
-            result = subprocess.run([str(binary), str(project / 'meal.jpg'), str(OUTPUT)], cwd=project, stdout=log, stderr=subprocess.STDOUT)
+            reports = []
+            # Exercise the smaller model used on 8 GB phones first. Both models
+            # must pass the unchanged dish and cached non-food checks.
+            for name, arguments in [('compact', ['--compact']), ('full', [])]:
+                report_path = project / (name + '-runtime.json')
+                result = subprocess.run([str(binary), str(project / 'meal.jpg'), str(report_path)] + arguments,
+                                        cwd=project, stdout=log, stderr=subprocess.STDOUT)
+                report = json.loads(report_path.read_text()) if report_path.exists() else {'tested': False, 'passed': False}
+                reports.append({'mode': name, **report})
+                OUTPUT.write_text(json.dumps({'tested': True, 'passed': all(x.get('passed') for x in reports), 'models': reports}, indent=2))
+                if result.returncode:
+                    break
     if result.returncode:
         print('\n'.join((ROOT / 'BuildOutput/model-runtime.log').read_text(errors='replace').splitlines()[-70:]))
         raise SystemExit(result.returncode)
