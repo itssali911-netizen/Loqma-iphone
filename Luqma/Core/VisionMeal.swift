@@ -83,8 +83,8 @@ enum VisionMeal {
         """
     }
     static func candidates(observations: String, foods: [PhotoFood]) -> [PhotoFood] {
-        let text = TextSearch.normalized(observations)
-        let ignored: Set<String> = ["a", "the", "and", "or", "of", "with", "in", "on", "small", "large", "cooked", "reference", "recipe", "cup", "pieces"]
+        let text = TextSearch.normalized(observations).replacingOccurrences(of: "(?:orange|white|brown|red|green|black|yellow)\\s+(?:plate|bowl|container)", with: "container", options: .regularExpression)
+        let ignored: Set<String> = ["a", "the", "and", "or", "of", "with", "in", "on", "small", "large", "cooked", "reference", "recipe", "cup", "pieces", "white", "brown", "red", "green", "black", "yellow", "plate", "bowl", "substance", "single", "flat", "circular"]
         let words = Set(text.split(separator: " ").map(String.init)).subtracting(ignored)
         return foods.enumerated().compactMap { index, food -> (Int, Int, PhotoFood)? in
             let name = TextSearch.normalized(food.nameEn)

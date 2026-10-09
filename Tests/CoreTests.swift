@@ -90,6 +90,9 @@ final class CoreTests: XCTestCase {
         XCTAssertFalse(candidates.contains { $0.nameEn == "Blueberries" })
         XCTAssertLessThanOrEqual(candidates.count, 18)
         XCTAssertTrue(VisionMeal.candidates(observations: "NO_FOOD", foods: foods).isEmpty)
+        let coloredPlate = VisionMeal.candidates(observations: "A chicken wrap on an orange plate with white creamy sauce", foods: foods)
+        XCTAssertFalse(coloredPlate.contains { $0.nameEn == "Orange" })
+        XCTAssertFalse(coloredPlate.contains { $0.id == "169757" })
     }
     func resource<T: Decodable>(_ name:String,_ type:T.Type) throws -> T {
         let url=try XCTUnwrap(Bundle.module.url(forResource:name,withExtension:"json"));return try JSONDecoder().decode(type,from:Data(contentsOf:url))

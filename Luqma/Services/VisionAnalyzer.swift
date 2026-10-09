@@ -34,7 +34,10 @@ actor VisionAnalyzer {
         // Local directory loading prevents tokenizer/model network requests after installation.
         let model = try await VLMModelFactory.shared.loadContainer(configuration: ModelConfiguration(directory: folder))
         try Task.checkCancellation()
-        let session = ChatSession(model, generateParameters: .init(maxTokens: 700, temperature: 0, prefillStepSize: 256), processing: .init(resize: CGSize(width: 896, height: 896)))
+        // Qwen's Instruct evaluation uses sampling (temperature 0.7 / top-p 0.8).
+        // Greedy decoding looped on real fixtures. A modest repetition penalty
+        // also prevents a repeated item from consuming the whole output budget.
+        let session = ChatSession(model, generateParameters: .init(maxTokens: 700, temperature: 0.7, topP: 0.8, repetitionPenalty: 1.08, repetitionContextSize: 128, prefillStepSize: 256), processing: .init(resize: CGSize(width: 896, height: 896)))
         progress("vision")
         do {
             // Observe first, without a menu or numeric example to copy. Ground the
@@ -65,11 +68,12 @@ actor VisionAnalyzer {
             try Task.checkCancellation()
             progress("validate")
             diagnostics("FIRST OUTPUT: " + answer)
-            let first = try VisionMeal.decode(answer, description: description, foods: foods)
-            if first.parts.isEmpty { return first }
+            let first = try? VisionMeal.decode(answer, description: description, foods: foods)
+            if let first, first.parts.isEmpty { return first }
             progress("audit")
             var audit = ""
-            for try await chunk in session.streamResponse(to: "Reinspect the original photograph and audit your JSON. Check missed separate foods, dip containers, counts and implausible portion masses. Do not count the internal ingredients of a prepared wrap separately. Use the user's factual context, retain uncertainty and do not invent unseen sides. Return the complete corrected JSON only in the same schema, including ALL meal components.") {
+            let correction = first == nil ? "The prior JSON failed validation. Repair duplicate IDs, missing fields or malformed JSON. " : ""
+            for try await chunk in session.streamResponse(to: correction + "Reinspect the original photograph and audit your JSON. Include ONLY observed dishes, not colors of plates. Remove invented sides and repeated foods. Aggregate identical dishes into ONE item with total weight. Check missed separate foods, dip containers, counts and implausible portions. Do not count the internal ingredients of a prepared wrap separately. Use factual context, retain uncertainty. Return complete compact JSON only, with every distinct edible component and at most 12 unique IDs.") {
                 try Task.checkCancellation(); audit += chunk
                 guard audit.utf8.count <= 60_000 else { throw VisionMeal.invalid }
             }
