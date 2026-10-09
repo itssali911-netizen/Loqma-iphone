@@ -49,6 +49,11 @@ enum VisionMeal {
         }
         // An explicit user description must not lose known components because vision missed them.
         let hints = try PhotoMeal.estimate([], description: description, foods: foods, confirmedFood: true)
+        let described = Set(hints.parts.map { $0.food.id })
+        for index in parts.indices {
+            if PhotoMeal.family(parts[index].food.id) == "sauce", !described.contains(parts[index].food.id) { parts[index].tentative = true }
+            if let weighed = hints.parts.first(where: { $0.food.id == parts[index].food.id && $0.basis == "weight" }) { parts[index].setGrams(weighed.grams) }
+        }
         for hint in hints.parts where !seen.contains(hint.food.id) {
             var added = hint; added.tentative = true; added.basis = "description"; parts.append(added); seen.insert(hint.food.id); unmatched = true
         }

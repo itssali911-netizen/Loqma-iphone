@@ -50,6 +50,10 @@ final class CoreTests: XCTestCase {
         XCTAssertTrue(result.parts[1].tentative)
         XCTAssertLessThan(result.parts[0].low, result.parts[0].grams)
         XCTAssertGreaterThan(result.parts[0].high, result.parts[0].grams)
+        let weighed = try VisionMeal.decode(json, description: "شاورما دجاج ٣٠٠ جم", foods: foods)
+        XCTAssertEqual(weighed.parts[0].grams, 300)
+        XCTAssertEqual(weighed.parts[0].low, 300)
+        XCTAssertEqual(weighed.parts[0].high, 300)
     }
     func testVisionRejectsDuplicateAndImpossibleMassAndDoesNotInventFood() throws {
         let foods = try resource("photo-foods", [PhotoFood].self)
