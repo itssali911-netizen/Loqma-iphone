@@ -60,6 +60,7 @@ let package = Package(name: "ModelCheck", platforms: [.macOS(.v14)], dependencie
         apply_vision_compat(derived / 'SourcePackages')
         result = subprocess.run(command, cwd=project, stdout=log, stderr=subprocess.STDOUT)
         if result.returncode == 0:
+            apply_vision_compat(derived / 'SourcePackages', verify_only=True)
             binary = derived / 'Build/Products/Release/ModelCheck'
             result = subprocess.run([str(binary), str(project / 'meal.jpg'), str(OUTPUT)], cwd=project, stdout=log, stderr=subprocess.STDOUT)
     if result.returncode:

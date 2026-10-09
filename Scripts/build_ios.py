@@ -212,6 +212,7 @@ def build(mode: str, output: Path) -> None:
                       "-resultBundlePath", str(output / "device.xcresult"),
                       "CODE_SIGNING_ALLOWED=NO", *settings, "build"], output / "device.log")
         app = output / "device-derived/Build/Products/Release-iphoneos/Luqma.app"
+        apply_vision_compat(packages, verify_only=True)
         prepare_sideload(app, output, bundle)
         (output / "READ-ME.txt").write_text("Luqma-Sideload.ipa is an iPhoneOS build requiring personal re-signing by AltStore/AltServer. It has no Apple developer certificate or provisioning profile and cannot install directly. A free account requires refreshing every 7 days. Native SDK/device/HealthKit behavior still needs validation after installation. No Apple account was accessed and no store upload was performed.\n")
         result_summary(output, mode, bundle, signed=False, apple_signed=False,
@@ -226,6 +227,7 @@ def build(mode: str, output: Path) -> None:
                           "-resultBundlePath", str(output / (name + ".xcresult")),
                           "CODE_SIGNING_ALLOWED=NO", *settings, "build"], output / (name + ".log"))
         app = output / "simulator-derived/Build/Products/Debug-iphonesimulator/Luqma.app"
+        apply_vision_compat(packages, verify_only=True)
         if not app.is_dir():
             raise BuildError("The simulator build did not produce Luqma.app.")
         run(["ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", str(app),
@@ -249,6 +251,7 @@ def build(mode: str, output: Path) -> None:
         if len(exported) != 1 or exported[0].stat().st_size == 0:
             raise BuildError("Xcode did not export exactly one nonempty IPA.")
         app = archive / "Products/Applications/Luqma.app"
+        apply_vision_compat(packages, verify_only=True)
         run(["codesign", "--verify", "--deep", "--strict", str(app)], output / "signature.log")
         # Check the exported IPA's identifier/profile too: export can re-sign an archive.
         try:
