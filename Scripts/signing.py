@@ -79,6 +79,8 @@ def validate_profile(data: bytes, team: str, bundle: str, mode: str,
         raise BuildError("The profile's entitlement team does not match APPLE_TEAM_ID.")
     if entitlements.get("com.apple.developer.healthkit") is not True:
         raise BuildError("Enable HealthKit on the App ID and regenerate the provisioning profile.")
+    if entitlements.get("com.apple.developer.healthkit.background-delivery") is not True:
+        raise BuildError("Enable HealthKit Background Delivery and regenerate the provisioning profile.")
     if entitlements.get("get-task-allow", False) is not False:
         raise BuildError("A distribution profile is required, not a development profile.")
     if profile.get("ProvisionsAllDevices"):

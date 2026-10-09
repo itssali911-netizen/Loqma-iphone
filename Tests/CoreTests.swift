@@ -2,6 +2,54 @@ import XCTest
 @testable import LuqmaCore
 
 final class CoreTests: XCTestCase {
+    func testLiveHealthWeightDeletionFallsBackAndPreservesManual() throws {
+        let date = try XCTUnwrap(ISO8601DateFormatter().date(from: "2026-10-08T12:00:00Z"))
+        let earlier = HealthWeightSample(id: UUID(), kg: 81, end: date.timeIntervalSince1970)
+        let later = HealthWeightSample(id: UUID(), kg: 80.5, end: date.addingTimeInterval(3600).timeIntervalSince1970)
+        let now = date.addingTimeInterval(86400)
+        let first = HealthSync.apply(added: [later, earlier], deleted: [], to: HealthSyncState(), weights: [], now: now)
+        XCTAssertEqual(first.weights.count, 1)
+        XCTAssertEqual(first.weights[0].kg, 80.5)
+        let removedLatest = HealthSync.apply(added: [], deleted: [later.id], to: first.cache, weights: first.weights, now: now)
+        XCTAssertEqual(removedLatest.weights[0].kg, 81)
+        let removedAll = HealthSync.apply(added: [], deleted: [earlier.id], to: removedLatest.cache, weights: removedLatest.weights, now: now)
+        XCTAssertTrue(removedAll.weights.isEmpty)
+        let manual = WeightReading(day: earlier.day, kg: 79, source: "Manual", timestamp: now.timeIntervalSince1970)
+        let keptManual = HealthSync.apply(added: [later], deleted: [earlier.id], to: first.cache, weights: [manual], now: now)
+        XCTAssertEqual(keptManual.weights, [manual])
+    }
+    func testLiveHealthEmptyReadAndInvalidSamplesDoNotEraseHistory() throws {
+        let date = try XCTUnwrap(ISO8601DateFormatter().date(from: "2026-10-08T12:00:00Z"))
+        let valid = HealthWeightSample(id: UUID(), kg: 82, end: date.timeIntervalSince1970)
+        let cache = HealthSyncState(records: [valid])
+        let reading = WeightReading(day: valid.day, kg: 82, source: "Apple Health", timestamp: valid.end)
+        let result = HealthSync.apply(added: [
+            HealthWeightSample(id: UUID(), kg: .nan, end: valid.end),
+            HealthWeightSample(id: UUID(), kg: 600, end: valid.end),
+            HealthWeightSample(id: UUID(), kg: 80, end: valid.end + 864000)
+        ], deleted: [UUID()], to: cache, weights: [reading], now: date.addingTimeInterval(3600))
+        XCTAssertEqual(result.cache.records, cache.records)
+        XCTAssertEqual(result.weights, [reading])
+        let empty = HealthSync.apply(added: [], deleted: [], to: result.cache, weights: result.weights)
+        XCTAssertEqual(empty.weights, [reading])
+        let deletedInSameBatch = HealthSync.apply(added: [valid], deleted: [valid.id], to: cache, weights: [reading])
+        XCTAssertTrue(deletedInSameBatch.cache.records.isEmpty)
+        XCTAssertTrue(deletedInSameBatch.weights.isEmpty)
+    }
+    func testHealthCacheBackupMigrationValidationAndCursorIsolation() throws {
+        var current = DiarySnapshot()
+        current.healthEnabled = true
+        current.healthSync = HealthSyncState(anchor: Data([1, 2]), activityDay: "2026-10-09", steps: 10000, activeCalories: 420, heightCM: 180, updatedAt: 1_792_000_000)
+        let data = try Backup.encode(current)
+        XCTAssertEqual(try Backup.decode(data).healthSync, current.healthSync)
+        var legacy = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        legacy.removeValue(forKey: "healthSync")
+        XCTAssertNil(try Backup.decode(JSONSerialization.data(withJSONObject: legacy)).healthSync)
+        var incoming = DiarySnapshot(); incoming.healthSync = HealthSyncState(anchor: Data([9]), steps: 2)
+        XCTAssertEqual(try Backup.merge(incoming, into: current).healthSync, current.healthSync)
+        current.healthSync?.steps = .infinity
+        XCTAssertThrowsError(try Backup.encode(current))
+    }
     func testHealthExportUnitsDailyPriorityAndFutureFiltering() throws {
         let xml = """
         <?xml version="1.0" encoding="UTF-8"?>
@@ -33,6 +81,10 @@ final class CoreTests: XCTestCase {
         XCTAssertEqual(HealthSigning.profileSupportsHealth(try profile(["com.apple.developer.healthkit": true])), true)
         XCTAssertEqual(HealthSigning.profileSupportsHealth(try profile(["get-task-allow": true])), false)
         XCTAssertNil(HealthSigning.profileSupportsHealth(Data("not a profile".utf8)))
+        XCTAssertEqual(HealthSigning.profileSupportsBackgroundHealth(try profile(["com.apple.developer.healthkit": true, "com.apple.developer.healthkit.background-delivery": true])), true)
+        XCTAssertEqual(HealthSigning.profileSupportsBackgroundHealth(try profile(["com.apple.developer.healthkit": true])), false)
+        XCTAssertEqual(HealthSigning.profileSupportsBackgroundHealth(try profile(["com.apple.developer.healthkit.background-delivery": true])), false)
+        XCTAssertNil(HealthSigning.profileSupportsBackgroundHealth(Data("unknown".utf8)))
     }
     func testGenerativeMealPreservesShawarmaDipsCountAndCatalogNutrition() throws {
         let foods = try resource("photo-foods", [PhotoFood].self)

@@ -31,7 +31,7 @@ struct SettingsView:View {
                 Notice(text:diary.t("لنقل السجل: صدّر نسخة JSON من إعدادات الموقع، ثم استوردها هنا. يُدمج السجل والوصفات والوزن والمنتجات دون حذف القائمة الحالية؛ السجلات المطابقة تُحدَّث من النسخة.","To migrate: export JSON from website Settings, then import it here. Diary, recipes, weights and products are merged without deleting the current list; matching records update from the backup."))
             }
             Section(diary.t("حول لُقمة","About Luqma")){
-                Text(diary.t("تطبيق آيفون أصلي • الإصدار ","Native iPhone app • Version ") + (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.1"))
+                Text(diary.t("تطبيق آيفون أصلي • الإصدار ","Native iPhone app • Version ") + (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.2"))
                 Notice(text:diary.t("سجلك محفوظ على الجهاز. البحث الخارجي وتنزيل نماذج الصور أول مرة يحتاجان الإنترنت. الصور وبيانات صحتي لا تُرفع إلى خادم.","Your diary is stored on the device. Online search and initial image-model downloads need internet. Photos and Health data are not uploaded."))
                 Link("Open Food Facts",destination:URL(string:"https://world.openfoodfacts.org")!)
                 Link("USDA FoodData Central",destination:URL(string:"https://fdc.nal.usda.gov/")!)

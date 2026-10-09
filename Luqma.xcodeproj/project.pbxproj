@@ -25,6 +25,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = 02942914B4F28DE136647951;
 		};
+		"13F476C3507BB71411F1E2C0" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "HealthSync.swift";
+			"sourceTree" = "<group>";
+		};
+		"98047510747B8D736A435A2B" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 13F476C3507BB71411F1E2C0;
+		};
 		"36A2BA55B038C65878A15F3F" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -80,6 +90,7 @@
 			"children" = (
 				6A4E15D7BD914BF2527B4EB9,
 				02942914B4F28DE136647951,
+				13F476C3507BB71411F1E2C0,
 				36A2BA55B038C65878A15F3F,
 				908DE38BDA6437C569E929DD,
 				C609B5DBE6427D6BB4FA505A,
@@ -535,6 +546,7 @@
 			"files" = (
 				E426F7E1598FC1DD6397C156,
 				08935C61F49D6812481E016D,
+				98047510747B8D736A435A2B,
 				828263A8C5D85FDB23435C05,
 				B66646D43CB4EE4B77D98999,
 				89C3439FD20A455E08E90E08,
@@ -626,7 +638,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				"MARKETING_VERSION" = "1.1";
+				"MARKETING_VERSION" = "1.2";
 				"PRODUCT_BUNDLE_IDENTIFIER" = "app.luqma.diary";
 				"PRODUCT_NAME" = "$(TARGET_NAME)";
 				"SDKROOT" = "iphoneos";
@@ -674,7 +686,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				"MARKETING_VERSION" = "1.1";
+				"MARKETING_VERSION" = "1.2";
 				"PRODUCT_BUNDLE_IDENTIFIER" = "app.luqma.diary";
 				"PRODUCT_NAME" = "$(TARGET_NAME)";
 				"SDKROOT" = "iphoneos";

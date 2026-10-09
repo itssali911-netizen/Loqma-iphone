@@ -2,6 +2,7 @@ import SwiftUI
 
 struct DiaryView:View {
     @EnvironmentObject var diary:DiaryStore
+    @EnvironmentObject var health:HealthService
     @State private var date=Date()
     @State private var adding=false
     @State private var goals=false
@@ -11,6 +12,14 @@ struct DiaryView:View {
         ScrollView{VStack(spacing:20){
             DatePicker(diary.t("اليوم","Day"),selection:$date,displayedComponents:.date).datePickerStyle(.compact)
             summary
+            if diary.state.healthEnabled && day == DayKey.today && (health.steps != nil || health.activeCalories != nil) {
+                HStack {
+                    Label("Apple Health", systemImage: "heart.fill").foregroundStyle(.pink)
+                    Spacer()
+                    if let steps = health.steps { Label(decimal(steps, 0), systemImage: "figure.walk") }
+                    if let calories = health.activeCalories { Label("\(decimal(calories,0)) kcal", systemImage: "flame") }
+                }.font(.caption).luqmaCard()
+            }
             Button{adding=true}label:{Label(diary.t("إضافة طعام","Add food"),systemImage:"plus").frame(maxWidth:.infinity).padding(10)}.buttonStyle(.borderedProminent)
             ForEach(Meal.allCases){meal in mealSection(meal)}
         }.padding(20)}.appBackground().navigationTitle(diary.t("لُقمة","Luqma"))

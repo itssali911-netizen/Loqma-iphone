@@ -13,6 +13,15 @@ enum DiaryValidation {
             for i in r.ingredients { try require(!i.name.isEmpty && i.name.count <= 180 && i.amount.isFinite && i.amount > 0 && i.amount <= 10000 && i.nutrition.valid) }
         }
         for w in s.weights { try require(DayKey.valid(w.day) && w.kg.isFinite && (35...300).contains(w.kg) && (w.timestamp?.isFinite ?? true)) }
+        if let h = s.healthSync {
+            try require(h.records.count <= 50000 && Set(h.records.map(\.id)).count == h.records.count && (h.anchor?.count ?? 0) <= 1000000)
+            for record in h.records { try require(record.kg.isFinite && (35...300).contains(record.kg) && record.end.isFinite && record.end > 0) }
+            try require(h.activityDay.map(DayKey.valid) ?? true)
+            try require(h.steps.map { $0.isFinite && (0...300000).contains($0) } ?? true)
+            try require(h.activeCalories.map { $0.isFinite && (0...50000).contains($0) } ?? true)
+            try require(h.heightCM.map { $0.isFinite && (120...240).contains($0) } ?? true)
+            try require(h.updatedAt.map { $0.isFinite && $0 > 0 } ?? true)
+        }
         for f in s.products + s.searchHistory + s.barcodeHistory {
             try require(!f.name.isEmpty && f.name.count <= 180 && (f.barcode?.count ?? 0) <= 20)
             try require([f.kcal,f.protein,f.carbs,f.fat].allSatisfy { $0.map { $0.isFinite && $0 >= 0 && $0 <= 100000 } ?? true })

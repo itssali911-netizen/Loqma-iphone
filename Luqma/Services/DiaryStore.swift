@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import UIKit
 
 @MainActor final class DiaryStore: ObservableObject {
     @Published private(set) var state: DiarySnapshot
@@ -7,6 +8,7 @@ import Combine
     @Published var adaptiveMessage: String?
     private let file: URL
     private var loadFailed = false
+    private(set) var waitingForUnlock = false
     var language: AppLanguage { state.language }
     func t(_ ar: String, _ en: String) -> String { language.text(ar,en) }
     init() {
@@ -14,15 +16,27 @@ import Combine
         file = folder.appendingPathComponent("luqma-diary.json"); state = DiarySnapshot()
         if FileManager.default.fileExists(atPath: file.path) {
             do { state = try Backup.decode(Data(contentsOf: file)) }
-            catch { loadFailed = true; self.error = "تعذّر فتح السجل. أعد تشغيل التطبيق أو استورد نسخة احتياطية؛ الملف الأصلي محفوظ. / Could not open the diary. Restart or import a backup; the original file is preserved." }
+            catch {
+                if !UIApplication.shared.isProtectedDataAvailable { waitingForUnlock = true }
+                else { loadFailed = true; self.error = "تعذّر فتح السجل. أعد تشغيل التطبيق أو استورد نسخة احتياطية؛ الملف الأصلي محفوظ. / Could not open the diary. Restart or import a backup; the original file is preserved." }
+            }
         }
+        if !waitingForUnlock && !loadFailed { UserDefaults.standard.set(state.healthEnabled, forKey: "luqma.health.connected") }
+    }
+    func restoreAfterUnlock() -> Bool {
+        guard waitingForUnlock else { return !loadFailed }
+        guard UIApplication.shared.isProtectedDataAvailable else { return false }
+        do { state = try Backup.decode(Data(contentsOf: file)); waitingForUnlock = false; return true }
+        catch { loadFailed = true; waitingForUnlock = false; report(error); return false }
     }
     func report(_ e: Error) { error = (e as? AppError)?.message(language) ?? e.localizedDescription }
     private func commit(_ next: DiarySnapshot, recovery: Bool = false) throws {
+        if waitingForUnlock { throw AppError.invalid("افتح قفل الآيفون لإكمال تحديث السجل.", "Unlock your iPhone to finish updating the diary.") }
         if loadFailed && !recovery { throw AppError.invalid("استورد نسخة احتياطية أولًا لحماية السجل الموجود.", "Import a backup first to protect the existing diary.") }
         let data = try Backup.encode(next)
         if recovery && loadFailed { try FileManager.default.copyItem(at:file,to:file.deletingLastPathComponent().appendingPathComponent("luqma-recovery-\(UUID().uuidString).json")) }
         try data.write(to: file,options: [.atomic,.completeFileProtection]); state = next; loadFailed = false
+        UserDefaults.standard.set(next.healthEnabled, forKey: "luqma.health.connected")
     }
     func change(_ mutation: (inout DiarySnapshot) throws -> Void) {
         do { var next = state; try mutation(&next); try commit(next) } catch { report(error) }
@@ -48,6 +62,10 @@ import Combine
     func mergeHealth(_ readings: [WeightReading]) { change { s in
         for w in readings { if let i=s.weights.firstIndex(where: { $0.day == w.day }) { if s.weights[i].source == "Apple Health" && (w.timestamp ?? 0) >= (s.weights[i].timestamp ?? 0) { s.weights[i]=w } } else { s.weights.append(w) } }; s.weights.sort { $0.day < $1.day }
     }; adapt() }
+    @discardableResult func applyHealth(_ cache: HealthSyncState, weights: [WeightReading]?) -> Bool {
+        do { var next = state; next.healthSync = cache; if let weights { next.weights = weights }; try commit(next); if weights != nil { adapt() }; return true }
+        catch { report(error); return false }
+    }
     @discardableResult func importHealthWeights(_ readings: [WeightReading]) -> Bool {
         do {
             var next = state

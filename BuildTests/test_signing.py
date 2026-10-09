@@ -31,7 +31,8 @@ def profile_data(mode="ad-hoc"):
         "DeveloperCertificates": [CERTIFICATE],
         "Entitlements": {"application-identifier": TEAM + "." + BUNDLE,
                          "com.apple.developer.team-identifier": TEAM,
-                         "com.apple.developer.healthkit": True, "get-task-allow": False},
+                         "com.apple.developer.healthkit": True,
+                         "com.apple.developer.healthkit.background-delivery": True, "get-task-allow": False},
     }
     if mode == "ad-hoc":
         data["ProvisionedDevices"] = ["synthetic-test-device"]
@@ -64,6 +65,7 @@ class SigningTests(unittest.TestCase):
     def test_healthkit_missing_team_bundle_platform_and_wildcard_rejected(self):
         changes = [
             ("health", lambda p: p["Entitlements"].pop("com.apple.developer.healthkit")),
+            ("background", lambda p: p["Entitlements"].pop("com.apple.developer.healthkit.background-delivery")),
             ("team", lambda p: p.update(TeamIdentifier=["WRONGTEAM1"])),
             ("bundle", lambda p: p["Entitlements"].update({"application-identifier": TEAM + ".app.other"})),
             ("wildcard", lambda p: p["Entitlements"].update({"application-identifier": TEAM + ".*"})),

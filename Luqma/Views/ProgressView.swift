@@ -48,10 +48,34 @@ struct HealthPanel:View {
     var body:some View {VStack(alignment:.leading,spacing:14){
         Label("Apple Health",systemImage:"heart.fill").font(.headline).foregroundStyle(.pink)
         if !diary.state.healthEnabled{Button(diary.t("ربط تطبيق صحتي","Connect Health")){Task{await health.connect(diary)}}.buttonStyle(.borderedProminent).disabled(health.busy)}
-        else{HStack{Button(diary.t("تحديث البيانات","Refresh data")){Task{await health.sync(diary)}}.disabled(health.busy);Spacer();if let date=health.lastSync{Text(date,style:.time).font(.caption).foregroundStyle(Theme.muted)}};HStack{if let steps=health.steps{Label("\(decimal(steps,0))",systemImage:"figure.walk")};Spacer();if let calories=health.activeCalories{Label("\(decimal(calories,0)) kcal",systemImage:"flame")}}.font(.subheadline);Button(diary.t("إيقاف الربط","Disconnect")){diary.change{$0.healthEnabled=false}}.font(.footnote)}
+        else {
+            Label(diary.t("المزامنة التلقائية مفعّلة", "Automatic sync is on"), systemImage: "arrow.triangle.2.circlepath").font(.subheadline)
+            HStack {
+                Button(diary.t("تحديث الآن", "Refresh now")) { Task { await health.sync(diary) } }.disabled(health.busy)
+                Spacer()
+                if let date = health.lastSync { VStack(alignment: .trailing) { Text(diary.t("آخر تحديث", "Last refreshed")); Text(date, style: .relative) }.font(.caption).foregroundStyle(Theme.muted) }
+            }
+            HStack {
+                if let steps = health.steps { Label("\(decimal(steps,0))", systemImage: "figure.walk") }
+                Spacer()
+                if let calories = health.activeCalories { Label("\(decimal(calories,0)) kcal", systemImage: "flame") }
+            }.font(.subheadline)
+            if let height = health.heightCM { Text("\(diary.t("الطول", "Height")): \(decimal(height)) cm").font(.footnote).foregroundStyle(Theme.muted) }
+            if health.backgroundStatus == .enabled { Notice(text: diary.t("تحديثات الخلفية مسجّلة. يحدد iOS توقيتها؛ قد يتأخر تحديث الخطوات.", "Background updates are registered. iOS controls timing; step updates can be delayed.")) }
+            else if health.backgroundStatus == .limited || health.backgroundStatus == .unavailable { Notice(text: diary.t("المزامنة أثناء فتح التطبيق متاحة. تحديث الخلفية غير متاح لكل البيانات؛ يحتاج صلاحية HealthKit Background Delivery في التوقيع.", "Foreground sync is available. Background delivery is not available for all data; the signature needs HealthKit Background Delivery.")) }
+            Button(diary.t("إيقاف الربط", "Disconnect")) { Task { await health.disconnect(diary) } }.font(.footnote)
+        }
         if let message=health.message{Notice(text:message)}
         Button { importingHealth = true } label: { Label(diary.t("استيراد بيانات صحتي", "Import Health data"), systemImage: "square.and.arrow.down") }.buttonStyle(.bordered)
         if health.busy{ProgressView()}
-        Notice(text:diary.t("قراءة الوزن والطول والنشاط بإذنك، والتحديث عند فتح التطبيق. سعرات النشاط للعرض؛ لا تُضاف فوق خطة النشاط لتجنب احتسابها مرتين.","Reads weight, height and activity with your permission and refreshes when opened. Activity calories are informational; they are not added again to the activity-based plan."))
+        Notice(text:diary.t("بعد السماح مرة واحدة، تُراقَب تغييرات صحتي تلقائيًا. تحفظ القراءات على الجهاز وتُستكمل بعد فتح القفل. سعرات النشاط للعرض ولا تُضاف فوق خطة النشاط.","After one-time permission, Health changes are observed automatically. Readings stay on the device and updates resume after unlocking. Activity calories are informational and are not added again to your plan."))
+        DisclosureGroup(diary.t("إعداد التوقيع والربط", "Signing and connection setup")) {
+            VStack(alignment: .leading, spacing: 10) {
+                Text(diary.t("صدّر نسخة احتياطية من لقمة أولًا. ثبّت ملف التحديث عبر Impactor على ويندوز بنفس حساب Apple. احتفظ بمعرّف التطبيق المثبت، ثم اسمح بقراءة البيانات عند الضغط على الربط.", "Export a Luqma backup first. Install the update through Impactor on Windows with the same Apple account. Keep the installed app identifier, then allow reads when you press Connect."))
+                Link(diary.t("تحميل Impactor", "Download Impactor"), destination: URL(string: "https://github.com/claration/impactor/releases")!)
+                Text(diary.t("معرّف النسخة المثبتة — انسخه عند الحاجة", "Installed identifier — copy if needed")).foregroundStyle(Theme.muted)
+                Text(health.installedIdentifier).font(.caption.monospaced()).textSelection(.enabled)
+            }.font(.footnote).padding(.top, 8)
+        }
     }.luqmaCard().sheet(isPresented: $importingHealth) { HealthImportView() }}
 }

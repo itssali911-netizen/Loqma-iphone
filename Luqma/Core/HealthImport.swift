@@ -80,11 +80,18 @@ enum HealthImport {
 /// A profile without HealthKit cannot be fixed by an in-app permission request.
 enum HealthSigning {
     static func profileSupportsHealth(_ data: Data) -> Bool? {
+        entitlement("com.apple.developer.healthkit", in: data)
+    }
+    static func profileSupportsBackgroundHealth(_ data: Data) -> Bool? {
+        guard profileSupportsHealth(data) != false else { return false }
+        return entitlement("com.apple.developer.healthkit.background-delivery", in: data)
+    }
+    private static func entitlement(_ key: String, in data: Data) -> Bool? {
         guard data.count <= 5_000_000,
               let start = data.range(of: Data("<?xml".utf8)),
               let end = data.range(of: Data("</plist>".utf8), in: start.lowerBound..<data.endIndex),
               let plist = try? PropertyListSerialization.propertyList(from: data[start.lowerBound..<end.upperBound], format: nil) as? [String: Any],
               let entitlements = plist["Entitlements"] as? [String: Any] else { return nil }
-        return entitlements["com.apple.developer.healthkit"] as? Bool ?? false
+        return entitlements[key] as? Bool ?? false
     }
 }
