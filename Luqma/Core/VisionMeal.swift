@@ -41,7 +41,10 @@ enum VisionMeal {
               let data = String(response[start...end]).data(using: .utf8),
               let output = try? JSONDecoder().decode(Output.self, from: data), output.items.count <= 16 else { throw invalid }
         guard output.food_present else { return PhotoResult(parts: [], sauceSuggested: false, unmatched: false) }
-        var parts: [PhotoPart] = [], seen = Set<String>(), unmatched = output.uncertain ?? false
+        let hints = try PhotoMeal.estimate([], description: description, foods: foods, confirmedFood: true)
+        let wrapHints = hints.parts.filter { PhotoMeal.family($0.food.id) == "wrap" }
+        let sauceHints = hints.parts.filter { PhotoMeal.family($0.food.id) == "sauce" }
+        var parts: [PhotoPart] = [], seen = Set<String>(), contextualNames = Set<String>(), pendingDips: [Item] = [], unmatched = output.uncertain ?? false
         for item in output.items {
             guard item.grams.isFinite, (1...3000).contains(item.grams), item.min_grams.isFinite, item.max_grams.isFinite,
                   item.min_grams > 0, item.min_grams <= item.grams, item.max_grams >= item.grams, item.max_grams <= 5000,
@@ -52,26 +55,60 @@ enum VisionMeal {
             let indexed = item.id.flatMap { id in foods.first { $0.id == id } }
             // Never accept an ID that contradicts the generated food name.
             if let indexed, let name = item.name_en, !name.isEmpty, named?.id != indexed.id { throw invalid }
-            let catalog = named ?? indexed
+            var catalog = named ?? indexed
+            var contextual = false
+            let label = TextSearch.normalized(item.name_en ?? "")
+            if catalog == nil, !label.isEmpty {
+                if isFilledDish(label), wrapHints.count == 1 { catalog = wrapHints[0].food; contextual = true }
+                else if isDip(label), sauceHints.count == 1 { catalog = sauceHints[0].food; contextual = true }
+                else if isDip(label), sauceHints.count > 1 {
+                    guard contextualNames.insert(label).inserted else { throw invalid }
+                    pendingDips.append(item); continue
+                }
+            }
             if let catalog { food = catalog }
             else {
-                guard let en = item.name_en?.trimmingCharacters(in: .whitespacesAndNewlines), !en.isEmpty, en.count <= 100,
-                      let n = item.nutrition_per_100g, n.valid, (1...900).contains(n.kcal),
-                      n.protein + n.carbs + n.fat <= 105, abs(n.macroCalories - n.kcal) <= max(30, n.kcal * 0.15) else { unmatched = true; continue }
-                let ar = item.name_ar?.trimmingCharacters(in: .whitespacesAndNewlines) ?? en
-                guard !ar.isEmpty, ar.count <= 100 else { throw invalid }
-                food = PhotoFood(id: "ai:" + TextSearch.normalized(en), name: ar, nameEn: en, grams: item.grams, kcal: n.kcal, protein: n.protein, carbs: n.carbs, fat: n.fat)
+                guard let estimate = estimatedFood(item) else { unmatched = true; continue }
+                food = estimate
                 unmatched = true
             }
-            guard seen.insert(food.id).inserted else { throw invalid } // repeated detections must not double-count a plate
+            let unique = seen.insert(food.id).inserted
+            // Distinct descriptions of separate prepared wraps may be refined
+            // by one factual user name. Merge them, but reject a repeated label.
+            if contextual { guard contextualNames.insert(label).inserted else { throw invalid } }
+            guard unique || contextual else { throw invalid }
             // Model confidence is not a calibrated accuracy score. Keep honest portion bounds.
-            let low = min(item.min_grams, item.grams * 0.75), high = max(item.max_grams, item.grams * 1.3)
-            var part = PhotoPart(food: food, grams: item.grams, low: low, high: high, basis: "vision", tentative: catalog == nil || item.confidence < 0.65 || item.usedRangeMidpoint)
+            let low = min(item.min_grams, item.grams * 0.5), high = max(item.max_grams, item.grams * 1.8)
+            var part = PhotoPart(food: food, grams: item.grams, low: low, high: high, basis: contextual ? "description" : "vision", tentative: contextual || catalog == nil || item.confidence < 0.65 || item.usedRangeMidpoint)
             part.count = item.count
-            parts.append(part)
+            if !unique, let index = parts.firstIndex(where: { $0.food.id == food.id }) {
+                parts[index].grams += part.grams; parts[index].low += part.low; parts[index].high += part.high
+                if let old = parts[index].count, let added = part.count { parts[index].count = old + added } else { parts[index].count = nil }
+                parts[index].tentative = true
+            } else { parts.append(part) }
+        }
+        if !pendingDips.isEmpty {
+            let missing = sauceHints.filter { !seen.contains($0.food.id) }
+            if !missing.isEmpty {
+                let grams = pendingDips.reduce(0) { $0 + $1.grams }
+                let low = pendingDips.reduce(0) { $0 + min($1.min_grams, $1.grams * 0.5) }
+                let high = pendingDips.reduce(0) { $0 + max($1.max_grams, $1.grams * 1.8) }
+                let referenceTotal = missing.reduce(0) { $0 + $1.grams }
+                for hint in missing {
+                    let share = hint.grams / referenceTotal
+                    parts.append(PhotoPart(food: hint.food, grams: grams * share, low: low * share, high: high * share, basis: "description", tentative: true)); seen.insert(hint.food.id)
+                }
+                unmatched = true // distribution among ambiguous containers needs review
+            } else {
+                for item in pendingDips {
+                    guard let food = estimatedFood(item) else { unmatched = true; continue }
+                    guard seen.insert(food.id).inserted else { throw invalid }
+                    var part = PhotoPart(food: food, grams: item.grams, low: min(item.min_grams, item.grams * 0.5), high: max(item.max_grams, item.grams * 1.8), basis: "vision", tentative: true)
+                    part.count = item.count; parts.append(part); unmatched = true
+                }
+            }
         }
         // An explicit user description must not lose known components because vision missed them.
-        let hints = try PhotoMeal.estimate([], description: description, foods: foods, confirmedFood: true)
         let described = Set(hints.parts.map { $0.food.id })
         for index in parts.indices {
             if PhotoMeal.family(parts[index].food.id) == "sauce", !described.contains(parts[index].food.id) { parts[index].tentative = true }
@@ -80,19 +117,33 @@ enum VisionMeal {
         for hint in hints.parts where !seen.contains(hint.food.id) {
             var added = hint; added.tentative = true; added.basis = "description"; parts.append(added); seen.insert(hint.food.id); unmatched = true
         }
-        guard parts.count <= 16, parts.reduce(0, { $0 + $1.grams }) <= 8000 else { throw invalid }
+        guard parts.count <= 16, parts.reduce(0, { $0 + $1.grams }) <= 8000,
+              parts.allSatisfy({ $0.grams <= 3000 && ($0.count == nil || $0.count! <= 100) }) else { throw invalid }
         return PhotoResult(parts: parts, sauceSuggested: false, unmatched: unmatched)
     }
+    private static func estimatedFood(_ item: Item) -> PhotoFood? {
+        guard let en = item.name_en?.trimmingCharacters(in: .whitespacesAndNewlines), !en.isEmpty, en.count <= 100,
+              var n = item.nutrition_per_100g, n.valid, (1...900).contains(n.kcal),
+              n.protein + n.carbs + n.fat <= 105, (1...900).contains(n.macroCalories) else { return nil }
+        n.kcal = n.macroCalories // one consistent energy value for an explicitly marked AI estimate
+        let ar = item.name_ar?.trimmingCharacters(in: .whitespacesAndNewlines) ?? en
+        guard !ar.isEmpty, ar.count <= 100 else { return nil }
+        return PhotoFood(id: "ai:" + TextSearch.normalized(en), name: ar, nameEn: en, grams: item.grams, kcal: n.kcal, protein: n.protein, carbs: n.carbs, fat: n.fat)
+    }
+    private static func isFilledDish(_ name: String) -> Bool {
+        name.contains("wrap") || name.contains("sandwich") || ((name.contains("pita") || name.contains("flatbread")) && (name.contains("filled") || name.contains("meat") || name.contains("topped") || name.contains("chicken")))
+    }
+    private static func isDip(_ name: String) -> Bool { name.contains("dip") || name.contains("sauce") }
     static var invalid: AppError { .invalid("لم ينتج النموذج تحليلًا متماسكًا. أعد المحاولة بصورة أوضح وأضف وصفًا إن رغبت.", "The model did not produce a consistent analysis. Retry with a clearer photo and an optional description.") }
     static func matchName(_ name: String, foods: [PhotoFood]) -> PhotoFood? {
-        let text = TextSearch.normalized(name)
+        let text = TextSearch.normalized(name).replacingOccurrences(of: "breads", with: "bread")
         let words = Set(text.split(separator: " ").map(String.init))
         if !words.isDisjoint(with: ["shawarma", "wrap", "wraps", "sandwich"]) {
             if !words.isDisjoint(with: ["beef", "lamb"]) { return foods.first { $0.id == "beef-shawarma" } }
             if words.contains("chicken") || words.contains("shawarma") { return foods.first { $0.id == "chicken-shawarma" } }
             return nil // a filled wrap must not be mistaken for plain bread
         }
-        let modifiers: Set<String> = ["pieces", "piece", "slices", "slice", "stack", "stacked", "pile", "fresh", "plain", "creamy", "white", "small", "large", "a", "some"]
+        let modifiers: Set<String> = ["pieces", "piece", "slices", "slice", "strips", "strip", "stack", "stacked", "pile", "of", "fresh", "plain", "creamy", "white", "small", "large", "a", "some"]
         let clean = text.split(separator: " ").map(String.init).filter { !modifiers.contains($0) }.joined(separator: " ")
         return foods.first { food in
             ([food.name, food.nameEn.components(separatedBy: " · ").first ?? food.nameEn] + (PhotoMeal.aliases[food.id] ?? [])).contains { alias in

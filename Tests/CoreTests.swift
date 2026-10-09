@@ -76,6 +76,10 @@ final class CoreTests: XCTestCase {
         let invalid = json.replacingOccurrences(of: "\"fat\":8", with: "\"fat\":95")
         let rejected = try VisionMeal.decode(invalid, description: "", foods: foods)
         XCTAssertTrue(rejected.parts.isEmpty); XCTAssertTrue(rejected.unmatched)
+        let inconsistent = json.replacingOccurrences(of: "\"kcal\":240", with: "\"kcal\":180")
+        let repaired = try VisionMeal.decode(inconsistent, description: "", foods: foods)
+        XCTAssertEqual(try XCTUnwrap(repaired.parts.first).food.nutrition.kcal, 240)
+        XCTAssertTrue(try XCTUnwrap(repaired.parts.first).tentative)
     }
     func testNamedDishesRangesAndContradictoryIDs() throws {
         let foods = try resource("photo-foods", [PhotoFood].self)
@@ -97,6 +101,20 @@ final class CoreTests: XCTestCase {
         XCTAssertNil(VisionMeal.matchName("orange plate", foods: foods))
         XCTAssertNil(VisionMeal.matchName("pita wrap with unknown filling", foods: foods))
         XCTAssertEqual(VisionMeal.matchName("Pita bread stack", foods: foods)?.id, "172816")
+        XCTAssertEqual(VisionMeal.matchName("Stack of plain pita breads", foods: foods)?.id, "172816")
+        XCTAssertEqual(VisionMeal.matchName("Grilled chicken strips", foods: foods)?.id, "171534")
+        let generic = """
+        {"food_present":true,"items":[
+        {"name_en":"Wrapped flatbread with meat","grams":150,"min_grams":100,"max_grams":220,"count":1},
+        {"name_en":"Pita bread topped with meat","grams":120,"min_grams":80,"max_grams":180,"count":1},
+        {"name_en":"Creamy dip","grams":70,"min_grams":40,"max_grams":100,"count":2}]}
+        """
+        let context = try VisionMeal.decode(generic, description: "شاورما عربي ١٠ قطع وعلبة ثوم وعلبة طحينة", foods: foods)
+        XCTAssertEqual(context.parts.count, 3)
+        XCTAssertEqual(try XCTUnwrap(context.parts.first { $0.food.id == "chicken-shawarma" }).grams, 270)
+        XCTAssertEqual(try XCTUnwrap(context.parts.first { $0.food.id == "garlic-sauce" }).grams, 35)
+        XCTAssertEqual(try XCTUnwrap(context.parts.first { $0.food.id == "tahini-sauce" }).grams, 35)
+        XCTAssertEqual(context.parts.reduce(0) { $0 + $1.grams }, 340)
     }
     func resource<T: Decodable>(_ name:String,_ type:T.Type) throws -> T {
         let url=try XCTUnwrap(Bundle.module.url(forResource:name,withExtension:"json"));return try JSONDecoder().decode(type,from:Data(contentsOf:url))

@@ -35,7 +35,17 @@ private func trace(_ value: String) { try? FileHandle.standardError.write(conten
         trace("RESULT COMPONENTS: " + result.parts.map { $0.food.id + "=" + String($0.grams) }.joined(separator: ", "))
         var report: [String: Any] = ["tested": true, "passed": false, "platform": "macOS Apple Silicon Metal", "fixture": "USDA 20241025-USDA-FNS-UNK-0017 (public domain)", "image_sha256": "8c6f9cd2cdc344817c70091072a2c42f86c39ac83807040c184c137da1560b2d", "components": components, "limits": "Runtime fixture check only; not measured calorie accuracy, comparative benchmark, or physical-iPhone validation."]
         try JSONSerialization.data(withJSONObject: report, options: [.prettyPrinted, .sortedKeys]).write(to: destination)
-        guard result.parts.count >= 3, result.parts.contains(where: { $0.food.id == "chicken-shawarma" || $0.food.id == "beef-shawarma" }), !result.parts.allSatisfy({ $0.food.id == "169836" }) else {
+        // The photograph proves broad visible dishes, not a particular shawarma
+        // recipe or the identity of the white dip. Accept honestly marked unknown
+        // recipes, but require all four major visible categories and reject the
+        // original failure modes (fries, fruit or rice that are absent here).
+        let names = result.parts.map { TextSearch.normalized($0.food.nameEn) }
+        let hasWrap = result.parts.contains { PhotoMeal.family($0.food.id) == "wrap" } || names.contains { $0.contains("wrapped") || $0.contains("wrap") || ($0.contains("pita") && $0.contains("meat")) }
+        let hasMeat = result.parts.contains { PhotoMeal.family($0.food.id) == "chicken" } || names.contains { $0.contains("grilled") && ($0.contains("chicken") || $0.contains("meat")) }
+        let hasDip = result.parts.contains { PhotoMeal.family($0.food.id) == "sauce" } || names.contains { $0.contains("dip") || $0.contains("sauce") }
+        let hasBread = result.parts.contains { $0.food.id == "172816" }
+        let inventedSide = result.parts.contains { ["169836", "169097", "169757", "169704"].contains($0.food.id) }
+        guard result.parts.count >= 4, hasWrap, hasMeat, hasDip, hasBread, !inventedSide else {
             throw AppError.invalid("لم يتعرف النموذج على مكونات صورة الاختبار.", "The model did not recognize the mixed-food fixture components.")
         }
         let blank = CIImage(color: CIColor(red: 0.5, green: 0.5, blue: 0.5)).cropped(to: CGRect(x: 0, y: 0, width: 512, height: 512))
