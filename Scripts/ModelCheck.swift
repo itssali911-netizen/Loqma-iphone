@@ -42,12 +42,17 @@ private func trace(_ value: String) { try? FileHandle.standardError.write(conten
         let names = result.parts.map { TextSearch.normalized($0.food.nameEn) }
         let hasWrap = result.parts.contains { PhotoMeal.family($0.food.id) == "wrap" } || names.contains { $0.contains("wrapped") || $0.contains("wrap") || ($0.contains("pita") && $0.contains("meat")) }
         let hasMeat = result.parts.contains { PhotoMeal.family($0.food.id) == "chicken" } || names.contains {
-            !$0.contains("wrap") && !$0.contains("pita") && !$0.contains("sandwich") &&
-            ($0.contains("chicken strips") || ($0.contains("grilled") && ($0.contains("chicken") || $0.contains("meat"))))
+            // The visible meat need not be labelled with a specific cooking method.
+            // Standalone breast slices are valid; fillings/toppings are not a separate meat item.
+            !$0.contains("wrap") && !$0.contains("pita") && !$0.contains("sandwich") && !$0.contains("flatbread") &&
+            ($0.contains("chicken strips") || $0.contains("chicken breast") || $0.contains("chicken slices") ||
+             $0.contains("sliced chicken") || ($0.contains("grilled") && ($0.contains("chicken") || $0.contains("meat"))))
         }
         let hasDip = result.parts.contains { PhotoMeal.family($0.food.id) == "sauce" || VisionMeal.isDip($0.food.nameEn) }
         let hasBread = result.parts.contains { $0.food.id == "172816" }
         let inventedSide = result.parts.contains { ["169836", "169097", "169757", "169704"].contains($0.food.id) }
+        report["categories"] = ["wrap": hasWrap, "standalone_meat": hasMeat, "standalone_dip": hasDip, "plain_pita": hasBread, "absent_side_invented": inventedSide]
+        try JSONSerialization.data(withJSONObject: report, options: [.prettyPrinted, .sortedKeys]).write(to: destination)
         guard result.parts.count >= 4, hasWrap, hasMeat, hasDip, hasBread, !inventedSide else {
             throw AppError.invalid("لم يتعرف النموذج على مكونات صورة الاختبار.", "The model did not recognize the mixed-food fixture components.")
         }
