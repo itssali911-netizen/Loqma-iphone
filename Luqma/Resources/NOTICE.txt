@@ -11,3 +11,5 @@ ONNX Runtime (MIT): https://github.com/microsoft/onnxruntime
 Nutrition: public-domain USDA FoodData Central SR Legacy (2018).
 Portions, chicken/rice, shawarma, garlic sauce and tahini sauce recipes are declared reference assumptions, not image measurements or restaurant labels.
 Similarity scores and calorie ranges are not calibrated confidence intervals.
+
+Advanced local vision: Qwen3-VL-2B-Instruct (Qwen Team), MLX-community 4-bit conversion by Prince Canuma — Apache-2.0. MLX and mlx-swift-lm — Apple Inc., MIT. swift-transformers — Hugging Face, Apache-2.0. See LICENSES.txt for license texts. No model weights are bundled; the app downloads a pinned, checksum-verified public revision.

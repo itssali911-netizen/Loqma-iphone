@@ -44,11 +44,14 @@ struct WeightEditor:View {
 struct HealthPanel:View {
     @EnvironmentObject var diary:DiaryStore
     @EnvironmentObject var health:HealthService
+    @State private var importingHealth = false
     var body:some View {VStack(alignment:.leading,spacing:14){
         Label("Apple Health",systemImage:"heart.fill").font(.headline).foregroundStyle(.pink)
-        if !diary.state.healthEnabled{Button(diary.t("ربط تطبيق صحتي","Connect Health")){Task{await health.connect(diary)}}.buttonStyle(.borderedProminent)}
-        else{HStack{Button(diary.t("تحديث البيانات","Refresh data")){Task{await health.sync(diary)}}.disabled(health.busy);Spacer();if let date=health.lastSync{Text(date,style:.time).font(.caption).foregroundStyle(Theme.muted)}};if let message=health.message{Notice(text:message)};HStack{if let steps=health.steps{Label("\(decimal(steps,0))",systemImage:"figure.walk")};Spacer();if let calories=health.activeCalories{Label("\(decimal(calories,0)) kcal",systemImage:"flame")}}.font(.subheadline);Button(diary.t("إيقاف الربط","Disconnect")){diary.change{$0.healthEnabled=false}}.font(.footnote)}
+        if !diary.state.healthEnabled{Button(diary.t("ربط تطبيق صحتي","Connect Health")){Task{await health.connect(diary)}}.buttonStyle(.borderedProminent).disabled(health.busy)}
+        else{HStack{Button(diary.t("تحديث البيانات","Refresh data")){Task{await health.sync(diary)}}.disabled(health.busy);Spacer();if let date=health.lastSync{Text(date,style:.time).font(.caption).foregroundStyle(Theme.muted)}};HStack{if let steps=health.steps{Label("\(decimal(steps,0))",systemImage:"figure.walk")};Spacer();if let calories=health.activeCalories{Label("\(decimal(calories,0)) kcal",systemImage:"flame")}}.font(.subheadline);Button(diary.t("إيقاف الربط","Disconnect")){diary.change{$0.healthEnabled=false}}.font(.footnote)}
+        if let message=health.message{Notice(text:message)}
+        Button { importingHealth = true } label: { Label(diary.t("استيراد بيانات صحتي", "Import Health data"), systemImage: "square.and.arrow.down") }.buttonStyle(.bordered)
         if health.busy{ProgressView()}
         Notice(text:diary.t("قراءة الوزن والطول والنشاط بإذنك، والتحديث عند فتح التطبيق. سعرات النشاط للعرض؛ لا تُضاف فوق خطة النشاط لتجنب احتسابها مرتين.","Reads weight, height and activity with your permission and refreshes when opened. Activity calories are informational; they are not added again to the activity-based plan."))
-    }.luqmaCard()}
+    }.luqmaCard().sheet(isPresented: $importingHealth) { HealthImportView() }}
 }

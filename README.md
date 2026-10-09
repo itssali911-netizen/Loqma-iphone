@@ -1,6 +1,6 @@
 # Luqma Native iOS
 
-Open `Luqma.xcodeproj` in Xcode 16+; iPhone / iOS 17+. Complete Arabic setup and migration instructions: **README-AR.md**.
+Open `Luqma.xcodeproj` in Xcode 26.3+; iPhone / iOS 17+. Complete Arabic setup and migration instructions: **README-AR.md**.
 
 **The iPhone build succeeded:** [build 3 and IPA download](https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/37903825640). Download the `Luqma-sideload-3` artifact, unzip it and save `Luqma-Sideload.ipa` in iPhone Files. In AltStore Classic, open **My Apps → +** and select the IPA while AltServer is running on your connected computer. See **BUILD-WINDOWS-AR.md** for Arabic installation and renewal instructions.
 
@@ -13,3 +13,11 @@ bash Scripts/verify.sh
 ```
 
 Core tests are a standalone Swift package. The cloud build passed 11 core tests, 16 build-tool tests, iPhoneOS Release compilation and local signature verification. See **VALIDATION.md** for the verified build commit, IPA checksum and remaining physical-device checks.
+
+## Version 1.1 changes
+
+Advanced local vision uses pinned Qwen3-VL-2B-Instruct MLX 4-bit weights (~1.8 GB download), inspects a full meal and performs a second review. Food counts, estimated weights, plausible ranges, catalog nutrition and explicitly marked estimates for unmatched foods replace single-label-only recognition in this mode. Requires an 8 GB RAM iPhone with Metal. CLIP remains the lightweight mode. Optional meal context is empty by default. Interrupted downloads preserve completed chunks; installed model inference is local and supports offline operation. This is not a claim of measured calorie accuracy or superiority to competitors.
+
+An installed signing profile without HealthKit is now detected and explained. Direct reading still requires HealthKit in the final Apple signing profile. Health weight import from the on-device export.xml works without HealthKit entitlement and keeps same-day manual records. Export Health data, unzip in Files, select export.xml, review and confirm. Import is a snapshot and does not provide automatic step/activity synchronization.
+
+About removes the ChatGPT-subscription phrase and licenses navigation row. Bundled third-party notices remain in resources. This version is undergoing a fresh Xcode device build; see the latest workflow and VALIDATION.md for verified results.

@@ -37,3 +37,7 @@ Before distributing a signed build, run it on a physical iPhone and verify these
 5. Switch Arabic/English, edit grams and percentage macro targets, and inspect Dynamic Type, keyboard behavior, charts and right-to-left layout.
 
 Local-model image recognition and native UI behavior remain **unverified on iPhone**. A single photograph cannot measure food weight or hidden ingredients; model ranking and reference portions must not be presented as measured accuracy.
+
+## Version 1.1 validation in progress
+
+New Foundation tests cover Health export units, latest daily weights, future/invalid records, profile capability detection, mixed generative meal output, counts, catalog-first nutrition, duplicate/impossible mass rejection, non-food refusal and bounded unknown-food estimates. Native device SDK compilation and the optional Apple Silicon runtime fixture check will be recorded after the new workflow completes. Physical-iPhone Health authorization and VLM memory/performance remain unverified.

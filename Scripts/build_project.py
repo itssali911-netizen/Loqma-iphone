@@ -72,7 +72,12 @@ main=add('group:main','PBXGroup',children=[appgroup,productgroup],sourceTree='<g
 package=add('package:ort','XCRemoteSwiftPackageReference',repositoryURL='https://github.com/microsoft/onnxruntime-swift-package-manager',requirement=dict(kind='exactVersion',version='1.24.2'))
 ort=add('ort:product','XCSwiftPackageProductDependency',package=package,productName='onnxruntime')
 ortbuild=add('ort:build','PBXBuildFile',productRef=ort)
-phases=[add('phase:sources','PBXSourcesBuildPhase',buildActionMask=2147483647,files=sources,runOnlyForDeploymentPostprocessing=0),add('phase:frameworks','PBXFrameworksBuildPhase',buildActionMask=2147483647,files=[ortbuild],runOnlyForDeploymentPostprocessing=0),add('phase:resources','PBXResourcesBuildPhase',buildActionMask=2147483647,files=resources,runOnlyForDeploymentPostprocessing=0)]
+mlxpackage=add('package:mlx-lm','XCRemoteSwiftPackageReference',repositoryURL='https://github.com/ml-explore/mlx-swift-lm',requirement=dict(kind='exactVersion',version='2.30.6'))
+mlxbase=add('package:mlx','XCRemoteSwiftPackageReference',repositoryURL='https://github.com/ml-explore/mlx-swift',requirement=dict(kind='exactVersion',version='0.30.6'))
+transformers=add('package:transformers','XCRemoteSwiftPackageReference',repositoryURL='https://github.com/huggingface/swift-transformers',requirement=dict(kind='exactVersion',version='1.1.6'))
+mlxproducts=[add('mlx:'+name,'XCSwiftPackageProductDependency',package=mlxbase if name=='MLX' else mlxpackage,productName=name) for name in ['MLX','MLXLMCommon','MLXVLM']]
+mlxbuilds=[add('mlx-build:'+str(p),'PBXBuildFile',productRef=p) for p in mlxproducts]
+phases=[add('phase:sources','PBXSourcesBuildPhase',buildActionMask=2147483647,files=sources,runOnlyForDeploymentPostprocessing=0),add('phase:frameworks','PBXFrameworksBuildPhase',buildActionMask=2147483647,files=[ortbuild]+mlxbuilds,runOnlyForDeploymentPostprocessing=0),add('phase:resources','PBXResourcesBuildPhase',buildActionMask=2147483647,files=resources,runOnlyForDeploymentPostprocessing=0)]
 
 targetsettings=dict(ASSETCATALOG_COMPILER_APPICON_NAME='AppIcon',CODE_SIGN_ENTITLEMENTS='Luqma/Luqma.entitlements',CODE_SIGN_STYLE='Automatic',DEVELOPMENT_TEAM='',CURRENT_PROJECT_VERSION='1',GENERATE_INFOPLIST_FILE='NO',INFOPLIST_FILE='Luqma/Info.plist',IPHONEOS_DEPLOYMENT_TARGET='17.0',LD_RUNPATH_SEARCH_PATHS=['$(inherited)','@executable_path/Frameworks'],MARKETING_VERSION='1.0',PRODUCT_BUNDLE_IDENTIFIER='app.luqma.diary',PRODUCT_NAME='$(TARGET_NAME)',SDKROOT='iphoneos',SUPPORTED_PLATFORMS='iphoneos iphonesimulator',SUPPORTS_MACCATALYST='NO',SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD='NO',SWIFT_VERSION='5.0',SWIFT_STRICT_CONCURRENCY='minimal',TARGETED_DEVICE_FAMILY='1')
 projectconfigs=[]
@@ -90,8 +95,9 @@ for name in ['Debug','Release']:
     targetconfigs.append(add('config:target:'+name,'XCBuildConfiguration',buildSettings=ts,name=name))
 pc=add('configs:project','XCConfigurationList',buildConfigurations=projectconfigs,defaultConfigurationIsVisible=0,defaultConfigurationName='Release')
 tc=add('configs:target','XCConfigurationList',buildConfigurations=targetconfigs,defaultConfigurationIsVisible=0,defaultConfigurationName='Release')
-target=add('target','PBXNativeTarget',buildConfigurationList=tc,buildPhases=phases,buildRules=[],dependencies=[],name='Luqma',packageProductDependencies=[ort],productName='Luqma',productReference=product,productType='com.apple.product-type.application')
-project=add('project','PBXProject',attributes=dict(BuildIndependentTargetsInParallel='YES',LastUpgradeCheck='1600',TargetAttributes={target:dict(CreatedOnToolsVersion='16.0',ProvisioningStyle='Automatic',SystemCapabilities={'com.apple.HealthKit':dict(enabled=1)})}),buildConfigurationList=pc,compatibilityVersion='Xcode 14.0',developmentRegion='ar',hasScannedForEncodings=0,knownRegions=['ar','en','Base'],mainGroup=main,packageReferences=[package],productRefGroup=productgroup,projectDirPath='',projectRoot='',targets=[target])
+for config in targetconfigs: objects[config]['buildSettings']['MARKETING_VERSION']='1.1'
+target=add('target','PBXNativeTarget',buildConfigurationList=tc,buildPhases=phases,buildRules=[],dependencies=[],name='Luqma',packageProductDependencies=[ort]+mlxproducts,productName='Luqma',productReference=product,productType='com.apple.product-type.application')
+project=add('project','PBXProject',attributes=dict(BuildIndependentTargetsInParallel='YES',LastUpgradeCheck='1600',TargetAttributes={target:dict(CreatedOnToolsVersion='16.0',ProvisioningStyle='Automatic',SystemCapabilities={'com.apple.HealthKit':dict(enabled=1)})}),buildConfigurationList=pc,compatibilityVersion='Xcode 14.0',developmentRegion='ar',hasScannedForEncodings=0,knownRegions=['ar','en','Base'],mainGroup=main,packageReferences=[package,mlxpackage,mlxbase,transformers],productRefGroup=productgroup,projectDirPath='',projectRoot='',targets=[target])
 payload=dict(archiveVersion=1,classes={},objectVersion=56,objects=objects,rootObject=project)
 (PROJECT/'project.pbxproj').write_text('// !$*UTF8*$!\n'+encode(payload)+'\n')
 scheme=PROJECT/'xcshareddata/xcschemes';scheme.mkdir(parents=True,exist_ok=True)

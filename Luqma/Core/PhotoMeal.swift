@@ -3,9 +3,9 @@ import Foundation
 struct PhotoFood: Codable, Identifiable {
     var id:String;var name:String;var nameEn:String;var grams:Double;var kcal:Double;var protein:Double;var carbs:Double;var fat:Double
     var nutrition:Nutrition { Nutrition(kcal:kcal,protein:protein,carbs:carbs,fat:fat) }
-    var food:Food { Food(catalogID:"photo:"+id,name:name,nameEn:nameEn,nutrition:nutrition,source:"USDA / reference recipe") }
+    var food:Food { Food(catalogID:"photo:"+id,name:name,nameEn:nameEn,nutrition:nutrition,source:id.hasPrefix("ai:") ? "AI nutrition estimate" : "USDA / reference recipe") }
 }
-struct PhotoPart:Identifiable { var id=UUID();var food:PhotoFood;var grams:Double;var low:Double;var high:Double;var basis:String;var tentative:Bool=false
+struct PhotoPart:Identifiable { var id=UUID();var food:PhotoFood;var grams:Double;var low:Double;var high:Double;var basis:String;var tentative:Bool=false;var count:Double?=nil
     var nutrition:Nutrition { food.nutrition.scaled(grams/100) }
     mutating func setGrams(_ value:Double) { guard value.isFinite else {return};grams=value;low=value;high=value;basis="weight" }
 }

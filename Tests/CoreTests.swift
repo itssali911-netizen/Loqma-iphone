@@ -2,6 +2,77 @@ import XCTest
 @testable import LuqmaCore
 
 final class CoreTests: XCTestCase {
+    func testHealthExportUnitsDailyPriorityAndFutureFiltering() throws {
+        let xml = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <HealthData locale="en_US">
+        <Record type="HKQuantityTypeIdentifierBodyMass" unit="kg" value="89" endDate="2026-10-08 10:00:00 +0000"/>
+        <Record type="HKQuantityTypeIdentifierBodyMass" unit="lb" value="200" endDate="2026-10-08 20:00:00 +0000"/>
+        <Record type="HKQuantityTypeIdentifierBodyMass" unit="g" value="91000" endDate="2026-10-09 08:00:00 +0000"/>
+        <Record type="HKQuantityTypeIdentifierBodyMass" unit="kg" value="92" endDate="2028-10-09 08:00:00 +0000"/>
+        <Record type="HKQuantityTypeIdentifierBodyMass" unit="kg" value="NaN" endDate="2026-10-09 09:00:00 +0000"/>
+        <Record type="HKQuantityTypeIdentifierBodyMass" unit="kg" value="500" endDate="2026-10-09 09:00:00 +0000"/>
+        <Record type="HKQuantityTypeIdentifierHeight" unit="m" value="1.81" endDate="2026-10-08 12:00:00 +0000"/>
+        <Record type="HKQuantityTypeIdentifierStepCount" unit="count" value="8000" endDate="2026-10-09 12:00:00 +0000"/>
+        </HealthData>
+        """
+        let result = try HealthImport.read(Data(xml.utf8), now: Date(timeIntervalSince1970: 1_792_000_000))
+        XCTAssertEqual(result.weights.count, 2)
+        XCTAssertEqual(result.weights[0].kg, 90.718474, accuracy: 1e-8)
+        XCTAssertEqual(result.weights[1].kg, 91)
+        XCTAssertEqual(result.weights[0].source, "Apple Health")
+        XCTAssertEqual(try XCTUnwrap(result.heightCM), 181, accuracy: 1e-8)
+        XCTAssertThrowsError(try HealthImport.read(Data("<notHealth/>".utf8)))
+        XCTAssertThrowsError(try HealthImport.read(Data("<HealthData><Record".utf8)))
+    }
+    func testProfileDetectsHealthCapabilityWithoutAssumingUnknown() throws {
+        func profile(_ entitlements: [String: Any]) throws -> Data {
+            let plist = try PropertyListSerialization.data(fromPropertyList: ["Entitlements": entitlements], format: .xml, options: 0)
+            return Data([0x30, 0x81, 0]) + plist + Data([0, 0xff])
+        }
+        XCTAssertEqual(HealthSigning.profileSupportsHealth(try profile(["com.apple.developer.healthkit": true])), true)
+        XCTAssertEqual(HealthSigning.profileSupportsHealth(try profile(["get-task-allow": true])), false)
+        XCTAssertNil(HealthSigning.profileSupportsHealth(Data("not a profile".utf8)))
+    }
+    func testGenerativeMealPreservesShawarmaDipsCountAndCatalogNutrition() throws {
+        let foods = try resource("photo-foods", [PhotoFood].self)
+        let json = """
+        {"food_present":true,"items":[
+        {"id":"chicken-shawarma","grams":420,"min_grams":320,"max_grams":550,"confidence":0.8,"count":10,"nutrition_per_100g":{"kcal":99999,"protein":99999,"carbs":0,"fat":0}},
+        {"id":"garlic-sauce","grams":45,"min_grams":25,"max_grams":65,"confidence":0.5},
+        {"id":"tahini-sauce","grams":40,"min_grams":25,"max_grams":60,"confidence":0.55}]}
+        """
+        let result = try VisionMeal.decode("```json\n" + json + "\n```", description: "", foods: foods)
+        XCTAssertEqual(result.parts.count, 3)
+        XCTAssertEqual(result.parts[0].count, 10)
+        XCTAssertEqual(result.parts[0].grams, 420)
+        XCTAssertEqual(result.parts[0].nutrition.kcal, try XCTUnwrap(foods.first { $0.id == "chicken-shawarma" }).kcal * 4.2, accuracy: 1e-8)
+        XCTAssertTrue(result.parts[1].tentative)
+        XCTAssertLessThan(result.parts[0].low, result.parts[0].grams)
+        XCTAssertGreaterThan(result.parts[0].high, result.parts[0].grams)
+    }
+    func testVisionRejectsDuplicateAndImpossibleMassAndDoesNotInventFood() throws {
+        let foods = try resource("photo-foods", [PhotoFood].self)
+        let item = "{\"id\":\"169836\",\"grams\":120,\"min_grams\":80,\"max_grams\":180,\"confidence\":0.7}"
+        XCTAssertThrowsError(try VisionMeal.decode("{\"food_present\":true,\"items\":[\(item),\(item)]}", description: "", foods: foods))
+        XCTAssertThrowsError(try VisionMeal.decode("{\"food_present\":true,\"items\":[\(item.replacingOccurrences(of: "120", with: "6000"))]}", description: "", foods: foods))
+        XCTAssertTrue(try VisionMeal.decode("{\"food_present\":false,\"items\":[]}", description: "شاورما", foods: foods).parts.isEmpty)
+        let hinted = try VisionMeal.decode("{\"food_present\":true,\"items\":[\(item)]}", description: "شاورما عربي ١٠ قطع وعلبة ثوم وعلبة طحينة", foods: foods)
+        XCTAssertTrue(hinted.parts.contains { $0.food.id == "chicken-shawarma" })
+        XCTAssertTrue(hinted.parts.first { $0.food.id == "tahini-sauce" }!.tentative)
+    }
+    func testUnknownFoodRequiresPlausibleNutritionAndIsMarkedAsAI() throws {
+        let foods = try resource("photo-foods", [PhotoFood].self)
+        let json = """
+        {"food_present":true,"items":[{"id":null,"name_ar":"وجبة محلية","name_en":"Regional meal","grams":220,"min_grams":150,"max_grams":310,"confidence":0.8,"nutrition_per_100g":{"kcal":240,"protein":12,"carbs":30,"fat":8}}]}
+        """
+        let result = try VisionMeal.decode(json, description: "", foods: foods)
+        XCTAssertEqual(result.parts.count, 1); XCTAssertTrue(result.parts[0].tentative)
+        XCTAssertEqual(result.parts[0].food.food.source, "AI nutrition estimate")
+        let invalid = json.replacingOccurrences(of: "\"fat\":8", with: "\"fat\":95")
+        let rejected = try VisionMeal.decode(invalid, description: "", foods: foods)
+        XCTAssertTrue(rejected.parts.isEmpty); XCTAssertTrue(rejected.unmatched)
+    }
     func resource<T: Decodable>(_ name:String,_ type:T.Type) throws -> T {
         let url=try XCTUnwrap(Bundle.module.url(forResource:name,withExtension:"json"));return try JSONDecoder().decode(type,from:Data(contentsOf:url))
     }

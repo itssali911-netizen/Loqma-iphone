@@ -48,6 +48,17 @@ import Combine
     func mergeHealth(_ readings: [WeightReading]) { change { s in
         for w in readings { if let i=s.weights.firstIndex(where: { $0.day == w.day }) { if s.weights[i].source == "Apple Health" && (w.timestamp ?? 0) >= (s.weights[i].timestamp ?? 0) { s.weights[i]=w } } else { s.weights.append(w) } }; s.weights.sort { $0.day < $1.day }
     }; adapt() }
+    @discardableResult func importHealthWeights(_ readings: [WeightReading]) -> Bool {
+        do {
+            var next = state
+            for w in readings {
+                if let i = next.weights.firstIndex(where: { $0.day == w.day }) {
+                    if next.weights[i].source == "Apple Health", (w.timestamp ?? 0) >= (next.weights[i].timestamp ?? 0) { next.weights[i] = w }
+                } else { next.weights.append(w) }
+            }
+            next.weights.sort { $0.day < $1.day }; try commit(next); adapt(); return true
+        } catch { report(error); return false }
+    }
     func adapt() {
         adaptiveMessage = nil
         guard state.adaptive,let plan=state.weightPlan else { return }

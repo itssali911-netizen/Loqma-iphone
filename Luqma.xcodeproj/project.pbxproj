@@ -15,6 +15,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = 6A4E15D7BD914BF2527B4EB9;
 		};
+		"02942914B4F28DE136647951" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "HealthImport.swift";
+			"sourceTree" = "<group>";
+		};
+		"08935C61F49D6812481E016D" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 02942914B4F28DE136647951;
+		};
 		"36A2BA55B038C65878A15F3F" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -45,6 +55,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = C609B5DBE6427D6BB4FA505A;
 		};
+		"08786D7FAA18CB5566A7126D" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "VisionMeal.swift";
+			"sourceTree" = "<group>";
+		};
+		"01274FBF58096C8167AFBA8E" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 08786D7FAA18CB5566A7126D;
+		};
 		"B6366F4B4273654A0E86C94C" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -59,9 +79,11 @@
 			"isa" = "PBXGroup";
 			"children" = (
 				6A4E15D7BD914BF2527B4EB9,
+				02942914B4F28DE136647951,
 				36A2BA55B038C65878A15F3F,
 				908DE38BDA6437C569E929DD,
 				C609B5DBE6427D6BB4FA505A,
+				08786D7FAA18CB5566A7126D,
 				B6366F4B4273654A0E86C94C,
 			);
 			"path" = "Core";
@@ -117,6 +139,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = 457CEDD891D8F8DC4EF9B741;
 		};
+		"C9590D10D02A9FBB9FB20F3A" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "VisionAnalyzer.swift";
+			"sourceTree" = "<group>";
+		};
+		"F00CC6E96A85F14F49D2934C" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = C9590D10D02A9FBB9FB20F3A;
+		};
 		"6B8B2B5CD808F874BF4EE1BA" = {
 			"isa" = "PBXGroup";
 			"children" = (
@@ -125,6 +157,7 @@
 				E1F4A59A8A0DC58AFC41151D,
 				7E651975D20915E3982D582C,
 				457CEDD891D8F8DC4EF9B741,
+				C9590D10D02A9FBB9FB20F3A,
 			);
 			"path" = "Services";
 			"sourceTree" = "<group>";
@@ -168,6 +201,16 @@
 		"A7BD3DF09ED09DC1D59F43D5" = {
 			"isa" = "PBXBuildFile";
 			"fileRef" = 9DE364C98BA1E4B24E65F24A;
+		};
+		"EDE663428C95380D95DE5612" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "HealthImportView.swift";
+			"sourceTree" = "<group>";
+		};
+		"831C5986D0201B1332EB575F" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = EDE663428C95380D95DE5612;
 		};
 		"D0D2BB0D0785FDA6E470FE52" = {
 			"isa" = "PBXFileReference";
@@ -226,6 +269,7 @@
 				A2C2846E141846D4239E36BE,
 				D300195B35C1D1D096360F5F,
 				9DE364C98BA1E4B24E65F24A,
+				EDE663428C95380D95DE5612,
 				D0D2BB0D0785FDA6E470FE52,
 				F7C993B4C35DD313717C0FCC,
 				6AA0F6F5943EA02A7C69472C,
@@ -295,6 +339,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = 6EB98A8AB819888921FE1785;
 		};
+		"F77E3949ED58AE5D0E009C67" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "text.json";
+			"path" = "vision-model.json";
+			"sourceTree" = "<group>";
+		};
+		"F6920C3EB0CC9DF86AF73A72" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = F77E3949ED58AE5D0E009C67;
+		};
 		"8BF729FFE074CAEE622C0292" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "folder.assetcatalog";
@@ -341,6 +395,7 @@
 				E6F8E3BF7A783F7AFB687CAC,
 				46D100BB2924E6536E452C0A,
 				6EB98A8AB819888921FE1785,
+				F77E3949ED58AE5D0E009C67,
 				8BF729FFE074CAEE622C0292,
 				A3CACB75505CC02B52B47594,
 			);
@@ -423,24 +478,79 @@
 			"isa" = "PBXBuildFile";
 			"productRef" = 5D8F5395035A2524E937E12F;
 		};
+		"6A72AD22DB4732AA77708F3C" = {
+			"isa" = "XCRemoteSwiftPackageReference";
+			"repositoryURL" = "https://github.com/ml-explore/mlx-swift-lm";
+			"requirement" = {
+				"kind" = "exactVersion";
+				"version" = "2.30.6";
+			};
+		};
+		"1FD33C1C49E45531E9257464" = {
+			"isa" = "XCRemoteSwiftPackageReference";
+			"repositoryURL" = "https://github.com/ml-explore/mlx-swift";
+			"requirement" = {
+				"kind" = "exactVersion";
+				"version" = "0.30.6";
+			};
+		};
+		"620D6CCB6234AA740AB00071" = {
+			"isa" = "XCRemoteSwiftPackageReference";
+			"repositoryURL" = "https://github.com/huggingface/swift-transformers";
+			"requirement" = {
+				"kind" = "exactVersion";
+				"version" = "1.1.6";
+			};
+		};
+		"9464051CF2608D4D871E64E8" = {
+			"isa" = "XCSwiftPackageProductDependency";
+			"package" = 1FD33C1C49E45531E9257464;
+			"productName" = "MLX";
+		};
+		"2321E2DD840236307218FC9E" = {
+			"isa" = "XCSwiftPackageProductDependency";
+			"package" = 6A72AD22DB4732AA77708F3C;
+			"productName" = "MLXLMCommon";
+		};
+		"CF955115CCB30E2819669342" = {
+			"isa" = "XCSwiftPackageProductDependency";
+			"package" = 6A72AD22DB4732AA77708F3C;
+			"productName" = "MLXVLM";
+		};
+		"F5A96A3C74A801FC651BF408" = {
+			"isa" = "PBXBuildFile";
+			"productRef" = 9464051CF2608D4D871E64E8;
+		};
+		"87033805866ECC7565D124E1" = {
+			"isa" = "PBXBuildFile";
+			"productRef" = 2321E2DD840236307218FC9E;
+		};
+		"136C32846819F40D17A353A2" = {
+			"isa" = "PBXBuildFile";
+			"productRef" = CF955115CCB30E2819669342;
+		};
 		"9261F04E014268C1FB6C1C5E" = {
 			"isa" = "PBXSourcesBuildPhase";
 			"buildActionMask" = 2147483647;
 			"files" = (
 				E426F7E1598FC1DD6397C156,
+				08935C61F49D6812481E016D,
 				828263A8C5D85FDB23435C05,
 				B66646D43CB4EE4B77D98999,
 				89C3439FD20A455E08E90E08,
+				01274FBF58096C8167AFBA8E,
 				93782E0C2B8AA17EC11F6DB7,
 				689DD9D6E6993C4CAAA8241E,
 				D9558DDAB92323A09F87AC15,
 				5C7AE550CCCCDD674418B167,
 				2C6CF96DB19F435964A39901,
 				AC829D744F74E1854AC3E8EA,
+				F00CC6E96A85F14F49D2934C,
 				FF71C1135CA6799BE2C58C42,
 				C4B8B7DD03FF0230596ED1A2,
 				B553520D878720AD0D41668E,
 				A7BD3DF09ED09DC1D59F43D5,
+				831C5986D0201B1332EB575F,
 				A749EA7132C53F1EF78CE564,
 				509FDDF0896EE88C4399B1B9,
 				3F6D0EF991AE340530BAC8B3,
@@ -455,6 +565,9 @@
 			"buildActionMask" = 2147483647;
 			"files" = (
 				9466729DFB099D221AD2BB5F,
+				F5A96A3C74A801FC651BF408,
+				87033805866ECC7565D124E1,
+				136C32846819F40D17A353A2,
 			);
 			"runOnlyForDeploymentPostprocessing" = 0;
 		};
@@ -468,6 +581,7 @@
 				EFC0C7B48C916161D27B0008,
 				4BFBBCDB8305B721E7B3C3E8,
 				8D7DA448D792B1D6FC06AEB4,
+				F6920C3EB0CC9DF86AF73A72,
 				5522B3B3B2EACC1C8F9BEAAC,
 				D70E903F5CEE6AF46A292C3F,
 			);
@@ -512,7 +626,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				"MARKETING_VERSION" = "1.0";
+				"MARKETING_VERSION" = "1.1";
 				"PRODUCT_BUNDLE_IDENTIFIER" = "app.luqma.diary";
 				"PRODUCT_NAME" = "$(TARGET_NAME)";
 				"SDKROOT" = "iphoneos";
@@ -560,7 +674,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				"MARKETING_VERSION" = "1.0";
+				"MARKETING_VERSION" = "1.1";
 				"PRODUCT_BUNDLE_IDENTIFIER" = "app.luqma.diary";
 				"PRODUCT_NAME" = "$(TARGET_NAME)";
 				"SDKROOT" = "iphoneos";
@@ -608,6 +722,9 @@
 			"name" = "Luqma";
 			"packageProductDependencies" = (
 				5D8F5395035A2524E937E12F,
+				9464051CF2608D4D871E64E8,
+				2321E2DD840236307218FC9E,
+				CF955115CCB30E2819669342,
 			);
 			"productName" = "Luqma";
 			"productReference" = A8792157CB4F27FB949C035F;
@@ -642,6 +759,9 @@
 			"mainGroup" = AA0596BBDB4DCC95D5D4F10C;
 			"packageReferences" = (
 				8BCE6256516733023D66F86F,
+				6A72AD22DB4732AA77708F3C,
+				1FD33C1C49E45531E9257464,
+				620D6CCB6234AA740AB00071,
 			);
 			"productRefGroup" = 6F7199ED7B63CDA338A0FB82;
 			"projectDirPath" = "";
