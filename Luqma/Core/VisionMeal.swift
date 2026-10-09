@@ -80,6 +80,7 @@ enum VisionMeal {
             // Model confidence is not a calibrated accuracy score. Keep honest portion bounds.
             let low = min(item.min_grams, item.grams * 0.5), high = max(item.max_grams, item.grams * 1.8)
             var part = PhotoPart(food: food, grams: item.grams, low: low, high: high, basis: contextual ? "description" : "vision", tentative: contextual || catalog == nil || item.confidence < 0.65 || item.usedRangeMidpoint)
+            if food.id == "172816", label.contains("flatbread"), !label.contains("pita") { part.tentative = true }
             part.count = item.count
             if !unique, let index = parts.firstIndex(where: { $0.food.id == food.id }) {
                 parts[index].grams += part.grams; parts[index].low += part.low; parts[index].high += part.high
@@ -113,6 +114,7 @@ enum VisionMeal {
         for index in parts.indices {
             if PhotoMeal.family(parts[index].food.id) == "sauce", !described.contains(parts[index].food.id) { parts[index].tentative = true }
             if let weighed = hints.parts.first(where: { $0.food.id == parts[index].food.id && $0.basis == "weight" }) { parts[index].setGrams(weighed.grams) }
+            if let statedCount = hints.parts.first(where: { $0.food.id == parts[index].food.id })?.count { parts[index].count = statedCount }
         }
         for hint in hints.parts where !seen.contains(hint.food.id) {
             var added = hint; added.tentative = true; added.basis = "description"; parts.append(added); seen.insert(hint.food.id); unmatched = true
@@ -145,6 +147,9 @@ enum VisionMeal {
         }
         let modifiers: Set<String> = ["pieces", "piece", "slices", "slice", "strips", "strip", "stack", "stacked", "pile", "of", "fresh", "plain", "creamy", "white", "small", "large", "a", "some"]
         let clean = text.split(separator: " ").map(String.init).filter { !modifiers.contains($0) }.joined(separator: " ")
+        // Generic plain flatbread uses the declared pita reference, marked
+        // tentative by decode. Filled flatbreads remain complete mixed dishes.
+        if clean == "flatbread" { return foods.first { $0.id == "172816" } }
         return foods.first { food in
             ([food.name, food.nameEn.components(separatedBy: " · ").first ?? food.nameEn] + (PhotoMeal.aliases[food.id] ?? [])).contains { alias in
                 let candidate = TextSearch.normalized(alias)

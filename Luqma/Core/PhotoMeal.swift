@@ -56,13 +56,13 @@ enum PhotoMeal {
         for m in candidates.sorted(by:{$0.range.length>$1.range.length}) { if !result.contains(where:{NSIntersectionRange($0.range,m.range).length>0}) {result.append(m)} }
         return result.sorted{$0.range.location<$1.range.location}
     }
-    static func quantity(_ raw:String,food:PhotoFood) throws -> (grams:Double,low:Double,high:Double,basis:String)? {
+    static func quantity(_ raw:String,food:PhotoFood) throws -> (grams:Double,low:Double,high:Double,basis:String,count:Double?)? {
         var text=TextSearch.normalized(raw).replacingOccurrences(of:"٫",with:".")
         for (word,n) in ["عشره":"10","عشر":"10","خمسه":"5","خمس":"5","اربعه":"4","اربع":"4","ثلاثه":"3","ثلاث":"3","اثنين":"2","اثنتين":"2","واحده":"1","واحد":"1","ten":"10","two":"2","one":"1"] { text=text.replacingOccurrences(of:"(?<![\\p{L}\\p{N}])"+word+"(?![\\p{L}\\p{N}])",with:n,options:.regularExpression) }
         func match(_ pattern:String) -> [String]? { guard let re=try? NSRegularExpression(pattern:pattern),let m=re.firstMatch(in:text,range:NSRange(text.startIndex...,in:text)) else{return nil};return (1..<m.numberOfRanges).compactMap{Range(m.range(at:$0),in:text).map{String(text[$0])}} }
         if text.range(of:"-\\s*\\d",options:.regularExpression) != nil { throw AppError.invalid("راجع الكمية في وصف الوجبة.", "Check the quantity in the description.") }
         if let m=match("([0-9]+(?:\\.[0-9]+)?)\\s*(كيلو(?:جرام|غرام)?|kg|جرام|غرام|قرام|جم|غم|grams?|g|مل|ml)(?![\\p{L}])"),let value=Double(m[0]) {
-            let grams=value*(m[1].hasPrefix("كيلو") || m[1]=="kg" ? 1000:1);guard grams>0,grams<=3000 else{throw AppError.invalid("راجع الوزن المكتوب.","Check the supplied weight.")};return (grams,grams,grams,"weight")
+            let grams=value*(m[1].hasPrefix("كيلو") || m[1]=="kg" ? 1000:1);guard grams>0,grams<=3000 else{throw AppError.invalid("راجع الوزن المكتوب.","Check the supplied weight.")};return (grams,grams,grams,"weight",nil)
         }
         var count:Double?,unit=""
         if let m=match("([0-9]+(?:\\.[0-9]+)?)\\s*(قطعه|قطع|حبه|حبات|علبه|علب|كوب|اكواب|ملعقه|ملاعق|pieces?|pcs|slices?|cups?|containers?|wraps?|sandwiches?|tbsp|tablespoons?|tsp)(?![\\p{L}])") { count=Double(m[0]);unit=m[1] }
@@ -78,7 +78,7 @@ enum PhotoMeal {
         else if family(food.id)=="wrap" {grams=unit.contains("wrap") || unit.contains("sandwich") ? 165:33}
         else if family(food.id)=="egg" {grams=50}
         else if family(food.id)=="sauce" {grams=35}
-        grams *= count;guard grams<=3000 else{throw AppError.invalid("الكمية أكبر من نطاق التحليل.","The portion exceeds the analysis range.")};return (grams,grams*0.65,grams*1.5,"count")
+        grams *= count;guard grams<=3000 else{throw AppError.invalid("الكمية أكبر من نطاق التحليل.","The portion exceeds the analysis range.")};return (grams,grams*0.65,grams*1.5,"count",count)
     }
     static func estimate(_ regions:[PhotoRegion],description:String,foods:[PhotoFood],confirmedFood:Bool=false) throws -> PhotoResult {
         guard confirmedFood || regions.contains(where:{$0.isFood}) else { return PhotoResult(parts:[],sauceSuggested:false,unmatched:false) }
@@ -96,8 +96,8 @@ enum PhotoMeal {
         for (i,m) in found.enumerated() {
             let start=i>0 ? NSMaxRange(found[i-1].range):0,end=i+1<found.count ? found[i+1].range.location:ns.length
             let before=clauses(ns.substring(with:NSRange(location:start,length:m.range.location-start))).last ?? "",after=clauses(ns.substring(with:NSRange(location:NSMaxRange(m.range),length:end-NSMaxRange(m.range)))).first ?? ""
-            var part=reference(m.food);if let q=try quantity(before+" "+after,food:m.food){part.grams=q.grams;part.low=q.low;part.high=q.high;part.basis=q.basis}
-            if let index=parts.firstIndex(where:{$0.food.id==part.food.id}) {parts[index].grams+=part.grams;parts[index].low+=part.low;parts[index].high+=part.high} else {parts.append(part)}
+            var part=reference(m.food);if let q=try quantity(before+" "+after,food:m.food){part.grams=q.grams;part.low=q.low;part.high=q.high;part.basis=q.basis;part.count=q.count}
+            if let index=parts.firstIndex(where:{$0.food.id==part.food.id}) {parts[index].grams+=part.grams;parts[index].low+=part.low;parts[index].high+=part.high;if let a=parts[index].count,let b=part.count{parts[index].count=a+b}else{parts[index].count=nil}} else {parts.append(part)}
         }
         struct Vote { var food:PhotoFood;var score:Double;var count:Int;var tentative:Bool }
         var votes:[String:Vote]=[:]

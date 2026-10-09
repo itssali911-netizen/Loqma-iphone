@@ -102,6 +102,8 @@ final class CoreTests: XCTestCase {
         XCTAssertNil(VisionMeal.matchName("pita wrap with unknown filling", foods: foods))
         XCTAssertEqual(VisionMeal.matchName("Pita bread stack", foods: foods)?.id, "172816")
         XCTAssertEqual(VisionMeal.matchName("Stack of plain pita breads", foods: foods)?.id, "172816")
+        XCTAssertEqual(VisionMeal.matchName("Stack of plain flatbreads", foods: foods)?.id, "172816")
+        XCTAssertNil(VisionMeal.matchName("Flatbread with chicken and sauce", foods: foods))
         XCTAssertEqual(VisionMeal.matchName("Grilled chicken strips", foods: foods)?.id, "171534")
         let generic = """
         {"food_present":true,"items":[
@@ -112,6 +114,7 @@ final class CoreTests: XCTestCase {
         let context = try VisionMeal.decode(generic, description: "شاورما عربي ١٠ قطع وعلبة ثوم وعلبة طحينة", foods: foods)
         XCTAssertEqual(context.parts.count, 3)
         XCTAssertEqual(try XCTUnwrap(context.parts.first { $0.food.id == "chicken-shawarma" }).grams, 270)
+        XCTAssertEqual(try XCTUnwrap(context.parts.first { $0.food.id == "chicken-shawarma" }).count, 10)
         XCTAssertEqual(try XCTUnwrap(context.parts.first { $0.food.id == "garlic-sauce" }).grams, 35)
         XCTAssertEqual(try XCTUnwrap(context.parts.first { $0.food.id == "tahini-sauce" }).grams, 35)
         XCTAssertEqual(context.parts.reduce(0) { $0 + $1.grams }, 340)
