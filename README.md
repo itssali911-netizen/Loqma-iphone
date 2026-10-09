@@ -2,17 +2,29 @@
 
 Build through `Scripts/build_ios.py` on Xcode 26.3+; iPhone / iOS 17+. Complete Arabic setup and migration instructions: **README-AR.md**.
 
-**The iPhone build succeeded:** [version 1.1, build 18 and IPA download](https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/37945751234). Download the `Luqma-sideload-18` artifact, unzip it and save `Luqma-Sideload.ipa` in iPhone Files. In AltStore Classic, open **My Apps → +** and select the IPA while AltServer is running on your connected computer. See **BUILD-WINDOWS-AR.md** for Arabic installation and renewal instructions.
+**Version 1.2 automatic Health sync is implemented in source.** The latest source verification, [build 21](https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/37968869599), failed before any build step started and has no logs or IPA. Its startup failure reason was not available through the repository connector; check the run's Annotations before rerunning. Do not treat this as a verified final installation.
+
+The earlier [build 19](https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/37965633305) did compile the iPhoneOS app and produce a version 1.2 IPA, but it predates the final SwiftUI foreground-lifecycle correction and its full workflow did not pass the vision fixture check. It is retained as a build record, not promoted as the final update. **VALIDATION.md** identifies exactly what was verified.
+
+The proposed free Windows path for automatic Apple Health is Impactor 2.6.5, using the same Apple account and installed bundle identifier; follow **HEALTH-SETUP-AR.md** after a final IPA is built. **BUILD-WINDOWS-AR.md** covers general installation and renewal.
 
 The GitHub Actions workflow uses macOS and Xcode 26.3. Source pushes to `main` start a `sideload` device build for personal re-signing with AltStore; this mode needs no Apple distribution certificate. Manual `check` builds both simulator and device SDK targets without signing; `ad-hoc` / `app-store` export an Apple-signed IPA only after valid signing inputs are configured.
 
-This is a native SwiftUI app using HealthKit, AVFoundation, Vision, Swift Charts on-device ONNX Runtime and MLX vision inference. The built `Luqma-Sideload.ipa` must be re-signed by AltStore using the user's Apple account before installation. Free-account signatures expire after seven days; keep Developer Mode enabled while using these apps. No Apple account, signing certificate, API key or ChatGPT subscription is embedded. Camera, Health access and model inference still need physical-iPhone verification.
+This is a native SwiftUI app using HealthKit, AVFoundation, Vision, Swift Charts, on-device ONNX Runtime and MLX vision inference. The built IPA needs personal re-signing before installation. Automatic Health requires both HealthKit and HealthKit Background Delivery in the final Apple profile/signature. Free-account signatures expire after seven days; keep Developer Mode enabled while using these apps. No Apple account, signing certificate, API key or ChatGPT subscription is embedded. Camera, Health access and model inference still need physical-iPhone verification.
 
 ```sh
 bash Scripts/verify.sh
 ```
 
-Core tests are a standalone Swift package. The cloud build passed 17 core tests, 16 build-tool tests, iPhoneOS Release compilation and local signature verification. The same vision service also passed a mixed-food check with a separate dip component, followed by cached, download-disabled inference rejecting a blank image on Apple Silicon Metal. See **VALIDATION.md** for the verified build commit, IPA checksum, recognition limitations and remaining physical-device checks.
+Core tests are a standalone Swift package. Build 19 passed 20 core tests, 16 build-tool tests, iPhoneOS Release compilation and local signature verification. The later source-only lifecycle correction has not yet been compiled by Xcode because the hosted job did not start. See **VALIDATION.md** for the verified build commit, IPA checksum, vision runtime results and remaining physical-device checks.
+
+## Version 1.2: automatic Apple Health
+
+Observer queries are installed synchronously in the application delegate at launch, including a HealthKit background launch. Weight changes use an anchored query: additions/deletions update the daily chart while preserving manual readings. The cursor and records are saved atomically with the diary, and an empty/denied read never erases history. Events arriving during a read are queued and acknowledged once after processing. Height and today's HealthKit cumulative steps/active energy update automatically. Cached activity appears in the diary; a foreground 30-second safety refresh handles delayed notifications and midnight. Opening the app triggers a full refresh.
+
+Both requested Health entitlements are embedded in the local package. Background delivery requests `.immediate`, but iOS controls delivery and throttles background step-count notifications to at most hourly. The panel reports whether registration succeeded; a signature that only allows foreground reads does not pretend background is enabled. Locked protected data is left intact and retried after unlocking. Disconnect stops observers, polling and background delivery. Activity calories are informational and never added twice to the weight plan.
+
+Impactor 2.6.5 source was checked for entitlement-to-capability requests and profile-based signing. It is the proposed free Windows installation path, with weekly renewal. Apple's acceptance of a particular account/profile and actual background updates have not been tested on a physical iPhone here. The one-time Health permission dialog still needs user consent. **HEALTH-SETUP-AR.md** includes installation, identifier preservation and an on-device verification checklist.
 
 ## Version 1.1 changes
 
