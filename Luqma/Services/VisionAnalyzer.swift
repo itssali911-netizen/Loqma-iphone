@@ -37,7 +37,8 @@ actor VisionAnalyzer {
         // Qwen's Instruct evaluation uses sampling (temperature 0.7 / top-p 0.8).
         // Greedy decoding looped on real fixtures. A modest repetition penalty
         // also prevents a repeated item from consuming the whole output budget.
-        let session = ChatSession(model, generateParameters: .init(maxTokens: 700, temperature: 0.7, topP: 0.8, repetitionPenalty: 1.08, repetitionContextSize: 128, prefillStepSize: 256), processing: .init(resize: CGSize(width: 896, height: 896)))
+        let pixels: CGFloat = ProcessInfo.processInfo.physicalMemory >= 11_000_000_000 ? 896 : 672
+        let session = ChatSession(model, generateParameters: .init(maxTokens: 700, temperature: 0.7, topP: 0.8, repetitionPenalty: 1.08, repetitionContextSize: 128, prefillStepSize: 128), processing: .init(resize: CGSize(width: pixels, height: pixels)))
         progress("vision")
         do {
             // Observe first, without a menu or numeric example to copy. Ground the
@@ -71,7 +72,7 @@ actor VisionAnalyzer {
             if let first, first.parts.isEmpty { return first }
             progress("audit")
             var audit = ""
-            let correction = first == nil ? "The prior JSON failed validation. Repair duplicate dishes, missing grams or malformed JSON. " : ""
+            let correction = first == nil ? "The prior JSON failed validation. Repair duplicates and malformed fields. ALL three weight fields must be NUMBERS, NEVER null. Estimate typical portion masses and use broad numeric bounds if scale is uncertain; exact measurement is not required. " : ""
             for try await chunk in session.streamResponse(to: correction + "Reinspect the original photograph and audit your JSON. Include ONLY observed dishes, not colors of plates. Remove invented sides and repeated foods. Aggregate identical dishes into ONE item with total weight. Include filled wraps as complete dishes, their separate sides and dip containers. Do not separately count ingredients inside a wrap. Return complete compact JSON only, with at most 8 distinct items. Every item MUST have name_en, grams, min_grams, max_grams and count. No IDs. Preserve factual context and uncertainty.") {
                 try Task.checkCancellation(); audit += chunk
                 guard audit.utf8.count <= 60_000 else { throw VisionMeal.invalid }

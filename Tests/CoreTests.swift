@@ -96,6 +96,7 @@ final class CoreTests: XCTestCase {
         XCTAssertThrowsError(try VisionMeal.decode(contradiction, description: "", foods: foods))
         XCTAssertNil(VisionMeal.matchName("orange plate", foods: foods))
         XCTAssertNil(VisionMeal.matchName("pita wrap with unknown filling", foods: foods))
+        XCTAssertEqual(VisionMeal.matchName("Pita bread stack", foods: foods)?.id, "172816")
     }
     func resource<T: Decodable>(_ name:String,_ type:T.Type) throws -> T {
         let url=try XCTUnwrap(Bundle.module.url(forResource:name,withExtension:"json"));return try JSONDecoder().decode(type,from:Data(contentsOf:url))
