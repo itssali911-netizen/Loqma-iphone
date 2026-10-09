@@ -1,0 +1,201 @@
+{
+  "retrieved": "2026-10-09",
+  "sources": [
+    {
+      "url": "https://www.niddk.nih.gov/bwp/services/baseline.js",
+      "sha256": "b985de553cbd123c1f14a0beb870acc2a42e297c7858fe35d7484ebbef0872c9"
+    },
+    {
+      "url": "https://www.niddk.nih.gov/bwp/services/bodychange.js",
+      "sha256": "5d03f696da21723391f385195b5c41c16b2c66239aeb839d89d0043aa00f21ba"
+    },
+    {
+      "url": "https://www.niddk.nih.gov/bwp/services/dailyparams.js",
+      "sha256": "074b3a1cd2435e819344ebaf00f4ad359ca187f8b9edcf97ce6db87029cc9aae"
+    },
+    {
+      "url": "https://www.niddk.nih.gov/bwp/services/bodymodel.js",
+      "sha256": "8f55c0ab1d809c6672f84438d9bc4960af9b7354daac613823ad44366b9e3da5"
+    },
+    {
+      "url": "https://www.niddk.nih.gov/bwp/services/intervention.js",
+      "sha256": "015db9386f7704b2b44c20c7cf09266634d8b77c4bb44162208cb5ed824915e8"
+    }
+  ],
+  "cases": [
+    {
+      "input": {
+        "sex": "male",
+        "age": 30,
+        "height": 180,
+        "weight": 90,
+        "targetWeight": 80,
+        "startDay": "2026-10-09",
+        "targetDay": "2027-04-07",
+        "pal": 1.6,
+        "activityChange": 0,
+        "bodyFat": null,
+        "restingCalories": null,
+        "carbPercent": 50,
+        "sodium": 4000,
+        "specialCase": false
+      },
+      "expected": {
+        "calories": 2415.081787109375,
+        "maintenance": 3010.4,
+        "maintenanceAtGoal": 2768.3072538229285,
+        "weight": 80.00000156700898,
+        "fat": 15.893287191149668,
+        "lean": 64.82704640217749,
+        "glycogen": 0.4478409713306273,
+        "water": -0.5273436202414962,
+        "therm": 338.1116672156158
+      }
+    },
+    {
+      "input": {
+        "sex": "female",
+        "age": 35,
+        "height": 165,
+        "weight": 78,
+        "targetWeight": 68,
+        "startDay": "2026-10-09",
+        "targetDay": "2027-04-07",
+        "pal": 1.6,
+        "activityChange": 0,
+        "bodyFat": null,
+        "restingCalories": null,
+        "carbPercent": 50,
+        "sodium": 4000,
+        "specialCase": false
+      },
+      "expected": {
+        "calories": 1760.693359375,
+        "maintenance": 2363.632,
+        "maintenanceAtGoal": 2150.7919804329545,
+        "weight": 67.99992643629618,
+        "fat": 22.392203866467074,
+        "lean": 46.54126105771559,
+        "glycogen": 0.43154087413158215,
+        "water": -0.6802397221733332,
+        "therm": 246.49729011079242
+      }
+    },
+    {
+      "input": {
+        "sex": "male",
+        "age": 30,
+        "height": 180,
+        "weight": 70,
+        "targetWeight": 75,
+        "startDay": "2026-10-09",
+        "targetDay": "2027-02-06",
+        "pal": 1.6,
+        "activityChange": 0,
+        "bodyFat": null,
+        "restingCalories": null,
+        "carbPercent": 50,
+        "sodium": 4000,
+        "specialCase": false
+      },
+      "expected": {
+        "calories": 3063.5498046875,
+        "maintenance": 2690.7200000000007,
+        "maintenanceAtGoal": 2831.9716431193065,
+        "weight": 74.99990915679378,
+        "fat": 12.812076493394267,
+        "lean": 61.69432299780793,
+        "glycogen": 0.533516952249549,
+        "water": 0.3694969422682395,
+        "therm": 428.88709347925493
+      }
+    },
+    {
+      "input": {
+        "sex": "male",
+        "age": 30,
+        "height": 180,
+        "weight": 90,
+        "targetWeight": 80,
+        "startDay": "2026-10-09",
+        "targetDay": "2027-04-07",
+        "pal": 1.8,
+        "activityChange": 20,
+        "bodyFat": null,
+        "restingCalories": null,
+        "carbPercent": 50,
+        "sodium": 4000,
+        "specialCase": false
+      },
+      "expected": {
+        "calories": 3028.52783203125,
+        "maintenance": 3386.7000000000003,
+        "maintenanceAtGoal": 3363.226877561437,
+        "weight": 79.99999860167101,
+        "fat": 15.68964882284131,
+        "lean": 64.69293194181492,
+        "glycogen": 0.47282172711121534,
+        "water": -0.28202255329671966,
+        "therm": 423.99402705426326
+      }
+    },
+    {
+      "input": {
+        "sex": "female",
+        "age": 30,
+        "height": 170,
+        "weight": 70,
+        "targetWeight": 70,
+        "startDay": "2026-10-09",
+        "targetDay": "2027-04-07",
+        "pal": 1.6,
+        "activityChange": 0,
+        "bodyFat": null,
+        "restingCalories": null,
+        "carbPercent": 50,
+        "sodium": 4000,
+        "specialCase": false
+      },
+      "expected": {
+        "calories": 2325.1200000000003,
+        "maintenance": 2325.1200000000003,
+        "maintenanceAtGoal": 2325.120000000001,
+        "weight": 70,
+        "fat": 20.686442033182598,
+        "lean": 49.3135579668174,
+        "glycogen": 0.5,
+        "water": 0,
+        "therm": 325.5168000000001
+      }
+    },
+    {
+      "input": {
+        "sex": "male",
+        "age": 30,
+        "height": 180,
+        "weight": 90,
+        "targetWeight": 80,
+        "startDay": "2026-10-09",
+        "targetDay": "2027-04-07",
+        "pal": 1.6,
+        "activityChange": 0,
+        "bodyFat": 24,
+        "restingCalories": 1900,
+        "carbPercent": 45,
+        "sodium": 2500,
+        "specialCase": false
+      },
+      "expected": {
+        "calories": 2440.185546875,
+        "maintenance": 3040,
+        "maintenanceAtGoal": 2794.60734718158,
+        "weight": 79.99998655426961,
+        "fat": 15.602643319165503,
+        "lean": 65.01736995552069,
+        "glycogen": 0.4479655718087101,
+        "water": -0.4274993361088267,
+        "therm": 341.6261952218853
+      }
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+Meal photos are processed on this device in local mode, never sent to a model server.
+Recognition: OpenAI CLIP ViT-B/32, converted to ONNX by Xenova.
+Regional recognition: OpenAI CLIP ViT-B/16, converted to ONNX by Xenova.
+Regional model: https://huggingface.co/Xenova/clip-vit-base-patch16
+Regional pinned revision: 342fdf2f67aded64d138ff074745fb4a5d2bba5f
+Model: https://huggingface.co/Xenova/clip-vit-base-patch32
+Pinned revision: d15189d7028b43f1d3e65039190477f6af591c2a
+CLIP license (MIT): https://github.com/openai/CLIP/blob/main/LICENSE
+Transformers.js (Apache-2.0): https://github.com/huggingface/transformers.js
+ONNX Runtime (MIT): https://github.com/microsoft/onnxruntime
+Nutrition: public-domain USDA FoodData Central SR Legacy (2018).
+Portions, chicken/rice, shawarma, garlic sauce and tahini sauce recipes are declared reference assumptions, not image measurements or restaurant labels.
+Similarity scores and calorie ranges are not calibrated confidence intervals.

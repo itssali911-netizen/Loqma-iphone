@@ -1,0 +1,36 @@
+Swift 6.1.2, x86_64-unknown-linux-gnu, Swift 5 language mode
+Test Suite 'All tests' started at 2026-10-09 00:57:40.541
+Test Suite 'debug.xctest' started at 2026-10-09 00:57:40.546
+Test Suite 'CoreTests' started at 2026-10-09 00:57:40.546
+Test Case 'CoreTests.testCatalogDecodesAndArabicSearchNormalizes' started at 2026-10-09 00:57:40.546
+Test Case 'CoreTests.testCatalogDecodesAndArabicSearchNormalizes' passed (0.007 seconds)
+Test Case 'CoreTests.testMacroCaloriesConservedInGramsAndPercent' started at 2026-10-09 00:57:40.553
+Test Case 'CoreTests.testMacroCaloriesConservedInGramsAndPercent' passed (0.004 seconds)
+Test Case 'CoreTests.testMealPrepByCookedWeight' started at 2026-10-09 00:57:40.557
+Test Case 'CoreTests.testMealPrepByCookedWeight' passed (0.003 seconds)
+Test Case 'CoreTests.testNativeBackupRoundTripMergeAndInvalidData' started at 2026-10-09 00:57:40.560
+Test Case 'CoreTests.testNativeBackupRoundTripMergeAndInvalidData' passed (0.014 seconds)
+Test Case 'CoreTests.testNegationAndSauceNeedsConfirmation' started at 2026-10-09 00:57:40.574
+Test Case 'CoreTests.testNegationAndSauceNeedsConfirmation' passed (0.228 seconds)
+Test Case 'CoreTests.testOfficialNIDDKScenarios' started at 2026-10-09 00:57:40.802
+Test Case 'CoreTests.testOfficialNIDDKScenarios' passed (0.046 seconds)
+Test Case 'CoreTests.testServingAndUnits' started at 2026-10-09 00:57:40.848
+Test Case 'CoreTests.testServingAndUnits' passed (0.0 seconds)
+Test Case 'CoreTests.testShawarmaDescriptionDoesNotCollapseToFries' started at 2026-10-09 00:57:40.848
+Test Case 'CoreTests.testShawarmaDescriptionDoesNotCollapseToFries' passed (0.325 seconds)
+Test Case 'CoreTests.testSixtyGramMacrosAndEditingInPlace' started at 2026-10-09 00:57:41.173
+Test Case 'CoreTests.testSixtyGramMacrosAndEditingInPlace' passed (0.009 seconds)
+Test Case 'CoreTests.testWebsiteBackupMigration' started at 2026-10-09 00:57:41.182
+Test Case 'CoreTests.testWebsiteBackupMigration' passed (0.005 seconds)
+Test Case 'CoreTests.testWeightAverageAndPlanGuards' started at 2026-10-09 00:57:41.187
+Test Case 'CoreTests.testWeightAverageAndPlanGuards' passed (0.011 seconds)
+Test Suite 'CoreTests' passed at 2026-10-09 00:57:41.198
+	 Executed 11 tests, with 0 failures (0 unexpected) in 0.652 (0.652) seconds
+Test Suite 'debug.xctest' passed at 2026-10-09 00:57:41.198
+	 Executed 11 tests, with 0 failures (0 unexpected) in 0.652 (0.652) seconds
+Test Suite 'All tests' passed at 2026-10-09 00:57:41.198
+	 Executed 11 tests, with 0 failures (0 unexpected) in 0.652 (0.652) seconds
+◇ Test run started.
+↳ Testing Library Version: 6.1.2 (d6b70f9ef9eb207)
+↳ Target Platform: x86_64-unknown-linux-gnu
+✔ Test run with 0 tests passed after 0.001 seconds.

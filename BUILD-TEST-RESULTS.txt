@@ -1,0 +1,21 @@
+test_existing_output_is_not_overwritten (test_build.BuildTests.test_existing_output_is_not_overwritten) ... ok
+test_failed_sdk_build_stops_without_success_summary (test_build.BuildTests.test_failed_sdk_build_stops_without_success_summary) ... ok
+test_sideload_packages_device_only_without_apple_secrets_or_claiming_signed_install (test_build.BuildTests.test_sideload_packages_device_only_without_apple_secrets_or_claiming_signed_install) ... ok
+test_signed_export_checks_embedded_profile_and_never_uploads (test_build.BuildTests.test_signed_export_checks_embedded_profile_and_never_uploads) ... ok
+test_simulator_app_cannot_be_packaged_for_iphone_sideloading (test_build.BuildTests.test_simulator_app_cannot_be_packaged_for_iphone_sideloading) ... ok
+test_unsigned_check_builds_both_sdks_without_claiming_an_ipa (test_build.BuildTests.test_unsigned_check_builds_both_sdks_without_claiming_an_ipa) ... ok
+test_ad_hoc_export_keeps_health_and_uses_registered_devices (test_signing.SigningTests.test_ad_hoc_export_keeps_health_and_uses_registered_devices) ... ok
+test_app_store_export_is_not_direct_sideload (test_signing.SigningTests.test_app_store_export_is_not_direct_sideload) ... ok
+test_expired_development_enterprise_and_invalid_uuid_rejected (test_signing.SigningTests.test_expired_development_enterprise_and_invalid_uuid_rejected) ... ok
+test_healthkit_missing_team_bundle_platform_and_wildcard_rejected (test_signing.SigningTests.test_healthkit_missing_team_bundle_platform_and_wildcard_rejected) ... ok
+test_identity_must_include_matching_private_key_and_distribution_certificate (test_signing.SigningTests.test_identity_must_include_matching_private_key_and_distribution_certificate) ... ok
+test_legacy_app_prefix_can_differ_from_team (test_signing.SigningTests.test_legacy_app_prefix_can_differ_from_team) ... ok
+test_linux_cannot_claim_to_compile_ios (test_signing.SigningTests.test_linux_cannot_claim_to_compile_ios) ... ok
+test_secrets_not_in_build_process_environment (test_signing.SigningTests.test_secrets_not_in_build_process_environment) ... ok
+test_signing_cleanup_runs_after_build_failure_and_restores_existing_profiles (test_signing.SigningTests.test_signing_cleanup_runs_after_build_failure_and_restores_existing_profiles) ... ok
+test_strict_base64_private_permissions_and_no_overwrite (test_signing.SigningTests.test_strict_base64_private_permissions_and_no_overwrite) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 0.023s
+
+OK
