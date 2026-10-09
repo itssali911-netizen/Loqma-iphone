@@ -34,12 +34,28 @@ actor VisionAnalyzer {
         // Local directory loading prevents tokenizer/model network requests after installation.
         let model = try await VLMModelFactory.shared.loadContainer(configuration: ModelConfiguration(directory: folder))
         try Task.checkCancellation()
-        let session = ChatSession(model, generateParameters: .init(maxTokens: 2000, temperature: 0, prefillStepSize: 256), processing: .init(resize: CGSize(width: 896, height: 896)))
+        let session = ChatSession(model, generateParameters: .init(maxTokens: 700, temperature: 0, prefillStepSize: 256), processing: .init(resize: CGSize(width: 896, height: 896)))
         progress("vision")
-        let prompt = VisionMeal.prompt(description: description, foods: foods)
-        var answer = "", tokens = 0
         do {
-            for try await chunk in session.streamResponse(to: prompt, image: .ciImage(image)) {
+            // Observe first, without a menu or numeric example to copy. Ground the
+            // subsequent nutrition task in the photograph, not a catalog listing.
+            var observations = ""
+            for try await chunk in session.streamResponse(to: VisionMeal.observationPrompt(description: description), image: .ciImage(image)) {
+                try Task.checkCancellation()
+                observations += chunk
+                guard observations.utf8.count <= 20_000 else { throw VisionMeal.invalid }
+            }
+            await session.synchronize()
+            diagnostics("IMAGE OBSERVATIONS: " + observations)
+            try Task.checkCancellation()
+            if observations.trimmingCharacters(in: .whitespacesAndNewlines) == "NO_FOOD" {
+                return PhotoResult(parts: [], sauceSuggested: false, unmatched: false)
+            }
+            session.generateParameters.maxTokens = 2000
+            let candidates = VisionMeal.candidates(observations: observations + " " + description, foods: foods)
+            let prompt = VisionMeal.prompt(description: description, foods: candidates)
+            var answer = "", tokens = 0
+            for try await chunk in session.streamResponse(to: prompt) {
                 try Task.checkCancellation()
                 answer += chunk; tokens += 1
                 if tokens % 40 == 0 { progress("vision") }

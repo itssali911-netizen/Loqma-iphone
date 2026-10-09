@@ -77,6 +77,20 @@ final class CoreTests: XCTestCase {
         let rejected = try VisionMeal.decode(invalid, description: "", foods: foods)
         XCTAssertTrue(rejected.parts.isEmpty); XCTAssertTrue(rejected.unmatched)
     }
+    func testNumericCatalogIDsAndObservationCandidates() throws {
+        let foods = try resource("photo-foods", [PhotoFood].self)
+        let json = """
+        {"food_present":true,"items":[{"id":171534,"grams":150,"min_grams":100,"max_grams":230,"confidence":0.7}]}
+        """
+        let result = try VisionMeal.decode(json, description: "", foods: foods)
+        XCTAssertEqual(result.parts.first?.food.id, "171534")
+        let candidates = VisionMeal.candidates(observations: "Two chicken wraps, pita bread, grilled chicken and a garlic dip", foods: foods)
+        XCTAssertTrue(candidates.contains { $0.id == "chicken-shawarma" })
+        XCTAssertTrue(candidates.contains { $0.id == "garlic-sauce" })
+        XCTAssertFalse(candidates.contains { $0.nameEn == "Blueberries" })
+        XCTAssertLessThanOrEqual(candidates.count, 18)
+        XCTAssertTrue(VisionMeal.candidates(observations: "NO_FOOD", foods: foods).isEmpty)
+    }
     func resource<T: Decodable>(_ name:String,_ type:T.Type) throws -> T {
         let url=try XCTUnwrap(Bundle.module.url(forResource:name,withExtension:"json"));return try JSONDecoder().decode(type,from:Data(contentsOf:url))
     }
