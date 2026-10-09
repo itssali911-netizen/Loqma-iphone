@@ -2,7 +2,7 @@ import SwiftUI
 import PhotosUI
 import UIKit
 
-struct PhotoMealView:View {
+@MainActor struct PhotoMealView:View {
     var onCommit:([(Food,Double)],Meal)->Bool
     @EnvironmentObject var diary:DiaryStore
     @State private var item:PhotosPickerItem?
@@ -20,9 +20,10 @@ struct PhotoMealView:View {
     @State private var analysisTask:Task<Void,Never>?
     private var total:Nutrition{parts.reduce(.zero){$0+$1.nutrition}}
     var body:some View {
-        VStack(alignment:.leading,spacing:18){
+        let choosePhotoTitle=diary.t("رفع صورة","Choose photo")
+        return VStack(alignment:.leading,spacing:18){
             if let imageData,let image=try? PhotoAnalyzer.image(imageData){Image(uiImage:UIImage(cgImage:image)).resizable().scaledToFit().frame(maxHeight:260).clipShape(RoundedRectangle(cornerRadius:18))}
-            HStack{PhotosPicker(selection:$item,matching:.images){Label(diary.t("رفع صورة","Choose photo"),systemImage:"photo")}.buttonStyle(.bordered);Button{Task{if UIImagePickerController.isSourceTypeAvailable(.camera),await CameraAccess.request(){camera=true}else{error=diary.t("الكاميرا غير متاحة أو تحتاج إذنًا من الإعدادات.","Camera is unavailable or needs access in Settings.")}}}label:{Label(diary.t("الكاميرا","Camera"),systemImage:"camera")}.buttonStyle(.bordered)}.disabled(busy)
+            HStack{PhotosPicker(selection:$item,matching:.images){Label(choosePhotoTitle,systemImage:"photo")}.buttonStyle(.bordered);Button{Task{if UIImagePickerController.isSourceTypeAvailable(.camera),await CameraAccess.request(){camera=true}else{error=diary.t("الكاميرا غير متاحة أو تحتاج إذنًا من الإعدادات.","Camera is unavailable or needs access in Settings.")}}}label:{Label(diary.t("الكاميرا","Camera"),systemImage:"camera")}.buttonStyle(.bordered)}.disabled(busy)
             VStack(alignment:.leading){Text(diary.t("ماذا في الوجبة؟ (اختياري)","What's in the meal? (optional)")).font(.subheadline);TextField("",text:$description,axis:.vertical).lineLimit(2...4).padding(12).background(Theme.card,in:RoundedRectangle(cornerRadius:12)).accessibilityLabel(diary.t("وصف الوجبة الاختياري","Optional meal description"))}
             Notice(text:diary.t("التحليل على الجهاز. أول استخدام ينزّل نموذجين بحجم إجمالي نحو ١٧٧ ميجابايت، ثم يعمل دون إنترنت. ذكر مكونات الوجبة وعدد القطع يساعد التحليل.","Analysis runs on your device. First use downloads two models totaling about 177 MB, then works offline. Naming ingredients and counts helps."))
             Button{analyze()}label:{Label(diary.t("تحليل الوجبة","Analyze meal"),systemImage:"sparkles").frame(maxWidth:.infinity).padding(12)}.buttonStyle(.borderedProminent).disabled(imageData==nil || busy)
@@ -51,6 +52,6 @@ struct PhotoMealView:View {
             let result=try await PhotoAnalyzer.shared.analyze(imageData,description:description){value in Task{@MainActor in stage=value}}
             try Task.checkCancellation();references=refs;parts=result.parts;sauceSuggested=result.sauceSuggested;unmatched=result.unmatched
             if parts.isEmpty{error=diary.t("لم تتضح مكونات الطعام. جرّب صورة أقرب ووصفًا اختياريًا.","Food components were unclear. Try a closer photo and an optional description.")}
-        }catch is CancellationError{error=nil}catch{error=(error as? AppError)?.message(diary.language) ?? diary.t("تعذّر التحليل. تحقق من الاتصال لتنزيل النموذج ثم أعد المحاولة.","Analysis failed. Check your connection to download the model, then retry.")};busy=false}
+        }catch is CancellationError{error=nil}catch{self.error=(error as? AppError)?.message(diary.language) ?? diary.t("تعذّر التحليل. تحقق من الاتصال لتنزيل النموذج ثم أعد المحاولة.","Analysis failed. Check your connection to download the model, then retry.")};busy=false}
     }
 }

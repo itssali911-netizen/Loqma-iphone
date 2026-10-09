@@ -3,7 +3,7 @@ import PhotosUI
 import UIKit
 
 typealias FoodCommit = (Food,Double,FoodUnit,Meal) -> Bool
-struct FoodAddView:View {
+@MainActor struct FoodAddView:View {
     var initial:Food? = nil
     var onPhotoCommit: (([(Food,Double)],Meal)->Bool)? = nil
     var onCommit:FoodCommit
@@ -44,9 +44,11 @@ struct FoodAddView:View {
         if query.isEmpty && !diary.state.searchHistory.isEmpty {recent(diary.t("آخر المنتجات التي بحثت عنها","Recently searched products"),diary.state.searchHistory)}
         Notice(text:diary.t("الأطعمة الأساسية والمنتجات المحفوظة متاحة دون إنترنت. البحث عن منتج جديد يحتاج اتصالًا.","Basic and saved foods work offline. New packaged products require a connection."))
     }}
-    private var barcodeContent:some View {VStack(alignment:.leading,spacing:16){
+    private var barcodeContent:some View {
+        let barcodePhotoTitle=diary.t("قراءة باركود من صورة","Read a barcode photo")
+        return VStack(alignment:.leading,spacing:16){
         Button{Task{if await CameraAccess.request(){scanning=true}else{notice=diary.t("اسمح للُقمة باستخدام الكاميرا من إعدادات الآيفون.","Allow Luqma camera access in iPhone Settings.")}}}label:{Label(diary.t("تشغيل الكاميرا","Open camera"),systemImage:"barcode.viewfinder").frame(maxWidth:.infinity).padding(20)}.buttonStyle(.borderedProminent)
-        PhotosPicker(selection:$photo,matching:.images){Label(diary.t("قراءة باركود من صورة","Read a barcode photo"),systemImage:"photo")}
+        PhotosPicker(selection:$photo,matching:.images){Label(barcodePhotoTitle,systemImage:"photo")}
         HStack{TextField(diary.t("رقم الباركود","Barcode number"),text:$code).keyboardType(.numberPad).environment(\.layoutDirection,.leftToRight);Button(diary.t("بحث","Look up")){Task{await lookup()}}.disabled(busy || code.isEmpty)}.padding(14).background(Theme.card,in:RoundedRectangle(cornerRadius:16))
         if !diary.state.barcodeHistory.isEmpty{recent(diary.t("آخر المنتجات الممسوحة","Recently scanned products"),diary.state.barcodeHistory)}
     }}
