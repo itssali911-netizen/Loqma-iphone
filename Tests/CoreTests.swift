@@ -77,22 +77,25 @@ final class CoreTests: XCTestCase {
         let rejected = try VisionMeal.decode(invalid, description: "", foods: foods)
         XCTAssertTrue(rejected.parts.isEmpty); XCTAssertTrue(rejected.unmatched)
     }
-    func testNumericCatalogIDsAndObservationCandidates() throws {
+    func testNamedDishesRangesAndContradictoryIDs() throws {
         let foods = try resource("photo-foods", [PhotoFood].self)
-        let json = """
+        let numeric = """
         {"food_present":true,"items":[{"id":171534,"grams":150,"min_grams":100,"max_grams":230,"confidence":0.7}]}
         """
-        let result = try VisionMeal.decode(json, description: "", foods: foods)
-        XCTAssertEqual(result.parts.first?.food.id, "171534")
-        let candidates = VisionMeal.candidates(observations: "Two chicken wraps, pita bread, grilled chicken and a garlic dip", foods: foods)
-        XCTAssertTrue(candidates.contains { $0.id == "chicken-shawarma" })
-        XCTAssertTrue(candidates.contains { $0.id == "garlic-sauce" })
-        XCTAssertFalse(candidates.contains { $0.nameEn == "Blueberries" })
-        XCTAssertLessThanOrEqual(candidates.count, 18)
-        XCTAssertTrue(VisionMeal.candidates(observations: "NO_FOOD", foods: foods).isEmpty)
-        let coloredPlate = VisionMeal.candidates(observations: "A chicken wrap on an orange plate with white creamy sauce", foods: foods)
-        XCTAssertFalse(coloredPlate.contains { $0.nameEn == "Orange" })
-        XCTAssertFalse(coloredPlate.contains { $0.id == "169757" })
+        XCTAssertEqual(try VisionMeal.decode(numeric, description: "", foods: foods).parts.first?.food.id, "171534")
+        let named = """
+        {"food_present":true,"items":[{"name_en":"Chicken wrap","grams":320,"min_grams":220,"max_grams":440,"count":2},{"name_en":"Tahini dip","min_grams":25,"max_grams":35,"count":1}]}
+        """
+        let result = try VisionMeal.decode(named, description: "", foods: foods)
+        XCTAssertEqual(result.parts[0].food.id, "chicken-shawarma")
+        XCTAssertEqual(result.parts[0].count, 2)
+        XCTAssertEqual(result.parts[1].food.id, "tahini-sauce")
+        XCTAssertEqual(result.parts[1].grams, 30)
+        XCTAssertTrue(result.parts[1].tentative)
+        let contradiction = numeric.replacingOccurrences(of: "\"id\":171534", with: "\"id\":171534,\"name_en\":\"Orange\"")
+        XCTAssertThrowsError(try VisionMeal.decode(contradiction, description: "", foods: foods))
+        XCTAssertNil(VisionMeal.matchName("orange plate", foods: foods))
+        XCTAssertNil(VisionMeal.matchName("pita wrap with unknown filling", foods: foods))
     }
     func resource<T: Decodable>(_ name:String,_ type:T.Type) throws -> T {
         let url=try XCTUnwrap(Bundle.module.url(forResource:name,withExtension:"json"));return try JSONDecoder().decode(type,from:Data(contentsOf:url))

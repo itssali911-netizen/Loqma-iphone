@@ -55,8 +55,7 @@ actor VisionAnalyzer {
                 return PhotoResult(parts: [], sauceSuggested: false, unmatched: false)
             }
             session.generateParameters.maxTokens = 2000
-            let candidates = VisionMeal.candidates(observations: observations + " " + description, foods: foods)
-            let prompt = VisionMeal.prompt(description: description, foods: candidates)
+            let prompt = VisionMeal.prompt(description: description)
             var answer = "", tokens = 0
             for try await chunk in session.streamResponse(to: prompt) {
                 try Task.checkCancellation()
@@ -72,8 +71,8 @@ actor VisionAnalyzer {
             if let first, first.parts.isEmpty { return first }
             progress("audit")
             var audit = ""
-            let correction = first == nil ? "The prior JSON failed validation. Repair duplicate IDs, missing fields or malformed JSON. " : ""
-            for try await chunk in session.streamResponse(to: correction + "Reinspect the original photograph and audit your JSON. Include ONLY observed dishes, not colors of plates. Remove invented sides and repeated foods. Aggregate identical dishes into ONE item with total weight. Check missed separate foods, dip containers, counts and implausible portions. Do not count the internal ingredients of a prepared wrap separately. Use factual context, retain uncertainty. Return complete compact JSON only, with every distinct edible component and at most 12 unique IDs.") {
+            let correction = first == nil ? "The prior JSON failed validation. Repair duplicate dishes, missing grams or malformed JSON. " : ""
+            for try await chunk in session.streamResponse(to: correction + "Reinspect the original photograph and audit your JSON. Include ONLY observed dishes, not colors of plates. Remove invented sides and repeated foods. Aggregate identical dishes into ONE item with total weight. Include filled wraps as complete dishes, their separate sides and dip containers. Do not separately count ingredients inside a wrap. Return complete compact JSON only, with at most 8 distinct items. Every item MUST have name_en, grams, min_grams, max_grams and count. No IDs. Preserve factual context and uncertainty.") {
                 try Task.checkCancellation(); audit += chunk
                 guard audit.utf8.count <= 60_000 else { throw VisionMeal.invalid }
             }
