@@ -2,7 +2,11 @@ import SwiftUI
 
 struct KitchenView:View {
     @EnvironmentObject var diary:DiaryStore
-    @State private var filter="all",creating=false,editing:Recipe?,selected:Food?,deleting:Recipe?
+    @State private var filter="all"
+    @State private var creating=false
+    @State private var editing:Recipe?
+    @State private var selected:Food?
+    @State private var deleting:Recipe?
     var body:some View {
         ScrollView{VStack(alignment:.leading,spacing:18){
             Picker(diary.t("النوع","Type"),selection:$filter){Text(diary.t("الكل","All")).tag("all");Text(diary.t("وصفات","Recipes")).tag("recipe");Text(diary.t("وجبات","Meals")).tag("meal");Text(diary.t("تحضير","Prep")).tag("prep")}.pickerStyle(.segmented)
@@ -25,7 +29,8 @@ struct RecipeEditor:View {
     @State var recipe:Recipe
     @EnvironmentObject var diary:DiaryStore
     @Environment(\.dismiss) var dismiss
-    @State private var adding=false,byWeight=false
+    @State private var adding=false
+    @State private var byWeight=false
     var body:some View {
         NavigationStack{Form{
             Section{TextField(diary.t("اسم الوصفة أو الوجبة","Recipe or meal name"),text:$recipe.name);Picker(diary.t("النوع","Type"),selection:$recipe.type){Text(diary.t("وصفة","Recipe")).tag("recipe");Text(diary.t("وجبة محفوظة","Saved meal")).tag("meal");Text(diary.t("تحضير وجبات","Meal prep")).tag("prep")}}

@@ -10,7 +10,12 @@ struct BackupDocument:FileDocument {
 }
 struct SettingsView:View {
     @EnvironmentObject var diary:DiaryStore
-    @State private var goals=false,exporting=false,importing=false,document=BackupDocument(data:Data()),pending:DiarySnapshot?,importingBusy=false
+    @State private var goals=false
+    @State private var exporting=false
+    @State private var importing=false
+    @State private var document=BackupDocument(data:Data())
+    @State private var pending:DiarySnapshot?
+    @State private var importingBusy=false
     var body:some View {
         Form{
             Section(diary.t("التطبيق","App")){

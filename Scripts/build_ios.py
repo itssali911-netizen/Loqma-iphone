@@ -44,7 +44,11 @@ def run(arguments: list[str], log: Path) -> None:
         result = subprocess.run(arguments, cwd=ROOT, env=public_environment(), stdout=file, stderr=subprocess.STDOUT)
     if result.returncode:
         # These commands receive no signing secrets. Full diagnostics remain in the log artifact.
-        tail = log.read_text(errors="replace").splitlines()[-65:]
+        lines = log.read_text(errors="replace").splitlines()
+        diagnostics = list(dict.fromkeys(line for line in lines if ": error:" in line or ": warning:" in line))
+        if diagnostics:
+            print("\n".join(diagnostics[:200]), file=sys.stderr)
+        tail = lines[-65:]
         print("\n".join(tail), file=sys.stderr)
         raise BuildError(f"Build command failed ({result.returncode}); see {log.name}.")
 

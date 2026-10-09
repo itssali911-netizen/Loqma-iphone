@@ -4,7 +4,13 @@ import Charts
 struct PlanView:View {
     @EnvironmentObject var diary:DiaryStore
     @EnvironmentObject var health:HealthService
-    @State private var plan=WeightPlan(),result:WeightResult?,advanced=false,bodyFat=false,resting=false,calculating=false,applied=false
+    @State private var plan=WeightPlan()
+    @State private var result:WeightResult?
+    @State private var advanced=false
+    @State private var bodyFat=false
+    @State private var resting=false
+    @State private var calculating=false
+    @State private var applied=false
     private func dateBinding(_ key:WritableKeyPath<WeightPlan,String>) -> Binding<Date> {Binding(get:{DayKey.localDate(plan[keyPath:key]) ?? Date()},set:{plan[keyPath:key]=DayKey.string($0)})}
     var body:some View {
         Form{

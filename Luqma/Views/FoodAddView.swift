@@ -9,9 +9,17 @@ struct FoodAddView:View {
     var onCommit:FoodCommit
     @EnvironmentObject var diary:DiaryStore
     @Environment(\.dismiss) var dismiss
-    @State private var tab=0,query="",code="",busy=false,scanning=false,manual=false
-    @State private var results:[Food]=[],selected:Food?,notice:String?
-    @State private var photo:PhotosPickerItem?,queryToken=UUID()
+    @State private var tab=0
+    @State private var query=""
+    @State private var code=""
+    @State private var busy=false
+    @State private var scanning=false
+    @State private var manual=false
+    @State private var results:[Food]=[]
+    @State private var selected:Food?
+    @State private var notice:String?
+    @State private var photo:PhotosPickerItem?
+    @State private var queryToken=UUID()
     var body:some View {
         NavigationStack{ScrollView{VStack(alignment:.leading,spacing:20){
             Picker(diary.t("طريقة الإضافة","Add method"),selection:$tab){Text(diary.t("بحث","Search")).tag(0);Text(diary.t("باركود","Barcode")).tag(1);Text(diary.t("صورة","Photo")).tag(2);Text(diary.t("يدوي","Manual")).tag(3)}.pickerStyle(.segmented)
@@ -77,8 +85,14 @@ struct FoodPortionView:View {
     var onCommit:FoodCommit
     @EnvironmentObject var diary:DiaryStore
     @Environment(\.dismiss) var dismiss
-    @State private var unit:FoodUnit = .g,meal:Meal = .breakfast,name="",amount="100"
-    @State private var kcal="",protein="",carbs="",fat=""
+    @State private var unit:FoodUnit = .g
+    @State private var meal:Meal = .breakfast
+    @State private var name=""
+    @State private var amount="100"
+    @State private var kcal=""
+    @State private var protein=""
+    @State private var carbs=""
+    @State private var fat=""
     private var base:Nutrition? {guard let k=TextSearch.number(kcal),let p=TextSearch.number(protein),let c=TextSearch.number(carbs),let f=TextSearch.number(fat) else{return nil};let n=Nutrition(kcal:k,protein:p,carbs:c,fat:f);return n.valid ? n:nil}
     private var quantity:Double? {TextSearch.number(amount)}
     private var total:Nutrition {base?.scaled((quantity ?? 0)/(unit == .serving ? 1:100)) ?? .zero}

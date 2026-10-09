@@ -5,7 +5,18 @@ import UIKit
 struct PhotoMealView:View {
     var onCommit:([(Food,Double)],Meal)->Bool
     @EnvironmentObject var diary:DiaryStore
-    @State private var item:PhotosPickerItem?,imageData:Data?,camera=false,busy=false,description="",stage="",error:String?,parts:[PhotoPart]=[],references:[PhotoFood]=[],sauceSuggested=false,unmatched=false,meal:Meal = .lunch
+    @State private var item:PhotosPickerItem?
+    @State private var imageData:Data?
+    @State private var camera=false
+    @State private var busy=false
+    @State private var description=""
+    @State private var stage=""
+    @State private var error:String?
+    @State private var parts:[PhotoPart]=[]
+    @State private var references:[PhotoFood]=[]
+    @State private var sauceSuggested=false
+    @State private var unmatched=false
+    @State private var meal:Meal = .lunch
     @State private var analysisTask:Task<Void,Never>?
     private var total:Nutrition{parts.reduce(.zero){$0+$1.nutrition}}
     var body:some View {

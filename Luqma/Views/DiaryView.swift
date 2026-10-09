@@ -2,7 +2,9 @@ import SwiftUI
 
 struct DiaryView:View {
     @EnvironmentObject var diary:DiaryStore
-    @State private var date=Date(),adding=false,goals=false
+    @State private var date=Date()
+    @State private var adding=false
+    @State private var goals=false
     @State private var editing:DiaryEntry?
     private var day:String {DayKey.string(date)}
     var body:some View {
@@ -44,7 +46,8 @@ struct EntryEditor:View {
     var entry:DiaryEntry
     @EnvironmentObject var diary:DiaryStore
     @Environment(\.dismiss) private var dismiss
-    @State private var amount="",deleting=false
+    @State private var amount=""
+    @State private var deleting=false
     private var value:Double? {TextSearch.number(amount)}
     private var total:Nutrition {entry.nutrition.scaled((value ?? 0)/max(entry.amount,0.001))}
     var body:some View {

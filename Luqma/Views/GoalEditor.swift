@@ -3,7 +3,8 @@ import SwiftUI
 struct GoalEditor:View {
     @EnvironmentObject var diary:DiaryStore
     @Environment(\.dismiss) var dismiss
-    @State private var goals=Nutrition.initial,percent=false
+    @State private var goals=Nutrition.initial
+    @State private var percent=false
     var body:some View {
         NavigationStack{Form{
             Section(diary.t("هدف السعرات","Calorie goal")){NumericInput(title:diary.t("السعرات","Calories"),value:Binding(get:{goals.kcal},set:{goals = $0>0 ? goals.settingCalories($0):Nutrition(kcal:$0,protein:0,carbs:0,fat:0)}),suffix:"kcal");if !(500...10000).contains(goals.kcal){Text(diary.t("أدخل هدفًا بين ٥٠٠ و١٠٠٠٠ سعرة.","Enter a goal from 500 to 10,000 kcal.")).font(.footnote).foregroundStyle(.orange)}}
