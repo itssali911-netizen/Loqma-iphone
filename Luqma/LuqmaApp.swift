@@ -13,11 +13,6 @@ import UIKit
         services.health.prepare(services.diary)
         return true
     }
-    func applicationDidBecomeActive(_ application: UIApplication) {
-        let services = AppServices.shared
-        services.health.becameActive(services.diary)
-    }
-    func applicationDidEnterBackground(_ application: UIApplication) { AppServices.shared.health.enteredBackground() }
     func applicationProtectedDataDidBecomeAvailable(_ application: UIApplication) {
         let services = AppServices.shared
         services.health.unlocked(services.diary)
@@ -35,7 +30,12 @@ import UIKit
                 .environment(\.layoutDirection,diary.language == .ar ? .rightToLeft:.leftToRight)
                 .environment(\.locale,Locale(identifier:diary.language == .ar ? "ar_SA":"en_US"))
                 .tint(Theme.accent).preferredColorScheme(.dark)
-                .onChange(of:phase) { _,value in if value == .active {diary.adapt()} }
+                .onChange(of:phase, initial:true) { _,value in
+                    // SwiftUI scenes own foreground transitions; app-delegate launch
+                    // registration remains synchronous for HealthKit background delivery.
+                    if value == .active { diary.adapt(); health.becameActive(diary) }
+                    else if value == .background { health.enteredBackground() }
+                }
                 .alert(diary.t("تنبيه","Notice"),isPresented:Binding(get:{diary.error != nil},set:{if !$0 {diary.error=nil}})) {Button(diary.t("حسنًا","OK")){diary.error=nil}} message:{Text(diary.error ?? "")}
         }
     }
