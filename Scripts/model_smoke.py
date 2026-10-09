@@ -12,6 +12,7 @@ import shutil
 import subprocess
 import tempfile
 import urllib.request
+from vision_compat import apply_vision_compat
 
 ROOT = Path(__file__).resolve().parent.parent
 OUTPUT = ROOT / 'BuildOutput/model-runtime.json'
@@ -53,6 +54,10 @@ let package = Package(name: "ModelCheck", platforms: [.macOS(.v14)], dependencie
     derived = project / 'DerivedData'
     command = ['xcodebuild', '-scheme', 'ModelCheck', '-destination', 'platform=macOS', '-configuration', 'Release', '-derivedDataPath', str(derived), 'CODE_SIGNING_ALLOWED=NO', 'build']
     with (ROOT / 'BuildOutput/model-runtime.log').open('wb') as log:
+        result = subprocess.run(['xcodebuild', '-resolvePackageDependencies', '-scheme', 'ModelCheck', '-derivedDataPath', str(derived)], cwd=project, stdout=log, stderr=subprocess.STDOUT)
+        if result.returncode:
+            raise RuntimeError('The model runtime dependencies could not be resolved.')
+        apply_vision_compat(derived / 'SourcePackages')
         result = subprocess.run(command, cwd=project, stdout=log, stderr=subprocess.STDOUT)
         if result.returncode == 0:
             binary = derived / 'Build/Products/Release/ModelCheck'

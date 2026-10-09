@@ -16,6 +16,13 @@ from test_signing import BUNDLE, FINGERPRINT, TEAM, profile_data, validated
 
 
 class BuildTests(unittest.TestCase):
+    def setUp(self):
+        # Package checkouts belong to Xcode; orchestration fixtures mock this
+        # boundary along with xcodebuild. Real builds verify both source hashes.
+        patcher = patch("build_ios.apply_vision_compat")
+        self.addCleanup(patcher.stop)
+        patcher.start()
+
     def test_sideload_packages_device_only_without_apple_secrets_or_claiming_signed_install(self):
         calls = []
         with tempfile.TemporaryDirectory() as directory:

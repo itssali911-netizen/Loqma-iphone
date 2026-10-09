@@ -21,6 +21,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from signing import BuildError, decode_secret, select_identity, validate_identifiers, validate_profile
+from vision_compat import apply_vision_compat
 
 ROOT = Path(__file__).resolve().parent.parent
 SECRET_NAMES = ("BUILD_CERTIFICATE_BASE64", "P12_PASSWORD", "BUILD_PROVISION_PROFILE_BASE64")
@@ -203,6 +204,7 @@ def build(mode: str, output: Path) -> None:
     # Resolve the exact ORT version before locking resolution for build commands.
     run(["xcodebuild", "-resolvePackageDependencies", "-project", "Luqma.xcodeproj",
          "-scheme", "Luqma", "-clonedSourcePackagesDirPath", str(packages)], output / "packages.log")
+    apply_vision_compat(packages)
     settings = [f"PRODUCT_BUNDLE_IDENTIFIER={bundle}", f"CURRENT_PROJECT_VERSION={number}"]
     if mode == "sideload":
         run(common + ["-destination", "generic/platform=iOS", "-configuration", "Release",

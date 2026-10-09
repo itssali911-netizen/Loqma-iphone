@@ -9,6 +9,8 @@ on:
       - 'Package.swift'
       - 'Scripts/build_ios.py'
       - 'Scripts/model_smoke.py'
+      - 'Scripts/vision_compat.py'
+      - 'Scripts/qwen3vl-compat.json'
       - 'Scripts/ModelCheck.swift'
       - 'Scripts/signing.py'
       - 'BuildTests/**'
