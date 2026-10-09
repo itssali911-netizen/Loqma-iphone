@@ -59,7 +59,7 @@ final class CoreTests: XCTestCase {
         XCTAssertTrue(try VisionMeal.decode("{\"food_present\":false,\"items\":[]}", description: "شاورما", foods: foods).parts.isEmpty)
         let hinted = try VisionMeal.decode("{\"food_present\":true,\"items\":[\(item)]}", description: "شاورما عربي ١٠ قطع وعلبة ثوم وعلبة طحينة", foods: foods)
         XCTAssertTrue(hinted.parts.contains { $0.food.id == "chicken-shawarma" })
-        XCTAssertTrue(hinted.parts.first { $0.food.id == "tahini-sauce" }!.tentative)
+        XCTAssertTrue(try XCTUnwrap(hinted.parts.first { $0.food.id == "tahini-sauce" }).tentative)
     }
     func testUnknownFoodRequiresPlausibleNutritionAndIsMarkedAsAI() throws {
         let foods = try resource("photo-foods", [PhotoFood].self)

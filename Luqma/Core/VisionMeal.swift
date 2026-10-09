@@ -48,7 +48,7 @@ enum VisionMeal {
             parts.append(part)
         }
         // An explicit user description must not lose known components because vision missed them.
-        let hints = try PhotoMeal.estimate([], description: description, foods: foods)
+        let hints = try PhotoMeal.estimate([], description: description, foods: foods, confirmedFood: true)
         for hint in hints.parts where !seen.contains(hint.food.id) {
             var added = hint; added.tentative = true; added.basis = "description"; parts.append(added); seen.insert(hint.food.id); unmatched = true
         }

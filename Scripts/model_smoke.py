@@ -74,9 +74,13 @@ import CoreGraphics
  }
 }
 ''')
-    command = ['swift', 'run', '-c', 'release', '-j', '3', 'ModelCheck', str(project / 'meal.jpg'), str(OUTPUT)]
+    derived = project / 'DerivedData'
+    command = ['xcodebuild', '-scheme', 'ModelCheck', '-destination', 'platform=macOS', '-configuration', 'Release', '-derivedDataPath', str(derived), 'CODE_SIGNING_ALLOWED=NO', 'build']
     with (ROOT / 'BuildOutput/model-runtime.log').open('wb') as log:
         result = subprocess.run(command, cwd=project, stdout=log, stderr=subprocess.STDOUT)
+        if result.returncode == 0:
+            binary = derived / 'Build/Products/Release/ModelCheck'
+            result = subprocess.run([str(binary), str(project / 'meal.jpg'), str(OUTPUT)], cwd=project, stdout=log, stderr=subprocess.STDOUT)
     if result.returncode:
         print('\n'.join((ROOT / 'BuildOutput/model-runtime.log').read_text(errors='replace').splitlines()[-70:]))
         raise SystemExit(result.returncode)

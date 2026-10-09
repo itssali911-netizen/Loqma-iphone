@@ -8,6 +8,7 @@ on:
       - 'Luqma.xcodeproj/**'
       - 'Package.swift'
       - 'Scripts/build_ios.py'
+      - 'Scripts/model_smoke.py'
       - 'Scripts/signing.py'
       - 'BuildTests/**'
       - '.github/workflows/ios-build.yml'

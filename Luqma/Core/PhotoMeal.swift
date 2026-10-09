@@ -80,8 +80,8 @@ enum PhotoMeal {
         else if family(food.id)=="sauce" {grams=35}
         grams *= count;guard grams<=3000 else{throw AppError.invalid("الكمية أكبر من نطاق التحليل.","The portion exceeds the analysis range.")};return (grams,grams*0.65,grams*1.5,"count")
     }
-    static func estimate(_ regions:[PhotoRegion],description:String,foods:[PhotoFood]) throws -> PhotoResult {
-        guard regions.contains(where:{$0.isFood}) else { return PhotoResult(parts:[],sauceSuggested:false,unmatched:false) }
+    static func estimate(_ regions:[PhotoRegion],description:String,foods:[PhotoFood],confirmedFood:Bool=false) throws -> PhotoResult {
+        guard confirmedFood || regions.contains(where:{$0.isFood}) else { return PhotoResult(parts:[],sauceSuggested:false,unmatched:false) }
         let text=TextSearch.normalized(String(description.prefix(1000))).replacingOccurrences(of:"٫",with:".")
         let all=mentions(text,foods:foods),found=all.filter{!$0.negative},excluded=Set(all.filter{$0.negative}.map{family($0.food.id)})
         let ns=text as NSString;var parts:[PhotoPart]=[]
