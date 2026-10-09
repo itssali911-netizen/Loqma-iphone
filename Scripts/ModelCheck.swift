@@ -45,7 +45,7 @@ private func trace(_ value: String) { try? FileHandle.standardError.write(conten
             !$0.contains("wrap") && !$0.contains("pita") && !$0.contains("sandwich") &&
             ($0.contains("chicken strips") || ($0.contains("grilled") && ($0.contains("chicken") || $0.contains("meat"))))
         }
-        let hasDip = result.parts.contains { PhotoMeal.family($0.food.id) == "sauce" } || names.contains { $0.contains("dip") || $0.contains("sauce") }
+        let hasDip = result.parts.contains { PhotoMeal.family($0.food.id) == "sauce" || VisionMeal.isDip($0.food.nameEn) }
         let hasBread = result.parts.contains { $0.food.id == "172816" }
         let inventedSide = result.parts.contains { ["169836", "169097", "169757", "169704"].contains($0.food.id) }
         guard result.parts.count >= 4, hasWrap, hasMeat, hasDip, hasBread, !inventedSide else {

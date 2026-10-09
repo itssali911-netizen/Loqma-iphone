@@ -105,6 +105,9 @@ final class CoreTests: XCTestCase {
         XCTAssertEqual(VisionMeal.matchName("Stack of plain flatbreads", foods: foods)?.id, "172816")
         XCTAssertNil(VisionMeal.matchName("Flatbread with chicken and sauce", foods: foods))
         XCTAssertEqual(VisionMeal.matchName("Grilled chicken strips", foods: foods)?.id, "171534")
+        XCTAssertTrue(VisionMeal.isDip("Creamy yogurt dip"))
+        XCTAssertFalse(VisionMeal.isDip("Chicken strips with vegetable medley and yogurt dip"))
+        XCTAssertFalse(VisionMeal.isDip("Pita with chicken and garlic sauce"))
         let generic = """
         {"food_present":true,"items":[
         {"name_en":"Wrapped flatbread with meat","grams":150,"min_grams":100,"max_grams":220,"count":1},
