@@ -2,6 +2,7 @@
 import PackageDescription
 let package = Package(
     name: "LuqmaCore",
+    platforms: [.macOS(.v13), .iOS(.v17)],
     products: [.library(name: "LuqmaCore", targets: ["LuqmaCore"])],
     targets: [
         .target(name: "LuqmaCore", path: "Luqma/Core"),
