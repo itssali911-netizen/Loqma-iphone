@@ -20,21 +20,21 @@ actor VisionAnalyzer {
         guard let url = Bundle.main.url(forResource: "vision-model", withExtension: "json") else { throw VisionMeal.invalid }
         return try JSONDecoder().decode(Manifest.self, from: Data(contentsOf: url))
     }
-    func analyze(_ data: Data, description: String, foods: [PhotoFood], allowDownloads: Bool = true, progress: @escaping @Sendable (String) -> Void) async throws -> PhotoResult {
+    func analyze(_ data: Data, description: String, foods: [PhotoFood], allowDownloads: Bool = true, diagnostics: @escaping @Sendable (String) -> Void = { _ in }, progress: @escaping @Sendable (String) -> Void) async throws -> PhotoResult {
         guard Self.supported else { throw AppError.invalid("التحليل المتقدم يحتاج جهازًا بذاكرة ٨ جيجابايت. استخدم التحليل الخفيف على هذا الجهاز.", "Advanced analysis requires a device with 8 GB RAM. Use lightweight analysis on this device.") }
         guard !running else { throw AppError.invalid("انتظر انتهاء التحليل الحالي.", "Wait for the current analysis to finish.") }
         running = true
         defer { running = false; Memory.clearCache() }
         let image = try Self.image(data)
         let spec = try manifest()
-        let folder = try await download(spec, allowDownloads: allowDownloads, progress: progress)
+        let folder = try await download(spec, allowDownloads: allowDownloads, diagnostics: diagnostics, progress: progress)
         try Task.checkCancellation()
         progress("load")
         Memory.cacheLimit = 32 * 1024 * 1024
         // Local directory loading prevents tokenizer/model network requests after installation.
         let model = try await VLMModelFactory.shared.loadContainer(configuration: ModelConfiguration(directory: folder))
         try Task.checkCancellation()
-        let session = ChatSession(model, generateParameters: .init(maxTokens: 1400, temperature: 0, prefillStepSize: 256), processing: .init(resize: CGSize(width: 672, height: 672)))
+        let session = ChatSession(model, generateParameters: .init(maxTokens: 2000, temperature: 0, prefillStepSize: 256), processing: .init(resize: CGSize(width: 896, height: 896)))
         progress("vision")
         let prompt = VisionMeal.prompt(description: description, foods: foods)
         var answer = "", tokens = 0
@@ -48,6 +48,7 @@ actor VisionAnalyzer {
             await session.synchronize()
             try Task.checkCancellation()
             progress("validate")
+            diagnostics("FIRST OUTPUT: " + answer)
             let first = try VisionMeal.decode(answer, description: description, foods: foods)
             if first.parts.isEmpty { return first }
             progress("audit")
@@ -58,6 +59,7 @@ actor VisionAnalyzer {
             }
             await session.synchronize()
             try Task.checkCancellation()
+            diagnostics("AUDIT OUTPUT: " + audit)
             return try VisionMeal.decode(audit, description: description, foods: foods)
         } catch {
             await session.synchronize()
@@ -78,7 +80,7 @@ actor VisionAnalyzer {
         while let chunk = try handle.read(upToCount: 1024 * 1024), !chunk.isEmpty { try Task.checkCancellation(); hash.update(data: chunk) }
         return hash.finalize().map { String(format: "%02x", $0) }.joined()
     }
-    private func download(_ spec: Manifest, allowDownloads: Bool, progress: @escaping @Sendable (String) -> Void) async throws -> URL {
+    private func download(_ spec: Manifest, allowDownloads: Bool, diagnostics: @escaping @Sendable (String) -> Void, progress: @escaping @Sendable (String) -> Void) async throws -> URL {
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         var folder = base.appendingPathComponent("VisionModels/" + spec.revision, isDirectory: true)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
@@ -89,6 +91,7 @@ actor VisionAnalyzer {
         let total = spec.files.reduce(Int64(0)) { $0 + $1.bytes }
         var done: Int64 = 0
         for file in spec.files {
+            diagnostics("MODEL FILE: " + file.name)
             try Task.checkCancellation()
             let final = folder.appendingPathComponent(file.name)
             let marker = folder.appendingPathComponent(file.name + ".verified")
@@ -118,6 +121,7 @@ actor VisionAnalyzer {
                     throw AppError.invalid("تعذّر تنزيل النموذج. أعد المحاولة؛ أجزاء التنزيل المكتملة محفوظة.", "Model download failed. Retry; completed download chunks are saved.")
                 }
                 let bytes = Int64(try temporary.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0)
+                diagnostics("HTTP \(http.statusCode): \(file.name), expected \(offset)-\(last)/\(file.bytes), got \(http.value(forHTTPHeaderField: "Content-Range") ?? "full file"), bytes \(bytes)")
                 if http.statusCode == 200 {
                     guard bytes == file.bytes else { throw VisionMeal.invalid }
                     try? FileManager.default.removeItem(at: partial)

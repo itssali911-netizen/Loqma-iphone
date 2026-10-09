@@ -62,11 +62,12 @@ import CoreGraphics
   let foods = try JSONDecoder().decode([PhotoFood].self, from: Data(contentsOf: Bundle.module.url(forResource: "photo-foods", withExtension: "json")!))
   let image = try Data(contentsOf: URL(fileURLWithPath: CommandLine.arguments[1]))
   let start = Date()
-  let result = try await VisionAnalyzer.shared.analyze(image, description: "", foods: foods) { _ in }
+  let result = try await VisionAnalyzer.shared.analyze(image, description: "", foods: foods, diagnostics: { text in print(text) }) { stage in if !stage.hasPrefix("download:") { print("STAGE: " + stage) } }
+  print("RESULT COMPONENTS: " + result.parts.map { $0.food.id + "=" + String($0.grams) }.joined(separator: ", "))
   guard result.parts.count >= 3, result.parts.contains(where: { $0.food.id == "chicken-shawarma" || $0.food.id == "beef-shawarma" }), !result.parts.allSatisfy({ $0.food.id == "169836" }) else { throw VisionMeal.invalid }
   let blank = CIImage(color: CIColor(red: 0.5, green: 0.5, blue: 0.5)).cropped(to: CGRect(x: 0, y: 0, width: 512, height: 512))
   let png = CIContext().pngRepresentation(of: blank, format: .RGBA8, colorSpace: CGColorSpaceCreateDeviceRGB())!
-  let empty = try await VisionAnalyzer.shared.analyze(png, description: "", foods: foods, allowDownloads: false) { _ in }
+  let empty = try await VisionAnalyzer.shared.analyze(png, description: "", foods: foods, allowDownloads: false, diagnostics: { text in print(text) }) { stage in print("CACHED STAGE: " + stage) }
   guard empty.parts.isEmpty else { throw VisionMeal.invalid }
   let report: [String: Any] = ["tested": true, "platform": "macOS Apple Silicon Metal", "fixture": "USDA 20241025-USDA-FNS-UNK-0017 (public domain)", "image_sha256": "8c6f9cd2cdc344817c70091072a2c42f86c39ac83807040c184c137da1560b2d", "components": result.parts.map { ["id": $0.food.id, "grams": $0.grams, "low": $0.low, "high": $0.high] as [String: Any] }, "cached_without_downloads": true, "no_food_fixture_rejected": true, "elapsed_seconds": Date().timeIntervalSince(start), "limits": "Runtime fixture check only; not measured calorie accuracy, comparative benchmark, or physical-iPhone validation."]
   try JSONSerialization.data(withJSONObject: report, options: [.prettyPrinted, .sortedKeys]).write(to: destination)
