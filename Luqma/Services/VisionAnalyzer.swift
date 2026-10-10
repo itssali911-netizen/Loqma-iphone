@@ -161,7 +161,7 @@ actor VisionAnalyzer {
             var audit = ""
             let correction = first == nil ? "The prior JSON failed validation. Repair duplicates and malformed fields, including missing or implausible nutrition_per_100g. ALL three weight fields must be NUMBERS, NEVER null. Estimate typical portion masses and use broad numeric bounds if scale is uncertain; exact measurement is not required. " : ""
             try Self.checkHeadroom()
-            for try await chunk in session.streamResponse(to: correction + "Reinspect the original photograph and audit your JSON. Include ONLY observed dishes, not colors of plates. Remove invented sides and repeated foods. Aggregate identical dishes into ONE item with total weight. Include filled wraps as complete dishes, their separate sides and dip containers. Check EACH visible dip cup or bowl and give it its own item with only the dip's weight; NEVER merge a separate dip with meat, vegetables or bread in a combined name or nutrition estimate. A plate or tray can contain multiple separate foods. Sauce inside a wrap remains inside that wrap. Do not separately count ingredients inside a wrap. Return complete compact JSON only, with at most 8 distinct items. Every item MUST have name_en, grams, min_grams, max_grams, count AND nutrition_per_100g with numeric kcal, protein, carbs and fat consistent with 4/4/9 energy. Add nutrition_per_100g if it was missing; correct it if necessary and never drop it. For an uncertain dip, wrap filling or side dish, use a plausible approximate recipe estimate, keep its honest generic name and set uncertain true. No IDs. Preserve factual context and uncertainty.") {
+            for try await chunk in session.streamResponse(to: correction + "Reinspect the original photograph and audit your JSON. Include ONLY observed dishes, not colors of plates. Remove invented sides and repeated foods. Aggregate identical dishes into ONE item with total weight. Include filled wraps as complete dishes, their separate sides and dip containers. Keep plain unfilled, untopped pita or flatbread separate from prepared filled wraps. Bread usable for wraps remains plain bread unless filling or toppings are visible or factual context confirms them. Check EACH visible dip cup or bowl and give it its own item with only the dip's weight; NEVER merge a separate dip with meat, vegetables or bread in a combined name or nutrition estimate. A plate or tray can contain multiple separate foods. Sauce inside a wrap remains inside that wrap. Do not separately count ingredients inside a wrap. Return complete compact JSON only, with at most 8 distinct items. Every item MUST have name_en, grams, min_grams, max_grams, count AND nutrition_per_100g with numeric kcal, protein, carbs and fat consistent with 4/4/9 energy. Add nutrition_per_100g if it was missing; correct it if necessary and never drop it. For an uncertain dip, wrap filling or side dish, use a plausible approximate recipe estimate, keep its honest generic name and set uncertain true. No IDs. Preserve factual context and uncertainty.") {
                 try Self.checkHeadroom(); audit += chunk
                 guard audit.utf8.count <= 60_000 else { throw VisionMeal.invalid }
             }
@@ -169,9 +169,44 @@ actor VisionAnalyzer {
             Memory.clearCache()
             try Task.checkCancellation()
             diagnostics("AUDIT OUTPUT: " + audit)
-            return try VisionMeal.decode(audit, description: description, foods: foods)
+            let requests = try VisionMeal.nutritionRequests(audit, description: description, foods: foods)
+            if requests.isEmpty { return try VisionMeal.decode(audit, description: description, foods: foods) }
+            // In pinned ChatSession, clear() replaces the KV-cache enum with
+            // .empty under its lock. Release visual context before the text pass.
+            await session.clear()
+            Memory.clearCache()
+            try Self.checkHeadroom()
+            progress("validate")
+            let nutrition = try await estimateNutrition(requests, model: model, tier: tier, diagnostics: diagnostics)
+            return try VisionMeal.decode(audit, description: description, foods: foods, nutritionOverrides: nutrition)
         } catch {
             await session.synchronize()
+            throw error
+        }
+    }
+    private func estimateNutrition(_ requests: [VisionMeal.NutritionRequest], model: ModelContainer, tier: VisionResources.Tier,
+                                   diagnostics: @escaping @Sendable (String) -> Void) async throws -> [Int: Nutrition] {
+        // Share evaluated model weights, but start with a fresh text-only KV
+        // cache. This pass may supply macros only for validated item indices.
+        let session = ChatSession(model, generateParameters: .init(maxTokens: 1024, temperature: 0.2, topP: 0.8,
+                                  repetitionPenalty: 1.05, repetitionContextSize: 64, prefillStepSize: VisionResources.prefillStep(tier)))
+        do {
+            var answer = ""
+            try Self.checkHeadroom()
+            let prompt = try VisionMeal.nutritionPrompt(requests)
+            for try await chunk in session.streamResponse(to: prompt) {
+                try Self.checkHeadroom(); answer += chunk
+                guard answer.utf8.count <= 8_000 else { throw VisionMeal.invalid }
+            }
+            await session.synchronize()
+            await session.clear()
+            Memory.clearCache()
+            try Self.checkHeadroom()
+            diagnostics("NUTRITION OUTPUT: " + answer)
+            return try VisionMeal.nutritionOverrides(answer, requests: requests)
+        } catch {
+            await session.synchronize()
+            await session.clear()
             throw error
         }
     }
