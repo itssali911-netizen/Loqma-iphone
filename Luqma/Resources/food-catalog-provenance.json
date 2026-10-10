@@ -1,0 +1,15 @@
+{
+  "source": "U.S. Department of Agriculture, Agricultural Research Service. FoodData Central, SR Legacy, final April 2018 release.",
+  "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_json_2018-04.zip",
+  "source_documentation": "https://fdc.nal.usda.gov/download-datasets/",
+  "license": "CC0-1.0",
+  "license_statement": "https://fdc.nal.usda.gov/api-guide/",
+  "source_sha256": "0fe8ae486a2c8eb42cb96413f058deb51863a46c8fb8eeb4b1fb45006dd338ef",
+  "source_zip_bytes": 13456312,
+  "food_count": 7793,
+  "catalog_sha256": "28c166c2bfbdabd42a0a18ac8f1bb6d2babf706a5bec0a3643e3ecea6b1c0e34",
+  "nutrient_basis": "Per 100 g, copied directly from source nutrient IDs 1008 (kcal), 1003 (protein), 1005 (carbohydrate), and 1004 (fat). Source calorie values are preserved; they are not recalculated from macros.",
+  "labels": "The 94 existing Arabic names, IDs, aliases and serving descriptions are preserved in food-catalog-labels.json. Added foods keep exact English source descriptions. Arabic aliases are curated search keywords in Scripts/import_usda_catalog.py, not complete translations or new recipe identities.",
+  "rebuild": "python3 Scripts/import_usda_catalog.py /path/to/FoodData_Central_sr_legacy_food_json_2018-04.zip",
+  "scope": "This is an open USDA catalog, separate from online Open Food Facts branded product results. It is not the MyFitnessPal database. Photo recognition reference foods are maintained separately."
+}

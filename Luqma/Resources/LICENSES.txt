@@ -1,3 +1,16 @@
+Food nutrition data attribution:
+USDA FoodData Central SR Legacy (final April 2018 release): public domain,
+CC0 1.0 Universal. U.S. Department of Agriculture, Agricultural Research Service.
+Source: https://fdc.nal.usda.gov/
+USDA license statement: https://fdc.nal.usda.gov/api-guide/
+CC0 legal code: https://creativecommons.org/publicdomain/zero/1.0/legalcode
+
+Online branded product data: Open Food Facts. Database ODbL-1.0; individual
+contents Database Contents License. https://world.openfoodfacts.org/
+Terms: https://world.openfoodfacts.org/terms-of-use
+ODbL: https://opendatacommons.org/licenses/odbl/1-0/
+Database Contents License: https://opendatacommons.org/licenses/dbcl/1-0/
+
 ONNX Runtime
 MIT License
 

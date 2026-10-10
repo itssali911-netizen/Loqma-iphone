@@ -11,6 +11,30 @@ struct BackupDocument:FileDocument {
 struct SettingsView:View {
     @EnvironmentObject var diary:DiaryStore
     @State private var goals=false
+    var body:some View {
+        Form{
+            Section(diary.t("أهدافي وتفضيلاتي","Goals and preferences")){
+                Button{goals=true}label:{Label(diary.t("السعرات والماكروز","Calories and macros"),systemImage:"target")}
+                NavigationLink{PlanView()}label:{Label(diary.t("خطة الوزن","Weight plan"),systemImage:"chart.line.uptrend.xyaxis")}
+                Picker(diary.t("اللغة","Language"),selection:Binding(get:{diary.language},set:{value in diary.change{$0.language=value}})){Text("العربية").tag(AppLanguage.ar);Text("English").tag(AppLanguage.en)}.pickerStyle(.menu)
+            }
+            Section(diary.t("الربط والبيانات","Connections and data")){
+                NavigationLink{
+                    ScrollView{HealthPanel().padding(20)}.appBackground().navigationTitle(diary.t("صحتي","Health"))
+                }label:{
+                    HStack{Label(diary.t("صحتي","Apple Health"),systemImage:"heart");Spacer();Text(diary.state.healthEnabled ? diary.t("مفعّل","Enabled"):diary.t("غير مفعّل","Disabled")).font(.caption).foregroundStyle(.secondary)}
+                }
+                NavigationLink{BackupSettingsView()}label:{Label(diary.t("النسخ الاحتياطي والنقل","Backup and transfer"),systemImage:"externaldrive")}
+            }
+            Section{
+                NavigationLink{AboutLuqmaView()}label:{Label(diary.t("حول لُقمة والخصوصية","About Luqma and privacy"),systemImage:"info.circle")}
+            }
+        }.appBackground().navigationTitle(diary.t("الإعدادات","Settings"))
+            .sheet(isPresented:$goals){GoalEditor()}
+    }
+}
+private struct BackupSettingsView:View {
+    @EnvironmentObject var diary:DiaryStore
     @State private var exporting=false
     @State private var importing=false
     @State private var document=BackupDocument(data:Data())
@@ -18,26 +42,15 @@ struct SettingsView:View {
     @State private var importingBusy=false
     var body:some View {
         Form{
-            Section(diary.t("التطبيق","App")){
-                Picker(diary.t("اللغة","Language"),selection:Binding(get:{diary.language},set:{value in diary.change{$0.language=value}})){Text("العربية").tag(AppLanguage.ar);Text("English").tag(AppLanguage.en)}
-                Button(diary.t("أهداف السعرات والماكروز","Calorie and macro goals")){goals=true}
-                NavigationLink(diary.t("خطة الوزن • NIDDK","Weight plan • NIDDK")){PlanView()}
-            }
-            Section("Apple Health"){HealthPanel().listRowBackground(Theme.background)}
             Section(diary.t("بياناتي","My data")){
                 Button{do{document=BackupDocument(data:try Backup.encode(diary.state));exporting=true}catch{diary.report(error)}}label:{Label(diary.t("تصدير نسخة احتياطية","Export backup"),systemImage:"square.and.arrow.up")}
                 Button{importing=true}label:{Label(diary.t("استيراد نسخة من الموقع أو التطبيق","Import a website or app backup"),systemImage:"square.and.arrow.down")}.disabled(importingBusy)
                 if importingBusy{ProgressView()}
-                Notice(text:diary.t("لنقل السجل: صدّر نسخة JSON من إعدادات الموقع، ثم استوردها هنا. يُدمج السجل والوصفات والوزن والمنتجات دون حذف القائمة الحالية؛ السجلات المطابقة تُحدَّث من النسخة.","To migrate: export JSON from website Settings, then import it here. Diary, recipes, weights and products are merged without deleting the current list; matching records update from the backup."))
             }
-            Section(diary.t("حول لُقمة","About Luqma")){
-                Text(diary.t("تطبيق آيفون أصلي • الإصدار ","Native iPhone app • Version ") + (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.2"))
-                Notice(text:diary.t("سجلك محفوظ على الجهاز. البحث الخارجي وتنزيل نماذج الصور أول مرة يحتاجان الإنترنت. الصور وبيانات صحتي لا تُرفع إلى خادم.","Your diary is stored on the device. Online search and initial image-model downloads need internet. Photos and Health data are not uploaded."))
-                Link("Open Food Facts",destination:URL(string:"https://world.openfoodfacts.org")!)
-                Link("USDA FoodData Central",destination:URL(string:"https://fdc.nal.usda.gov/")!)
+            Section{
+                Notice(text:diary.t("صدّر نسخة لحفظ بياناتك أو نقلها إلى جهاز آخر. عند الاستيراد تُدمج البيانات، وتُحدَّث السجلات المطابقة دون حذف باقي سجلك.","Export a backup to save your data or move it to another device. Import merges the data and updates matching records without deleting the rest of your diary."))
             }
-        }.appBackground().navigationTitle(diary.t("الإعدادات","Settings"))
-            .sheet(isPresented:$goals){GoalEditor()}
+        }.appBackground().navigationTitle(diary.t("النسخ الاحتياطي","Backup"))
             .fileExporter(isPresented:$exporting,document:document,contentType:.json,defaultFilename:"luqma-backup-"+DayKey.today){if case let .failure(error)=$0{diary.report(error)}}
             .fileImporter(isPresented:$importing,allowedContentTypes:[.json],allowsMultipleSelection:false){result in
                 switch result{case .success(let urls):if let url=urls.first{read(url)};case .failure(let error):diary.report(error)}
@@ -46,6 +59,23 @@ struct SettingsView:View {
     }
     private func read(_ url:URL){importingBusy=true
         Task{do{let snapshot=try await Task.detached{let scoped=url.startAccessingSecurityScopedResource();defer{if scoped{url.stopAccessingSecurityScopedResource()}};return try Backup.decode(Data(contentsOf:url,options:.mappedIfSafe))}.value;pending=snapshot}catch{diary.report(error)};importingBusy=false}
+    }
+}
+private struct AboutLuqmaView:View {
+    @EnvironmentObject var diary:DiaryStore
+    var body:some View {
+        Form{
+            Section(diary.t("لُقمة","Luqma")){
+                Text(diary.t("الإصدار ","Version ") + (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.3"))
+            }
+            Section(diary.t("الخصوصية","Privacy")){
+                Notice(text:diary.t("سجلك محفوظ على الجهاز. البحث الخارجي وتنزيل نماذج الصور أول مرة يحتاجان الإنترنت. الصور وبيانات صحتي لا تُرفع إلى خادم.","Your diary is stored on the device. Online search and initial image-model downloads need internet. Photos and Health data are not uploaded."))
+            }
+            Section(diary.t("مصادر الطعام","Food sources")){
+                Link("Open Food Facts",destination:URL(string:"https://world.openfoodfacts.org")!)
+                Link("USDA FoodData Central",destination:URL(string:"https://fdc.nal.usda.gov/")!)
+            }
+        }.appBackground().navigationTitle(diary.t("حول لُقمة","About Luqma"))
     }
 }
 struct ImportPreview:View {

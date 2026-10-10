@@ -9,6 +9,8 @@ CLIP license (MIT): https://github.com/openai/CLIP/blob/main/LICENSE
 Transformers.js (Apache-2.0): https://github.com/huggingface/transformers.js
 ONNX Runtime (MIT): https://github.com/microsoft/onnxruntime
 Nutrition: public-domain USDA FoodData Central SR Legacy (2018).
+Offline search catalog: complete USDA SR Legacy final April 2018 release, 7,793 foods; CC0-1.0/public domain. U.S. Department of Agriculture, Agricultural Research Service. FoodData Central. https://fdc.nal.usda.gov/ . Source nutrition is per 100 g. Existing Arabic labels are retained; new foods retain exact English names with curated Arabic search keywords. Source archive and reproduction details: food-catalog-provenance.json and Scripts/import_usda_catalog.py.
+Online branded product search and barcode data: Open Food Facts, https://world.openfoodfacts.org/ ; database ODbL-1.0, individual contents Database Contents License. Online product records are separate from the bundled USDA catalog. No Open Food Facts images are bundled. Attribution and terms: https://world.openfoodfacts.org/terms-of-use .
 Portions, chicken/rice, shawarma, garlic sauce and tahini sauce recipes are declared reference assumptions, not image measurements or restaurant labels.
 Similarity scores and calorie ranges are not calibrated confidence intervals.
 Pinned mlx-swift-lm 2.30.6 includes verified MIT-licensed upstream Qwen3-VL fixes: sRGB preprocessing (https://github.com/ml-explore/mlx-swift-lm/pull/411) and fused vision attention (https://github.com/ml-explore/mlx-swift-lm/pull/455). Build scripts verify both original and patched source hashes.

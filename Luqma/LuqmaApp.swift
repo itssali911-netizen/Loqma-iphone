@@ -44,10 +44,15 @@ struct RootView:View {
     @EnvironmentObject var diary:DiaryStore
     var body:some View {
         TabView {
-            NavigationStack{DiaryView()}.tabItem{Label(diary.t("اليوم","Diary"),systemImage:"square.grid.2x2")}
-            NavigationStack{KitchenView()}.tabItem{Label(diary.t("مطبخي","Kitchen"),systemImage:"fork.knife")}
-            NavigationStack{ProgressViewScreen()}.tabItem{Label(diary.t("تقدّمي","Progress"),systemImage:"chart.xyaxis.line")}
-            NavigationStack{SettingsView()}.tabItem{Label(diary.t("الإعدادات","Settings"),systemImage:"slider.horizontal.3")}
+            NavigationStack{DiaryView().toolbar{settingsLink}}.tabItem{Label(diary.t("اليوم","Today"),systemImage:"square.grid.2x2")}
+            NavigationStack{KitchenView().toolbar{settingsLink}}.tabItem{Label(diary.t("مطبخي","Kitchen"),systemImage:"fork.knife")}
+            NavigationStack{ProgressViewScreen().toolbar{settingsLink}}.tabItem{Label(diary.t("تقدّمي","Progress"),systemImage:"chart.xyaxis.line")}
+        }
+    }
+    private var settingsLink:some ToolbarContent {
+        ToolbarItem(placement:.topBarTrailing){
+            NavigationLink{SettingsView()}label:{Image(systemName:"gearshape")}
+                .accessibilityLabel(diary.t("الإعدادات","Settings"))
         }
     }
 }

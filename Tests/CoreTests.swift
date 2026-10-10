@@ -2,6 +2,98 @@ import XCTest
 @testable import LuqmaCore
 
 final class CoreTests: XCTestCase {
+    func testFoodSearchKeepsEveryMatchingVariantBeyondFortyResults() {
+        let foods = (0..<125).map { index in
+            Food(catalogID: "rice:\(index)", name: "أرز صنف \(index)", nameEn: "Rice variety \(index)",
+                 nutrition: Nutrition(kcal: 120, protein: 3, carbs: 25, fat: 1))
+        }
+        let index = FoodSearch.Index(foods)
+        XCTAssertEqual(index.results("أرز").count, 125)
+        XCTAssertEqual(Set(index.results("rice").map(\.id)), Set(foods.map(\.id)))
+        XCTAssertEqual(index.results("rice").map(\.id), FoodSearch.results("rice", in: Array(foods.reversed())).map(\.id))
+        XCTAssertTrue(index.results("??? \n").isEmpty)
+    }
+
+    func testFoodSearchMatchesArabicDiacriticsPunctuationAliasesBrandsAndBothLanguages() {
+        let milk = Food(catalogID: "milk", name: "حَليب قليل الدّسم", nameEn: "Low-fat milk",
+                        aliases: "لبن، حليب بقري | Dairy drink", brand: "المراعي Almarai")
+        for query in ["حليب", "حليب-قليل", "الدسم حليب", "MILK low", "milk almarai", "لبن", "dairy drink", "المراعي", "حليب MILK"] {
+            XCTAssertTrue(FoodSearch.matches(milk, query: query), query)
+        }
+        XCTAssertFalse(FoodSearch.matches(milk, query: "milk chocolate"))
+        XCTAssertFalse(FoodSearch.matches(milk, query: ""))
+        XCTAssertEqual(FoodSearch.normalized("أَرْز… ١٠۰% / CＡＦÉ\n"), "ارز 100 cafe")
+        XCTAssertEqual(FoodSearch.normalized("شـاورما، إِجّاص؛ جبنة"), "شاورما اجاص جبنه")
+    }
+
+    func testFoodSearchRanksExactNamesThenPrefixesAndKeepsDistinctBrandProducts() {
+        let nutrition = Nutrition(kcal: 120, protein: 3, carbs: 25, fat: 1)
+        let exact = Food(catalogID: "exact", name: "Rice", nutrition: nutrition)
+        let incompleteExact = Food(catalogID: "missing", name: "Rice")
+        let prefix = Food(catalogID: "prefix", name: "Rice cooked", nutrition: nutrition)
+        let inside = Food(catalogID: "inside", name: "Brown rice cooked", nutrition: nutrition)
+        let brand = Food(catalogID: "brand", name: "Cereal", brand: "Rice Farms", nutrition: nutrition)
+        let results = FoodSearch.results("rice", in: [brand, inside, prefix, incompleteExact, exact])
+        XCTAssertEqual(results.map(\.id), ["exact", "missing", "prefix", "inside", "brand"])
+        let variants = [Food(name: "Rice", brand: "Brand A", barcode: "12345678"),
+                        Food(name: "Rice", brand: "Brand B", barcode: "87654321")]
+        XCTAssertEqual(FoodSearch.results("rice", in: variants).count, 2)
+        XCTAssertEqual(FoodSearch.results("brand rice", in: variants).count, 2)
+    }
+
+    func testFoodSearchDeduplicatesIdentifiersAndUsesNewestSavedNutritionWithoutMutatingIDs() {
+        let original = Food(catalogID: "usda:rice", name: "أرز", nameEn: "Rice",
+                            nutrition: Nutrition(kcal: 100, protein: 2, carbs: 20, fat: 1))
+        var edited = original
+        edited.kcal = 130
+        let index = FoodSearch.Index([original, original])
+        let matches = index.results("ارز", additional: [edited])
+        XCTAssertEqual(matches.count, 1)
+        XCTAssertEqual(matches[0].kcal, 130)
+        XCTAssertEqual(matches[0].id, "usda:rice")
+        XCTAssertEqual(index.results("rice")[0].kcal, 100)
+        let alias = Food(catalogID: "alias", name: "Oryza", aliases: "Rice, أرز")
+        XCTAssertEqual(FoodSearch.results("rice", in: [alias, original]).map(\.id), ["usda:rice", "alias"])
+    }
+
+    func testFoodSearchSourcePaginationContinuesAfterFilteredPagesAndExposesSourceWindow() throws {
+        // OFF's count/page_count describe source hits before the app excludes
+        // category-only matches; the first displayed page can contain no foods.
+        var response: [String: Any] = ["hits": [["product_name": "Unrelated category match"]],
+                                      "page": 1, "page_size": 50, "page_count": 200,
+                                      "count": 10_000, "is_count_exact": false, "timed_out": false]
+        let first = try XCTUnwrap(FoodSearchPage.pagination(response, requestedPage: 1, pageSize: 50))
+        XCTAssertEqual(first.nextPage, 2)
+        XCTAssertNil(first.sourceTotal)
+        XCTAssertFalse(first.reachedSourceWindow)
+        XCTAssertTrue(FoodSearch.results("milk", in: [Food(name: "Unrelated category match")]).isEmpty)
+        response["page"] = 200
+        let boundary = try XCTUnwrap(FoodSearchPage.pagination(response, requestedPage: 200, pageSize: 50))
+        XCTAssertNil(boundary.nextPage)
+        XCTAssertTrue(boundary.reachedSourceWindow)
+        response["count"] = 9_951
+        response["is_count_exact"] = true
+        let final = try XCTUnwrap(FoodSearchPage.pagination(response, requestedPage: 200, pageSize: 50))
+        XCTAssertNil(final.nextPage)
+        XCTAssertEqual(final.sourceTotal, 9_951)
+        XCTAssertFalse(final.reachedSourceWindow)
+    }
+
+    func testFoodSearchPaginationRejectsStaleIncompleteAndErroredSourceResponses() {
+        let response: [String: Any] = ["hits": [["code": "12345678"]], "page": 2, "page_size": 50,
+                                     "page_count": 3, "count": 120, "is_count_exact": true, "timed_out": false]
+        XCTAssertNil(FoodSearchPage.pagination(response, requestedPage: 1, pageSize: 50))
+        let failures: [(String, Any)] = [("timed_out", true), ("errors", [] as [Any]), ("count", -1), ("page_size", 20)]
+        for (key, value) in failures {
+            var failed = response
+            failed[key] = value
+            XCTAssertNil(FoodSearchPage.pagination(failed, requestedPage: 2, pageSize: 50))
+        }
+        var empty = response
+        empty["hits"] = [] as [Any]
+        XCTAssertNil(FoodSearchPage.pagination(empty, requestedPage: 2, pageSize: 50)?.nextPage)
+    }
+
     func testVisionUsesAppAllowanceAndCompactModelOnEightGBPhones() {
         let compact = 1_782_040_921, full = 3_093_767_283
         // An 8 GB phone can still give this app a much smaller allowance.

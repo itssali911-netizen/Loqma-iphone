@@ -1,0 +1,582 @@
+[
+  {
+    "id": "usda:171287",
+    "name": "بيض كامل نيء · بيضة كبيرة",
+    "nameEn": "Whole raw egg · large egg",
+    "aliases": "بيض بيضة بيضه بيضات كبيرة eggs",
+    "serving": "بيضة كبيرة",
+    "servingEn": "Large egg",
+    "servingQuantity": 50,
+    "servingUnit": "g"
+  },
+  {
+    "id": "usda:173424",
+    "name": "بيض مسلوق · بيضة كبيرة",
+    "nameEn": "Hard-boiled egg · large egg",
+    "aliases": "بيض بيضة بيضه بيضات مسلوق مسلوقة كبيرة boiled eggs",
+    "serving": "بيضة كبيرة",
+    "servingEn": "Large egg",
+    "servingQuantity": 50,
+    "servingUnit": "g"
+  },
+  {
+    "id": "usda:172183",
+    "name": "بياض بيض نيء",
+    "nameEn": "Raw egg white",
+    "aliases": "بيض بياض بيضة بيضه egg whites",
+    "serving": "بياض بيضة كبيرة",
+    "servingEn": "Large egg white",
+    "servingQuantity": 33,
+    "servingUnit": "g"
+  },
+  {
+    "id": "usda:172184",
+    "name": "صفار بيض نيء",
+    "nameEn": "Raw egg yolk",
+    "aliases": "بيض صفار بيضة بيضه yolks",
+    "serving": "صفار بيضة كبيرة",
+    "servingEn": "Large egg yolk",
+    "servingQuantity": 17,
+    "servingUnit": "g"
+  },
+  {
+    "id": "usda:172185",
+    "name": "بيض أومليت",
+    "nameEn": "Egg omelet",
+    "aliases": "بيض بيضة بيضه اومليت omelette"
+  },
+  {
+    "id": "usda:172187",
+    "name": "بيض مخفوق مطبوخ",
+    "nameEn": "Scrambled eggs",
+    "aliases": "بيض بيضة بيضه مخفوق scrambled egg"
+  },
+  {
+    "id": "usda:173423",
+    "name": "بيض مقلي",
+    "nameEn": "Fried egg",
+    "aliases": "بيض بيضة بيضه مقلي fried eggs"
+  },
+  {
+    "id": "usda:171077",
+    "name": "صدر دجاج نيء بدون جلد",
+    "nameEn": "Chicken breast, raw, skinless",
+    "aliases": "دجاج صدر صدور chicken breasts raw"
+  },
+  {
+    "id": "usda:171477",
+    "name": "صدر دجاج مطبوخ بالفرن بدون جلد",
+    "nameEn": "Chicken breast, roasted, skinless",
+    "aliases": "دجاج صدر صدور مطبوخ فرن roasted cooked"
+  },
+  {
+    "id": "usda:171534",
+    "name": "صدر دجاج مشوي بدون جلد",
+    "nameEn": "Chicken breast, grilled, skinless",
+    "aliases": "دجاج صدر صدور مشوي grilled"
+  },
+  {
+    "id": "usda:174030",
+    "name": "لحم بقري مفروم نيء · دهون 10٪",
+    "nameEn": "Ground beef, raw, 10% fat",
+    "aliases": "لحم لحمة بقري مفروم beef minced"
+  },
+  {
+    "id": "usda:174031",
+    "name": "لحم بقري مفروم مشوي · دهون 10٪",
+    "nameEn": "Ground beef, broiled, 10% fat",
+    "aliases": "لحم لحمة بقري مفروم مطبوخ مشوي beef minced cooked"
+  },
+  {
+    "id": "usda:175167",
+    "name": "سلمون أطلسي نيء · مستزرع",
+    "nameEn": "Atlantic salmon, raw, farmed",
+    "aliases": "سلمون سالمون سمك salmon fish"
+  },
+  {
+    "id": "usda:175168",
+    "name": "سلمون أطلسي مطبوخ · مستزرع",
+    "nameEn": "Atlantic salmon, cooked, farmed",
+    "aliases": "سلمون سالمون سمك مطبوخ مشوي salmon fish"
+  },
+  {
+    "id": "usda:173709",
+    "name": "تونة معلبة بالماء · مصفاة",
+    "nameEn": "Canned light tuna in water, drained",
+    "aliases": "تونة تونه سمك tuna canned"
+  },
+  {
+    "id": "usda:175176",
+    "name": "سمك بلطي نيء",
+    "nameEn": "Tilapia, raw",
+    "aliases": "سمك بلطي fish"
+  },
+  {
+    "id": "usda:175177",
+    "name": "سمك بلطي مطبوخ",
+    "nameEn": "Tilapia, cooked",
+    "aliases": "سمك بلطي مطبوخ مشوي fish"
+  },
+  {
+    "id": "usda:175179",
+    "name": "روبيان نيء",
+    "nameEn": "Shrimp, raw",
+    "aliases": "روبيان جمبري shrimp prawns"
+  },
+  {
+    "id": "usda:175180",
+    "name": "روبيان مطبوخ",
+    "nameEn": "Shrimp, cooked",
+    "aliases": "روبيان جمبري مطبوخ shrimp prawns"
+  },
+  {
+    "id": "usda:169756",
+    "name": "أرز أبيض طويل الحبة · نيء",
+    "nameEn": "White long-grain rice, dry",
+    "aliases": "ارز رز رُز ابيض ني خام rice uncooked raw dry"
+  },
+  {
+    "id": "usda:169757",
+    "name": "أرز أبيض طويل الحبة · مطبوخ بدون ملح",
+    "nameEn": "White long-grain rice, cooked, unsalted",
+    "aliases": "ارز رز رُز ابيض مطبوخ rice cooked"
+  },
+  {
+    "id": "usda:169703",
+    "name": "أرز بني طويل الحبة · نيء",
+    "nameEn": "Brown long-grain rice, dry",
+    "aliases": "ارز رز بني اسمر ني خام rice uncooked raw dry"
+  },
+  {
+    "id": "usda:169704",
+    "name": "أرز بني طويل الحبة · مطبوخ",
+    "nameEn": "Brown long-grain rice, cooked",
+    "aliases": "ارز رز بني اسمر مطبوخ rice cooked"
+  },
+  {
+    "id": "usda:173904",
+    "name": "شوفان جاف",
+    "nameEn": "Oats, dry",
+    "aliases": "شوفان oat oatmeal"
+  },
+  {
+    "id": "usda:168927",
+    "name": "مكرونة جافة",
+    "nameEn": "Pasta, dry",
+    "aliases": "مكرونة معكرونة سباغيتي سباجيتي pasta macaroni spaghetti raw"
+  },
+  {
+    "id": "usda:168928",
+    "name": "مكرونة مطبوخة بدون ملح",
+    "nameEn": "Pasta, cooked, unsalted",
+    "aliases": "مكرونة معكرونة سباغيتي سباجيتي مطبوخة pasta macaroni spaghetti"
+  },
+  {
+    "id": "usda:172816",
+    "name": "خبز عربي أبيض · بيتا",
+    "nameEn": "White pita bread",
+    "aliases": "خبز عيش عربي بيتا bread pita"
+  },
+  {
+    "id": "usda:174916",
+    "name": "خبز عربي قمح كامل · بيتا",
+    "nameEn": "Whole-wheat pita bread",
+    "aliases": "خبز عيش عربي اسمر بر بيتا bread pita"
+  },
+  {
+    "id": "usda:172688",
+    "name": "خبز توست قمح كامل",
+    "nameEn": "Whole-wheat bread",
+    "aliases": "خبز عيش توست اسمر بر bread toast"
+  },
+  {
+    "id": "usda:174924",
+    "name": "خبز توست أبيض",
+    "nameEn": "White bread",
+    "aliases": "خبز عيش توست ابيض bread toast"
+  },
+  {
+    "id": "usda:168874",
+    "name": "كينوا جافة",
+    "nameEn": "Quinoa, dry",
+    "aliases": "كينوا خام نيئة quinoa uncooked"
+  },
+  {
+    "id": "usda:168917",
+    "name": "كينوا مطبوخة",
+    "nameEn": "Quinoa, cooked",
+    "aliases": "كينوا مطبوخ quinoa"
+  },
+  {
+    "id": "usda:169699",
+    "name": "كسكس جاف",
+    "nameEn": "Couscous, dry",
+    "aliases": "كسكس كسكسي couscous uncooked"
+  },
+  {
+    "id": "usda:169700",
+    "name": "كسكس مطبوخ",
+    "nameEn": "Couscous, cooked",
+    "aliases": "كسكس كسكسي مطبوخ couscous"
+  },
+  {
+    "id": "usda:170026",
+    "name": "بطاطس نيئة بالقشرة",
+    "nameEn": "Potato, raw, with skin",
+    "aliases": "بطاطس بطاطا potatoes potato raw"
+  },
+  {
+    "id": "usda:170438",
+    "name": "بطاطس مسلوقة بدون ملح",
+    "nameEn": "Potato, boiled, unsalted",
+    "aliases": "بطاطس بطاطا مسلوقة potatoes potato boiled"
+  },
+  {
+    "id": "usda:170093",
+    "name": "بطاطس مشوية بالقشرة بدون ملح",
+    "nameEn": "Potato, baked, unsalted",
+    "aliases": "بطاطس بطاطا مشوية potatoes potato baked"
+  },
+  {
+    "id": "usda:168482",
+    "name": "بطاطا حلوة نيئة",
+    "nameEn": "Sweet potato, raw",
+    "aliases": "بطاطا بطاطس حلوة sweet potatoes"
+  },
+  {
+    "id": "usda:168483",
+    "name": "بطاطا حلوة مشوية",
+    "nameEn": "Sweet potato, baked",
+    "aliases": "بطاطا بطاطس حلوة مشوية sweet potatoes"
+  },
+  {
+    "id": "usda:171265",
+    "name": "حليب كامل الدسم · دهون 3.25٪",
+    "nameEn": "Whole milk, 3.25% fat",
+    "aliases": "حليب لبن milk full fat"
+  },
+  {
+    "id": "usda:170872",
+    "name": "حليب قليل الدسم · دهون 1٪",
+    "nameEn": "Low-fat milk, 1% fat",
+    "aliases": "حليب لبن قليل الدسم milk low fat"
+  },
+  {
+    "id": "usda:171269",
+    "name": "حليب خالي الدسم",
+    "nameEn": "Skim milk, fat-free",
+    "aliases": "حليب لبن خالي الدسم milk nonfat skim"
+  },
+  {
+    "id": "usda:171284",
+    "name": "زبادي سادة كامل الدسم",
+    "nameEn": "Plain whole-milk yogurt",
+    "aliases": "زبادي روب يوجرت yogurt yoghurt"
+  },
+  {
+    "id": "usda:170886",
+    "name": "زبادي سادة قليل الدسم",
+    "nameEn": "Plain low-fat yogurt",
+    "aliases": "زبادي روب قليل الدسم yogurt yoghurt"
+  },
+  {
+    "id": "usda:170894",
+    "name": "زبادي يوناني سادة خالي الدسم",
+    "nameEn": "Plain nonfat Greek yogurt",
+    "aliases": "زبادي روب يوناني خالي الدسم greek yogurt yoghurt"
+  },
+  {
+    "id": "usda:170903",
+    "name": "زبادي يوناني سادة قليل الدسم",
+    "nameEn": "Plain low-fat Greek yogurt",
+    "aliases": "زبادي روب يوناني قليل الدسم greek yogurt yoghurt"
+  },
+  {
+    "id": "usda:171304",
+    "name": "زبادي يوناني سادة كامل الدسم",
+    "nameEn": "Plain whole-milk Greek yogurt",
+    "aliases": "زبادي روب يوناني كامل الدسم greek yogurt yoghurt"
+  },
+  {
+    "id": "usda:173414",
+    "name": "جبن شيدر",
+    "nameEn": "Cheddar cheese",
+    "aliases": "جبن جبنة شيدر cheese"
+  },
+  {
+    "id": "usda:173420",
+    "name": "جبن فيتا",
+    "nameEn": "Feta cheese",
+    "aliases": "جبن جبنة فيتا cheese"
+  },
+  {
+    "id": "usda:173944",
+    "name": "موز نيء",
+    "nameEn": "Banana, raw",
+    "aliases": "موز موزه موزة banana bananas"
+  },
+  {
+    "id": "usda:169097",
+    "name": "برتقال نيء",
+    "nameEn": "Orange, raw",
+    "aliases": "برتقال برتقالة orange oranges"
+  },
+  {
+    "id": "usda:171705",
+    "name": "أفوكادو نيء",
+    "nameEn": "Avocado, raw",
+    "aliases": "افوكادو avocado avocados"
+  },
+  {
+    "id": "usda:167762",
+    "name": "فراولة نيئة",
+    "nameEn": "Strawberry, raw",
+    "aliases": "فراولة فراوله strawberries strawberry"
+  },
+  {
+    "id": "usda:174683",
+    "name": "عنب أحمر أو أخضر",
+    "nameEn": "Red or green grapes, raw",
+    "aliases": "عنب grapes grape"
+  },
+  {
+    "id": "usda:171711",
+    "name": "توت أزرق نيء",
+    "nameEn": "Blueberry, raw",
+    "aliases": "توت ازرق blueberries blueberry"
+  },
+  {
+    "id": "usda:169124",
+    "name": "أناناس نيء",
+    "nameEn": "Pineapple, raw",
+    "aliases": "اناناس pineapple"
+  },
+  {
+    "id": "usda:167765",
+    "name": "بطيخ نيء",
+    "nameEn": "Watermelon, raw",
+    "aliases": "بطيخ حبحب watermelon"
+  },
+  {
+    "id": "usda:169910",
+    "name": "مانجو نيء",
+    "nameEn": "Mango, raw",
+    "aliases": "مانجو مانجا mango"
+  },
+  {
+    "id": "usda:168191",
+    "name": "تمر مجدول",
+    "nameEn": "Medjool dates",
+    "aliases": "تمر تمرة تمور مجدول dates date"
+  },
+  {
+    "id": "usda:171726",
+    "name": "تمر دقلة نور",
+    "nameEn": "Deglet Noor dates",
+    "aliases": "تمر تمرة تمور dates date"
+  },
+  {
+    "id": "usda:168409",
+    "name": "خيار نيء بالقشرة",
+    "nameEn": "Cucumber, raw, with peel",
+    "aliases": "خيار cucumber"
+  },
+  {
+    "id": "usda:170457",
+    "name": "طماطم نيئة",
+    "nameEn": "Tomato, raw",
+    "aliases": "طماطم بندورة tomatoes tomato"
+  },
+  {
+    "id": "usda:170379",
+    "name": "بروكلي نيء",
+    "nameEn": "Broccoli, raw",
+    "aliases": "بروكلي broccoli"
+  },
+  {
+    "id": "usda:170393",
+    "name": "جزر نيء",
+    "nameEn": "Carrot, raw",
+    "aliases": "جزر carrot carrots"
+  },
+  {
+    "id": "usda:168429",
+    "name": "خس زبدي نيء",
+    "nameEn": "Butterhead lettuce, raw",
+    "aliases": "خس lettuce"
+  },
+  {
+    "id": "usda:168462",
+    "name": "سبانخ نيئة",
+    "nameEn": "Spinach, raw",
+    "aliases": "سبانخ spinach"
+  },
+  {
+    "id": "usda:170000",
+    "name": "بصل نيء",
+    "nameEn": "Onion, raw",
+    "aliases": "بصل onions onion"
+  },
+  {
+    "id": "usda:170108",
+    "name": "فلفل حلو أحمر نيء",
+    "nameEn": "Red bell pepper, raw",
+    "aliases": "فلفل حلو رومي احمر peppers pepper"
+  },
+  {
+    "id": "usda:169251",
+    "name": "فطر أبيض نيء",
+    "nameEn": "White mushroom, raw",
+    "aliases": "فطر مشروم mushrooms mushroom"
+  },
+  {
+    "id": "usda:169998",
+    "name": "ذرة حلوة صفراء نيئة",
+    "nameEn": "Yellow sweet corn, raw",
+    "aliases": "ذرة corn maize"
+  },
+  {
+    "id": "usda:170567",
+    "name": "لوز",
+    "nameEn": "Almonds",
+    "aliases": "لوز almonds almond"
+  },
+  {
+    "id": "usda:170162",
+    "name": "كاجو نيء",
+    "nameEn": "Cashews, raw",
+    "aliases": "كاجو cashews cashew"
+  },
+  {
+    "id": "usda:170187",
+    "name": "جوز عين الجمل",
+    "nameEn": "Walnuts",
+    "aliases": "جوز عين جمل walnuts walnut"
+  },
+  {
+    "id": "usda:172430",
+    "name": "فول سوداني نيء",
+    "nameEn": "Peanuts, raw",
+    "aliases": "فول سوداني peanuts peanut"
+  },
+  {
+    "id": "usda:173806",
+    "name": "فول سوداني محمص بدون ملح",
+    "nameEn": "Peanuts, dry-roasted, unsalted",
+    "aliases": "فول سوداني محمص peanuts peanut"
+  },
+  {
+    "id": "usda:172470",
+    "name": "زبدة فول سوداني ناعمة بدون ملح",
+    "nameEn": "Smooth peanut butter, unsalted",
+    "aliases": "زبدة فول سوداني peanut butter"
+  },
+  {
+    "id": "usda:170554",
+    "name": "بذور شيا جافة",
+    "nameEn": "Chia seeds, dried",
+    "aliases": "شيا بذور chia seeds"
+  },
+  {
+    "id": "usda:169414",
+    "name": "بذور كتان",
+    "nameEn": "Flaxseed",
+    "aliases": "كتان بذور flax seeds"
+  },
+  {
+    "id": "usda:172420",
+    "name": "عدس نيء",
+    "nameEn": "Lentils, dry",
+    "aliases": "عدس lentils lentil raw"
+  },
+  {
+    "id": "usda:172421",
+    "name": "عدس مسلوق بدون ملح",
+    "nameEn": "Lentils, boiled, unsalted",
+    "aliases": "عدس مسلوق مطبوخ lentils lentil"
+  },
+  {
+    "id": "usda:173756",
+    "name": "حمص حب نيء",
+    "nameEn": "Chickpeas, dry",
+    "aliases": "حمص حب chickpeas garbanzo raw"
+  },
+  {
+    "id": "usda:173757",
+    "name": "حمص حب مسلوق بدون ملح",
+    "nameEn": "Chickpeas, boiled, unsalted",
+    "aliases": "حمص حب مسلوق chickpeas garbanzo"
+  },
+  {
+    "id": "usda:172454",
+    "name": "حمص بطحينة · تحضير منزلي",
+    "nameEn": "Hummus, home prepared",
+    "aliases": "حمص طحينة hummus"
+  },
+  {
+    "id": "usda:175194",
+    "name": "فاصوليا حمراء مسلوقة بدون ملح",
+    "nameEn": "Red kidney beans, boiled, unsalted",
+    "aliases": "فاصوليا حمراء kidney beans"
+  },
+  {
+    "id": "usda:171413",
+    "name": "زيت زيتون",
+    "nameEn": "Olive oil",
+    "aliases": "زيت زيتون olive oil"
+  },
+  {
+    "id": "usda:173430",
+    "name": "زبدة بدون ملح",
+    "nameEn": "Butter, unsalted",
+    "aliases": "زبدة butter"
+  },
+  {
+    "id": "usda:169640",
+    "name": "عسل",
+    "nameEn": "Honey",
+    "aliases": "عسل honey"
+  },
+  {
+    "id": "usda:169655",
+    "name": "سكر أبيض",
+    "nameEn": "White sugar",
+    "aliases": "سكر sugar"
+  },
+  {
+    "id": "usda:171689",
+    "name": "تفاح نيء بدون القشرة",
+    "nameEn": "Apple, raw, without skin",
+    "aliases": "تفاح تفاحة apples apple"
+  },
+  {
+    "id": "usda:170845",
+    "name": "جبن موزاريلا كامل الدسم",
+    "nameEn": "Whole-milk mozzarella cheese",
+    "aliases": "جبن جبنة موزاريلا موتزريلا mozzarella"
+  },
+  {
+    "id": "usda:170287",
+    "name": "برغل مطبوخ",
+    "nameEn": "Bulgur, cooked",
+    "aliases": "برغل مطبوخ bulgur"
+  },
+  {
+    "id": "usda:170688",
+    "name": "برغل جاف",
+    "nameEn": "Bulgur, dry",
+    "aliases": "برغل خام نيء bulgur"
+  },
+  {
+    "id": "usda:170419",
+    "name": "بازلاء خضراء نيئة",
+    "nameEn": "Green peas, raw",
+    "aliases": "بازلاء بسلة peas"
+  },
+  {
+    "id": "usda:171890",
+    "name": "قهوة سوداء بدون إضافات",
+    "nameEn": "Black brewed coffee",
+    "aliases": "قهوة قهوه سوداء coffee black"
+  }
+]
