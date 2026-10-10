@@ -154,12 +154,52 @@ final class CoreTests: XCTestCase {
         XCTAssertEqual(result.parts.count, 1); XCTAssertTrue(result.parts[0].tentative)
         XCTAssertEqual(result.parts[0].food.food.source, "AI nutrition estimate")
         let invalid = json.replacingOccurrences(of: "\"fat\":8", with: "\"fat\":95")
-        let rejected = try VisionMeal.decode(invalid, description: "", foods: foods)
-        XCTAssertTrue(rejected.parts.isEmpty); XCTAssertTrue(rejected.unmatched)
+        XCTAssertThrowsError(try VisionMeal.decode(invalid, description: "", foods: foods))
         let inconsistent = json.replacingOccurrences(of: "\"kcal\":240", with: "\"kcal\":180")
         let repaired = try VisionMeal.decode(inconsistent, description: "", foods: foods)
         XCTAssertEqual(try XCTUnwrap(repaired.parts.first).food.nutrition.kcal, 240)
         XCTAssertTrue(try XCTUnwrap(repaired.parts.first).tentative)
+    }
+    func testVisionDoesNotSilentlyLoseObservedGenericWrapDipsAndSides() throws {
+        let foods = try resource("photo-foods", [PhotoFood].self)
+        // The compact runtime recognized these six components but omitted
+        // nutrition, previously leaving only chicken and plain bread in the UI.
+        let incomplete = """
+        {"food_present":true,"uncertain":false,"items":[
+        {"name_en":"grilled chicken strips","grams":250,"min_grams":200,"max_grams":300,"count":8},
+        {"name_en":"dip","grams":120,"min_grams":100,"max_grams":160,"count":1},
+        {"name_en":"pita wrap","grams":120,"min_grams":100,"max_grams":160,"count":1},
+        {"name_en":"pickled vegetables","grams":75,"min_grams":70,"max_grams":80,"count":2},
+        {"name_en":"flatbread","grams":200,"min_grams":180,"max_grams":220,"count":3},
+        {"name_en":"dip bowl","grams":120,"min_grams":100,"max_grams":160,"count":1}]}
+        """
+        XCTAssertThrowsError(try VisionMeal.decode(incomplete, description: "", foods: foods))
+        var repaired = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(incomplete.utf8)) as? [String: Any])
+        var items = try XCTUnwrap(repaired["items"] as? [[String: Any]])
+        let estimates: [[String: Double]] = [
+            ["kcal": 165, "protein": 31, "carbs": 0, "fat": 4.5],
+            ["kcal": 195, "protein": 3, "carbs": 12, "fat": 15],
+            ["kcal": 220, "protein": 8, "carbs": 29, "fat": 8],
+            ["kcal": 28, "protein": 1, "carbs": 6, "fat": 0],
+            ["kcal": 250, "protein": 8, "carbs": 50, "fat": 2],
+            ["kcal": 170, "protein": 4, "carbs": 7, "fat": 14]
+        ]
+        for index in items.indices { items[index]["nutrition_per_100g"] = estimates[index] }
+        repaired["items"] = items; repaired["uncertain"] = true
+        let json = try XCTUnwrap(String(data: JSONSerialization.data(withJSONObject: repaired), encoding: .utf8))
+        let result = try VisionMeal.decode(json, description: "", foods: foods)
+        XCTAssertEqual(result.parts.count, 6)
+        XCTAssertEqual(result.parts.reduce(0) { $0 + $1.grams }, 885)
+        XCTAssertEqual(result.parts.first { $0.food.id == "171534" }?.grams, 250)
+        XCTAssertEqual(result.parts.first { $0.food.id == "172816" }?.grams, 200)
+        for name in ["dip", "pita wrap", "pickled vegetables", "dip bowl"] {
+            let part = try XCTUnwrap(result.parts.first { $0.food.nameEn == name })
+            XCTAssertTrue(part.food.id.hasPrefix("ai:")); XCTAssertTrue(part.tentative)
+            XCTAssertEqual(part.food.food.source, "AI nutrition estimate")
+            XCTAssertEqual(part.food.nutrition.kcal, part.food.nutrition.macroCalories, accuracy: 1e-8)
+        }
+        XCTAssertFalse(result.parts.contains { ["chicken-shawarma", "garlic-sauce", "tahini-sauce"].contains($0.food.id) })
+        XCTAssertTrue(result.unmatched)
     }
     func testNamedDishesRangesAndContradictoryIDs() throws {
         let foods = try resource("photo-foods", [PhotoFood].self)
