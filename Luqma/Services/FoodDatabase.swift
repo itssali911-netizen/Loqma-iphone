@@ -5,13 +5,15 @@ import FoundationNetworking
 
 actor FoodDatabase {
     static let shared = FoodDatabase()
+    static let searchSummarySourceDescription = "openfoodfacts-search-summary"
     private let catalog: FoodSearch.Index
     private var searchStarts: [TimeInterval] = []
     private var barcodeStarts: [TimeInterval] = []
     private var searchBlockedUntil: TimeInterval = 0
+    private var barcodeBlockedUntil: TimeInterval = 0
     private var pages: [String: (saved: TimeInterval, page: FoodSearchPage)] = [:]
     private static let pageSize = 50
-    private static let fields = ["code", "product_name", "product_name_ar", "product_name_en", "brands", "nutriments", "serving_size", "serving_quantity", "serving_quantity_unit", "product_quantity_unit"]
+    private static let fields = ["code", "product_name", "product_name_ar", "product_name_en", "brands", "nutriments", "nutrition_data_per", "serving_size", "serving_quantity", "serving_quantity_unit", "product_quantity_unit"]
 
     init() {
         var foods: [Food] = []
@@ -46,8 +48,10 @@ actor FoodDatabase {
     private func reserveBarcode() throws {
         let now = ProcessInfo.processInfo.systemUptime
         barcodeStarts.removeAll { now - $0 >= 60 }
-        guard barcodeStarts.count < 15 else {
-            let seconds = Int(ceil(max(1, 60 - (now - barcodeStarts[0]))))
+        let quota = barcodeStarts.count >= 15 ? max(0, 60 - (now - barcodeStarts[0])) : 0
+        let wait = max(quota, barcodeBlockedUntil - now)
+        guard wait <= 0 else {
+            let seconds = Int(ceil(wait))
             throw AppError.invalid("انتظر \(seconds) ثانية قبل البحث عن باركود آخر.", "Wait \(seconds) seconds before looking up another barcode.")
         }
         barcodeStarts.append(now)
@@ -71,6 +75,7 @@ actor FoodDatabase {
             let supplied = header.flatMap(Double.init) ?? header.flatMap { formatter.date(from: $0)?.timeIntervalSinceNow }
             let retry = supplied.map { $0.isFinite ? min(3600, max(1, $0)) : 60 } ?? 60
             if searching { searchBlockedUntil = ProcessInfo.processInfo.systemUptime + retry }
+            else { barcodeBlockedUntil = ProcessInfo.processInfo.systemUptime + retry }
             throw AppError.invalid("قاعدة المنتجات مشغولة. انتظر قليلًا ثم أعد المحاولة؛ الأطعمة المحفوظة متاحة الآن.", "The product database is busy. Wait a little and retry; saved foods are available now.")
         }
         guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode), data.count < 15 * 1024 * 1024,
@@ -85,10 +90,38 @@ actor FoodDatabase {
         guard (8...14).contains(code.count), TextSearch.normalized(raw).trimmingCharacters(in: .whitespacesAndNewlines) == code else {
             throw AppError.invalid("أدخل رقم باركود من ٨ إلى ١٤ رقمًا.", "Enter a barcode of 8 to 14 digits.")
         }
-        if let saved = cached.last(where: { $0.barcode == code }), saved.per100 != nil || saved.servingNutrition != nil { return saved }
+        if let saved = cached.last(where: { $0.barcode == code }) {
+            if saved.sourceDescription == Self.searchSummarySourceDescription { return try await details(for: saved) }
+            if saved.per100 != nil || saved.servingNutrition != nil { return saved }
+        }
+        return try await loadProduct(code)
+    }
+
+    /// The search index can omit liquid units and serving information. Resolve
+    /// those fields from the authoritative product endpoint before using its
+    /// nutrition in the diary; old saved foods remain usable offline.
+    func details(for food: Food) async throws -> Food {
         try Task.checkCancellation()
+        guard food.sourceDescription == Self.searchSummarySourceDescription else { return food }
+        guard food.source == "OpenFoodFacts", let code = food.sourceId ?? food.barcode,
+              let resolved = try await loadProduct(code) else {
+            throw AppError.invalid("تعذّر تحميل تفاصيل المنتج. أعد المحاولة أو أدخل بيانات ملصقه يدويًا.", "Product details could not be loaded. Retry or enter its label nutrition manually.")
+        }
+        try Task.checkCancellation()
+        return resolved
+    }
+
+    private func loadProduct(_ code: String) async throws -> Food? {
+        try Task.checkCancellation()
+        // OFF also assigns internal codes that are not EAN barcodes. Restrict
+        // path characters, without applying the scanner's 8–14-digit limit.
+        guard !code.isEmpty, code.count <= 180,
+              code.allSatisfy({ "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_".contains($0) }) else {
+            throw AppError.invalid("تعذّر قراءة معرّف المنتج. أدخل بيانات ملصقه يدويًا.", "The product identifier could not be read. Enter its label nutrition manually.")
+        }
         try reserveBarcode()
-        var url = URLComponents(string: "https://world.openfoodfacts.org/api/v2/product/\(code).json")!
+        var url = URLComponents(string: "https://world.openfoodfacts.org")!
+        url.path = "/api/v2/product/\(code).json"
         url.queryItems = [URLQueryItem(name: "fields", value: Self.fields.joined(separator: ","))]
         let json = try await request(URLRequest(url: url.url!), allowMissing: true)
         guard (json["status"] as? Int) == 1, let product = json["product"] as? [String: Any] else { return nil }
@@ -121,7 +154,12 @@ actor FoodDatabase {
               let pagination = FoodSearchPage.pagination(json, requestedPage: page, pageSize: Self.pageSize) else {
             throw AppError.invalid("لم تكتمل نتائج البحث. جرّب مرة أخرى؛ الأطعمة المحفوظة متاحة الآن.", "The search did not complete. Retry; saved foods are available now.")
         }
-        let result = FoodSearchPage(foods: FoodSearch.results(term, in: hits.compactMap(Self.product)),
+        let summaries = hits.compactMap(Self.product).map { product -> Food in
+            var summary = product
+            summary.sourceDescription = Self.searchSummarySourceDescription
+            return summary
+        }
+        let result = FoodSearchPage(foods: FoodSearch.results(term, in: summaries),
                                     nextPage: pagination.nextPage, sourceTotal: pagination.sourceTotal,
                                     reachedSourceWindow: pagination.reachedSourceWindow)
         try Task.checkCancellation()
@@ -152,8 +190,10 @@ actor FoodDatabase {
         let match = serving.flatMap { try? NSRegularExpression(pattern: "([0-9]+(?:[.,][0-9]+)?)\\s*(g|ml|gr|gram|grams)\\b", options: .caseInsensitive).firstMatch(in: $0, range: NSRange($0.startIndex..., in: $0)) }
         var quantity: Double?, servingUnit: String?
         if let serving, let match, let value = Range(match.range(at: 1), in: serving), let unit = Range(match.range(at: 2), in: serving) {
-            quantity = Double(serving[value].replacingOccurrences(of: ",", with: "."))
-            servingUnit = serving[unit].lowercased() == "ml" ? "ml" : "g"
+            if let parsed = Double(serving[value].replacingOccurrences(of: ",", with: ".")), parsed.isFinite, parsed > 0, parsed <= 10_000 {
+                quantity = parsed
+                servingUnit = serving[unit].lowercased() == "ml" ? "ml" : "g"
+            }
         }
         if quantity == nil,
            let value = (product["serving_quantity"] as? NSNumber)?.doubleValue,
@@ -162,7 +202,11 @@ actor FoodDatabase {
             quantity = value
             servingUnit = unit
         }
-        let base: FoodUnit = text("product_quantity_unit") == "ml" || servingUnit == "ml" ? .ml : .g
+        let declaredBasis = text("nutrition_data_per")?.lowercased().replacingOccurrences(of: " ", with: "")
+        let base: FoodUnit
+        if declaredBasis == "100ml" { base = .ml }
+        else if declaredBasis == "100g" { base = .g }
+        else { base = text("product_quantity_unit") == "ml" || servingUnit == "ml" ? .ml : .g }
         let per100 = nutrition("100g"), direct = nutrition("serving")
         let calculated = quantity.flatMap { value in value > 0 && servingUnit == base.rawValue ? per100?.scaled(value / 100) : nil }
         var food = Food(catalogID: "off:" + code, name: name, nameEn: text("product_name_en"), brand: text("brands"), barcode: barcode, unit: base,

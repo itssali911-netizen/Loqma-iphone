@@ -42,11 +42,15 @@ struct NutritionView:View {
 struct FoodRow:View {
     var food:Food;var action:()->Void
     @EnvironmentObject var diary:DiaryStore
+    private var reference:String {
+        if food.sourceDescription==FoodDatabase.searchSummarySourceDescription {return diary.t("لكل ١٠٠","per 100")}
+        return food.unit == .serving ? diary.t("للحصة","per serving"):diary.t("لكل ١٠٠","per 100")+" "+food.unit.label(diary.language)
+    }
     var body:some View {
         Button(action:action){HStack(spacing:14){
             Image(systemName:"plus.circle.fill").font(.title2).foregroundStyle(Theme.accent)
             VStack(alignment:.leading,spacing:6){Text(food.label(diary.language)).font(.headline).foregroundStyle(.primary);if let brand=food.brand{Text(brand).font(.caption).foregroundStyle(Theme.muted)}
-                if let n=food.values(for:food.unit){Text("\(decimal(n.kcal,0)) \(diary.t("سعرة","kcal")) · \(food.unit == .serving ? diary.t("للحصة","per serving"):diary.t("لكل ١٠٠","per 100")+" "+food.unit.label(diary.language))").font(.subheadline).foregroundStyle(Theme.accent);Text("P \(decimal(n.protein)) · C \(decimal(n.carbs)) · F \(decimal(n.fat))").font(.caption).foregroundStyle(Theme.muted).environment(\.layoutDirection,.leftToRight)}
+                if let n=food.values(for:food.unit){Text("\(decimal(n.kcal,0)) \(diary.t("سعرة","kcal")) · \(reference)").font(.subheadline).foregroundStyle(Theme.accent);Text("P \(decimal(n.protein)) · C \(decimal(n.carbs)) · F \(decimal(n.fat))").font(.caption).foregroundStyle(Theme.muted).environment(\.layoutDirection,.leftToRight)}
                 else{Text(diary.t("بيانات غذائية غير مكتملة","Incomplete nutrition data")).font(.caption).foregroundStyle(.orange)}
             };Spacer(minLength:0)
         }.padding(.vertical,8)}.buttonStyle(.plain)
