@@ -39,7 +39,9 @@ enum FoodSearch {
     /// belong to searching only, so old diary entries and saved products retain
     /// their identity when a spelling is normalized differently.
     static func normalized(_ text: String) -> String {
-        var value = TextSearch.normalized(text)
+        // Foundation can preserve a hamza when another Arabic mark follows it.
+        // Decompose first so all combining marks are removed by the scalar pass.
+        var value = TextSearch.normalized(text).decomposedStringWithCanonicalMapping
         for (original, replacement) in [("ؤ", "و"), ("ئ", "ي"), ("ی", "ي"), ("ک", "ك")] {
             value = value.replacingOccurrences(of: original, with: replacement)
         }

@@ -24,6 +24,9 @@ final class CoreTests: XCTestCase {
         XCTAssertFalse(FoodSearch.matches(milk, query: ""))
         XCTAssertEqual(FoodSearch.normalized("أَرْز… ١٠۰% / CＡＦÉ\n"), "ارز 100 cafe")
         XCTAssertEqual(FoodSearch.normalized("شـاورما، إِجّاص؛ جبنة"), "شاورما اجاص جبنه")
+        XCTAssertTrue(FoodSearch.matches(Food(name: "أَرْز"), query: "ارز"))
+        XCTAssertEqual(FoodSearch.normalized("ا\u{0654}رز"), FoodSearch.normalized("أرز"))
+        XCTAssertEqual(FoodSearch.normalized("إِجّاص"), FoodSearch.normalized("اجاص"))
     }
 
     func testFoodSearchRanksExactNamesThenPrefixesAndKeepsDistinctBrandProducts() {
