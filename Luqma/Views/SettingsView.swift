@@ -10,19 +10,20 @@ struct BackupDocument:FileDocument {
 }
 struct SettingsView:View {
     @EnvironmentObject var diary:DiaryStore
+    @EnvironmentObject var health:HealthService
     @State private var goals=false
     var body:some View {
         Form{
-            Section(diary.t("أهدافي وتفضيلاتي","Goals and preferences")){
+            Section(diary.t("أهدافي","My goals")){
                 Button{goals=true}label:{Label(diary.t("السعرات والماكروز","Calories and macros"),systemImage:"target")}
                 NavigationLink{PlanView()}label:{Label(diary.t("خطة الوزن","Weight plan"),systemImage:"chart.line.uptrend.xyaxis")}
+            }
+            Section(diary.t("التفضيلات","Preferences")){
                 Picker(diary.t("اللغة","Language"),selection:Binding(get:{diary.language},set:{value in diary.change{$0.language=value}})){Text("العربية").tag(AppLanguage.ar);Text("English").tag(AppLanguage.en)}.pickerStyle(.menu)
             }
             Section(diary.t("الربط والبيانات","Connections and data")){
-                NavigationLink{
-                    ScrollView{HealthPanel().padding(20)}.appBackground().navigationTitle(diary.t("صحتي","Health"))
-                }label:{
-                    HStack{Label(diary.t("صحتي","Apple Health"),systemImage:"heart");Spacer();Text(diary.state.healthEnabled ? diary.t("مفعّل","Enabled"):diary.t("غير مفعّل","Disabled")).font(.caption).foregroundStyle(.secondary)}
+                NavigationLink{HealthConnectionView()}label:{
+                    HStack{Label(diary.t("صحتي","Apple Health"),systemImage:"heart");Spacer();Text(health.signingBlocked ? diary.t("يحتاج إعداد","Setup needed") : (diary.state.healthEnabled ? diary.t("مفعّل","Enabled"):diary.t("غير مربوط","Not connected"))).font(.caption).foregroundStyle(.secondary)}
                 }
                 NavigationLink{BackupSettingsView()}label:{Label(diary.t("النسخ الاحتياطي والنقل","Backup and transfer"),systemImage:"externaldrive")}
             }
@@ -66,14 +67,13 @@ private struct AboutLuqmaView:View {
     var body:some View {
         Form{
             Section(diary.t("لُقمة","Luqma")){
-                Text(diary.t("الإصدار ","Version ") + (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.3"))
+                Text(diary.t("الإصدار ","Version ") + (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.4"))
             }
             Section(diary.t("الخصوصية","Privacy")){
                 Notice(text:diary.t("سجلك محفوظ على الجهاز. البحث الخارجي وتنزيل نماذج الصور أول مرة يحتاجان الإنترنت. الصور وبيانات صحتي لا تُرفع إلى خادم.","Your diary is stored on the device. Online search and initial image-model downloads need internet. Photos and Health data are not uploaded."))
             }
             Section(diary.t("مصادر الطعام","Food sources")){
                 Link("Open Food Facts",destination:URL(string:"https://world.openfoodfacts.org")!)
-                Link("USDA FoodData Central",destination:URL(string:"https://fdc.nal.usda.gov/")!)
             }
         }.appBackground().navigationTitle(diary.t("حول لُقمة","About Luqma"))
     }

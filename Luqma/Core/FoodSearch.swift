@@ -35,6 +35,19 @@ struct FoodSearchPage {
 }
 
 enum FoodSearch {
+    static func isOpenFoodFacts(_ food: Food) -> Bool {
+        food.source == "OpenFoodFacts" && food.catalogID?.hasPrefix("off:") == true &&
+            food.sourceId.map { !$0.isEmpty && food.catalogID == "off:" + $0 } == true
+    }
+
+    static func isPersonalFood(_ food: Food) -> Bool {
+        food.source == "Your food" || (food.source == nil && food.catalogID == nil && food.barcode == nil)
+    }
+
+    /// Keep old entries and backup caches intact while preventing an old USDA
+    /// cache or an image estimate from re-entering the new food picker.
+    static func availableForAdding(_ food: Food) -> Bool { isOpenFoodFacts(food) || isPersonalFood(food) }
+
     /// Keep the persisted Food identifiers unchanged. These normalization rules
     /// belong to searching only, so old diary entries and saved products retain
     /// their identity when a spelling is normalized differently.

@@ -41,6 +41,17 @@ struct Food: Codable, Equatable, Identifiable {
     var servingChoices: [FoodServing] { unit == .g && per100 != nil ? (servings ?? []).filter(\.valid) : [] }
     func values(for u: FoodUnit) -> Nutrition? { u == .serving ? servingNutrition ?? (unit == .serving ? per100 : servingChoices.first.flatMap { per100?.scaled($0.grams / 100) }) : (u == unit ? per100 : nil) }
     var units: [FoodUnit] { [unit] + (unit != .serving && values(for: .serving) != nil ? [.serving] : []) }
+    var additionUnits: [FoodUnit] { [.serving] + (unit == .serving ? [] : [unit]) }
+    var defaultAdditionUnit: FoodUnit { .serving }
+    func definingServing(quantity: Double, unit servingBasis: FoodUnit, label: String) throws -> Food {
+        guard servingBasis != .serving, servingBasis == unit, quantity.isFinite, quantity > 0, quantity <= 10000,
+              let reference = per100, !label.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              label.count <= 240 else { throw AppError.invalid("حدد وزن أو حجم الحصة بوحدة المنتج.", "Set the serving weight or volume in the product's unit.") }
+        var result = self
+        result.serving = label; result.servingQuantity = quantity; result.servingUnit = servingBasis.rawValue
+        result.servingNutrition = reference.scaled(quantity / 100)
+        return result
+    }
     func selecting(_ choice: FoodServing) throws -> Food {
         guard choice.valid, unit == .g, let nutrition = per100, servingChoices.contains(choice) else { throw AppError.invalid("اختر حصة صالحة من حصص الطعام.", "Choose a valid serving from this food.") }
         var result = self; result.serving = choice.label; result.servingQuantity = choice.grams; result.servingUnit = "g"; result.servingNutrition = nutrition.scaled(choice.grams / 100)

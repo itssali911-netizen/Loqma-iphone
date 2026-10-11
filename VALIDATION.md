@@ -1,6 +1,10 @@
+# Validation — version 1.5 native verification pending
+
+Version 1.5 replaces the active food catalog with Open Food Facts, adds Best match and Serving defaults, requires actual OFF products before photo logging, and separates Health signing help from progress. The starter cache has six real products and five declared servings; live search is the broader database access. New tests cover v3.6 parsing, source filtering, declared liquid units, missing servings and recognition-only labels. Native compilation is pending for this source; prior build results below do not validate it. Personal Apple signing and physical-device verification remain necessary.
+
 # Validation — version 1.4 build 29 food tests/package verified; vision fixture failed 2026-10-11
 
-## Current version 1.4: build 29 partial validation
+## Historical version 1.4: build 29 partial validation
 
 [Build 29](https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/38107859362) from `671cdac6b3e50704ba55eadd94f972a85e0b35f9` passed all **53 Foundation tests and 26 Python tests** on the macOS 15 / Xcode 26.3 runner. The iPhoneOS Release app compiled, local ad-hoc signing and strict deep signature verification passed. The workflow concluded **failure at the separate vision runtime step**: compact 2B returned an analysable meal but missed plain pita in the mixed-meal fixture. Standalone dip, meat and wrap categories were present; no absent side was invented. Full 4B, cached/offline and blank-image checks were not reached. These results do not establish reliable photo recognition, physical-iPhone performance, Health authorization or measured nutrition accuracy.
 

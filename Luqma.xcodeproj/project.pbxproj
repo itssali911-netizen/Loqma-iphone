@@ -75,6 +75,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = 007FBEEB3DCFA7A65B8ECEC2;
 		};
+		"1E894F72A51B5F2C4EE0C0D6" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "OpenFoodFactsProduct.swift";
+			"sourceTree" = "<group>";
+		};
+		"513E77FD1223B72D245CC4B7" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 1E894F72A51B5F2C4EE0C0D6;
+		};
 		"F78575E7CF35BE9BEF0982EF" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -125,6 +135,7 @@
 				740B6574D4BE2DB81E89F3F4,
 				99FD76BD119C231294A67C24,
 				007FBEEB3DCFA7A65B8ECEC2,
+				1E894F72A51B5F2C4EE0C0D6,
 				F78575E7CF35BE9BEF0982EF,
 				F866668F7C766A3FE269DA0B,
 				1F0D75ECCB677A0C7DCB66DA,
@@ -246,6 +257,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = BFE17ACE05D898E290332E40;
 		};
+		"3759170AED1C2D7C901295F6" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "HealthConnectionView.swift";
+			"sourceTree" = "<group>";
+		};
+		"D04ED25BCA9CF73FE9FDA19E" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 3759170AED1C2D7C901295F6;
+		};
 		"3EA6656D40209CE7623FD71E" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -313,6 +334,7 @@
 				BC88FCEB1B7FEC70CC4BD5B3,
 				11772A999B0CF5E648C47233,
 				BFE17ACE05D898E290332E40,
+				3759170AED1C2D7C901295F6,
 				3EA6656D40209CE7623FD71E,
 				3E31BDA889FB25A6C7913241,
 				69C4B1C7AA72B29F8292B817,
@@ -322,16 +344,6 @@
 			);
 			"path" = "Views";
 			"sourceTree" = "<group>";
-		};
-		"CC4835ACBE4AF0BEE9598C7C" = {
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "text.json";
-			"path" = "food-catalog-labels.json";
-			"sourceTree" = "<group>";
-		};
-		"C59949329D4A9E5086B69543" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = CC4835ACBE4AF0BEE9598C7C;
 		};
 		"653CB95744A5426845834052" = {
 			"isa" = "PBXFileReference";
@@ -463,7 +475,6 @@
 		"369366657F0CC118760331FE" = {
 			"isa" = "PBXGroup";
 			"children" = (
-				CC4835ACBE4AF0BEE9598C7C,
 				653CB95744A5426845834052,
 				8EA4F3E095B455BAF87189A3,
 				AAECD8E4A1635D9ECC66FF18,
@@ -617,6 +628,7 @@
 				FD770A0D1190CA0559B018D1,
 				98141A9EE077F7BCF208865C,
 				223C3154D98275519A803E3F,
+				513E77FD1223B72D245CC4B7,
 				25D59F21AF9CF7B0695BC555,
 				7156749514081042D0DEDDA9,
 				7F8C55211A3045987A30FBB4,
@@ -631,6 +643,7 @@
 				2C605AA8C1E44D960F29D9D5,
 				0E5577C4BBC679748E6C3F13,
 				0B2634EBC8B3FF8510852636,
+				D04ED25BCA9CF73FE9FDA19E,
 				437B4B5D1B4C9BA846CD0DF3,
 				B9FCD0B7DEB5015571206492,
 				B7953420073CFA82ED6F7D0D,
@@ -656,7 +669,6 @@
 			"isa" = "PBXResourcesBuildPhase";
 			"buildActionMask" = 2147483647;
 			"files" = (
-				C59949329D4A9E5086B69543,
 				60B9E98FB23D88931E10D2AC,
 				49626A23D001F68B37E6F749,
 				16E7F61E3E9E166F4FBD966C,
@@ -710,7 +722,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				"MARKETING_VERSION" = "1.4";
+				"MARKETING_VERSION" = "1.5";
 				"PRODUCT_BUNDLE_IDENTIFIER" = "app.luqma.diary";
 				"PRODUCT_NAME" = "$(TARGET_NAME)";
 				"SDKROOT" = "iphoneos";
@@ -758,7 +770,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				"MARKETING_VERSION" = "1.4";
+				"MARKETING_VERSION" = "1.5";
 				"PRODUCT_BUNDLE_IDENTIFIER" = "app.luqma.diary";
 				"PRODUCT_NAME" = "$(TARGET_NAME)";
 				"SDKROOT" = "iphoneos";

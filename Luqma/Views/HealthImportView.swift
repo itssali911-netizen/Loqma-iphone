@@ -13,7 +13,8 @@ import UniformTypeIdentifiers
         NavigationStack {
             Form {
                 Section {
-                    Text(diary.t("استيراد الوزن دون صلاحية HealthKit", "Import weight without HealthKit access")).font(.headline)
+                    Text(diary.t("استيراد يدوي من صحتي", "Manual Health import")).font(.headline)
+                    Notice(text: diary.t("ينقل الوزن من ملف فقط. لا يفعّل الربط أو التحديث التلقائي.", "Imports weight from a file. It does not enable Health access or automatic updates."))
                     Text(diary.t("١. افتح صحتي ← صورة حسابك ← تصدير جميع البيانات الصحية، واحفظ ملف ZIP في «الملفات».\n٢. في «الملفات»، اضغط ملف ZIP لفك ضغطه.\n٣. اختر ملف apple_health_export/export.xml من الزر أدناه.", "1. Open Health → your profile → Export All Health Data. Save the ZIP to Files.\n2. In Files, tap the ZIP to unzip it.\n3. Choose apple_health_export/export.xml below."))
                     Button(diary.t("اختيار export.xml", "Choose export.xml")) { choosing = true }.disabled(busy)
                     if busy { ProgressView(diary.t("قراءة سجل الوزن…", "Reading weight records…")) }

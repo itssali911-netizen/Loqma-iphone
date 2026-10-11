@@ -2,8 +2,25 @@ import Foundation
 
 struct PhotoFood: Codable, Identifiable {
     var id:String;var name:String;var nameEn:String;var grams:Double;var kcal:Double;var protein:Double;var carbs:Double;var fat:Double
+    private var recognitionOnly=false
     var nutrition:Nutrition { Nutrition(kcal:kcal,protein:protein,carbs:carbs,fat:fat) }
-    var food:Food { Food(catalogID:"photo:"+id,name:name,nameEn:nameEn,nutrition:nutrition,source:id.hasPrefix("ai:") ? "AI nutrition estimate" : "USDA / reference recipe") }
+    var food:Food { Food(catalogID:"photo:"+id,name:name,nameEn:nameEn,nutrition:recognitionOnly ? nil : nutrition,source:recognitionOnly ? "Image label" : id.hasPrefix("ai:") ? "AI nutrition estimate" : "Historical photo reference") }
+    init(id:String,name:String,nameEn:String,grams:Double,kcal:Double,protein:Double,carbs:Double,fat:Double) {
+        self.id=id;self.name=name;self.nameEn=nameEn;self.grams=grams;self.kcal=kcal;self.protein=protein;self.carbs=carbs;self.fat=fat
+    }
+    enum CodingKeys:String,CodingKey {case id,name,nameEn,grams,kcal,protein,carbs,fat}
+    init(from decoder:Decoder) throws {
+        let c=try decoder.container(keyedBy:CodingKeys.self)
+        id=try c.decode(String.self,forKey:.id);name=try c.decode(String.self,forKey:.name);nameEn=try c.decode(String.self,forKey:.nameEn);grams=try c.decode(Double.self,forKey:.grams)
+        let k=try c.decodeIfPresent(Double.self,forKey:.kcal),p=try c.decodeIfPresent(Double.self,forKey:.protein),b=try c.decodeIfPresent(Double.self,forKey:.carbs),f=try c.decodeIfPresent(Double.self,forKey:.fat)
+        recognitionOnly=k==nil || p==nil || b==nil || f==nil
+        kcal=k ?? 0;protein=p ?? 0;carbs=b ?? 0;fat=f ?? 0
+    }
+    func encode(to encoder:Encoder) throws {
+        var c=encoder.container(keyedBy:CodingKeys.self)
+        try c.encode(id,forKey:.id);try c.encode(name,forKey:.name);try c.encode(nameEn,forKey:.nameEn);try c.encode(grams,forKey:.grams)
+        if !recognitionOnly {try c.encode(kcal,forKey:.kcal);try c.encode(protein,forKey:.protein);try c.encode(carbs,forKey:.carbs);try c.encode(fat,forKey:.fat)}
+    }
 }
 struct PhotoPart:Identifiable { var id=UUID();var food:PhotoFood;var grams:Double;var low:Double;var high:Double;var basis:String;var tentative:Bool=false;var count:Double?=nil
     var nutrition:Nutrition { food.nutrition.scaled(grams/100) }

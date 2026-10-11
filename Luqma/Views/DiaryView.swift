@@ -24,7 +24,7 @@ struct DiaryView:View {
             ForEach(Meal.allCases){meal in mealSection(meal)}
         }.padding(20)}.appBackground().navigationTitle(diary.t("لُقمة","Luqma"))
             .toolbar{ToolbarItem(placement:.topBarTrailing){Button{goals=true}label:{Image(systemName:"target")}.accessibilityLabel(diary.t("أهداف الماكروز","Macro goals"))}}
-            .sheet(isPresented:$adding){FoodAddView(onPhotoCommit:{foods,meal in do{let entries=try foods.map{try DiaryEntry(food:$0.0,amount:$0.1,unit:.g,meal:meal,day:day,language:diary.language)};return diary.add(entries,foods:foods.map{$0.0})}catch{diary.report(error);return false}}){food,amount,unit,meal in do{let entry=try DiaryEntry(food:food,amount:amount,unit:unit,meal:meal,day:day,language:diary.language);return diary.add([entry],foods:[food])}catch{diary.report(error);return false}}}
+            .sheet(isPresented:$adding){FoodAddView(onPhotoCommit:{foods,meal in do{let entries=try foods.map{try DiaryEntry(food:$0.0,amount:$0.1,unit:$0.2,meal:meal,day:day,language:diary.language)};return diary.add(entries,foods:foods.map{$0.0})}catch{diary.report(error);return false}}){food,amount,unit,meal in do{let entry=try DiaryEntry(food:food,amount:amount,unit:unit,meal:meal,day:day,language:diary.language);return diary.add([entry],foods:[food])}catch{diary.report(error);return false}}}
             .sheet(item:$editing){EntryEditor(entry:$0)}
             .sheet(isPresented:$goals){GoalEditor()}
     }

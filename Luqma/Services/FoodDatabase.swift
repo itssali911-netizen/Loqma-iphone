@@ -13,25 +13,31 @@ actor FoodDatabase {
     private var barcodeBlockedUntil: TimeInterval = 0
     private var pages: [String: (saved: TimeInterval, page: FoodSearchPage)] = [:]
     private static let pageSize = 50
-    private static let fields = ["code", "product_name", "product_name_ar", "product_name_en", "brands", "nutriments", "nutrition_data_per", "serving_size", "serving_quantity", "serving_quantity_unit", "product_quantity_unit"]
+    private static let fields = ["code", "product_name", "product_name_ar", "product_name_en", "brands", "nutriments", "nutrition", "nutrition_data_per", "serving_size", "serving_quantity", "serving_quantity_unit", "product_quantity_unit"]
 
     init() {
         var foods: [Food] = []
         if let url = Bundle.main.url(forResource: "foods-data", withExtension: "json"), let data = try? Data(contentsOf: url) {
             foods = (try? JSONDecoder().decode([Food].self, from: data)) ?? []
         }
-        catalog = FoodSearch.Index(foods)
+        catalog = FoodSearch.Index(foods.filter(FoodSearch.isOpenFoodFacts))
     }
 
     func local(_ query: String, cached: [Food]) -> [Food] {
-        catalog.results(query, additional: Array(cached.reversed()))
+        catalog.results(query, additional: Array(cached.filter(FoodSearch.availableForAdding).reversed()))
     }
 
     func historyFoods(_ entries: [DiaryEntry]) -> [Food] { catalog.historyCandidates(entries) }
-    func historyLists(_ state: DiarySnapshot) -> (recent: [Food], frequent: [Food], personal: [Food]) { FoodHistory.lists(in: state, catalog: catalog.historyCandidates(state.entries)) }
+    func historyLists(_ state: DiarySnapshot) -> (recent: [Food], frequent: [Food], personal: [Food]) {
+        var filtered = state
+        filtered.products = state.products.filter(FoodSearch.availableForAdding)
+        filtered.searchHistory = state.searchHistory.filter(FoodSearch.availableForAdding)
+        filtered.barcodeHistory = state.barcodeHistory.filter(FoodSearch.availableForAdding)
+        return FoodHistory.lists(in: filtered, catalog: catalog.historyCandidates(state.entries))
+    }
 
     func combined(_ query: String, local: [Food], remote: [Food]) -> [Food] {
-        remote.isEmpty ? local : FoodSearch.results(query, in: local + remote)
+        FoodSearch.results(query, in: (local + remote).filter(FoodSearch.availableForAdding))
     }
 
     /// OFF asks apps not to search online on every keystroke. The UI submits a
@@ -64,7 +70,7 @@ actor FoodDatabase {
         try Task.checkCancellation()
         var req = request
         req.timeoutInterval = 18
-        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.3"
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.5"
         req.setValue("LuqmaIOS/\(version) (https://github.com/itssali911-netizen/Loqma-iphone)", forHTTPHeaderField: "User-Agent")
         let (data, response) = try await URLSession.shared.data(for: req)
         try Task.checkCancellation()
@@ -93,7 +99,7 @@ actor FoodDatabase {
         guard (8...14).contains(code.count), TextSearch.normalized(raw).trimmingCharacters(in: .whitespacesAndNewlines) == code else {
             throw AppError.invalid("أدخل رقم باركود من ٨ إلى ١٤ رقمًا.", "Enter a barcode of 8 to 14 digits.")
         }
-        if let saved = cached.last(where: { $0.barcode == code }) {
+        if let saved = cached.last(where: { $0.barcode == code && FoodSearch.isOpenFoodFacts($0) }) {
             if saved.sourceDescription == Self.searchSummarySourceDescription { return try await details(for: saved) }
             if saved.per100 != nil || saved.servingNutrition != nil { return saved }
         }
@@ -124,11 +130,11 @@ actor FoodDatabase {
         }
         try reserveBarcode()
         var url = URLComponents(string: "https://world.openfoodfacts.org")!
-        url.path = "/api/v2/product/\(code).json"
+        url.path = "/api/v3.6/product/\(code).json"
         url.queryItems = [URLQueryItem(name: "fields", value: Self.fields.joined(separator: ","))]
         let json = try await request(URLRequest(url: url.url!), allowMissing: true)
-        guard (json["status"] as? Int) == 1, let product = json["product"] as? [String: Any] else { return nil }
-        return Self.product(product)
+        guard json["status"] as? String == "success", let product = json["product"] as? [String: Any] else { return nil }
+        return OpenFoodFactsProduct.parse(product)
     }
 
     func remote(_ query: String, page: Int = 1) async throws -> FoodSearchPage {
@@ -157,7 +163,7 @@ actor FoodDatabase {
               let pagination = FoodSearchPage.pagination(json, requestedPage: page, pageSize: Self.pageSize) else {
             throw AppError.invalid("لم تكتمل نتائج البحث. جرّب مرة أخرى؛ الأطعمة المحفوظة متاحة الآن.", "The search did not complete. Retry; saved foods are available now.")
         }
-        let summaries = hits.compactMap(Self.product).map { product -> Food in
+        let summaries = hits.compactMap(OpenFoodFactsProduct.parse).map { product -> Food in
             var summary = product
             summary.sourceDescription = Self.searchSummarySourceDescription
             return summary
@@ -171,55 +177,4 @@ actor FoodDatabase {
         return result
     }
 
-    private static func product(_ product: [String: Any]) -> Food? {
-        func text(_ key: String) -> String? {
-            let value = (product[key] as? String) ?? (product[key] as? [String])?.joined(separator: ", ")
-            guard let value, !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
-            return String(value.prefix(180))
-        }
-        guard let code = text("code"), let name = text("product_name_ar") ?? text("product_name") ?? text("product_name_en") else { return nil }
-        let barcode = (8...14).contains(code.count) && code.allSatisfy { "0123456789".contains($0) } ? code : nil
-        let nutriments = product["nutriments"] as? [String: Any] ?? [:]
-        func number(_ key: String) -> Double? {
-            let value = (nutriments[key] as? NSNumber)?.doubleValue ?? (nutriments[key] as? String).flatMap(Double.init)
-            return value.flatMap { $0.isFinite && $0 >= 0 && $0 <= 100_000 ? $0 : nil }
-        }
-        func nutrition(_ suffix: String) -> Nutrition? {
-            guard let kcal = number("energy-kcal_" + suffix) ?? ((number("energy-kj_" + suffix) ?? number("energy_" + suffix)).map { $0 / 4.184 }),
-                  let protein = number("proteins_" + suffix), let carbs = number("carbohydrates_" + suffix), let fat = number("fat_" + suffix) else { return nil }
-            return Nutrition(kcal: kcal, protein: protein, carbs: carbs, fat: fat)
-        }
-        let serving = text("serving_size")
-        let match = serving.flatMap { try? NSRegularExpression(pattern: "([0-9]+(?:[.,][0-9]+)?)\\s*(g|ml|gr|gram|grams)\\b", options: .caseInsensitive).firstMatch(in: $0, range: NSRange($0.startIndex..., in: $0)) }
-        var quantity: Double?, servingUnit: String?
-        if let serving, let match, let value = Range(match.range(at: 1), in: serving), let unit = Range(match.range(at: 2), in: serving) {
-            if let parsed = Double(serving[value].replacingOccurrences(of: ",", with: ".")), parsed.isFinite, parsed > 0, parsed <= 10_000 {
-                quantity = parsed
-                servingUnit = serving[unit].lowercased() == "ml" ? "ml" : "g"
-            }
-        }
-        if quantity == nil,
-           let value = (product["serving_quantity"] as? NSNumber)?.doubleValue,
-           value.isFinite, value > 0, value <= 10_000,
-           let unit = text("serving_quantity_unit"), ["g", "ml"].contains(unit) {
-            quantity = value
-            servingUnit = unit
-        }
-        let declaredBasis = text("nutrition_data_per")?.lowercased().replacingOccurrences(of: " ", with: "")
-        let base: FoodUnit
-        if declaredBasis == "100ml" { base = .ml }
-        else if declaredBasis == "100g" { base = .g }
-        else { base = text("product_quantity_unit") == "ml" || servingUnit == "ml" ? .ml : .g }
-        let per100 = nutrition("100g"), direct = nutrition("serving")
-        let calculated = quantity.flatMap { value in value > 0 && servingUnit == base.rawValue ? per100?.scaled(value / 100) : nil }
-        var food = Food(catalogID: "off:" + code, name: name, nameEn: text("product_name_en"), brand: text("brands"), barcode: barcode, unit: base,
-                        nutrition: per100, serving: serving, servingQuantity: quantity, servingUnit: servingUnit,
-                        servingNutrition: direct ?? calculated, source: "OpenFoodFacts")
-        food.sourceId = code
-        // Preserve the alternate language and original product label in the
-        // searchable aliases even when an Arabic label is chosen for display.
-        food.aliases = [text("product_name_ar"), text("product_name_en"), text("product_name")].compactMap { $0 }.filter { $0 != name && $0 != food.nameEn }.joined(separator: " | ")
-        if per100 == nil && food.servingNutrition != nil { food.unit = .serving }
-        return food
-    }
 }

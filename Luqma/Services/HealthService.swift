@@ -35,9 +35,14 @@ import UIKit
 
     private func explainSigning(_ diary: DiaryStore) {
         signingBlocked = true; backgroundStatus = .unavailable
+        generation += 1
         stopObservers()
         if UIApplication.shared.isProtectedDataAvailable && !diary.waitingForUnlock { diary.change { $0.healthEnabled = false } }
-        message = diary.t("توقيع النسخة المثبتة يفتقد HealthKit. أعد توقيع ملف التحديث عبر Impactor مع نفس حساب Apple ومعرّف التطبيق، ثم اضغط الربط مرة واحدة. راجع دليل ربط صحتي؛ تغيير الأذونات وحده لا يصلح التوقيع.", "This installation's signature is missing HealthKit. Re-sign the update using Impactor with the same Apple account and app identifier, then connect once. See the Health setup guide; permissions alone cannot fix signing.")
+        message = diary.t("النسخة المثبتة لا تحمل صلاحية HealthKit. يلزم إعادة توقيعها بصلاحية صحتي قبل الربط؛ تغيير أذونات الآيفون وحده لا يكفي.", "This installation lacks the HealthKit entitlement. Re-sign it with Health access before connecting; changing iPhone permissions alone cannot fix it.")
+    }
+    func checkInstallation(_ diary: DiaryStore) {
+        guard available, profileAllowsHealth == false, !signingBlocked else { return }
+        explainSigning(diary)
     }
     private func handle(_ error: Error, diary: DiaryStore) {
         let e = error as NSError

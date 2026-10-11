@@ -3,7 +3,7 @@ import PhotosUI
 import UIKit
 
 @MainActor struct PhotoMealView:View {
-    var onCommit:([(Food,Double)],Meal)->Bool
+    var onCommit:PhotoFoodCommit
     @EnvironmentObject var diary:DiaryStore
     @Environment(\.scenePhase) private var phase
     @State private var item:PhotosPickerItem?
@@ -17,6 +17,9 @@ import UIKit
     @State private var cancellationMessage:String?
     @State private var recoveredRun=false
     @State private var parts:[PhotoPart]=[]
+    private struct ProductSelection:Identifiable {var id:UUID;var name:String}
+    @State private var selection:ProductSelection?
+    @State private var products:[UUID:(Food,Double,FoodUnit)]=[:]
     @State private var references:[PhotoFood]=[]
     @State private var sauceSuggested=false
     @State private var unmatched=false
@@ -25,7 +28,7 @@ import UIKit
     @State private var advanced = VisionAnalyzer.supported
     @State private var engine = ""
     @State private var activeModel = "Qwen3-VL"
-    private var total:Nutrition{parts.reduce(.zero){$0+$1.nutrition}}
+    private var total:Nutrition{products.values.reduce(.zero){$0+((try? $1.0.total($1.1,unit:$1.2)) ?? .zero)}}
     var body:some View {
         let choosePhotoTitle=diary.t("رفع صورة","Choose photo")
         return VStack(alignment:.leading,spacing:18){
@@ -45,8 +48,17 @@ import UIKit
             if let error{Text(error).foregroundStyle(.orange).font(.footnote)}
             if !parts.isEmpty{review}
         }.sheet(isPresented:$camera){CameraPhoto{data in camera=false;if let data{imageData=data;parts=[];error=nil}}.ignoresSafeArea()}
+            .sheet(item:$selection){request in AnyView(FoodAddView(initial:products[request.id]?.0,initialQuery:request.name,productSelection:true){food,amount,unit,_ in
+                guard FoodSearch.isOpenFoodFacts(food),(try? food.total(amount,unit:unit)) != nil else{return false}
+                if !parts.contains(where:{$0.id==request.id}) {
+                    let n=food.values(for:food.unit) ?? .zero
+                    let label=PhotoFood(id:food.id,name:food.name,nameEn:food.nameEn ?? food.name,grams:1,kcal:n.kcal,protein:n.protein,carbs:n.carbs,fat:n.fat)
+                    parts.append(PhotoPart(id:request.id,food:label,grams:1,low:1,high:1,basis:"selected"))
+                }
+                products[request.id]=(food,amount,unit);selection=nil;return true
+            })}
             .onChange(of:item){_,value in Task{guard let value else{return};do{imageData=try await value.loadTransferable(type:Data.self);parts=[];error=nil}catch{self.error=error.localizedDescription}}}
-            .onChange(of:imageData){_,data in preview=data.flatMap{try? PhotoAnalyzer.image($0,maxPixels:640)}.map{UIImage(cgImage:$0)}}
+            .onChange(of:imageData){_,data in products.removeAll();preview=data.flatMap{try? PhotoAnalyzer.image($0,maxPixels:640)}.map{UIImage(cgImage:$0)}}
             .onChange(of:phase){_,value in if value != .active,busy{cancellationMessage=diary.t("توقف التحليل عند مغادرة الشاشة. ملفات النموذج محفوظة؛ افتح التطبيق واضغط تحليل مجددًا.", "Analysis stopped when the app left the foreground. Model files are preserved; reopen the app and analyze again.");analysisTask?.cancel()}}
             .onReceive(NotificationCenter.default.publisher(for:UIApplication.didReceiveMemoryWarningNotification)){_ in if busy{cancellationMessage=diary.t("أوقفنا التحليل بسبب ضغط الذاكرة. أعد فتح لقمة وحاول مجددًا أو اختر التحليل الخفيف.", "Analysis stopped because of memory pressure. Reopen Luqma and retry or choose lightweight analysis.");analysisTask?.cancel()}}
             .task{recoveredRun=await VisionAnalyzer.shared.recoverInterruptedRun()}
@@ -62,20 +74,37 @@ import UIKit
         if stage=="validate" { return diary.t("مراجعة القيم الغذائية…", "Checking nutrition…") }
         return diary.t("فحص مكونات الصورة…", "Inspecting image regions…") + " " + stage.replacingOccurrences(of:"analyze:",with:"")
     }
-    private var review:some View {VStack(alignment:.leading,spacing:18){
-        Text(diary.t("راجع مكونات الوجبة","Review meal components")).font(.title3.bold())
-        Text(engine).font(.caption).foregroundStyle(Theme.muted)
-        ForEach($parts){$part in VStack(alignment:.leading,spacing:8){HStack{Text(part.food.food.label(diary.language)).font(.headline);Spacer();Button(role:.destructive){parts.removeAll{$0.id==part.id}}label:{Image(systemName:"minus.circle")}};if part.tentative{Text(diary.t("اقتراح يحتاج تأكيدك","Tentative: confirm this component")).foregroundStyle(.orange).font(.caption)};if let count=part.count{Text(diary.t("العدد المقدّر: ","Estimated count: ")+decimal(count,0)).font(.caption)};if part.food.id.hasPrefix("ai:"){Text(diary.t("القيم الغذائية مقدّرة بالذكاء الاصطناعي","AI-estimated nutrition")).font(.caption).foregroundStyle(.orange)};NumericInput(title:diary.t("الوزن المقدّر","Estimated weight"),value:Binding(get:{part.grams},set:{part.setGrams($0)}),suffix:diary.t("جم","g"));Text("\(decimal(part.low,0))–\(decimal(part.high,0)) "+diary.t("جم • نطاق تقديري","g • rough range")).font(.caption).foregroundStyle(Theme.muted);NutritionView(value:part.nutrition)}.luqmaCard()}
-        Menu{ForEach(references){f in Button(f.food.label(diary.language)){parts.append(PhotoPart(food:f,grams:f.grams,low:f.grams*0.5,high:f.grams*1.8,basis:"reference"))}}}label:{Label(diary.t("إضافة مكوّن ناقص","Add a missing component"),systemImage:"plus.circle")}
-        if sauceSuggested{Notice(text:diary.t("قد توجد علبة صوص؛ حدّد نوعها من إضافة مكوّن ناقص قبل الحفظ.","A dip may be present. Confirm its type using Add a missing component."))}
-        if unmatched{Notice(text:diary.t("بعض تفاصيل وصفك غير معروفة؛ راجع المكونات الناقصة.","Some description details were not recognized. Check missing components."))}
-        NutritionView(value:total,large:true).luqmaCard()
-        Text(diary.t("نطاق السعرات: ", "Calorie range: ") + decimal(parts.reduce(0){$0+$1.food.kcal*$1.low/100},0) + "–" + decimal(parts.reduce(0){$0+$1.food.kcal*$1.high/100},0) + " kcal").font(.subheadline).foregroundStyle(Theme.muted)
-        Notice(text:diary.t("الوزن والسعرات تقديرات، وليست قياسًا من الصورة. نطاق السعرات يعكس اختلاف الوزن فقط؛ الزيت والوصفة ونوع الصوص قد يوسّعونه. راجع المكونات قبل الحفظ، خصوصًا الصوصات والأصناف المقترحة.","Weight and calories are estimates, not measurements. The calorie range reflects portion uncertainty only; oil, recipe and sauce type add uncertainty. Review components before saving, especially dips and tentative foods."))
-        Picker(diary.t("الوجبة","Meal"),selection:$meal){ForEach(Meal.allCases){Text($0.label(diary.language)).tag($0)}}
-        Button(diary.t("تأكيد وإضافة الوجبة","Confirm and add meal")){if onCommit(parts.map{($0.food.food,$0.grams)},meal){parts=[]}}.buttonStyle(.borderedProminent).disabled(parts.contains{!$0.grams.isFinite || $0.grams<=0 || $0.grams>3000})
-    }}
-    private func analyze(){guard let imageData else{return};busy=true;error=nil;cancellationMessage=nil;parts=[];stage=""
+    private var review:some View {
+        VStack(alignment:.leading,spacing:16){
+            Text(diary.t("اختر منتجات الوجبة","Choose meal products")).font(.title3.bold())
+            Text(diary.t("الصورة تقترح الأصناف فقط. اختر المنتج والكمية من Open Food Facts لكل مكوّن قبل الإضافة.","The photo suggests food names only. Choose an Open Food Facts product and amount for each component before logging.")).font(.footnote).foregroundStyle(Theme.muted)
+            ForEach(parts){part in
+                VStack(alignment:.leading,spacing:10){
+                    HStack{
+                        Text(part.food.food.label(diary.language)).font(.headline)
+                        Spacer()
+                        Button(role:.destructive){parts.removeAll{$0.id==part.id};products.removeValue(forKey:part.id)}label:{Image(systemName:"minus.circle")}.accessibilityLabel(diary.t("إزالة المكوّن","Remove component"))
+                    }
+                    if let product=products[part.id] {
+                        Text(product.0.label(diary.language)).font(.subheadline)
+                        Text("\(decimal(product.1)) \(product.2.label(diary.language)) · Open Food Facts").font(.caption).foregroundStyle(Theme.muted)
+                        if let nutrition=try? product.0.total(product.1,unit:product.2){NutritionView(value:nutrition)}
+                    }else if part.basis != "selected" {
+                        Text(diary.t("وزن تقريبي من الصورة: ","Rough photo weight: ")+decimal(part.grams,0)+diary.t(" جم — راجع الكمية عند اختيار المنتج"," g — review the amount when choosing a product")).font(.caption).foregroundStyle(Theme.muted)
+                    }
+                    Button{selection=ProductSelection(id:part.id,name:part.food.food.label(diary.language))}label:{Label(diary.t(products[part.id]==nil ? "اختيار المنتج والكمية":"تغيير المنتج أو الكمية",products[part.id]==nil ? "Choose product and amount":"Change product or amount"),systemImage:"magnifyingglass")}.buttonStyle(.bordered)
+                }.luqmaCard()
+            }
+            Button{selection=ProductSelection(id:UUID(),name:"")}label:{Label(diary.t("إضافة مكوّن","Add component"),systemImage:"plus.circle")}
+            if !products.isEmpty {NutritionView(value:total,large:true).luqmaCard()}
+            Picker(diary.t("الوجبة","Meal"),selection:$meal){ForEach(Meal.allCases){Text($0.label(diary.language)).tag($0)}}
+            Button(diary.t("إضافة المنتجات المحددة","Log selected products")){
+                let values=parts.compactMap{products[$0.id]}
+                if onCommit(values,meal){parts=[];products=[:]}
+            }.buttonStyle(.borderedProminent).disabled(parts.isEmpty || parts.contains{products[$0.id]==nil})
+        }
+    }
+    private func analyze(){guard let imageData else{return};busy=true;error=nil;cancellationMessage=nil;parts=[];products=[:];stage=""
         analysisTask=Task{do{
             let refs=try await PhotoAnalyzer.shared.foods()
             let result:PhotoResult
