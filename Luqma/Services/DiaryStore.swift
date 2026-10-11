@@ -41,18 +41,46 @@ import UIKit
     func change(_ mutation: (inout DiarySnapshot) throws -> Void) {
         do { var next = state; try mutation(&next); try commit(next) } catch { report(error) }
     }
-    @discardableResult func add(_ entries: [DiaryEntry]) -> Bool {
-        do { var next=state; next.entries += entries; try commit(next); return true } catch { report(error); return false }
+    @discardableResult func add(_ entries: [DiaryEntry], foods: [Food] = []) -> Bool {
+        do {
+            var next = state
+            next.entries += entries
+            for food in foods { try FoodHistory.remember(food, in: &next, barcode: food.barcode != nil) }
+            try commit(next)
+            return true
+        } catch { report(error); return false }
     }
     @discardableResult func resize(_ id: UUID, _ amount: Double) -> Bool {
         do { var next = state; guard let i = next.entries.firstIndex(where: { $0.id == id }) else { return false }; try next.entries[i].resize(amount); try commit(next); return true } catch { report(error); return false }
     }
     func remove(_ id: UUID) { change { $0.entries.removeAll { $0.id == id } } }
-    func remember(_ food: Food, barcode: Bool) { change { s in
-        s.products.removeAll { $0.id == food.id }; s.products.append(food); s.products = Array(s.products.suffix(1000))
-        if barcode { s.barcodeHistory.removeAll { $0.id == food.id }; s.barcodeHistory.append(food); s.barcodeHistory = Array(s.barcodeHistory.suffix(30)) }
-        else { s.searchHistory.removeAll { $0.id == food.id }; s.searchHistory.append(food); s.searchHistory = Array(s.searchHistory.suffix(30)) }
-    } }
+    func rememberPersisted(_ food: Food, barcode: Bool) throws {
+        var next = state
+        try FoodHistory.remember(food, in: &next, barcode: barcode)
+        try commit(next)
+    }
+    func remember(_ food: Food, barcode: Bool) {
+        do { try rememberPersisted(food, barcode: barcode) } catch { report(error) }
+    }
+    var personalFoods: [Food] { FoodHistory.yourFoods(in: state) }
+    @discardableResult func removePersonal(_ foodID: String) -> Bool {
+        do {
+            var next = state
+            next.customFoods = (next.customFoods ?? []).filter { $0.id != foodID }
+            next.products.removeAll { $0.id == foodID }
+            next.searchHistory.removeAll { $0.id == foodID }
+            next.barcodeHistory.removeAll { $0.id == foodID }
+            // Past diary entries retain the values that were actually logged.
+            try commit(next)
+            return true
+        } catch { report(error); return false }
+    }
+    func recentFoods(catalog: [Food] = []) -> [Food] {
+        FoodHistory.recent(entries: state.entries, foods: FoodHistory.candidates(in: state, catalog: catalog))
+    }
+    func frequentFoods(catalog: [Food] = []) -> [Food] {
+        FoodHistory.frequent(entries: state.entries, foods: FoodHistory.candidates(in: state, catalog: catalog))
+    }
     @discardableResult func saveRecipe(_ recipe: Recipe) -> Bool {
         do { var next=state; next.recipes.removeAll { $0.id == recipe.id }; next.recipes.append(recipe); try commit(next); return true } catch { report(error); return false }
     }

@@ -24,7 +24,7 @@ struct DiaryView:View {
             ForEach(Meal.allCases){meal in mealSection(meal)}
         }.padding(20)}.appBackground().navigationTitle(diary.t("لُقمة","Luqma"))
             .toolbar{ToolbarItem(placement:.topBarTrailing){Button{goals=true}label:{Image(systemName:"target")}.accessibilityLabel(diary.t("أهداف الماكروز","Macro goals"))}}
-            .sheet(isPresented:$adding){FoodAddView(onPhotoCommit:{foods,meal in do{let entries=try foods.map{try DiaryEntry(food:$0.0,amount:$0.1,unit:.g,meal:meal,day:day,language:diary.language)};return diary.add(entries)}catch{diary.report(error);return false}}){food,amount,unit,meal in do{let entry=try DiaryEntry(food:food,amount:amount,unit:unit,meal:meal,day:day,language:diary.language);return diary.add([entry])}catch{diary.report(error);return false}}}
+            .sheet(isPresented:$adding){FoodAddView(onPhotoCommit:{foods,meal in do{let entries=try foods.map{try DiaryEntry(food:$0.0,amount:$0.1,unit:.g,meal:meal,day:day,language:diary.language)};return diary.add(entries,foods:foods.map{$0.0})}catch{diary.report(error);return false}}){food,amount,unit,meal in do{let entry=try DiaryEntry(food:food,amount:amount,unit:unit,meal:meal,day:day,language:diary.language);return diary.add([entry],foods:[food])}catch{diary.report(error);return false}}}
             .sheet(item:$editing){EntryEditor(entry:$0)}
             .sheet(isPresented:$goals){GoalEditor()}
     }
@@ -45,7 +45,7 @@ struct DiaryView:View {
             HStack{Label(meal.label(diary.language),systemImage:meal.symbol).font(.headline);Spacer();Text("\(decimal(total.kcal,0))").foregroundStyle(Theme.muted)}
             if items.isEmpty{Text(diary.t("لم تضف طعامًا بعد","No food added yet")).font(.footnote).foregroundStyle(Theme.muted)}
             ForEach(items){entry in
-                HStack{Button{editing=entry}label:{VStack(alignment:.leading,spacing:5){Text(entry.name).foregroundStyle(.primary);Text("\(decimal(entry.amount)) \(entry.unit.label(diary.language)) · \(decimal(entry.kcal,0)) \(diary.t("سعرة","kcal"))").font(.caption).foregroundStyle(Theme.muted)}}.buttonStyle(.plain);Spacer();Button{editing=entry}label:{Image(systemName:"pencil")}.accessibilityLabel(diary.t("تعديل الكمية","Edit quantity"))}
+                HStack{Button{editing=entry}label:{VStack(alignment:.leading,spacing:5){Text(entry.name).foregroundStyle(.primary);Text("\(decimal(entry.amount)) × \(entry.unitLabel(diary.language)) · \(decimal(entry.kcal,0)) \(diary.t("سعرة","kcal"))").font(.caption).foregroundStyle(Theme.muted)}}.buttonStyle(.plain);Spacer();Button{editing=entry}label:{Image(systemName:"pencil")}.accessibilityLabel(diary.t("تعديل الكمية","Edit quantity"))}
                 if entry.id != items.last?.id{Divider()}
             }
         }.luqmaCard()
@@ -61,7 +61,7 @@ struct EntryEditor:View {
     private var total:Nutrition {entry.nutrition.scaled((value ?? 0)/max(entry.amount,0.001))}
     var body:some View {
         NavigationStack{Form{
-            Section{Text(entry.name).font(.headline);TextField(diary.t("الكمية","Amount"),text:$amount).keyboardType(.decimalPad);Text(entry.unit.label(diary.language)).foregroundStyle(.secondary)}
+            Section{Text(entry.name).font(.headline);TextField(diary.t("الكمية","Amount"),text:$amount).keyboardType(.decimalPad);Text(entry.unitLabel(diary.language)).foregroundStyle(.secondary)}
             Section(diary.t("إجمالي هذه الكمية","Nutrition for this amount")){NutritionView(value:total)}
             Section{Button(diary.t("حفظ التعديل","Save changes")){if let value,diary.resize(entry.id,value){dismiss()}}.disabled(value == nil || (value ?? 0)<=0 || (value ?? 0)>10000);Button(diary.t("حذف الطعام","Delete food"),role:.destructive){deleting=true}}
         }.appBackground().navigationTitle(diary.t("تعديل الطعام","Edit food"))

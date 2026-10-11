@@ -25,29 +25,55 @@ struct Nutrition: Codable, Equatable {
     func scaled(_ scale: Double) -> Nutrition { Nutrition(kcal:kcal*scale,protein:protein*scale,carbs:carbs*scale,fat:fat*scale) }
     static func + (a: Nutrition, b: Nutrition) -> Nutrition { Nutrition(kcal:a.kcal+b.kcal,protein:a.protein+b.protein,carbs:a.carbs+b.carbs,fat:a.fat+b.fat) }
 }
+struct FoodServing: Codable, Equatable, Identifiable {
+    var id: String; var label: String; var grams: Double
+    var valid: Bool { !id.isEmpty && id.count <= 100 && !label.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && label.count <= 240 && grams.isFinite && grams > 0 && grams <= 10000 }
+}
 struct Food: Codable, Equatable, Identifiable {
     var catalogID: String?; var name: String; var nameEn: String?; var aliases: String?; var brand: String?; var barcode: String?
     var unit: FoodUnit; var kcal: Double?; var protein: Double?; var carbs: Double?; var fat: Double?
     var serving: String?; var servingQuantity: Double?; var servingUnit: String?; var servingNutrition: Nutrition?
+    var servings: [FoodServing]?
     var source: String?; var sourceId: String?; var sourceDescription: String?
     var id: String { barcode.map { "barcode:"+$0 } ?? catalogID ?? TextSearch.normalized(name + (brand ?? "")) }
     var per100: Nutrition? { guard let k=kcal,let p=protein,let c=carbs,let f=fat else { return nil }; let v=Nutrition(kcal:k,protein:p,carbs:c,fat:f); return v.valid ? v : nil }
     func label(_ l: AppLanguage) -> String { l == .en ? nameEn ?? name : name }
-    func values(for u: FoodUnit) -> Nutrition? { u == .serving ? servingNutrition ?? (unit == .serving ? per100:nil) : (u == unit ? per100 : nil) }
-    var units: [FoodUnit] { [unit] + (unit != .serving && servingNutrition != nil ? [.serving] : []) }
+    var servingChoices: [FoodServing] { unit == .g && per100 != nil ? (servings ?? []).filter(\.valid) : [] }
+    func values(for u: FoodUnit) -> Nutrition? { u == .serving ? servingNutrition ?? (unit == .serving ? per100 : servingChoices.first.flatMap { per100?.scaled($0.grams / 100) }) : (u == unit ? per100 : nil) }
+    var units: [FoodUnit] { [unit] + (unit != .serving && values(for: .serving) != nil ? [.serving] : []) }
+    func selecting(_ choice: FoodServing) throws -> Food {
+        guard choice.valid, unit == .g, let nutrition = per100, servingChoices.contains(choice) else { throw AppError.invalid("اختر حصة صالحة من حصص الطعام.", "Choose a valid serving from this food.") }
+        var result = self; result.serving = choice.label; result.servingQuantity = choice.grams; result.servingUnit = "g"; result.servingNutrition = nutrition.scaled(choice.grams / 100)
+        return result
+    }
+    func withReference(_ nutrition: Nutrition, unit referenceUnit: FoodUnit) throws -> Food {
+        guard nutrition.valid else { throw AppError.invalid("أدخل قيمًا غذائية صحيحة.", "Enter valid nutrition values.") }
+        var result = self
+        if referenceUnit == .serving {
+            result.servingNutrition = nutrition
+            if result.unit != .serving { return result }
+        } else {
+            if let grams = servingQuantity, servingUnit == referenceUnit.rawValue, grams.isFinite, grams > 0, grams <= 10000 {
+                result.servingNutrition = nutrition.scaled(grams / 100)
+            } else { result.servingNutrition = nil }
+        }
+        result.unit = referenceUnit; result.kcal = nutrition.kcal; result.protein = nutrition.protein; result.carbs = nutrition.carbs; result.fat = nutrition.fat
+        return result
+    }
     func total(_ amount: Double, unit u: FoodUnit) throws -> Nutrition {
         guard amount.isFinite,amount>0,amount<=10000,let values=values(for:u),values.valid else { throw AppError.invalid("أكمل القيم الغذائية وأدخل كمية صحيحة.","Complete nutrition and enter a valid amount.") }
         return values.scaled(u == .serving ? amount : amount/100)
     }
-    enum CodingKeys: String, CodingKey { case catalogID="id", name,nameEn,aliases,brand,barcode,unit,kcal,protein,carbs,fat,serving,servingQuantity,servingUnit,servingNutrition,source,sourceId,sourceDescription }
+    enum CodingKeys: String, CodingKey { case catalogID="id", name,nameEn,aliases,brand,barcode,unit,kcal,protein,carbs,fat,serving,servingQuantity,servingUnit,servingNutrition,servings,source,sourceId,sourceDescription }
     init(catalogID:String?=nil,name:String,nameEn:String?=nil,aliases:String?=nil,brand:String?=nil,barcode:String?=nil,unit:FoodUnit = .g,nutrition:Nutrition?=nil,serving:String?=nil,servingQuantity:Double?=nil,servingUnit:String?=nil,servingNutrition:Nutrition?=nil,source:String?=nil) {
         self.catalogID=catalogID;self.name=name;self.nameEn=nameEn;self.aliases=aliases;self.brand=brand;self.barcode=barcode;self.unit=unit;self.kcal=nutrition?.kcal;self.protein=nutrition?.protein;self.carbs=nutrition?.carbs;self.fat=nutrition?.fat;self.serving=serving;self.servingQuantity=servingQuantity;self.servingUnit=servingUnit;self.servingNutrition=servingNutrition;self.source=source
     }
 }
 struct DiaryEntry: Codable, Identifiable, Equatable {
-    var id: UUID;var day: String;var meal: Meal;var name: String;var amount: Double;var unit: FoodUnit;var kcal: Double;var protein: Double;var carbs: Double;var fat: Double;var barcode: String?;var created: String?
+    var id: UUID;var day: String;var meal: Meal;var name: String;var amount: Double;var unit: FoodUnit;var kcal: Double;var protein: Double;var carbs: Double;var fat: Double;var barcode: String?;var created: String?;var foodID: String?;var servingLabel: String?
     var nutrition: Nutrition { Nutrition(kcal:kcal,protein:protein,carbs:carbs,fat:fat) }
-    init(food: Food,amount: Double,unit: FoodUnit,meal: Meal,day: String,language:AppLanguage) throws { let n=try food.total(amount,unit:unit);self.id=UUID();self.day=day;self.meal=meal;self.name=food.label(language);self.amount=amount;self.unit=unit;self.kcal=n.kcal;self.protein=n.protein;self.carbs=n.carbs;self.fat=n.fat;self.barcode=food.barcode;self.created=ISO8601DateFormatter().string(from:Date()) }
+    func unitLabel(_ language: AppLanguage) -> String { unit == .serving ? servingLabel ?? unit.label(language) : unit.label(language) }
+    init(food: Food,amount: Double,unit: FoodUnit,meal: Meal,day: String,language:AppLanguage) throws { let n=try food.total(amount,unit:unit);self.id=UUID();self.day=day;self.meal=meal;self.name=food.label(language);self.amount=amount;self.unit=unit;self.kcal=n.kcal;self.protein=n.protein;self.carbs=n.carbs;self.fat=n.fat;self.barcode=food.barcode;self.created=ISO8601DateFormatter().string(from:Date());self.foodID=food.id;self.servingLabel=unit == .serving ? food.serving ?? food.servingChoices.first?.label : nil }
     mutating func resize(_ newAmount:Double) throws { guard amount>0,newAmount.isFinite,newAmount>0,newAmount<=10000 else { throw AppError.invalid("أدخل كمية صحيحة.","Enter a valid amount.") };let n=nutrition.scaled(newAmount/amount);amount=newAmount;kcal=n.kcal;protein=n.protein;carbs=n.carbs;fat=n.fat }
 }
 struct Ingredient: Codable, Identifiable, Equatable { var id:UUID;var name:String;var amount:Double;var unit:FoodUnit;var kcal:Double;var protein:Double;var carbs:Double;var fat:Double
@@ -61,7 +87,7 @@ struct WeightReading: Codable, Identifiable, Equatable { var day:String;var kg:D
     var id:String { day }
 }
 struct DiarySnapshot: Codable {
-    var version=2;var app="luqma";var entries:[DiaryEntry]=[];var goals:Nutrition = .initial;var recipes:[Recipe]=[];var weights:[WeightReading]=[];var products:[Food]=[];var searchHistory:[Food]=[];var barcodeHistory:[Food]=[];var weightPlan:WeightPlan?;var adaptive=false;var language:AppLanguage = .ar;var healthEnabled=false;var healthSync:HealthSyncState?
+    var version=2;var app="luqma";var entries:[DiaryEntry]=[];var goals:Nutrition = .initial;var recipes:[Recipe]=[];var weights:[WeightReading]=[];var products:[Food]=[];var searchHistory:[Food]=[];var barcodeHistory:[Food]=[];var customFoods:[Food]?;var weightPlan:WeightPlan?;var adaptive=false;var language:AppLanguage = .ar;var healthEnabled=false;var healthSync:HealthSyncState?
 }
 enum DayKey {
     static func string(_ date:Date) -> String { let f=DateFormatter();f.locale=Locale(identifier:"en_US_POSIX");f.calendar=Calendar(identifier:.gregorian);f.dateFormat="yyyy-MM-dd";return f.string(from:date) }

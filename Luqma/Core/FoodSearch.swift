@@ -79,6 +79,13 @@ enum FoodSearch {
         private let entries: [Entry]
         init(_ foods: [Food]) { entries = foods.map(Entry.init) }
 
+        func historyCandidates(_ diary: [DiaryEntry]) -> [Food] {
+            let ids = Set(diary.compactMap(\.foodID))
+            let codes = Set(diary.filter { $0.foodID == nil }.compactMap(\.barcode))
+            let names = Set(diary.filter { $0.foodID == nil && $0.barcode == nil }.map { FoodSearch.normalized($0.name) })
+            return entries.filter { ids.contains($0.food.id) || ($0.food.barcode.map(codes.contains) ?? false) || $0.names.contains(where: names.contains) }.map(\.food)
+        }
+
         func results(_ query: String, additional: [Food] = []) -> [Food] {
             let term = Query(query)
             guard !term.words.isEmpty else { return [] }

@@ -1,5 +1,6 @@
 Food nutrition data attribution:
-USDA FoodData Central SR Legacy (final April 2018 release): public domain,
+USDA FoodData Central SR Legacy (final April 2018 release) and FNDDS 2021-2023
+(October 31, 2024 release): public domain,
 CC0 1.0 Universal. U.S. Department of Agriculture, Agricultural Research Service.
 Source: https://fdc.nal.usda.gov/
 USDA license statement: https://fdc.nal.usda.gov/api-guide/

@@ -1,6 +1,20 @@
-# Validation — version 1.3, delivery status finalized 2026-10-11
+# Validation — version 1.4 source update, native checks pending 2026-10-11
 
-## Delivery status
+## Current version 1.4 status
+
+The source implements FNDDS catalog expansion, USDA weighted household portions, catalog-derived suggested searches, diary-derived Recent/Frequent, persistent personal foods and stable food identity in newly logged entries. **The version 1.4 native workflow and package validation have not completed. No passing version 1.4 IPA or native test count is asserted here.** The verified version 1.3 build-27 package below is history, not validation of these changes. Personal signing, Health authorization and physical-iPhone behavior remain separate pending checks.
+
+Local inspection of the generated `foods-data.json` found 13,224 catalog foods, 31,253 portion choices on 12,957 foods, and Arabic aliases on 11,736 records. The output is 7,071,407 bytes; SHA-256 `7f901edf216c9a59e13c1a32b67d6126496d39c5d949b493a05a28b5dea1f3d5`. These are source-file counts/digest, not measured native search results or packaged-IPA checks.
+
+The importer pins two official archives: SR Legacy, SHA-256 `0fe8ae486a2c8eb42cb96413f058deb51863a46c8fb8eeb4b1fb45006dd338ef`, and FNDDS 2021–2023, SHA-256 `dfb06ae7ddc397ccd570b91c14b75438ab2ba39f64f22d321f61d4a52a77f3eb`. All 7,793 SR foods are included. Of 5,432 FNDDS records, the human-milk record `2705383` is excluded because all four required nutrients are absent; 5,431 remain. Source values retain precision and explicit zeros; missing values are never invented. Portions retain explicit gram weights with English source labels; unknown/invalid/duplicate portions are excluded, and no liquid density is inferred. One long source description is shortened for display while the original stays in `sourceDescription` and its search alias. The 94 legacy identities and labels, old diary totals and separate photo-reference catalog remain preserved.
+
+Updated tests cover household-portion calculations, source provenance, stable IDs in diary/backup, personal-food persistence, usage ordering and legacy ambiguity alongside contains search/pagination and the existing calculation/Health/vision tests. The updated suites are expected to contain 51 Foundation XCTest cases (32 existing, 10 history and 7 serving cases) and 26 Python tests (10 catalog and 16 build-tool tests). These counts are expectations, not pass results; actual results must be recorded from the new macOS workflow before release. Historical test totals below refer only to their listed source commits.
+
+Food history is based on actual diary entries. An unresolved explicit ID is not reassigned to another similarly named brand; legacy entries fall back only to a unique barcode or normalized name. Personal foods are separate from the rolling product cache and are carried through validated backup merge. Suggested phrases come from Loqma's own catalog and trigger search, not logging. Source-based portion selection changes quantity nutrition while retaining the chosen label; old saved totals are not recalculated. These are source implementation statements awaiting native/device validation.
+
+MyFitnessPal findings come from public first-party documentation retrieved 2026-10-11, not an observed native app session or private API. Their exact ranking weights, exhaustive substring behavior, typo handling and Arabic normalization are unknown. Loqma's exhaustive local all-token contains contract is the user's requested independent design; no MyFitnessPal catalog or reviewed badge was copied. [FOOD-DATA-AR.md](FOOD-DATA-AR.md) links the claim-specific evidence and reproduces the importer command.
+
+## Historical version 1.3 delivery status — build 27
 
 The final version 1.3 [build 27](https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/38044977908) completed successfully from source `5c1a9d2abefceaba2520d03d86f4f70efaa44b1c`. All 32 Foundation XCTest cases passed with zero failures, all 23 Python tests passed on macOS, the iPhoneOS Release app compiled and passed local signature verification, and both compact/full models passed the Metal runtime fixture checks. The downloaded IPA and packaged resources were independently verified. This is the version 1.3 package for personal re-signing and physical-device testing.
 

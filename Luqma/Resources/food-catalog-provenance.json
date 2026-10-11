@@ -1,15 +1,47 @@
 {
-  "source": "U.S. Department of Agriculture, Agricultural Research Service. FoodData Central, SR Legacy, final April 2018 release.",
-  "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_json_2018-04.zip",
+  "source": "U.S. Department of Agriculture, Agricultural Research Service. FoodData Central: SR Legacy and FNDDS 2021-2023.",
   "source_documentation": "https://fdc.nal.usda.gov/download-datasets/",
   "license": "CC0-1.0",
   "license_statement": "https://fdc.nal.usda.gov/api-guide/",
-  "source_sha256": "0fe8ae486a2c8eb42cb96413f058deb51863a46c8fb8eeb4b1fb45006dd338ef",
-  "source_zip_bytes": 13456312,
-  "food_count": 7793,
-  "catalog_sha256": "28c166c2bfbdabd42a0a18ac8f1bb6d2babf706a5bec0a3643e3ecea6b1c0e34",
-  "nutrient_basis": "Per 100 g, copied directly from source nutrient IDs 1008 (kcal), 1003 (protein), 1005 (carbohydrate), and 1004 (fat). Source calorie values are preserved; they are not recalculated from macros.",
-  "labels": "The 94 existing Arabic names, IDs, aliases and serving descriptions are preserved in food-catalog-labels.json. Added foods keep exact English source descriptions. Arabic aliases are curated search keywords in Scripts/import_usda_catalog.py, not complete translations or new recipe identities.",
-  "rebuild": "python3 Scripts/import_usda_catalog.py /path/to/FoodData_Central_sr_legacy_food_json_2018-04.zip",
+  "sources": [
+    {
+      "name": "SR Legacy, final April 2018 release",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_json_2018-04.zip",
+      "source_sha256": "0fe8ae486a2c8eb42cb96413f058deb51863a46c8fb8eeb4b1fb45006dd338ef",
+      "source_zip_bytes": 13456312,
+      "source_food_count": 7793,
+      "source_portion_count": 14449,
+      "included_food_count": 7793,
+      "excluded_records": [],
+      "included_serving_count": 14426,
+      "excluded_portion_count": 23
+    },
+    {
+      "name": "FNDDS 2021-2023, October 31, 2024 release",
+      "source_url": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_survey_food_json_2024-10-31.zip",
+      "source_sha256": "dfb06ae7ddc397ccd570b91c14b75438ab2ba39f64f22d321f61d4a52a77f3eb",
+      "source_zip_bytes": 3835292,
+      "source_food_count": 5432,
+      "source_portion_count": 22194,
+      "included_food_count": 5431,
+      "excluded_records": [
+        {
+          "sourceId": "2705383",
+          "reason": "Milk, human: source has no energy, protein, carbohydrate or fat values."
+        }
+      ],
+      "included_serving_count": 16827,
+      "excluded_portion_count": 5367
+    }
+  ],
+  "food_count": 13224,
+  "catalog_bytes": 7071407,
+  "catalog_sha256": "7f901edf216c9a59e13c1a32b67d6126496d39c5d949b493a05a28b5dea1f3d5",
+  "foods_with_servings": 12957,
+  "serving_count": 31253,
+  "nutrient_basis": "Per 100 g, copied directly from source nutrient IDs 1008 (kcal), 1003 (protein), 1005 (carbohydrate), and 1004 (fat). Source calorie values and precision are preserved; they are not recalculated from macros. Missing nutrients are never replaced by zero.",
+  "servings": "Optional choices copy explicit USDA gram weights for the full portion label. SR labels combine source amount with its measure/modifier; FNDDS labels use portionDescription rather than numeric modifier codes. Non-positive or invalid weights/amounts, unnamed or 'Quantity not specified' portions and duplicates are excluded. No ml conversion or liquid density is inferred. Four existing legacy serving fields are preserved.",
+  "labels": "The 94 existing Arabic names, IDs, aliases and single-serving descriptions are preserved in food-catalog-labels.json. Added foods keep exact English source descriptions. One description exceeds the native 180-character display-name limit: its displayed name uses an ellipsis, while sourceDescription and a search alias retain the full original. Arabic aliases are curated search keywords in Scripts/import_usda_catalog.py, not complete translations or new recipe identities. Portion labels retain source English.",
+  "rebuild": "python3 Scripts/import_usda_catalog.py /path/to/FoodData_Central_sr_legacy_food_json_2018-04.zip /path/to/FoodData_Central_survey_food_json_2024-10-31.zip",
   "scope": "This is an open USDA catalog, separate from online Open Food Facts branded product results. It is not the MyFitnessPal database. Photo recognition reference foods are maintained separately."
 }

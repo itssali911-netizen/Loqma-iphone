@@ -27,6 +27,9 @@ actor FoodDatabase {
         catalog.results(query, additional: Array(cached.reversed()))
     }
 
+    func historyFoods(_ entries: [DiaryEntry]) -> [Food] { catalog.historyCandidates(entries) }
+    func historyLists(_ state: DiarySnapshot) -> (recent: [Food], frequent: [Food], personal: [Food]) { FoodHistory.lists(in: state, catalog: catalog.historyCandidates(state.entries)) }
+
     func combined(_ query: String, local: [Food], remote: [Food]) -> [Food] {
         remote.isEmpty ? local : FoodSearch.results(query, in: local + remote)
     }
