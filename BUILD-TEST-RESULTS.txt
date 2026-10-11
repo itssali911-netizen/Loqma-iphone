@@ -1,5 +1,5 @@
-GitHub Actions build 24, source d7055a1a85780911c395033e77dcb48155753828
-https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/38027199614
+GitHub Actions build 27, source 5c1a9d2abefceaba2520d03d86f4f70efaa44b1c
+https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/38044977908
 macOS 15 runner / Xcode 26.3
 
 test_existing_output_is_not_overwritten (test_build.BuildTests.test_existing_output_is_not_overwritten) ... ok
@@ -8,6 +8,13 @@ test_sideload_packages_device_only_without_apple_secrets_or_claiming_signed_inst
 test_signed_export_checks_embedded_profile_and_never_uploads (test_build.BuildTests.test_signed_export_checks_embedded_profile_and_never_uploads) ... ok
 test_simulator_app_cannot_be_packaged_for_iphone_sideloading (test_build.BuildTests.test_simulator_app_cannot_be_packaged_for_iphone_sideloading) ... ok
 test_unsigned_check_builds_both_sdks_without_claiming_an_ipa (test_build.BuildTests.test_unsigned_check_builds_both_sdks_without_claiming_an_ipa) ... ok
+test_catalog_provenance_matches_pinned_source_and_generated_bytes (test_food_catalog.FoodCatalogTests.test_catalog_provenance_matches_pinned_source_and_generated_bytes) ... ok
+test_complete_unique_official_catalog_and_valid_per_100g_values (test_food_catalog.FoodCatalogTests.test_complete_unique_official_catalog_and_valid_per_100g_values) ... ok
+test_converter_preserves_source_values_and_rejects_broken_identity_or_nutrition (test_food_catalog.FoodCatalogTests.test_converter_preserves_source_values_and_rejects_broken_identity_or_nutrition) ... ok
+test_converter_rejects_unverified_archives (test_food_catalog.FoodCatalogTests.test_converter_rejects_unverified_archives) ... ok
+test_existing_arabic_identity_aliases_and_servings_are_preserved (test_food_catalog.FoodCatalogTests.test_existing_arabic_identity_aliases_and_servings_are_preserved) ... ok
+test_new_foods_keep_exact_source_names_and_arabic_search_expands_coverage (test_food_catalog.FoodCatalogTests.test_new_foods_keep_exact_source_names_and_arabic_search_expands_coverage) ... ok
+test_source_nutrients_include_explicit_zeroes_and_original_energy (test_food_catalog.FoodCatalogTests.test_source_nutrients_include_explicit_zeroes_and_original_energy) ... ok
 test_ad_hoc_export_keeps_health_and_uses_registered_devices (test_signing.SigningTests.test_ad_hoc_export_keeps_health_and_uses_registered_devices) ... ok
 test_app_store_export_is_not_direct_sideload (test_signing.SigningTests.test_app_store_export_is_not_direct_sideload) ... ok
 test_expired_development_enterprise_and_invalid_uuid_rejected (test_signing.SigningTests.test_expired_development_enterprise_and_invalid_uuid_rejected) ... ok
@@ -20,6 +27,6 @@ test_signing_cleanup_runs_after_build_failure_and_restores_existing_profiles (te
 test_strict_base64_private_permissions_and_no_overwrite (test_signing.SigningTests.test_strict_base64_private_permissions_and_no_overwrite) ... ok
 
 ----------------------------------------------------------------------
-Ran 16 tests in 0.027s
+Ran 23 tests in 0.128s
 
 OK
