@@ -45,8 +45,10 @@ enum VisionMeal {
             nutrition_per_100g = try c.decodeIfPresent(Nutrition.self, forKey: .nutrition_per_100g)
         }
     }
-    private static func jsonData(_ response: String, limit: Int = 60_000) throws -> Data {
-        guard response.utf8.count <= limit, let start = response.firstIndex(of: "{"), let end = response.lastIndex(of: "}"), start < end,
+    private static func jsonData(_ response: String, limit: Int = 60_000, allowArray: Bool = false) throws -> Data {
+        guard response.utf8.count <= limit, let start = response.firstIndex(where: { $0 == "{" || (allowArray && $0 == "[") }) else { throw invalid }
+        let closing: Character = response[start] == "[" ? "]" : "}"
+        guard let end = response.lastIndex(of: closing), start < end,
               let data = String(response[start...end]).data(using: .utf8) else { throw invalid }
         return data
     }
@@ -117,10 +119,12 @@ enum VisionMeal {
         let expected = Set(requests.map { $0.index })
         guard !requests.isEmpty, requests.count <= 16, expected.count == requests.count,
               expected.allSatisfy({ (0..<16).contains($0) }),
-              let result = try? JSONDecoder().decode(Estimates.self, from: jsonData(response, limit: 8_000)),
-              result.items.count == requests.count else { throw invalid }
+              let data = try? jsonData(response, limit: 8_000, allowArray: true),
+              let items = (try? JSONDecoder().decode(Estimates.self, from: data))?.items
+                  ?? (try? JSONDecoder().decode([Estimate].self, from: data)),
+              items.count == requests.count else { throw invalid }
         var overrides: [Int: Nutrition] = [:]
-        for item in result.items {
+        for item in items {
             guard expected.contains(item.index), let nutrition = plausibleNutrition(item.nutrition),
                   overrides.updateValue(nutrition, forKey: item.index) == nil else { throw invalid }
         }

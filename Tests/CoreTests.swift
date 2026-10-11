@@ -345,9 +345,67 @@ final class CoreTests: XCTestCase {
                       first + "," + second.replacingOccurrences(of: "\"index\":2", with: "\"index\":99"),
                       first + "," + second.replacingOccurrences(of: "\"fat\":15", with: "\"fat\":95"),
                       first + "," + second.replacingOccurrences(of: "\"protein\":3", with: "\"protein\":null")] {
-            XCTAssertThrowsError(try VisionMeal.nutritionOverrides("{\"items\":[\(items)]}", requests: requests))
+            for response in ["{\"items\":[\(items)]}", "[\(items)]"] {
+                XCTAssertThrowsError(try VisionMeal.nutritionOverrides(response, requests: requests))
+            }
+        }
+        for malformed in ["[", "[null]", "[{}]", "[]", "{\"items\":null}", "[\(first),\(second)", "[\(first),\(second)] trailing ]"] {
+            XCTAssertThrowsError(try VisionMeal.nutritionOverrides(malformed, requests: requests))
         }
         XCTAssertThrowsError(try VisionMeal.nutritionOverrides(String(repeating: " ", count: 8_001), requests: requests))
+    }
+    func testTextNutritionRepairArrayAndObjectEnvelopesProduceIdenticalValidatedValues() throws {
+        let requests = [VisionMeal.NutritionRequest(index: 1, name_en: "pita wrap"), VisionMeal.NutritionRequest(index: 2, name_en: "dip")]
+        let items = """
+        {"index":2,"kcal":195,"protein":3,"carbs":12,"fat":15},
+        {"index":1,"kcal":220,"protein":8,"carbs":29,"fat":8}
+        """
+        let object = try VisionMeal.nutritionOverrides("{\"items\":[\(items)]}", requests: requests)
+        let array = try VisionMeal.nutritionOverrides("```json\n[\(items)]\n```", requests: requests)
+        XCTAssertEqual(array, object)
+        XCTAssertEqual(Set(array.keys), Set([1, 2]))
+        XCTAssertEqual(array[1]?.kcal, 220)
+        XCTAssertEqual(array[2]?.kcal, 195)
+        XCTAssertThrowsError(try VisionMeal.nutritionOverrides("[\(items)]", requests: []))
+        XCTAssertThrowsError(try VisionMeal.nutritionOverrides("[\(items)]", requests: [requests[0], requests[0]]))
+        XCTAssertThrowsError(try VisionMeal.nutritionOverrides("[\(items)]", requests: [VisionMeal.NutritionRequest(index: -1, name_en: "dip"), requests[1]]))
+    }
+    func testBuild28ArrayNutritionRepairPreservesEveryAuditedFoodAndQuantity() throws {
+        let foods = try resource("photo-foods", [PhotoFood].self)
+        let audited = """
+        {"food_present":true,"uncertain":false,"items":[
+        {"name_en":"pita wrap","grams":35,"min_grams":25,"max_grams":45,"count":2},
+        {"name_en":"chicken strips","grams":75,"min_grams":60,"max_grams":90,"count":12},
+        {"name_en":"dip cup","grams":15,"min_grams":10,"max_grams":20,"count":1},
+        {"name_en":"pickle spear","grams":18,"min_grams":12,"max_grams":25,"count":12},
+        {"name_en":"red peppers","grams":30,"min_grams":25,"max_grams":35,"count":6},
+        {"name_en":"dip bowl","grams":15,"min_grams":10,"max_grams":20,"count":1},
+        {"name_en":"plain pita bread","grams":70,"min_grams":60,"max_grams":80,"count":3}]}
+        """
+        let requests = try VisionMeal.nutritionRequests(audited, description: "", foods: foods)
+        XCTAssertEqual(requests.map(\.index), [0, 2, 3, 4, 5])
+        let response = """
+        [{"index":0,"kcal":280,"protein":7,"carbs":18,"fat":11},
+        {"index":2,"kcal":260,"protein":7,"carbs":18,"fat":11},
+        {"index":3,"kcal":120,"protein":4,"carbs":12,"fat":2},
+        {"index":4,"kcal":180,"protein":6,"carbs":16,"fat":7},
+        {"index":5,"kcal":280,"protein":8,"carbs":18,"fat":12}]
+        """
+        let overrides = try VisionMeal.nutritionOverrides(response, requests: requests)
+        let result = try VisionMeal.decode(audited, description: "", foods: foods, nutritionOverrides: overrides)
+        XCTAssertEqual(result.parts.count, 7)
+        XCTAssertEqual(result.parts.reduce(0) { $0 + $1.grams }, 258)
+        for (name, grams, count) in [("pita wrap", 35.0, 2.0), ("dip cup", 15.0, 1.0), ("pickle spear", 18.0, 12.0), ("red peppers", 30.0, 6.0), ("dip bowl", 15.0, 1.0)] {
+            let part = try XCTUnwrap(result.parts.first { $0.food.id == "ai:" + name })
+            XCTAssertEqual(part.food.nameEn, name); XCTAssertEqual(part.grams, grams); XCTAssertEqual(part.count, count)
+            XCTAssertTrue(part.tentative)
+            XCTAssertEqual(part.food.nutrition.kcal, part.food.nutrition.macroCalories, accuracy: 1e-8)
+        }
+        XCTAssertEqual(result.parts.first { $0.food.id == "172816" }?.grams, 70)
+        let chicken = try XCTUnwrap(result.parts.first { $0.food.id == "171477" })
+        XCTAssertEqual(chicken.grams, 75)
+        XCTAssertEqual(chicken.food.nutrition, try XCTUnwrap(foods.first { $0.id == "171477" }).nutrition)
+        XCTAssertTrue(result.unmatched)
     }
     func testBuild23AuditedFoodsKeepTheirNamesAndWeightsThroughTextNutritionRepair() throws {
         let foods = try resource("photo-foods", [PhotoFood].self)
