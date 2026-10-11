@@ -1,5 +1,7 @@
 # Validation — version 1.5 native verification pending
 
+Intermediate [build 30](https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/38115701975), source `9cb80d8020dad3e3800393a20a2a462fab8c02ee`, stopped while compiling the new source-filtering test: its DiaryEntry construction used an unavailable memberwise initializer. No native test results or IPA were produced. The test now uses the production initializer, then sets its historical saved totals; production logic and assertions were not weakened. A new native build is required.
+
 Version 1.5 replaces the active food catalog with Open Food Facts, adds Best match and Serving defaults, requires actual OFF products before photo logging, and separates Health signing help from progress. The starter cache has six real products and five declared servings; live search is the broader database access. New tests cover v3.6 parsing, source filtering, declared liquid units, missing servings and recognition-only labels. Native compilation is pending for this source; prior build results below do not validate it. Personal Apple signing and physical-device verification remain necessary.
 
 # Validation — version 1.4 build 29 food tests/package verified; vision fixture failed 2026-10-11

@@ -66,9 +66,8 @@ final class OpenFoodFactsProductTests: XCTestCase {
         let ai = Food(catalogID: "photo:ai:123", name: "Milk", nutrition: .initial, source: "AI nutrition estimate")
         let candidates = [oldUSDA, ai, off, personal, legacyManual].filter(FoodSearch.availableForAdding)
         XCTAssertEqual(Set(candidates.map(\.id)), Set([off.id, personal.id, legacyManual.id]))
-        let entry = DiaryEntry(id: UUID(), day: "2026-10-11", meal: .breakfast, name: oldUSDA.name,
-                              amount: 1, unit: .serving, kcal: 123, protein: 2, carbs: 3, fat: 4,
-                              barcode: nil, created: nil, foodID: oldUSDA.id, servingLabel: "Old serving")
+        var entry = try DiaryEntry(food: oldUSDA, amount: 100, unit: .g, meal: .breakfast, day: "2026-10-11", language: .en)
+        entry.kcal = 123; entry.protein = 2; entry.carbs = 3; entry.fat = 4
         var state = DiarySnapshot(); state.entries = [entry]; state.products = [oldUSDA, off]
         XCTAssertTrue(FoodHistory.usage(entries: state.entries, foods: candidates).isEmpty)
         XCTAssertEqual(state.entries, [entry])
