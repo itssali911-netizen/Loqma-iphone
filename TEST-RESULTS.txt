@@ -1,6 +1,6 @@
-GitHub Actions build 27, source 5c1a9d2abefceaba2520d03d86f4f70efaa44b1c
-https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/38044977908
-macOS 15 runner / Xcode 26.3
+GitHub Actions build 29, source 671cdac6b3e50704ba55eadd94f972a85e0b35f9
+https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/38107859362
+macOS 15 / Xcode 26.3
 
 Building for debugging...
 [0/10] /Users/runner/work/Loqma-iphone/Loqma-iphone/.build/arm64-apple-macosx/debug/LuqmaCorePackageTests.derived/runner.swift
@@ -9,38 +9,44 @@ Building for debugging...
 [3/10] Copying foods-data.json
 [4/10] Write sources
 [7/10] Write swift-version-1977FEB4D2752686.txt
-[9/16] Emitting module LuqmaCore
-[10/16] Compiling LuqmaCore Backup.swift
-[11/16] Compiling LuqmaCore FoodSearch.swift
-[12/16] Compiling LuqmaCore HealthImport.swift
-[13/16] Compiling LuqmaCore HealthSync.swift
-[14/16] Compiling LuqmaCore MacroBalance.swift
-[15/21] Compiling LuqmaCore Models.swift
-[16/21] Compiling LuqmaCore PhotoMeal.swift
-[17/21] Compiling LuqmaCore VisionMeal.swift
-[18/21] Compiling LuqmaCore VisionResources.swift
-[19/21] Compiling LuqmaCore WeightModel.swift
-[20/23] Emitting module LuqmaCoreTests
-[21/23] Compiling LuqmaCoreTests CoreTests.swift
-[22/24] Compiling LuqmaCoreTests resource_bundle_accessor.swift
-[23/26] Emitting module LuqmaCorePackageTests
-[24/26] Compiling LuqmaCorePackageTests runner.swift
-[24/26] Write Objects.LinkFileList
-[25/26] Linking LuqmaCorePackageTests
-Build complete! (29.32s)
-Test Suite 'All tests' started at 2026-10-10 10:29:49.231.
-Test Suite 'LuqmaCorePackageTests.xctest' started at 2026-10-10 10:29:49.234.
-Test Suite 'CoreTests' started at 2026-10-10 10:29:49.234.
+[9/17] Emitting module LuqmaCore
+[10/17] Compiling LuqmaCore Backup.swift
+[11/17] Compiling LuqmaCore FoodHistory.swift
+[12/17] Compiling LuqmaCore FoodSearch.swift
+[13/17] Compiling LuqmaCore HealthImport.swift
+[14/17] Compiling LuqmaCore HealthSync.swift
+[15/17] Compiling LuqmaCore MacroBalance.swift
+[16/22] Compiling LuqmaCore Models.swift
+[17/22] Compiling LuqmaCore PhotoMeal.swift
+[18/22] Compiling LuqmaCore VisionMeal.swift
+[19/22] Compiling LuqmaCore VisionResources.swift
+[20/22] Compiling LuqmaCore WeightModel.swift
+[21/26] Compiling LuqmaCoreTests CoreTests.swift
+[22/26] Compiling LuqmaCoreTests FoodCatalogIntegrationTests.swift
+[23/26] Compiling LuqmaCoreTests FoodHistoryTests.swift
+[24/26] Emitting module LuqmaCoreTests
+[25/28] Compiling LuqmaCoreTests FoodServingTests.swift
+[26/28] Compiling LuqmaCoreTests resource_bundle_accessor.swift
+[27/30] Compiling LuqmaCorePackageTests runner.swift
+[28/30] Emitting module LuqmaCorePackageTests
+[28/30] Write Objects.LinkFileList
+[29/30] Linking LuqmaCorePackageTests
+Build complete! (25.98s)
+Test Suite 'All tests' started at 2026-10-11 03:17:30.341.
+Test Suite 'LuqmaCorePackageTests.xctest' started at 2026-10-11 03:17:30.344.
+Test Suite 'CoreTests' started at 2026-10-11 03:17:30.344.
 Test Case '-[LuqmaCoreTests.CoreTests testBuild23AuditedFoodsKeepTheirNamesAndWeightsThroughTextNutritionRepair]' started.
-Test Case '-[LuqmaCoreTests.CoreTests testBuild23AuditedFoodsKeepTheirNamesAndWeightsThroughTextNutritionRepair]' passed (0.221 seconds).
+Test Case '-[LuqmaCoreTests.CoreTests testBuild23AuditedFoodsKeepTheirNamesAndWeightsThroughTextNutritionRepair]' passed (0.235 seconds).
+Test Case '-[LuqmaCoreTests.CoreTests testBuild28ArrayNutritionRepairPreservesEveryAuditedFoodAndQuantity]' started.
+Test Case '-[LuqmaCoreTests.CoreTests testBuild28ArrayNutritionRepairPreservesEveryAuditedFoodAndQuantity]' passed (0.272 seconds).
 Test Case '-[LuqmaCoreTests.CoreTests testCatalogDecodesAndArabicSearchNormalizes]' started.
 Test Case '-[LuqmaCoreTests.CoreTests testCatalogDecodesAndArabicSearchNormalizes]' passed (0.007 seconds).
 Test Case '-[LuqmaCoreTests.CoreTests testFoodSearchDeduplicatesIdentifiersAndUsesNewestSavedNutritionWithoutMutatingIDs]' started.
 Test Case '-[LuqmaCoreTests.CoreTests testFoodSearchDeduplicatesIdentifiersAndUsesNewestSavedNutritionWithoutMutatingIDs]' passed (0.002 seconds).
 Test Case '-[LuqmaCoreTests.CoreTests testFoodSearchKeepsEveryMatchingVariantBeyondFortyResults]' started.
-Test Case '-[LuqmaCoreTests.CoreTests testFoodSearchKeepsEveryMatchingVariantBeyondFortyResults]' passed (0.120 seconds).
+Test Case '-[LuqmaCoreTests.CoreTests testFoodSearchKeepsEveryMatchingVariantBeyondFortyResults]' passed (0.101 seconds).
 Test Case '-[LuqmaCoreTests.CoreTests testFoodSearchMatchesArabicDiacriticsPunctuationAliasesBrandsAndBothLanguages]' started.
-Test Case '-[LuqmaCoreTests.CoreTests testFoodSearchMatchesArabicDiacriticsPunctuationAliasesBrandsAndBothLanguages]' passed (0.010 seconds).
+Test Case '-[LuqmaCoreTests.CoreTests testFoodSearchMatchesArabicDiacriticsPunctuationAliasesBrandsAndBothLanguages]' passed (0.014 seconds).
 Test Case '-[LuqmaCoreTests.CoreTests testFoodSearchPaginationRejectsStaleIncompleteAndErroredSourceResponses]' started.
 Test Case '-[LuqmaCoreTests.CoreTests testFoodSearchPaginationRejectsStaleIncompleteAndErroredSourceResponses]' passed (0.000 seconds).
 Test Case '-[LuqmaCoreTests.CoreTests testFoodSearchRanksExactNamesThenPrefixesAndKeepsDistinctBrandProducts]' started.
@@ -48,59 +54,115 @@ Test Case '-[LuqmaCoreTests.CoreTests testFoodSearchRanksExactNamesThenPrefixesA
 Test Case '-[LuqmaCoreTests.CoreTests testFoodSearchSourcePaginationContinuesAfterFilteredPagesAndExposesSourceWindow]' started.
 Test Case '-[LuqmaCoreTests.CoreTests testFoodSearchSourcePaginationContinuesAfterFilteredPagesAndExposesSourceWindow]' passed (0.000 seconds).
 Test Case '-[LuqmaCoreTests.CoreTests testGenerativeMealPreservesShawarmaDipsCountAndCatalogNutrition]' started.
-Test Case '-[LuqmaCoreTests.CoreTests testGenerativeMealPreservesShawarmaDipsCountAndCatalogNutrition]' passed (0.170 seconds).
+Test Case '-[LuqmaCoreTests.CoreTests testGenerativeMealPreservesShawarmaDipsCountAndCatalogNutrition]' passed (0.156 seconds).
 Test Case '-[LuqmaCoreTests.CoreTests testHealthCacheBackupMigrationValidationAndCursorIsolation]' started.
-Test Case '-[LuqmaCoreTests.CoreTests testHealthCacheBackupMigrationValidationAndCursorIsolation]' passed (0.005 seconds).
+Test Case '-[LuqmaCoreTests.CoreTests testHealthCacheBackupMigrationValidationAndCursorIsolation]' passed (0.004 seconds).
 Test Case '-[LuqmaCoreTests.CoreTests testHealthExportUnitsDailyPriorityAndFutureFiltering]' started.
-Test Case '-[LuqmaCoreTests.CoreTests testHealthExportUnitsDailyPriorityAndFutureFiltering]' passed (0.003 seconds).
+Test Case '-[LuqmaCoreTests.CoreTests testHealthExportUnitsDailyPriorityAndFutureFiltering]' passed (0.002 seconds).
 Test Case '-[LuqmaCoreTests.CoreTests testLiveHealthEmptyReadAndInvalidSamplesDoNotEraseHistory]' started.
 Test Case '-[LuqmaCoreTests.CoreTests testLiveHealthEmptyReadAndInvalidSamplesDoNotEraseHistory]' passed (0.001 seconds).
 Test Case '-[LuqmaCoreTests.CoreTests testLiveHealthWeightDeletionFallsBackAndPreservesManual]' started.
-Test Case '-[LuqmaCoreTests.CoreTests testLiveHealthWeightDeletionFallsBackAndPreservesManual]' passed (0.001 seconds).
+Test Case '-[LuqmaCoreTests.CoreTests testLiveHealthWeightDeletionFallsBackAndPreservesManual]' passed (0.002 seconds).
 Test Case '-[LuqmaCoreTests.CoreTests testMacroCaloriesConservedInGramsAndPercent]' started.
 Test Case '-[LuqmaCoreTests.CoreTests testMacroCaloriesConservedInGramsAndPercent]' passed (0.000 seconds).
 Test Case '-[LuqmaCoreTests.CoreTests testMealPrepByCookedWeight]' started.
 Test Case '-[LuqmaCoreTests.CoreTests testMealPrepByCookedWeight]' passed (0.000 seconds).
 Test Case '-[LuqmaCoreTests.CoreTests testNamedDishesRangesAndContradictoryIDs]' started.
-Test Case '-[LuqmaCoreTests.CoreTests testNamedDishesRangesAndContradictoryIDs]' passed (0.492 seconds).
+Test Case '-[LuqmaCoreTests.CoreTests testNamedDishesRangesAndContradictoryIDs]' passed (0.407 seconds).
 Test Case '-[LuqmaCoreTests.CoreTests testNativeBackupRoundTripMergeAndInvalidData]' started.
-Test Case '-[LuqmaCoreTests.CoreTests testNativeBackupRoundTripMergeAndInvalidData]' passed (0.003 seconds).
+Test Case '-[LuqmaCoreTests.CoreTests testNativeBackupRoundTripMergeAndInvalidData]' passed (0.004 seconds).
 Test Case '-[LuqmaCoreTests.CoreTests testNegationAndSauceNeedsConfirmation]' started.
-Test Case '-[LuqmaCoreTests.CoreTests testNegationAndSauceNeedsConfirmation]' passed (0.168 seconds).
+Test Case '-[LuqmaCoreTests.CoreTests testNegationAndSauceNeedsConfirmation]' passed (0.164 seconds).
 Test Case '-[LuqmaCoreTests.CoreTests testOfficialNIDDKScenarios]' started.
-Test Case '-[LuqmaCoreTests.CoreTests testOfficialNIDDKScenarios]' passed (0.072 seconds).
+Test Case '-[LuqmaCoreTests.CoreTests testOfficialNIDDKScenarios]' passed (0.076 seconds).
 Test Case '-[LuqmaCoreTests.CoreTests testProfileDetectsHealthCapabilityWithoutAssumingUnknown]' started.
 Test Case '-[LuqmaCoreTests.CoreTests testProfileDetectsHealthCapabilityWithoutAssumingUnknown]' passed (0.001 seconds).
 Test Case '-[LuqmaCoreTests.CoreTests testServingAndUnits]' started.
 Test Case '-[LuqmaCoreTests.CoreTests testServingAndUnits]' passed (0.000 seconds).
 Test Case '-[LuqmaCoreTests.CoreTests testShawarmaDescriptionDoesNotCollapseToFries]' started.
-Test Case '-[LuqmaCoreTests.CoreTests testShawarmaDescriptionDoesNotCollapseToFries]' passed (0.221 seconds).
+Test Case '-[LuqmaCoreTests.CoreTests testShawarmaDescriptionDoesNotCollapseToFries]' passed (0.217 seconds).
 Test Case '-[LuqmaCoreTests.CoreTests testSixtyGramMacrosAndEditingInPlace]' started.
-Test Case '-[LuqmaCoreTests.CoreTests testSixtyGramMacrosAndEditingInPlace]' passed (0.000 seconds).
+Test Case '-[LuqmaCoreTests.CoreTests testSixtyGramMacrosAndEditingInPlace]' passed (0.001 seconds).
+Test Case '-[LuqmaCoreTests.CoreTests testTextNutritionRepairArrayAndObjectEnvelopesProduceIdenticalValidatedValues]' started.
+Test Case '-[LuqmaCoreTests.CoreTests testTextNutritionRepairArrayAndObjectEnvelopesProduceIdenticalValidatedValues]' passed (0.001 seconds).
 Test Case '-[LuqmaCoreTests.CoreTests testTextNutritionRepairPreservesAuditedIdentitiesQuantitiesAndCatalogNutrition]' started.
-Test Case '-[LuqmaCoreTests.CoreTests testTextNutritionRepairPreservesAuditedIdentitiesQuantitiesAndCatalogNutrition]' passed (0.340 seconds).
+Test Case '-[LuqmaCoreTests.CoreTests testTextNutritionRepairPreservesAuditedIdentitiesQuantitiesAndCatalogNutrition]' passed (0.341 seconds).
 Test Case '-[LuqmaCoreTests.CoreTests testTextNutritionRepairRejectsMissingDuplicateExtraAndImplausibleRecords]' started.
 Test Case '-[LuqmaCoreTests.CoreTests testTextNutritionRepairRejectsMissingDuplicateExtraAndImplausibleRecords]' passed (0.001 seconds).
 Test Case '-[LuqmaCoreTests.CoreTests testUnknownFoodRequiresPlausibleNutritionAndIsMarkedAsAI]' started.
-Test Case '-[LuqmaCoreTests.CoreTests testUnknownFoodRequiresPlausibleNutritionAndIsMarkedAsAI]' passed (0.189 seconds).
+Test Case '-[LuqmaCoreTests.CoreTests testUnknownFoodRequiresPlausibleNutritionAndIsMarkedAsAI]' passed (0.179 seconds).
 Test Case '-[LuqmaCoreTests.CoreTests testVisionAdmissionRechecksShrinkingBudgetAndKeepsSafetyReserve]' started.
 Test Case '-[LuqmaCoreTests.CoreTests testVisionAdmissionRechecksShrinkingBudgetAndKeepsSafetyReserve]' passed (0.000 seconds).
 Test Case '-[LuqmaCoreTests.CoreTests testVisionDoesNotSilentlyLoseObservedGenericWrapDipsAndSides]' started.
 Test Case '-[LuqmaCoreTests.CoreTests testVisionDoesNotSilentlyLoseObservedGenericWrapDipsAndSides]' passed (0.257 seconds).
 Test Case '-[LuqmaCoreTests.CoreTests testVisionRejectsDuplicateAndImpossibleMassAndDoesNotInventFood]' started.
-Test Case '-[LuqmaCoreTests.CoreTests testVisionRejectsDuplicateAndImpossibleMassAndDoesNotInventFood]' passed (0.368 seconds).
+Test Case '-[LuqmaCoreTests.CoreTests testVisionRejectsDuplicateAndImpossibleMassAndDoesNotInventFood]' passed (0.333 seconds).
 Test Case '-[LuqmaCoreTests.CoreTests testVisionUsesAppAllowanceAndCompactModelOnEightGBPhones]' started.
 Test Case '-[LuqmaCoreTests.CoreTests testVisionUsesAppAllowanceAndCompactModelOnEightGBPhones]' passed (0.000 seconds).
 Test Case '-[LuqmaCoreTests.CoreTests testWebsiteBackupMigration]' started.
 Test Case '-[LuqmaCoreTests.CoreTests testWebsiteBackupMigration]' passed (0.001 seconds).
 Test Case '-[LuqmaCoreTests.CoreTests testWeightAverageAndPlanGuards]' started.
 Test Case '-[LuqmaCoreTests.CoreTests testWeightAverageAndPlanGuards]' passed (0.003 seconds).
-Test Suite 'CoreTests' passed at 2026-10-10 10:29:51.901.
-	 Executed 32 tests, with 0 failures (0 unexpected) in 2.660 (2.667) seconds
-Test Suite 'LuqmaCorePackageTests.xctest' passed at 2026-10-10 10:29:51.901.
-	 Executed 32 tests, with 0 failures (0 unexpected) in 2.660 (2.667) seconds
-Test Suite 'All tests' passed at 2026-10-10 10:29:51.901.
-	 Executed 32 tests, with 0 failures (0 unexpected) in 2.660 (2.669) seconds
+Test Suite 'CoreTests' passed at 2026-10-11 03:17:33.138.
+	 Executed 34 tests, with 0 failures (0 unexpected) in 2.788 (2.794) seconds
+Test Suite 'FoodCatalogIntegrationTests' started at 2026-10-11 03:17:33.139.
+Test Case '-[LuqmaCoreTests.FoodCatalogIntegrationTests testRealCatalogDecodesAndEveryNamedPortionKeepsItsSourceWeightAndNutrition]' started.
+Test Case '-[LuqmaCoreTests.FoodCatalogIntegrationTests testRealCatalogDecodesAndEveryNamedPortionKeepsItsSourceWeightAndNutrition]' passed (0.883 seconds).
+Test Case '-[LuqmaCoreTests.FoodCatalogIntegrationTests testRealCatalogSearchReturnsAllMatchingNamesAliasesAndBrandTokens]' started.
+Test Case '-[LuqmaCoreTests.FoodCatalogIntegrationTests testRealCatalogSearchReturnsAllMatchingNamesAliasesAndBrandTokens]' passed (61.542 seconds).
+Test Suite 'FoodCatalogIntegrationTests' passed at 2026-10-11 03:18:35.564.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 62.425 (62.425) seconds
+Test Suite 'FoodHistoryTests' started at 2026-10-11 03:18:35.564.
+Test Case '-[LuqmaCoreTests.FoodHistoryTests testDatesUseCreationTimestampWithDayFallbackAndFractionalSeconds]' started.
+Test Case '-[LuqmaCoreTests.FoodHistoryTests testDatesUseCreationTimestampWithDayFallbackAndFractionalSeconds]' passed (0.003 seconds).
+Test Case '-[LuqmaCoreTests.FoodHistoryTests testFrequencyCountsLogsAndKeepsDistinctBrandsWithDeterministicTies]' started.
+Test Case '-[LuqmaCoreTests.FoodHistoryTests testFrequencyCountsLogsAndKeepsDistinctBrandsWithDeterministicTies]' passed (0.013 seconds).
+Test Case '-[LuqmaCoreTests.FoodHistoryTests testFullPersonalCollectionRejectsNewFoodAtomicallyButAllowsEditing]' started.
+Test Case '-[LuqmaCoreTests.FoodHistoryTests testFullPersonalCollectionRejectsNewFoodAtomicallyButAllowsEditing]' passed (0.042 seconds).
+Test Case '-[LuqmaCoreTests.FoodHistoryTests testLegacyBarcodeResolvesRenamedFoodAndExplicitUnknownIDNeverUsesName]' started.
+Test Case '-[LuqmaCoreTests.FoodHistoryTests testLegacyBarcodeResolvesRenamedFoodAndExplicitUnknownIDNeverUsesName]' passed (0.001 seconds).
+Test Case '-[LuqmaCoreTests.FoodHistoryTests testLegacyLabelsMatchBothLanguagesButAmbiguousBrandsAreExcluded]' started.
+Test Case '-[LuqmaCoreTests.FoodHistoryTests testLegacyLabelsMatchBothLanguagesButAmbiguousBrandsAreExcluded]' passed (0.002 seconds).
+Test Case '-[LuqmaCoreTests.FoodHistoryTests testLegacyPersonalFoodsMigrateWithoutDuplicateIdentifiers]' started.
+Test Case '-[LuqmaCoreTests.FoodHistoryTests testLegacyPersonalFoodsMigrateWithoutDuplicateIdentifiers]' passed (0.001 seconds).
+Test Case '-[LuqmaCoreTests.FoodHistoryTests testOpeningSearchAndBarcodeResultsDoesNotCreateRecentOrFrequentUsage]' started.
+Test Case '-[LuqmaCoreTests.FoodHistoryTests testOpeningSearchAndBarcodeResultsDoesNotCreateRecentOrFrequentUsage]' passed (0.003 seconds).
+Test Case '-[LuqmaCoreTests.FoodHistoryTests testPersonalFoodsSurviveCacheEvictionAndLatestSavedValuesOverrideCatalog]' started.
+Test Case '-[LuqmaCoreTests.FoodHistoryTests testPersonalFoodsSurviveCacheEvictionAndLatestSavedValuesOverrideCatalog]' passed (0.006 seconds).
+Test Case '-[LuqmaCoreTests.FoodHistoryTests testUnrelatedCacheInsertMigratesLegacyNameBasedPersonalIDBeforeEviction]' started.
+Test Case '-[LuqmaCoreTests.FoodHistoryTests testUnrelatedCacheInsertMigratesLegacyNameBasedPersonalIDBeforeEviction]' passed (0.256 seconds).
+Test Case '-[LuqmaCoreTests.FoodHistoryTests testVersion13ManualFoodWithoutSourceMigratesAndExcludesCatalogRecipePhotoFoods]' started.
+Test Case '-[LuqmaCoreTests.FoodHistoryTests testVersion13ManualFoodWithoutSourceMigratesAndExcludesCatalogRecipePhotoFoods]' passed (0.010 seconds).
+Test Suite 'FoodHistoryTests' passed at 2026-10-11 03:18:35.903.
+	 Executed 10 tests, with 0 failures (0 unexpected) in 0.337 (0.339) seconds
+Test Suite 'FoodServingTests' started at 2026-10-11 03:18:35.903.
+Test Case '-[LuqmaCoreTests.FoodServingTests testBackupRejectsMalformedOrDuplicatePortionsWithoutChangingDiary]' started.
+Test Case '-[LuqmaCoreTests.FoodServingTests testBackupRejectsMalformedOrDuplicatePortionsWithoutChangingDiary]' passed (0.001 seconds).
+Test Case '-[LuqmaCoreTests.FoodServingTests testDiaryKeepsFoodIdentityAndPortionLabelAfterResizeAndBackup]' started.
+Test Case '-[LuqmaCoreTests.FoodServingTests testDiaryKeepsFoodIdentityAndPortionLabelAfterResizeAndBackup]' passed (0.001 seconds).
+Test Case '-[LuqmaCoreTests.FoodServingTests testEditingReferenceRecalculatesKnownGramPortionWithoutRewritingIdentity]' started.
+Test Case '-[LuqmaCoreTests.FoodServingTests testEditingReferenceRecalculatesKnownGramPortionWithoutRewritingIdentity]' passed (0.000 seconds).
+Test Case '-[LuqmaCoreTests.FoodServingTests testHouseholdPortionUsesWeightOfWholeLabeledChoiceAndFractionalCounts]' started.
+Test Case '-[LuqmaCoreTests.FoodServingTests testHouseholdPortionUsesWeightOfWholeLabeledChoiceAndFractionalCounts]' passed (0.000 seconds).
+Test Case '-[LuqmaCoreTests.FoodServingTests testOldBackupDecodesWithoutAnyNewOptionalFields]' started.
+Test Case '-[LuqmaCoreTests.FoodServingTests testOldBackupDecodesWithoutAnyNewOptionalFields]' passed (0.001 seconds).
+Test Case '-[LuqmaCoreTests.FoodServingTests testPersonalBackupMergePreservesRenamedIDsAndRejectsOverflow]' started.
+Test Case '-[LuqmaCoreTests.FoodServingTests testPersonalBackupMergePreservesRenamedIDsAndRejectsOverflow]' passed (0.032 seconds).
+Test Case '-[LuqmaCoreTests.FoodServingTests testPortionNeverInfersMillilitersOrAcceptsAnotherFoodsChoice]' started.
+Test Case '-[LuqmaCoreTests.FoodServingTests testPortionNeverInfersMillilitersOrAcceptsAnotherFoodsChoice]' passed (0.000 seconds).
+Test Suite 'FoodServingTests' passed at 2026-10-11 03:18:35.941.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.036 (0.037) seconds
+Test Suite 'LuqmaCorePackageTests.xctest' passed at 2026-10-11 03:18:35.941.
+	 Executed 53 tests, with 0 failures (0 unexpected) in 65.586 (65.597) seconds
+Test Suite 'All tests' passed at 2026-10-11 03:18:35.941.
+	 Executed 53 tests, with 0 failures (0 unexpected) in 65.586 (65.600) seconds
+CATALOG_SEARCH rice=442
+CATALOG_SEARCH دجاج=801
+CATALOG_SEARCH ارز=441
+CATALOG_SEARCH milk=425
+CATALOG_SEARCH شاورما=0
+CATALOG_SEARCH chicken cooked=152
+CATALOG_SEARCH مطبوخ دجاج=145
 ◇ Test run started.
 ↳ Testing Library Version: 1501
 ↳ Target Platform: arm64e-apple-macos14.0
