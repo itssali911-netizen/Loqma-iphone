@@ -1,4 +1,14 @@
-# Validation — version 1.5 native verification pending
+# Validation — version 1.5 build 31
+
+[Build 31](https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/38116013298) from `467c2dd1b6a509ea8d66749bbb7a983c0500531c`: Version 1.5, build 31: 62 Foundation tests and 26 Python tests passed on macOS/Xcode 26.3; iPhoneOS Release compilation and independent IPA/resource verification passed. Compact 2B failed the standalone-meat category in the mixed-meal fixture. Full 4B, cached/offline and blank-image checks were not reached. Photo recognition remains tentative and requires manual OFF product selection. Personal Apple signing and physical-iPhone Health authorization remain necessary.
+
+Workflow conclusion: **failure**. IPA SHA-256: `3e0315663046421f603e1b7bfcb888e4417b30365af63e1ed7c967deee471621`. Eight packaged resources were compared byte-for-byte against the immutable built commit. All six foods are OFF products; five declared servings preserve source g/ml quantities. The removed USDA label resource is absent, and all 59 photo-category records contain names/weights without nutrition. The source contains historical regression fixtures, separate from application resources.
+
+The native integration tests compare all six products to pinned v3.6 responses; search counts are {"milk": 2, "حليب": 4, "Almarai": 1, "nutella": 1, "pesto": 1}. The live Arabic query «حليب» returned 133 exact source hits across three pages, and two submitted pages returned 50 each. Almarai's source serving is 250 ml = 155 kcal. These are source data observations, not measured nutritional accuracy.
+
+Apple Health's requested entitlements are in the local package, but the final Apple signature/profile and on-device consent are separate. The installed identifier from the user's screenshot is `app.luqma.diary.2AV9NV468K`; preserve it and the same account after exporting a backup. Automatic/background Health, camera, UI layout and memory behavior have not been verified on the physical iPhone here.
+
+# Earlier version 1.5 preparation and validation history
 
 Intermediate [build 30](https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/38115701975), source `9cb80d8020dad3e3800393a20a2a462fab8c02ee`, stopped while compiling the new source-filtering test: its DiaryEntry construction used an unavailable memberwise initializer. No native test results or IPA were produced. The test now uses the production initializer, then sets its historical saved totals; production logic and assertions were not weakened. A new native build is required.
 

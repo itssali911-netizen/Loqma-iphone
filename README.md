@@ -1,5 +1,7 @@
 # Luqma Native iOS
 
+Version 1.5, build 31: 62 Foundation tests and 26 Python tests passed on macOS/Xcode 26.3; iPhoneOS Release compilation and independent IPA/resource verification passed. Compact 2B failed the standalone-meat category in the mixed-meal fixture. Full 4B, cached/offline and blank-image checks were not reached. Photo recognition remains tentative and requires manual OFF product selection. Personal Apple signing and physical-iPhone Health authorization remain necessary. [Build / البناء](https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/38116013298)
+
 Version 1.5 implements an Open Food Facts food catalog and live product search, a promoted **Best match**, **Serving** as the default addition unit, and simpler food, progress and Health screens. Build through `Scripts/build_ios.py` on Xcode 26.3+; iPhone / iOS 17+. See [Arabic instructions](README-AR.md), [food sources](FOOD-DATA-AR.md) and [validation history](VALIDATION.md).
 
 The bundled starter cache contains six inspected Open Food Facts products; it is not a full database download. Submitted searches and barcode lookups query Open Food Facts, and saved products remain usable offline. All query words must occur in names, aliases or brand in any order. Exact names and prefixes rank ahead of other contains matches; the first loaded result is promoted as Best match without duplicating it. Search has explicit pagination and an external 10,000-hit window. No private MyFitnessPal data or ranking algorithm is included.
