@@ -1,3 +1,11 @@
+# Version1.6 — native verification pending
+
+New source implements the 744-record supplied MyFitnessPal catalog + OFF6, declared portion persistence, suggestions, Gemini3.8Flash, PowerPeak-style UI and brand assets. No previous native build validates these changes. All 744 source food rows remain; 31 unknown-nutrition foods cannot be logged until explicitly corrected. Imported portions use exact source multipliers and no inferred per100 basis.
+
+The real Gemini API responded HTTP200 for the pinned public-domain meal and blank control, explicitly as gemini-3.8-flash. The meal returned five component labels; blank returned nofood. Prior HTTP400 request-enum defect was fixed and a transient HTTP503 is retained in evidence. Credentials are excluded from all reports, source and IPA. Native service/ImageIO/Keychain and physical-iPhone behavior still require verification.
+
+NativeUIpreview will capture four actual Simulator frames using the Debug-only preview flag, then inspect them visually. Interface similarity is grounded in the supplied reference image; no pixel-perfect equivalence or MyFitnessPal server-ranking recovery is claimed.
+
 # Validation — version 1.5 build 31
 
 [Build 31](https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/38116013298) from `467c2dd1b6a509ea8d66749bbb7a983c0500531c`: Version 1.5, build 31: 62 Foundation tests and 26 Python tests passed on macOS/Xcode 26.3; iPhoneOS Release compilation and independent IPA/resource verification passed. Compact 2B failed the standalone-meat category in the mixed-meal fixture. Full 4B, cached/offline and blank-image checks were not reached. Photo recognition remains tentative and requires manual OFF product selection. Personal Apple signing and physical-iPhone Health authorization remain necessary.

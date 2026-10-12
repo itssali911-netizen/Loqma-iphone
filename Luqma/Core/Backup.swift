@@ -29,7 +29,9 @@ enum DiaryValidation {
             try require([f.kcal,f.protein,f.carbs,f.fat].allSatisfy { $0.map { $0.isFinite && $0 >= 0 && $0 <= 100000 } ?? true })
             try require(f.servingNutrition?.valid ?? true)
             try require((f.servings?.count ?? 0) <= 100 && (f.servings ?? []).allSatisfy(\.valid) && Set((f.servings ?? []).map(\.id)).count == (f.servings?.count ?? 0))
-            try require((f.catalogID?.count ?? 0) <= 360 && (f.serving?.count ?? 0) <= 240 && (f.servingUnit?.count ?? 0) <= 30 && (f.servingQuantity.map { $0.isFinite && $0 > 0 && $0 <= 10000 } ?? true))
+            try require((f.portions?.count ?? 0) <= 100 && (f.portions ?? []).allSatisfy(\.valid) && Set((f.portions ?? []).map(\.id)).count == (f.portions?.count ?? 0))
+            try require(f.selectedPortionID.map { id in (f.portions ?? []).contains { $0.id == id } } ?? true)
+            try require((f.catalogID?.count ?? 0) <= 360 && (f.serving?.count ?? 0) <= 240 && (f.servingUnit?.count ?? 0) <= 240 && (f.servingQuantity.map { $0.isFinite && $0 > 0 && $0 <= 10000 } ?? true))
         }
         if let p = s.weightPlan { try p.validate() }
     }

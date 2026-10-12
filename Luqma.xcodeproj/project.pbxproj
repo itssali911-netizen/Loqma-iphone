@@ -35,6 +35,36 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = 6788AB226F815121F5C5056F;
 		};
+		"67042EE0EA50AF773CD7EF74" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "FoodSuggestions.swift";
+			"sourceTree" = "<group>";
+		};
+		"A3ED49B7297D82ECF3C54A6C" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 67042EE0EA50AF773CD7EF74;
+		};
+		"8F286E5ED2AD62A72DA83130" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "GeminiConfiguration.swift";
+			"sourceTree" = "<group>";
+		};
+		"1FE956C0D7E022E94445DDC9" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 8F286E5ED2AD62A72DA83130;
+		};
+		"CA5786B0EF2E26C4699D77AC" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "GeminiMeal.swift";
+			"sourceTree" = "<group>";
+		};
+		"66C58434E865BE22206AF1F7" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = CA5786B0EF2E26C4699D77AC;
+		};
 		"88B76ECB732F1C2ADD459E0B" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -131,6 +161,9 @@
 				E905FBAED38800B358467D68,
 				AD5F6C86957F15655ED65354,
 				6788AB226F815121F5C5056F,
+				67042EE0EA50AF773CD7EF74,
+				8F286E5ED2AD62A72DA83130,
+				CA5786B0EF2E26C4699D77AC,
 				88B76ECB732F1C2ADD459E0B,
 				740B6574D4BE2DB81E89F3F4,
 				99FD76BD119C231294A67C24,
@@ -174,6 +207,26 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = 1843CD3E6F8E7EB8B56ABA91;
 		};
+		"653DD8E88E923295DB76B7AD" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "GeminiCredentialStore.swift";
+			"sourceTree" = "<group>";
+		};
+		"71A948B0477A77F7B102F007" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 653DD8E88E923295DB76B7AD;
+		};
+		"20744C83D0394496367E6FF9" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "GeminiMealService.swift";
+			"sourceTree" = "<group>";
+		};
+		"279360EAF13099BDBE667F01" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 20744C83D0394496367E6FF9;
+		};
 		"97A0CB0974ACD09ACD0BF0E3" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -210,6 +263,8 @@
 				92F09BE3BE7408F4DD44966F,
 				EA63825235A3A3823BF8D8D4,
 				1843CD3E6F8E7EB8B56ABA91,
+				653DD8E88E923295DB76B7AD,
+				20744C83D0394496367E6FF9,
 				97A0CB0974ACD09ACD0BF0E3,
 				E540AB74E9432128CD9051EC,
 				48D10B5AE5F72B6836EDFCD5,
@@ -246,6 +301,16 @@
 		"0E5577C4BBC679748E6C3F13" = {
 			"isa" = "PBXBuildFile";
 			"fileRef" = 11772A999B0CF5E648C47233;
+		};
+		"29048C922B421BBD73B1A875" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "GeminiSettingsView.swift";
+			"sourceTree" = "<group>";
+		};
+		"531B4A74ADCF42F28BF17735" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 29048C922B421BBD73B1A875;
 		};
 		"BFE17ACE05D898E290332E40" = {
 			"isa" = "PBXFileReference";
@@ -333,6 +398,7 @@
 				8F7A2BF48A08222DC9D42E67,
 				BC88FCEB1B7FEC70CC4BD5B3,
 				11772A999B0CF5E648C47233,
+				29048C922B421BBD73B1A875,
 				BFE17ACE05D898E290332E40,
 				3759170AED1C2D7C901295F6,
 				3EA6656D40209CE7623FD71E,
@@ -384,6 +450,26 @@
 		"C4B6949B0FC96D26B298D9EB" = {
 			"isa" = "PBXBuildFile";
 			"fileRef" = 95F89D80B1649284B0761644;
+		};
+		"77FC0A578CFBB35BCEC3F125" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "text.json";
+			"path" = "mfp-foods-data.json";
+			"sourceTree" = "<group>";
+		};
+		"DA1E3A892B4303775A3DC536" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 77FC0A578CFBB35BCEC3F125;
+		};
+		"2FDC09C69CD2CCC9FD3E2044" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "text.json";
+			"path" = "mfp-foods-provenance.json";
+			"sourceTree" = "<group>";
+		};
+		"CEE890999E5EB8E39AF4B869" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 2FDC09C69CD2CCC9FD3E2044;
 		};
 		"BA6538021878DCF9D37C537F" = {
 			"isa" = "PBXFileReference";
@@ -479,6 +565,8 @@
 				8EA4F3E095B455BAF87189A3,
 				AAECD8E4A1635D9ECC66FF18,
 				95F89D80B1649284B0761644,
+				77FC0A578CFBB35BCEC3F125,
+				2FDC09C69CD2CCC9FD3E2044,
 				BA6538021878DCF9D37C537F,
 				D247B60688D68529AFA78738,
 				143D7BFFDB66553FB03578E2,
@@ -624,6 +712,9 @@
 				20126CEF08FC5BF70D8ED5F6,
 				B29BC5AE96FFAC126BF5DE69,
 				3C7850613A45F50FB9A4B6D3,
+				A3ED49B7297D82ECF3C54A6C,
+				1FE956C0D7E022E94445DDC9,
+				66C58434E865BE22206AF1F7,
 				296B7C7F92ECAB568E3064DB,
 				FD770A0D1190CA0559B018D1,
 				98141A9EE077F7BCF208865C,
@@ -636,12 +727,15 @@
 				31DB4AF06768137E0E95C19B,
 				403A3A19D829E31AE030433B,
 				E9DF33C90C95BE46CC7B5561,
+				71A948B0477A77F7B102F007,
+				279360EAF13099BDBE667F01,
 				402DA145132AAD9769C44221,
 				76A090779134DCD58DA2D30F,
 				32A69040FD1EC58A7366E44B,
 				25FAC676E9E27349FB2F59A2,
 				2C605AA8C1E44D960F29D9D5,
 				0E5577C4BBC679748E6C3F13,
+				531B4A74ADCF42F28BF17735,
 				0B2634EBC8B3FF8510852636,
 				D04ED25BCA9CF73FE9FDA19E,
 				437B4B5D1B4C9BA846CD0DF3,
@@ -673,6 +767,8 @@
 				49626A23D001F68B37E6F749,
 				16E7F61E3E9E166F4FBD966C,
 				C4B6949B0FC96D26B298D9EB,
+				DA1E3A892B4303775A3DC536,
+				CEE890999E5EB8E39AF4B869,
 				EE03F44154F9839F5BCEBF5A,
 				8514D5B613BF7C410DA4A25C,
 				E5329B64DF8043101EC0CCFF,
@@ -722,7 +818,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				"MARKETING_VERSION" = "1.5";
+				"MARKETING_VERSION" = "1.6";
 				"PRODUCT_BUNDLE_IDENTIFIER" = "app.luqma.diary";
 				"PRODUCT_NAME" = "$(TARGET_NAME)";
 				"SDKROOT" = "iphoneos";
@@ -770,7 +866,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				"MARKETING_VERSION" = "1.5";
+				"MARKETING_VERSION" = "1.6";
 				"PRODUCT_BUNDLE_IDENTIFIER" = "app.luqma.diary";
 				"PRODUCT_NAME" = "$(TARGET_NAME)";
 				"SDKROOT" = "iphoneos";

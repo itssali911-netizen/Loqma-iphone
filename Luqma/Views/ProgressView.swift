@@ -10,34 +10,39 @@ struct ProgressViewScreen:View {
     @State private var deleting:WeightReading?
     private var readings:[WeightReading] {diary.state.weights.filter{let days=WeightModel.days($0.day,DayKey.today);return days>=0 && (range==0 || days<range)}}
     var body:some View {
-        ScrollView{VStack(alignment:.leading,spacing:18){
+        ScrollView{VStack(alignment:.leading,spacing:24){
+            LuqmaPageHeader(title:diary.t("تقدّمي","My progress"),subtitle:diary.t("خطوات صغيرة، أثر واضح","Small steps, visible progress"),symbol:"chart.xyaxis.line")
             weightSummary
+            LuqmaSectionHeader(title:diary.t("اتجاه الوزن","Weight trend"))
             weightChart
             weightPlan
             healthConnection
             weightHistory
-        }.padding(20)}.appBackground().navigationTitle(diary.t("تقدّمي","My progress"))
+        }.padding(20).padding(.bottom,10)}.appBackground().navigationTitle(diary.t("تقدّمي","My progress"))
+            .toolbar(.hidden,for:.navigationBar)
             .sheet(isPresented:$adding){WeightEditor()}
             .confirmationDialog(diary.t("حذف قراءة الوزن؟","Delete weight reading?"),isPresented:Binding(get:{deleting != nil},set:{if !$0{deleting=nil}}),titleVisibility:.visible){Button(diary.t("حذف","Delete"),role:.destructive){if let w=deleting{diary.removeWeight(w.day)};deleting=nil}}
     }
-    private var weightSummary:some View {VStack(alignment:.leading,spacing:14){
+    private var weightSummary:some View {VStack(alignment:.leading,spacing:20){
         if let latest=diary.state.weights.last {
-            Text(diary.t("آخر وزن","Latest weight")).font(.subheadline).foregroundStyle(Theme.muted)
-            HStack(alignment:.firstTextBaseline,spacing:8){
-                Text(decimal(latest.kg)).font(.largeTitle.bold()).monospacedDigit().foregroundStyle(Theme.accent)
-                Text(diary.t("كجم","kg")).foregroundStyle(Theme.muted)
+            HStack(alignment:.center,spacing:18){
+                VStack(alignment:.leading,spacing:10){
+                    Text(diary.t("آخر وزن","Latest weight")).font(.subheadline).foregroundStyle(Theme.muted)
+                    HStack(alignment:.firstTextBaseline,spacing:8){Text(decimal(latest.kg)).font(.system(size:43,weight:.bold,design:.rounded)).monospacedDigit();Text(diary.t("كجم","kg")).foregroundStyle(Theme.muted)}
+                    Text(latest.day).font(.caption).monospacedDigit().foregroundStyle(Theme.muted)
+                }
                 Spacer(minLength:0)
+                Image(systemName:"scalemass").font(.system(size:29,weight:.light)).foregroundStyle(Theme.accent).frame(width:70,height:70).background(Theme.accent.opacity(0.12),in:Circle()).accessibilityHidden(true)
             }
-            Text(latest.day).font(.caption).monospacedDigit().foregroundStyle(Theme.muted)
         } else {
             Text(diary.t("ابدأ بتسجيل وزنك","Start with your weight")).font(.headline)
             Notice(text:diary.t("تابع تغيّر وزنك ومتوسط الأسبوع هنا.","Track your weight trend and weekly average here."))
         }
-        Button{adding=true}label:{Label(diary.t("تسجيل وزن","Log weight"),systemImage:"plus")}.buttonStyle(.borderedProminent)
+        Button{adding=true}label:{Label(diary.t("تسجيل وزن","Log weight"),systemImage:"plus")}.buttonStyle(LuqmaPrimaryButtonStyle())
     }.luqmaCard()}
     private var weightPlan:some View {VStack(alignment:.leading,spacing:14){
-        NavigationLink{PlanView()}label:{HStack(spacing:12){
-            Image(systemName:"target").foregroundStyle(Theme.accent)
+        NavigationLink{PlanView().toolbar(.visible,for:.navigationBar)}label:{HStack(spacing:12){
+            Image(systemName:"target").font(.system(size:24)).foregroundStyle(Theme.accent).frame(width:46,height:46).background(Theme.surface,in:RoundedRectangle(cornerRadius:15))
             VStack(alignment:.leading,spacing:4){
                 Text(diary.t("خطة الوزن","Weight plan")).font(.headline).foregroundStyle(.primary)
                 if let plan=diary.state.weightPlan{Text("\(diary.t("الهدف","Goal")): \(decimal(plan.targetWeight)) \(diary.t("كجم","kg"))").font(.subheadline).foregroundStyle(Theme.muted)}
@@ -56,8 +61,8 @@ struct ProgressViewScreen:View {
             }.font(.footnote)
         }
     }.luqmaCard()}
-    private var healthConnection:some View {NavigationLink{HealthConnectionView()}label:{HStack(spacing:12){
-        Image(systemName:"heart.fill").foregroundStyle(.pink).font(.title2)
+    private var healthConnection:some View {NavigationLink{HealthConnectionView().toolbar(.visible,for:.navigationBar)}label:{HStack(spacing:12){
+        Image(systemName:"heart.fill").foregroundStyle(.pink).font(.title2).frame(width:46,height:46).background(Theme.surface,in:RoundedRectangle(cornerRadius:15))
         VStack(alignment:.leading,spacing:4){
             Text("Apple Health").font(.headline).foregroundStyle(.primary)
             Text(health.signingBlocked ? diary.t("يحتاج إعداد الربط","Connection setup needed") : (diary.state.healthEnabled ? diary.t("الربط مفعّل","Connection enabled") : diary.t("اربط الوزن والخطوات","Connect weight and steps"))).font(.subheadline).foregroundStyle(Theme.muted)
@@ -78,10 +83,20 @@ struct ProgressViewScreen:View {
         }.luqmaCard()}
     }
     private var weightChart:some View {VStack(alignment:.leading,spacing:18){
-        Picker(diary.t("مدة الرسم","Chart range"),selection:$range){Text(diary.t("أسبوع","7d")).tag(7);Text(diary.t("شهر","30d")).tag(30);Text(diary.t("٣ شهور","90d")).tag(90);Text(diary.t("الكل","All")).tag(0)}.pickerStyle(.segmented)
+        HStack(spacing:4){ForEach([7,30,90,0],id:\.self){value in
+            Button{range=value}label:{Text(rangeTitle(value)).font(.caption.weight(.semibold)).frame(maxWidth:.infinity,minHeight:40).foregroundStyle(range == value ? Theme.card:Theme.muted).background(range == value ? Theme.text:Theme.surface,in:RoundedRectangle(cornerRadius:12))}.buttonStyle(.plain).accessibilityAddTraits(range == value ? .isSelected:[])
+        }}.padding(4).background(Theme.surface,in:RoundedRectangle(cornerRadius:16)).accessibilityLabel(diary.t("مدة الرسم","Chart range"))
         if readings.isEmpty{Notice(text:diary.t("لا توجد قراءات في هذه المدة.","No readings in this range."))}
-        else{Chart{ForEach(readings){w in if let date=DayKey.localDate(w.day){LineMark(x:.value("Date",date),y:.value("Weight",w.kg)).foregroundStyle(Theme.accent);PointMark(x:.value("Date",date),y:.value("Weight",w.kg)).foregroundStyle(Theme.accent)}};if let target=diary.state.weightPlan?.targetWeight{RuleMark(y:.value("Goal",target)).lineStyle(StrokeStyle(lineWidth:1,dash:[5])).foregroundStyle(.orange)}}.chartYScale(domain:.automatic(includesZero:false)).frame(height:230).accessibilityLabel(diary.t("رسم تغيّر الوزن بالكيلوجرام","Weight trend in kilograms"))}
+        else{Chart{
+            ForEach(readings){w in if let date=DayKey.localDate(w.day){
+                AreaMark(x:.value("Date",date),yStart:.value("Lower bound",(readings.map{$0.kg}.min() ?? w.kg)-1),yEnd:.value("Weight",w.kg)).foregroundStyle(LinearGradient(colors:[Theme.accent.opacity(0.28),Theme.accent.opacity(0.015)],startPoint:.top,endPoint:.bottom))
+                LineMark(x:.value("Date",date),y:.value("Weight",w.kg)).lineStyle(StrokeStyle(lineWidth:2.5)).foregroundStyle(Theme.accent)
+                PointMark(x:.value("Date",date),y:.value("Weight",w.kg)).symbolSize(25).foregroundStyle(Theme.accent)
+            }}
+            if let target=diary.state.weightPlan?.targetWeight{RuleMark(y:.value("Goal",target)).lineStyle(StrokeStyle(lineWidth:1,dash:[5])).foregroundStyle(Theme.secondaryAccent)}
+        }.chartYScale(domain:.automatic(includesZero:false)).chartLegend(.hidden).frame(height:225).accessibilityLabel(diary.t("رسم تغيّر الوزن بالكيلوجرام","Weight trend in kilograms"))}
     }.luqmaCard()}
+    private func rangeTitle(_ value:Int)->String {switch value{case 7:return diary.t("أسبوع","7d");case 30:return diary.t("شهر","30d");case 90:return diary.t("٣ شهور","90d");default:return diary.t("الكل","All")}}
 }
 struct WeightEditor:View {
     @EnvironmentObject var diary:DiaryStore

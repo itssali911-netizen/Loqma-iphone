@@ -22,6 +22,7 @@ struct SettingsView:View {
                 Picker(diary.t("اللغة","Language"),selection:Binding(get:{diary.language},set:{value in diary.change{$0.language=value}})){Text("العربية").tag(AppLanguage.ar);Text("English").tag(AppLanguage.en)}.pickerStyle(.menu)
             }
             Section(diary.t("الربط والبيانات","Connections and data")){
+                NavigationLink{GeminiSettingsView()}label:{Label(diary.t("تحليل الوجبات · Gemini","Meal analysis · Gemini"),systemImage:"sparkles")}
                 NavigationLink{HealthConnectionView()}label:{
                     HStack{Label(diary.t("صحتي","Apple Health"),systemImage:"heart");Spacer();Text(health.signingBlocked ? diary.t("يحتاج إعداد","Setup needed") : (diary.state.healthEnabled ? diary.t("مفعّل","Enabled"):diary.t("غير مربوط","Not connected"))).font(.caption).foregroundStyle(.secondary)}
                 }
@@ -70,9 +71,10 @@ private struct AboutLuqmaView:View {
                 Text(diary.t("الإصدار ","Version ") + (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.4"))
             }
             Section(diary.t("الخصوصية","Privacy")){
-                Notice(text:diary.t("سجلك محفوظ على الجهاز. البحث الخارجي وتنزيل نماذج الصور أول مرة يحتاجان الإنترنت. الصور وبيانات صحتي لا تُرفع إلى خادم.","Your diary is stored on the device. Online search and initial image-model downloads need internet. Photos and Health data are not uploaded."))
+                Notice(text:diary.t("سجلك وبيانات صحتي محفوظة على الجهاز. عند اختيار Gemini تُرسل صورة الوجبة والوصف فقط إلى Google. التحليل على الجهاز يعمل محليًا بعد تنزيل النموذج. مفتاح Gemini لا يدخل النسخ الاحتياطية.","Your diary and Health data stay on the device. Gemini sends only the selected meal photo and description to Google. On-device analysis runs locally after its model download. The Gemini key is excluded from backups."))
             }
             Section(diary.t("مصادر الطعام","Food sources")){
+                Text(diary.t("٧٤٤ طعامًا من ملف MyFitnessPal الذي أضفته. هذه عينة محلية؛ البيانات الناقصة تحتاج مراجعة الملصق.","744 foods from your supplied MyFitnessPal file. This is a local sample; incomplete values need label review."))
                 Link("Open Food Facts",destination:URL(string:"https://world.openfoodfacts.org")!)
             }
         }.appBackground().navigationTitle(diary.t("حول لُقمة","About Luqma"))

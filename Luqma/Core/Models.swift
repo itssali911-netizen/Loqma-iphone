@@ -29,20 +29,49 @@ struct FoodServing: Codable, Equatable, Identifiable {
     var id: String; var label: String; var grams: Double
     var valid: Bool { !id.isEmpty && id.count <= 100 && !label.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && label.count <= 240 && grams.isFinite && grams > 0 && grams <= 10000 }
 }
+/// A declared portion can be a cup, slice or another source label; it is not
+/// interchangeable with a gram weight. Missing source nutrition stays unknown.
+struct FoodPortionChoice: Codable, Equatable, Identifiable {
+    var id: String; var label: String; var quantity: Double; var unit: String
+    var nutritionMultiplier: Double; var nutrition: Nutrition?
+    var valid: Bool {
+        !id.isEmpty && id.count <= 100 && !label.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && label.count <= 240 &&
+        !unit.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && unit.count <= 240 &&
+        quantity.isFinite && quantity > 0 && quantity <= 10000 &&
+        nutritionMultiplier.isFinite && nutritionMultiplier > 0 && nutritionMultiplier <= 100000 &&
+        (nutrition == nil || nutrition?.valid == true)
+    }
+}
 struct Food: Codable, Equatable, Identifiable {
     var catalogID: String?; var name: String; var nameEn: String?; var aliases: String?; var brand: String?; var barcode: String?
     var unit: FoodUnit; var kcal: Double?; var protein: Double?; var carbs: Double?; var fat: Double?
     var serving: String?; var servingQuantity: Double?; var servingUnit: String?; var servingNutrition: Nutrition?
     var servings: [FoodServing]?
+    var portions: [FoodPortionChoice]?
+    var selectedPortionID: String?
     var source: String?; var sourceId: String?; var sourceDescription: String?
     var id: String { barcode.map { "barcode:"+$0 } ?? catalogID ?? TextSearch.normalized(name + (brand ?? "")) }
     var per100: Nutrition? { guard let k=kcal,let p=protein,let c=carbs,let f=fat else { return nil }; let v=Nutrition(kcal:k,protein:p,carbs:c,fat:f); return v.valid ? v : nil }
     func label(_ l: AppLanguage) -> String { l == .en ? nameEn ?? name : name }
     var servingChoices: [FoodServing] { unit == .g && per100 != nil ? (servings ?? []).filter(\.valid) : [] }
+    var portionChoices: [FoodPortionChoice] { (portions ?? []).filter(\.valid) }
     func values(for u: FoodUnit) -> Nutrition? { u == .serving ? servingNutrition ?? (unit == .serving ? per100 : servingChoices.first.flatMap { per100?.scaled($0.grams / 100) }) : (u == unit ? per100 : nil) }
     var units: [FoodUnit] { [unit] + (unit != .serving && values(for: .serving) != nil ? [.serving] : []) }
     var additionUnits: [FoodUnit] { [.serving] + (unit == .serving ? [] : [unit]) }
     var defaultAdditionUnit: FoodUnit { .serving }
+    func selectingPortion(_ choice: FoodPortionChoice) throws -> Food {
+        guard choice.valid, portionChoices.contains(choice) else {
+            throw AppError.invalid("اختر حصة من حصص هذا الطعام.", "Choose a portion declared for this food.")
+        }
+        var result = self
+        result.unit = .serving; result.serving = choice.label
+        result.selectedPortionID = choice.id
+        result.servingQuantity = choice.quantity; result.servingUnit = choice.unit
+        result.servingNutrition = choice.nutrition
+        result.kcal = choice.nutrition?.kcal; result.protein = choice.nutrition?.protein
+        result.carbs = choice.nutrition?.carbs; result.fat = choice.nutrition?.fat
+        return result
+    }
     func definingServing(quantity: Double, unit servingBasis: FoodUnit, label: String) throws -> Food {
         guard servingBasis != .serving, servingBasis == unit, quantity.isFinite, quantity > 0, quantity <= 10000,
               let reference = per100, !label.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
@@ -62,6 +91,10 @@ struct Food: Codable, Equatable, Identifiable {
         var result = self
         if referenceUnit == .serving {
             result.servingNutrition = nutrition
+            if let selected = result.selectedPortionID,
+               let index = result.portions?.firstIndex(where: { $0.id == selected }) {
+                result.portions?[index].nutrition = nutrition
+            }
             if result.unit != .serving { return result }
         } else {
             if let grams = servingQuantity, servingUnit == referenceUnit.rawValue, grams.isFinite, grams > 0, grams <= 10000 {
@@ -75,7 +108,7 @@ struct Food: Codable, Equatable, Identifiable {
         guard amount.isFinite,amount>0,amount<=10000,let values=values(for:u),values.valid else { throw AppError.invalid("أكمل القيم الغذائية وأدخل كمية صحيحة.","Complete nutrition and enter a valid amount.") }
         return values.scaled(u == .serving ? amount : amount/100)
     }
-    enum CodingKeys: String, CodingKey { case catalogID="id", name,nameEn,aliases,brand,barcode,unit,kcal,protein,carbs,fat,serving,servingQuantity,servingUnit,servingNutrition,servings,source,sourceId,sourceDescription }
+    enum CodingKeys: String, CodingKey { case catalogID="id", name,nameEn,aliases,brand,barcode,unit,kcal,protein,carbs,fat,serving,servingQuantity,servingUnit,servingNutrition,servings,portions,selectedPortionID,source,sourceId,sourceDescription }
     init(catalogID:String?=nil,name:String,nameEn:String?=nil,aliases:String?=nil,brand:String?=nil,barcode:String?=nil,unit:FoodUnit = .g,nutrition:Nutrition?=nil,serving:String?=nil,servingQuantity:Double?=nil,servingUnit:String?=nil,servingNutrition:Nutrition?=nil,source:String?=nil) {
         self.catalogID=catalogID;self.name=name;self.nameEn=nameEn;self.aliases=aliases;self.brand=brand;self.barcode=barcode;self.unit=unit;self.kcal=nutrition?.kcal;self.protein=nutrition?.protein;self.carbs=nutrition?.carbs;self.fat=nutrition?.fat;self.serving=serving;self.servingQuantity=servingQuantity;self.servingUnit=servingUnit;self.servingNutrition=servingNutrition;self.source=source
     }

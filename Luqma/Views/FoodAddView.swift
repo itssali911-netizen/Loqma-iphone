@@ -8,6 +8,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
     var initial:Food? = nil
     var initialQuery=""
     var productSelection=false
+    var initialMeal:Meal?=nil
     var onPhotoCommit: PhotoFoodCommit? = nil
     var onCommit:FoodCommit
     @EnvironmentObject var diary:DiaryStore
@@ -39,18 +40,16 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
     @State private var historyTask:Task<Void,Never>?
     @State private var suggestedQuery:String?
     @State private var photoToken=UUID()
+    @State private var suggestionFoods:[Food]=[]
     private var term:String {query.trimmingCharacters(in:.whitespacesAndNewlines)}
     private var personalList:[Food] {
         let foods = filter == 1 ? recentFoods : filter == 2 ? frequentFoods : savedFoods
         return term.isEmpty ? foods : foods.filter { FoodSearch.matches($0,query:term) }
     }
-    private var displayedResults:[Food] {let found=filter == 0 ? results:personalList;return productSelection ? found.filter{FoodSearch.isOpenFoodFacts($0)}:found}
+    private var displayedResults:[Food] {let found=filter == 0 ? results:personalList;return productSelection ? found.filter{FoodSearch.isCatalogFood($0)}:found}
     private var bestMatch:Food? {filter == 0 && !term.isEmpty ? displayedResults.first : nil}
     private var otherResults:[Food] {guard let bestMatch else{return displayedResults};return displayedResults.filter{$0.id != bestMatch.id}}
-    private var suggestions:[String] {
-        var seen=Set<String>()
-        return Array(localResults.map{$0.label(diary.language)}.filter { let key=FoodSearch.normalized($0);return key != FoodSearch.normalized(term) && seen.insert(key).inserted }.prefix(4))
-    }
+    private var suggestions:[FoodSuggestion] {FoodSuggestions.suggestions(query:term,foods:suggestionFoods,language:diary.language,history:recentFoods,limit:6)}
     var body:some View {
         NavigationStack {
             ScrollView {
@@ -60,7 +59,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                     }
                     if tab==0 {searchContent}
                     if tab==1 {barcodeContent}
-                    if tab==2 && !productSelection {PhotoMealView {foods,meal in onPhoto(foods,meal)}}
+                    if tab==2 && !productSelection {PhotoMealView(initialMeal:initialMeal){foods,meal in onPhoto(foods,meal)}}
                     if let notice,tab != 2 {Notice(text:notice)}
                     if busy || choosingFood {ProgressView(choosingFood ? diary.t("جلب تفاصيل المنتج…","Loading product details…"):"").frame(maxWidth:.infinity)}
                     if tab==0 && !displayedResults.isEmpty {
@@ -90,10 +89,11 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                 }.padding(20)
             }.appBackground().navigationTitle(diary.t(tab==1 ? "باركود":tab==2 ? "صورة الوجبة":"إضافة طعام",tab==1 ? "Barcode":tab==2 ? "Meal photo":"Add food"))
                 .toolbar {ToolbarItem(placement:.cancellationAction){Button(diary.t("إغلاق","Close")){searchTask?.cancel();selectionTask?.cancel();barcodePhotoTask?.cancel();queryToken=UUID();photoToken=UUID();dismiss()}}}
-                .sheet(item:$selected){food in FoodPortionView(food:food,sourceBarcode:tab==1,onCommit:{f,a,u,m in if onCommit(f,a,u,m){dismiss();return true};return false})}
-                .sheet(isPresented:$manual){FoodPortionView(food:Food(name:""),manual:true,onCommit:{f,a,u,m in if onCommit(f,a,u,m){dismiss();return true};return false})}
+                .sheet(item:$selected){food in FoodPortionView(food:food,sourceBarcode:tab==1,initialMeal:initialMeal,onCommit:{f,a,u,m in if onCommit(f,a,u,m){dismiss();return true};return false})}
+                .sheet(isPresented:$manual){FoodPortionView(food:Food(name:""),manual:true,initialMeal:initialMeal,onCommit:{f,a,u,m in if onCommit(f,a,u,m){dismiss();return true};return false})}
                 .sheet(isPresented:$scanning){NavigationStack{BarcodeCamera(completion:{value in scanning=false;code=value;startLookup()},failed:{message in scanning=false;notice=message}).ignoresSafeArea().navigationTitle(diary.t("مسح الباركود","Scan barcode")).toolbar{ToolbarItem(placement:.cancellationAction){Button(diary.t("إغلاق","Close")){scanning=false}}}}}
         }.onAppear{if let initial{selected=initial};if query.isEmpty && !initialQuery.isEmpty {query=initialQuery};refreshHistory();if tab==0 {searchTask=Task{await refreshLocal()}}}
+            .task{suggestionFoods=await FoodDatabase.shared.suggestionCandidates(cached:diary.state.products+diary.personalFoods)}
             .onChange(of:diary.state.entries){_,_ in refreshHistory()}
             .onChange(of:diary.state.customFoods){_,_ in refreshHistory()}
             .onChange(of:query){_,value in let submit=suggestedQuery==value;suggestedQuery=nil;resetSearch();searchTask=Task{if submit{await search()}else{await refreshLocal()}}}
@@ -118,9 +118,9 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                 if !productSelection {Button {tab=2} label:{Label(diary.t("صورة الوجبة","Meal photo"),systemImage:"camera").frame(maxWidth:.infinity).padding(.vertical,10)}}
             }.buttonStyle(.bordered)
             if filter==0 && term.isEmpty && !recentFoods.isEmpty {recent(diary.t("الأخيرة","Recent foods"),Array(recentFoods.prefix(8)),reverse:false)}
-            if filter==0 && !term.isEmpty {
-                if !suggestions.isEmpty {VStack(alignment:.leading,spacing:8){Text(diary.t("اقتراحات البحث","Suggested searches")).font(.subheadline.bold());ForEach(suggestions,id:\.self){phrase in Button {suggestedQuery=phrase;query=phrase} label:{Label(phrase,systemImage:"magnifyingglass").lineLimit(2).multilineTextAlignment(.leading)}.buttonStyle(.plain).disabled(choosingFood)}}}
-                Text(diary.t("Open Food Facts • اضغط بحث لعرض المنتجات","Open Food Facts • tap Search for products")).font(.caption).foregroundStyle(Theme.muted)
+            if filter==0 {
+                if !suggestions.isEmpty {VStack(alignment:.leading,spacing:10){Text(diary.t(term.isEmpty ? "ابدأ البحث":"اقتراحات البحث",term.isEmpty ? "Start searching":"Suggested searches")).font(.subheadline.bold());ForEach(suggestions){suggestion in Button {submitSuggestion(suggestion.query)} label:{HStack{Image(systemName:suggestion.kind == .history ? "clock":"magnifyingglass");Text(suggestion.label).lineLimit(2).multilineTextAlignment(.leading);Spacer();Image(systemName:"arrow.up.left").font(.caption)}}.buttonStyle(.plain).disabled(choosingFood)}}.luqmaCard()}
+                if !term.isEmpty {Text(diary.t("الأطعمة المحفوظة • بحث لعرض منتجات Open Food Facts","Saved foods • Search for Open Food Facts products")).font(.caption).foregroundStyle(Theme.muted)}
             }
         }
     }
@@ -131,12 +131,12 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
             DisclosureGroup(diary.t("كتابة رقم الباركود","Enter barcode number")) {
                 HStack{TextField(diary.t("رقم الباركود","Barcode number"),text:$code).keyboardType(.numberPad).environment(\.layoutDirection,.leftToRight);Button(diary.t("بحث","Look up")){startLookup()}.disabled(busy || code.isEmpty)}.padding(.vertical,12)
             }.luqmaCard()
-            let scanned=diary.state.barcodeHistory.filter(FoodSearch.isOpenFoodFacts)
+            let scanned=diary.state.barcodeHistory.filter(FoodSearch.isCatalogFood)
             if !scanned.isEmpty {recent(diary.t("آخر المنتجات الممسوحة","Recently scanned products"),scanned)}
         }
     }
     private func select(_ food:Food) {
-        guard FoodSearch.availableForAdding(food), !productSelection || FoodSearch.isOpenFoodFacts(food) else{return}
+        guard FoodSearch.availableForAdding(food), !productSelection || FoodSearch.isCatalogFood(food) else{return}
         selectionTask?.cancel();searchTask?.cancel();barcodePhotoTask?.cancel();photoToken=UUID()
         let token=UUID(),fromBarcode=tab==1,selectionQuery=query,selectionTab=tab;queryToken=token;busy=false;pageLoading=false;choosingFood=false;notice=nil
         guard food.sourceDescription==FoodDatabase.searchSummarySourceDescription else {diary.remember(food,barcode:fromBarcode);selected=food;return}
@@ -156,7 +156,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
             }
         }
     }
-    private func recent(_ title:String,_ foods:[Food],reverse:Bool=true) -> some View {let available=foods.filter{FoodSearch.availableForAdding($0) && (!productSelection || FoodSearch.isOpenFoodFacts($0))};return VStack(alignment:.leading,spacing:4){Text(title).font(.headline);ForEach(Array((reverse ? Array(available.reversed()):available).prefix(8))){food in FoodRow(food:food){select(food)}.disabled(choosingFood)}}.luqmaCard()}
+    private func recent(_ title:String,_ foods:[Food],reverse:Bool=true) -> some View {let available=foods.filter{FoodSearch.availableForAdding($0) && (!productSelection || FoodSearch.isCatalogFood($0))};return VStack(alignment:.leading,spacing:4){Text(title).font(.headline);ForEach(Array((reverse ? Array(available.reversed()):available).prefix(8))){food in FoodRow(food:food){select(food)}.disabled(choosingFood)}}.luqmaCard()}
     private func resetSearch() {
         searchTask?.cancel();selectionTask?.cancel();queryToken=UUID();busy=false;pageLoading=false;choosingFood=false;nextPage=nil;reachedSourceWindow=false
         localResults=[];remoteResults=[];results=[];notice=nil
@@ -166,6 +166,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
         historyTask=Task{let lists=await FoodDatabase.shared.historyLists(snapshot);guard !Task.isCancelled else{return};recentFoods=lists.recent;frequentFoods=lists.frequent;savedFoods=lists.personal}
     }
     private func startSearch(){guard !choosingFood else{return};searchTask?.cancel();searchTask=Task{await search()}}
+    private func submitSuggestion(_ value:String){if query==value{startSearch()}else{suggestedQuery=value;query=value}}
     private func startMore(){guard tab==0,!busy,!pageLoading,!choosingFood,nextPage != nil else{return};searchTask?.cancel();searchTask=Task{await more()}}
     private func startLookup(){guard tab==1 else{return};barcodePhotoTask?.cancel();photoToken=UUID();searchTask?.cancel();searchTask=Task{await lookup()}}
     private func readBarcodePhoto(_ item:PhotosPickerItem?) {
@@ -239,7 +240,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
         if token==queryToken {busy=false}
     }
     private func onPhoto(_ values:[(Food,Double,FoodUnit)],_ meal:Meal) -> Bool {
-        guard !values.isEmpty,values.allSatisfy({FoodSearch.isOpenFoodFacts($0.0)}) else{return false}
+        guard !values.isEmpty,values.allSatisfy({FoodSearch.isCatalogFood($0.0)}) else{return false}
         if let onPhotoCommit {if onPhotoCommit(values,meal){dismiss();return true};return false}
         if values.count==1,let first=values.first{return onCommit(first.0,first.1,first.2,meal)}
         guard let combined=try? values.reduce(Nutrition.zero,{$0+(try $1.0.total($1.1,unit:$1.2))}) else{return false}
@@ -252,10 +253,12 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
 struct FoodPortionView:View {
     let food:Food
     var manual=false,sourceBarcode=false
+    var initialMeal:Meal?=nil
     var onCommit:FoodCommit
     @EnvironmentObject var diary:DiaryStore
     @Environment(\.dismiss) var dismiss
     @State private var unit:FoodUnit = .serving
+    @State private var portionID=""
     @State private var meal:Meal = .breakfast
     @State private var name=""
     @State private var amount="1"
@@ -269,6 +272,7 @@ struct FoodPortionView:View {
     @State private var personalID="personal:"+UUID().uuidString
     private var needsServingSize:Bool {!manual && food.unit != .serving && food.values(for:.serving)==nil && food.per100 != nil}
     private var portionFood:Food {
+        if let choice=food.portionChoices.first(where:{$0.id==portionID}) {return (try? food.selectingPortion(choice)) ?? food}
         if let choice=food.servingChoices.first(where:{$0.id==servingID}) {return (try? food.selecting(choice)) ?? food}
         if needsServingSize,let value=TextSearch.number(servingWeight) {return (try? food.definingServing(quantity:value,unit:food.unit,label:"\(decimal(value)) \(food.unit.label(diary.language))")) ?? food}
         return food
@@ -290,6 +294,9 @@ struct FoodPortionView:View {
                         ForEach(food.servingChoices){choice in Text("\(choice.label) · \(decimal(choice.grams)) \(diary.t("جم","g"))").tag(choice.id)}
                     }
                 }
+                if unit == .serving && !food.portionChoices.isEmpty {
+                    Picker(diary.t("حجم الحصة","Serving size"),selection:$portionID){ForEach(food.portionChoices){choice in Text(choice.label).tag(choice.id)}}
+                }
                 if unit == .serving && needsServingSize {
                     input(diary.t(food.unit == .ml ? "حجم الحصة (مل)":"وزن الحصة (جم)",food.unit == .ml ? "Serving volume (ml)":"Serving weight (g)"),$servingWeight)
                     Text(diary.t("لا يحدد المصدر حجم الحصة. أدخله من الملصق أو اختر وحدة المنتج.","The source has no serving size. Enter it from the label, or choose the product's unit.")).font(.caption).foregroundStyle(Theme.muted)
@@ -305,9 +312,10 @@ struct FoodPortionView:View {
             Section{Button(diary.t("إضافة الطعام","Add food")){save()}.disabled(base==nil || name.trimmingCharacters(in:.whitespaces).isEmpty || (quantity ?? 0)<=0 || (quantity ?? 0)>10000)}
         }.appBackground().navigationTitle(diary.t("كمية الطعام","Food portion"))
             .toolbar{ToolbarItem(placement:.cancellationAction){Button(diary.t("إلغاء","Cancel")){dismiss()}}}
-        }.onAppear{unit=food.defaultAdditionUnit;name=food.label(diary.language);amount="1";if food.servingNutrition==nil{servingID=food.servingChoices.first?.id ?? ""};loadBase();editingNutrition=manual || (food.per100==nil && food.servingNutrition==nil)}
+        }.onAppear{if let initialMeal{meal=initialMeal};unit=food.defaultAdditionUnit;name=food.label(diary.language);amount="1";portionID=food.selectedPortionID ?? food.portionChoices.first?.id ?? "";if food.servingNutrition==nil{servingID=food.servingChoices.first?.id ?? ""};loadBase();editingNutrition=manual || (portionFood.per100==nil && portionFood.servingNutrition==nil)}
             .onChange(of:unit){_,_ in amount=unit == .serving ? "1":"100";if !manual{loadBase();if portionFood.values(for:unit)==nil && !needsServingSize{editingNutrition=true}}}
             .onChange(of:servingID){_,_ in if !manual{loadBase()}}
+            .onChange(of:portionID){_,_ in if !manual{loadBase();editingNutrition=portionFood.values(for:unit)==nil}}
             .onChange(of:servingWeight){_,_ in if !manual && unit == .serving{loadBase()}}
     }
     private var referenceTitle:String {unit == .serving ? diary.t("القيم للحصة الواحدة","Values per serving"):diary.t("القيم لكل ١٠٠","Values per 100")+" "+unit.label(diary.language)}

@@ -100,6 +100,28 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+      - name: Capture native SwiftUI screens
+        if: success() && (github.event_name == 'push' || inputs.mode == 'sideload' || inputs.mode == 'check')
+        continue-on-error: true
+        timeout-minutes: 25
+        env:
+          BUNDLE_ID: ${{ vars.BUNDLE_ID }}
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: python3 Scripts/ui_preview.py --packages BuildOutput/Packages --output UIPreview
+
+      - name: Native SwiftUI screenshots and report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: Luqma-ui-preview-${{ github.run_number }}
+          path: |
+            UIPreview/*.png
+            UIPreview/*.json
+            UIPreview/*.log
+            UIPreview/*.xcresult
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Check local vision runtime on a supported runner
         if: success() && (github.event_name == 'push' || inputs.mode == 'sideload')
         run: python3 Scripts/model_smoke.py

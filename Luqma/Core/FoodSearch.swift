@@ -35,6 +35,13 @@ struct FoodSearchPage {
 }
 
 enum FoodSearch {
+    static func isMyFitnessPalBundled(_ food: Food) -> Bool {
+        food.source == "MyFitnessPal supplied IPA" && food.catalogID?.hasPrefix("mfp-bundled:") == true &&
+            food.sourceId.map { !$0.isEmpty && food.catalogID == "mfp-bundled:" + $0 } == true
+    }
+
+    static func isCatalogFood(_ food: Food) -> Bool { isOpenFoodFacts(food) || isMyFitnessPalBundled(food) }
+
     static func isOpenFoodFacts(_ food: Food) -> Bool {
         food.source == "OpenFoodFacts" && food.catalogID?.hasPrefix("off:") == true &&
             food.sourceId.map { !$0.isEmpty && food.catalogID == "off:" + $0 } == true
@@ -46,7 +53,7 @@ enum FoodSearch {
 
     /// Keep old entries and backup caches intact while preventing an old USDA
     /// cache or an image estimate from re-entering the new food picker.
-    static func availableForAdding(_ food: Food) -> Bool { isOpenFoodFacts(food) || isPersonalFood(food) }
+    static func availableForAdding(_ food: Food) -> Bool { isCatalogFood(food) || isPersonalFood(food) }
 
     /// Keep the persisted Food identifiers unchanged. These normalization rules
     /// belong to searching only, so old diary entries and saved products retain
@@ -91,6 +98,7 @@ enum FoodSearch {
     struct Index {
         private let entries: [Entry]
         init(_ foods: [Food]) { entries = foods.map(Entry.init) }
+        var foods: [Food] { entries.map(\.food) }
 
         func historyCandidates(_ diary: [DiaryEntry]) -> [Food] {
             let ids = Set(diary.compactMap(\.foodID))

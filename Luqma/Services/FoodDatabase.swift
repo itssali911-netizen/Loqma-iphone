@@ -17,14 +17,23 @@ actor FoodDatabase {
 
     init() {
         var foods: [Food] = []
-        if let url = Bundle.main.url(forResource: "foods-data", withExtension: "json"), let data = try? Data(contentsOf: url) {
-            foods = (try? JSONDecoder().decode([Food].self, from: data)) ?? []
+        for name in ["foods-data", "mfp-foods-data"] {
+            if let url = Bundle.main.url(forResource: name, withExtension: "json"), let data = try? Data(contentsOf: url) {
+                foods += (try? JSONDecoder().decode([Food].self, from: data)) ?? []
+            }
         }
-        catalog = FoodSearch.Index(foods.filter(FoodSearch.isOpenFoodFacts))
+        catalog = FoodSearch.Index(foods.filter(FoodSearch.isCatalogFood))
     }
 
     func local(_ query: String, cached: [Food]) -> [Food] {
         catalog.results(query, additional: Array(cached.filter(FoodSearch.availableForAdding).reversed()))
+    }
+
+    func suggestionCandidates(cached: [Food]) -> [Food] {
+        var seen = Set<String>()
+        return (Array(cached.reversed()) + catalog.foods).filter {
+            FoodSearch.availableForAdding($0) && seen.insert($0.id).inserted
+        }
     }
 
     func historyFoods(_ entries: [DiaryEntry]) -> [Food] { catalog.historyCandidates(entries) }

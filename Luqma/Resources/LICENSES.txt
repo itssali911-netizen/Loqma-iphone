@@ -1,4 +1,9 @@
 Food product data attribution:
+The user-supplied MyFitnessPal regional data subset is attributed separately in
+mfp-foods-provenance.json. Its license is not established here, and this document
+does not apply OFF's open-data licenses to that subset. Contributor identifiers
+and source app code are not included in the food catalog transformation.
+
 Open Food Facts, https://world.openfoodfacts.org/
 Database: Open Database License 1.0 (ODbL-1.0).
 Individual contents: Database Contents License 1.0.
