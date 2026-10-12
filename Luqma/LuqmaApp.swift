@@ -54,8 +54,16 @@ import UIKit
 }
 struct RootView:View {
     @EnvironmentObject var diary:DiaryStore
-    @State private var tab=0
+    @State private var tab:Int
     @State private var adding=false
+    init(){
+        var selected=0
+        #if DEBUG
+        let arguments=ProcessInfo.processInfo.arguments
+        if let index=arguments.firstIndex(of:"-loqma-preview-tab"),arguments.indices.contains(index+1),let value=Int(arguments[index+1]),(0...3).contains(value){selected=value}
+        #endif
+        _tab=State(initialValue:selected)
+    }
     var body:some View {
         TabView(selection:$tab) {
             NavigationStack{DiaryView()}.tabItem{Label(diary.t("اليوم","Today"),systemImage:"house")}.tag(0)
@@ -63,7 +71,6 @@ struct RootView:View {
             NavigationStack{ProgressViewScreen()}.tabItem{Label(diary.t("تقدّمي","Progress"),systemImage:"chart.bar")}.tag(2)
             NavigationStack{SettingsView()}.tabItem{Label(diary.t("الإعدادات","Settings"),systemImage:"gearshape")}.tag(3)
         }.toolbar(.hidden,for:.tabBar)
-            .onAppear(perform:applyPreviewTab)
             .safeAreaInset(edge:.bottom,spacing:0){bottomNavigation}
             .sheet(isPresented:$adding){FoodAddView(onPhotoCommit:{foods,meal in
                 do{let entries=try foods.map{try DiaryEntry(food:$0.0,amount:$0.1,unit:$0.2,meal:meal,day:DayKey.today,language:diary.language)};return diary.add(entries,foods:foods.map{$0.0})}catch{diary.report(error);return false}
@@ -82,11 +89,6 @@ struct RootView:View {
             .background(Theme.card,in:UnevenRoundedRectangle(topLeadingRadius:24,topTrailingRadius:24))
             .overlay(alignment:.top){Rectangle().fill(Theme.stroke).frame(height:0.5).padding(.horizontal,24)}
             .background(Theme.card.ignoresSafeArea(edges:.bottom))
-    }
-    private func applyPreviewTab(){
-        #if DEBUG
-        if let index=ProcessInfo.processInfo.arguments.firstIndex(of:"-loqma-preview-tab"),ProcessInfo.processInfo.arguments.indices.contains(index+1),let value=Int(ProcessInfo.processInfo.arguments[index+1]),(0...3).contains(value){tab=value}
-        #endif
     }
     private func navigationButton(_ value:Int,title:String,symbol:String)->some View {
         Button{tab=value}label:{VStack(spacing:7){

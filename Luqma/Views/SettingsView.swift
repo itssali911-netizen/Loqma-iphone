@@ -13,25 +13,30 @@ struct SettingsView:View {
     @EnvironmentObject var health:HealthService
     @State private var goals=false
     var body:some View {
+        VStack(spacing:0){
+            LuqmaPageHeader(title:diary.t("الإعدادات","Settings"),subtitle:diary.t("أهدافك وربطك وبياناتك","Your goals, connections and data"),symbol:"slider.horizontal.3")
+                .padding(.horizontal,20).padding(.top,20).padding(.bottom,8)
         Form{
             Section(diary.t("أهدافي","My goals")){
                 Button{goals=true}label:{Label(diary.t("السعرات والماكروز","Calories and macros"),systemImage:"target")}
-                NavigationLink{PlanView()}label:{Label(diary.t("خطة الوزن","Weight plan"),systemImage:"chart.line.uptrend.xyaxis")}
+                NavigationLink{PlanView().toolbar(.visible,for:.navigationBar)}label:{Label(diary.t("خطة الوزن","Weight plan"),systemImage:"chart.line.uptrend.xyaxis")}
             }
             Section(diary.t("التفضيلات","Preferences")){
                 Picker(diary.t("اللغة","Language"),selection:Binding(get:{diary.language},set:{value in diary.change{$0.language=value}})){Text("العربية").tag(AppLanguage.ar);Text("English").tag(AppLanguage.en)}.pickerStyle(.menu)
             }
             Section(diary.t("الربط والبيانات","Connections and data")){
-                NavigationLink{GeminiSettingsView()}label:{Label(diary.t("تحليل الوجبات · Gemini","Meal analysis · Gemini"),systemImage:"sparkles")}
-                NavigationLink{HealthConnectionView()}label:{
+                NavigationLink{GeminiSettingsView().toolbar(.visible,for:.navigationBar)}label:{Label(diary.t("تحليل الوجبات · Gemini","Meal analysis · Gemini"),systemImage:"sparkles")}
+                NavigationLink{HealthConnectionView().toolbar(.visible,for:.navigationBar)}label:{
                     HStack{Label(diary.t("صحتي","Apple Health"),systemImage:"heart");Spacer();Text(health.signingBlocked ? diary.t("يحتاج إعداد","Setup needed") : (diary.state.healthEnabled ? diary.t("مفعّل","Enabled"):diary.t("غير مربوط","Not connected"))).font(.caption).foregroundStyle(.secondary)}
                 }
-                NavigationLink{BackupSettingsView()}label:{Label(diary.t("النسخ الاحتياطي والنقل","Backup and transfer"),systemImage:"externaldrive")}
+                NavigationLink{BackupSettingsView().toolbar(.visible,for:.navigationBar)}label:{Label(diary.t("النسخ الاحتياطي والنقل","Backup and transfer"),systemImage:"externaldrive")}
             }
             Section{
-                NavigationLink{AboutLuqmaView()}label:{Label(diary.t("حول لُقمة والخصوصية","About Luqma and privacy"),systemImage:"info.circle")}
+                NavigationLink{AboutLuqmaView().toolbar(.visible,for:.navigationBar)}label:{Label(diary.t("حول لُقمة والخصوصية","About Luqma and privacy"),systemImage:"info.circle")}
             }
+        }.appBackground()
         }.appBackground().navigationTitle(diary.t("الإعدادات","Settings"))
+            .toolbar(.hidden,for:.navigationBar)
             .sheet(isPresented:$goals){GoalEditor()}
     }
 }
