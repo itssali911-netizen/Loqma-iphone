@@ -1,10 +1,17 @@
-# Version1.6 — native verification pending
+# Validation — version 1.6 build 35
 
-New source implements the 744-record supplied MyFitnessPal catalog + OFF6, declared portion persistence, suggestions, Gemini3.8Flash, PowerPeak-style UI and brand assets. No previous native build validates these changes. All 744 source food rows remain; 31 unknown-nutrition foods cannot be logged until explicitly corrected. Imported portions use exact source multipliers and no inferred per100 basis.
+[Build 35](https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/38278925435) from `745a4a9bc40274ec14160e6e511e285af87d4031`. 88 Swift tests, 26 Python tests, iPhoneOS Release build, independent IPA verification and four actual SwiftUI Simulator screenshots passed. The unchanged optional local model was not revalidated for this release; its earlier build31 fixture failure is retained separately. The workflow was deliberately stopped after the native app and four screenshots passed. Gemini is the default and passed a separate real API test on a public meal and a blank control. Physical iPhone, personal Apple signing and Health authorization remain to be verified on the device.
 
-The real Gemini API responded HTTP200 for the pinned public-domain meal and blank control, explicitly as gemini-3.8-flash. The meal returned five component labels; blank returned nofood. Prior HTTP400 request-enum defect was fixed and a transient HTTP503 is retained in evidence. Credentials are excluded from all reports, source and IPA. Native service/ImageIO/Keychain and physical-iPhone behavior still require verification.
+Workflow conclusion: **cancelled**. IPA SHA256: `c86aaddda2e7af5c3e8377305ec82154c3663fe478203f6de4ca7bd1ec4fafa0`.
+The app contains all 744 supplied MFP regional records plus six OFF starter products. Every packaged JSON, provenance and privacy resource byte-matches the immutable built commit. Independent comparison to the original supplied IPA verifies 3,830 servings, 94 unknown portions and 31 incomplete food references. Unknown values remain absent; they are never zero-filled. This is a regional seed, not MFP's full server database or its unpublished ranking formula.
 
-NativeUIpreview will capture four actual Simulator frames using the Debug-only preview flag, then inspect them visually. Interface similarity is grounded in the supplied reference image; no pixel-perfect equivalence or MyFitnessPal server-ranking recovery is claimed.
+All four real native screenshots were captured on a fresh isolated iPhone 16 Pro Simulator. Root inspected Today, Kitchen, Progress and Settings for layout and navigation. The simulator used no Gemini key, user diary or photos. These are actual SwiftUI screenshots, not generated mockups.
+
+Gemini `gemini-3.8-flash` responded HTTP200 with bounded recognition JSON on a pinned public meal and HTTP200/no food on a blank control. That test used the production request format but ran outside native iOS; it does not measure weight accuracy or on-device API execution. No billing was changed. Private key bytes are absent from the IPA and source archive; import the separate private setup file once after installing.
+
+The requested HealthKit, Background Delivery and increased-memory entitlements exist in the local ad-hoc IPA. Final Apple provisioning, physical iPhone permissions, camera, memory and background behavior require device verification. Preserve installed identity `app.luqma.diary.2AV9NV468K` and the same Apple account after exporting a backup.
+
+## Historical results before version 1.6
 
 # Validation — version 1.5 build 31
 
