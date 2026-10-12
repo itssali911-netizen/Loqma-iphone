@@ -12,6 +12,7 @@ struct SettingsView:View {
     @EnvironmentObject var diary:DiaryStore
     @EnvironmentObject var health:HealthService
     @State private var goals=false
+    @State private var gemini=false
     var body:some View {
         VStack(spacing:0){
             LuqmaPageHeader(title:diary.t("الإعدادات","Settings"),subtitle:diary.t("أهدافك وربطك وبياناتك","Your goals, connections and data"),symbol:"slider.horizontal.3")
@@ -25,7 +26,7 @@ struct SettingsView:View {
                 Picker(diary.t("اللغة","Language"),selection:Binding(get:{diary.language},set:{value in diary.change{$0.language=value}})){Text("العربية").tag(AppLanguage.ar);Text("English").tag(AppLanguage.en)}.pickerStyle(.menu)
             }
             Section(diary.t("الربط والبيانات","Connections and data")){
-                NavigationLink{GeminiSettingsView().toolbar(.visible,for:.navigationBar)}label:{Label(diary.t("تحليل الوجبات · Gemini","Meal analysis · Gemini"),systemImage:"sparkles")}
+                Button{gemini=true}label:{Label(diary.t("تحليل الوجبات · Gemini","Meal analysis · Gemini"),systemImage:"sparkles")}
                 NavigationLink{HealthConnectionView().toolbar(.visible,for:.navigationBar)}label:{
                     HStack{Label(diary.t("صحتي","Apple Health"),systemImage:"heart");Spacer();Text(health.signingBlocked ? diary.t("يحتاج إعداد","Setup needed") : (diary.state.healthEnabled ? diary.t("مفعّل","Enabled"):diary.t("غير مربوط","Not connected"))).font(.caption).foregroundStyle(.secondary)}
                 }
@@ -38,6 +39,7 @@ struct SettingsView:View {
         }.appBackground().navigationTitle(diary.t("الإعدادات","Settings"))
             .toolbar(.hidden,for:.navigationBar)
             .sheet(isPresented:$goals){GoalEditor()}
+            .sheet(isPresented:$gemini){GeminiSettingsView()}
     }
 }
 private struct BackupSettingsView:View {
