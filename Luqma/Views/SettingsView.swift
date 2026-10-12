@@ -22,6 +22,7 @@ struct SettingsView:View {
                 Picker(diary.t("اللغة","Language"),selection:Binding(get:{diary.language},set:{value in diary.change{$0.language=value}})){Text("العربية").tag(AppLanguage.ar);Text("English").tag(AppLanguage.en)}.pickerStyle(.menu)
             }
             Section(diary.t("الربط والبيانات","Connections and data")){
+                NavigationLink{PhotoAnalysisSettingsView()}label:{Label(diary.t("تحليل الصور • Gemini","Photo analysis • Gemini"),systemImage:"sparkles")}
                 NavigationLink{HealthConnectionView()}label:{
                     HStack{Label(diary.t("صحتي","Apple Health"),systemImage:"heart");Spacer();Text(health.signingBlocked ? diary.t("يحتاج إعداد","Setup needed") : (diary.state.healthEnabled ? diary.t("مفعّل","Enabled"):diary.t("غير مربوط","Not connected"))).font(.caption).foregroundStyle(.secondary)}
                 }
@@ -70,7 +71,7 @@ private struct AboutLuqmaView:View {
                 Text(diary.t("الإصدار ","Version ") + (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.4"))
             }
             Section(diary.t("الخصوصية","Privacy")){
-                Notice(text:diary.t("سجلك محفوظ على الجهاز. البحث الخارجي وتنزيل نماذج الصور أول مرة يحتاجان الإنترنت. الصور وبيانات صحتي لا تُرفع إلى خادم.","Your diary is stored on the device. Online search and initial image-model downloads need internet. Photos and Health data are not uploaded."))
+                Notice(text:diary.t("سجلك وبيانات صحتي محفوظة على الجهاز. عند اختيار التحليل السحابي والضغط على تحليل تُرسل صورة الوجبة ووصفها إلى Google بعد حذف بيانات موقع الصورة. التحليل على الجهاز لا يرفع الصور. البحث الخارجي وتنزيل النماذج يحتاجان الإنترنت.","Your diary and Health data are stored on the device. Selecting online analysis and tapping Analyze sends the meal photo and description to Google after removing photo location metadata. On-device analysis does not upload photos. Online search and model downloads need internet."))
             }
             Section(diary.t("مصادر الطعام","Food sources")){
                 Link("Open Food Facts",destination:URL(string:"https://world.openfoodfacts.org")!)

@@ -1,3 +1,7 @@
+# Version 1.6 online photo recognition — validation pending
+
+The new Gemini 3.8 Flash path uses a user-provided device-only Keychain key. Source photos are decoded, oriented and re-encoded without original GPS/EXIF metadata. Recognition returns names and approximate portions, never nutritional records; logging still requires user-selected OFF products. There are no embedded/shared provider credentials, automatic billable retries or diary/Health uploads. The 26 existing Python build/data tests passed locally on Linux. Foundation/API-boundary, native image-sanitization and iPhoneOS compilation checks are pending on macOS. No live Gemini request, accuracy comparison or physical-iPhone verification has been performed: a personal API key is required. Historical offline vision failures below remain unresolved and must not be described as Gemini results.
+
 # Validation — version 1.5 build 31
 
 [Build 31](https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/38116013298) from `467c2dd1b6a509ea8d66749bbb7a983c0500531c`: Version 1.5, build 31: 62 Foundation tests and 26 Python tests passed on macOS/Xcode 26.3; iPhoneOS Release compilation and independent IPA/resource verification passed. Compact 2B failed the standalone-meat category in the mixed-meal fixture. Full 4B, cached/offline and blank-image checks were not reached. Photo recognition remains tentative and requires manual OFF product selection. Personal Apple signing and physical-iPhone Health authorization remain necessary.
