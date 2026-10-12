@@ -25,7 +25,10 @@ import UIKit
     @State private var unmatched=false
     @State private var meal:Meal = .lunch
     @State private var analysisTask:Task<Void,Never>?
-    @State private var advanced = VisionAnalyzer.supported
+    private enum AnalysisMode { case cloud, advanced, lightweight }
+    @State private var mode:AnalysisMode = .cloud
+    @State private var cloudSettings=false
+    @State private var hasCloudKey=false
     @State private var engine = ""
     @State private var activeModel = "Qwen3-VL"
     private var total:Nutrition{products.values.reduce(.zero){$0+((try? $1.0.total($1.1,unit:$1.2)) ?? .zero)}}
@@ -34,20 +37,25 @@ import UIKit
         return VStack(alignment:.leading,spacing:18){
             if let preview{Image(uiImage:preview).resizable().scaledToFit().frame(maxHeight:260).clipShape(RoundedRectangle(cornerRadius:18))}
             HStack{PhotosPicker(selection:$item,matching:.images){Label(choosePhotoTitle,systemImage:"photo")}.buttonStyle(.bordered);Button{Task{if UIImagePickerController.isSourceTypeAvailable(.camera),await CameraAccess.request(){camera=true}else{error=diary.t("الكاميرا غير متاحة أو تحتاج إذنًا من الإعدادات.","Camera is unavailable or needs access in Settings.")}}}label:{Label(diary.t("الكاميرا","Camera"),systemImage:"camera")}.buttonStyle(.bordered)}.disabled(busy)
-            VStack(alignment:.leading){Text(diary.t("ماذا في الوجبة؟ (اختياري)","What's in the meal? (optional)")).font(.subheadline);TextField("",text:$description,axis:.vertical).lineLimit(2...4).padding(12).background(Theme.card,in:RoundedRectangle(cornerRadius:12)).accessibilityLabel(diary.t("وصف الوجبة الاختياري","Optional meal description"))}
-            if VisionAnalyzer.supported {
-                Picker(diary.t("طريقة التحليل", "Analysis mode"), selection: $advanced) {
-                    Text(diary.t("متقدم", "Advanced")).tag(true)
-                    Text(diary.t("خفيف", "Lightweight")).tag(false)
+            VStack(alignment:.leading){Text(diary.t("ماذا في الوجبة؟ (اختياري)","What's in the meal? (optional)")).font(.subheadline);TextField("",text:$description,axis:.vertical).lineLimit(2...4).padding(12).background(Theme.card,in:RoundedRectangle(cornerRadius:12)).accessibilityLabel(diary.t("وصف الوجبة الاختياري","Optional meal description")).disabled(busy)}
+            Picker(diary.t("طريقة التحليل", "Analysis mode"), selection: $mode) {
+                    Text(diary.t("سحابي", "Online")).tag(AnalysisMode.cloud)
+                    if VisionAnalyzer.supported {Text(diary.t("على الجهاز", "On device")).tag(AnalysisMode.advanced)}
+                    Text(diary.t("خفيف", "Lightweight")).tag(AnalysisMode.lightweight)
                 }.pickerStyle(.segmented).disabled(busy)
+            if mode == .cloud {
+                Notice(text:diary.t("يستخدم Gemini عبر الإنترنت دون تنزيل نموذج. عند الضغط على تحليل تُرسل الصورة ووصفها فقط إلى Google، بعد حذف بيانات موقع الصورة. الاستخدام يتبع حصة حسابك وقد تترتب عليه رسوم.", "Uses Gemini online without a model download. Tapping Analyze sends only the photo and description to Google after removing photo location metadata. Usage follows your account quota and may incur charges."))
+                Button{cloudSettings=true}label:{Label(diary.t(hasCloudKey ? "إعدادات Gemini" : "إضافة مفتاح Gemini للبدء",hasCloudKey ? "Gemini settings" : "Add your Gemini key to start"),systemImage:"key")}.disabled(busy)
+            }else{
+                Notice(text:mode == .advanced ? diary.t("يختار نموذجًا متقدمًا يناسب ذاكرة التطبيق: نحو ١٫٨ جيجابايت لأجهزة ٨ جيجابايت، أو ٣٫١ جيجابايت عند توفر ذاكرة كافية. استخدم Wi-Fi واترك الشاشة مفتوحة. يعمل دون إنترنت بعد التنزيل.", "Selects an advanced model that fits the app's memory: about 1.8 GB on 8 GB devices, or 3.1 GB when enough memory is available. Use Wi-Fi and keep this screen open. Works offline after download.") : diary.t("تحليل خفيف للأصناف المعروفة. ينزّل نحو ١٧٧ ميجابايت أول مرة، ثم يعمل دون إنترنت. ذكر المكونات وعدد القطع يساعده.", "Lightweight analysis recognizes known foods. First use downloads about 177 MB, then works offline. Ingredients and counts help."))
             }
-            Notice(text:advanced ? diary.t("يختار نموذجًا متقدمًا يناسب ذاكرة التطبيق: نحو ١٫٨ جيجابايت لأجهزة ٨ جيجابايت، أو ٣٫١ جيجابايت عند توفر ذاكرة كافية. استخدم Wi-Fi واترك الشاشة مفتوحة. يعمل دون إنترنت بعد التنزيل.", "Selects an advanced model that fits the app's memory: about 1.8 GB on 8 GB devices, or 3.1 GB when enough memory is available. Use Wi-Fi and keep this screen open. Works offline after download.") : diary.t("تحليل خفيف للأصناف المعروفة. ينزّل نحو ١٧٧ ميجابايت أول مرة، ثم يعمل دون إنترنت. ذكر المكونات وعدد القطع يساعده. التحليل المتقدم يحتاج ذاكرة جهاز ٨ جيجابايت.", "Lightweight analysis recognizes known foods. First use downloads about 177 MB, then works offline. Ingredients and counts help. Advanced analysis requires an 8 GB device."))
-            if recoveredRun{Notice(text:diary.t("توقف التحليل السابق قبل اكتماله. المحاولة التالية تستخدم النموذج المتقدم الأصغر مع فحص الذاكرة؛ ملفات التنزيل السابقة محفوظة.", "The previous analysis stopped before finishing. The next attempt uses the smaller advanced model with memory checks; existing downloads are preserved."))}
-            Button{analyze()}label:{Label(diary.t("تحليل الوجبة","Analyze meal"),systemImage:"sparkles").frame(maxWidth:.infinity).padding(12)}.buttonStyle(.borderedProminent).disabled(imageData==nil || busy)
+            if recoveredRun && mode == .advanced{Notice(text:diary.t("توقف التحليل السابق قبل اكتماله. المحاولة التالية تستخدم النموذج المتقدم الأصغر مع فحص الذاكرة؛ ملفات التنزيل السابقة محفوظة.", "The previous analysis stopped before finishing. The next attempt uses the smaller advanced model with memory checks; existing downloads are preserved."))}
+            Button{analyze()}label:{Label(diary.t(mode == .cloud ? "تحليل عبر Gemini" : "تحليل الوجبة",mode == .cloud ? "Analyze with Gemini" : "Analyze meal"),systemImage:"sparkles").frame(maxWidth:.infinity).padding(12)}.buttonStyle(.borderedProminent).disabled(imageData==nil || busy || (mode == .cloud && !hasCloudKey))
             if busy{HStack{ProgressView();Text(stageText).font(.footnote);Spacer();Button(diary.t("إلغاء","Cancel")){analysisTask?.cancel()}}}
             if let error{Text(error).foregroundStyle(.orange).font(.footnote)}
             if !parts.isEmpty{review}
         }.sheet(isPresented:$camera){CameraPhoto{data in camera=false;if let data{imageData=data;parts=[];error=nil}}.ignoresSafeArea()}
+            .sheet(isPresented:$cloudSettings,onDismiss:refreshCloudKey){NavigationStack{PhotoAnalysisSettingsView().toolbar{ToolbarItem(placement:.confirmationAction){Button(diary.t("تم","Done")){cloudSettings=false}}}}}
             .sheet(item:$selection){request in AnyView(FoodAddView(initial:products[request.id]?.0,initialQuery:request.name,productSelection:true){food,amount,unit,_ in
                 guard FoodSearch.isOpenFoodFacts(food),(try? food.total(amount,unit:unit)) != nil else{return false}
                 if !parts.contains(where:{$0.id==request.id}) {
@@ -59,12 +67,16 @@ import UIKit
             })}
             .onChange(of:item){_,value in Task{guard let value else{return};do{imageData=try await value.loadTransferable(type:Data.self);parts=[];error=nil}catch{self.error=error.localizedDescription}}}
             .onChange(of:imageData){_,data in products.removeAll();preview=data.flatMap{try? PhotoAnalyzer.image($0,maxPixels:640)}.map{UIImage(cgImage:$0)}}
-            .onChange(of:phase){_,value in if value != .active,busy{cancellationMessage=diary.t("توقف التحليل عند مغادرة الشاشة. ملفات النموذج محفوظة؛ افتح التطبيق واضغط تحليل مجددًا.", "Analysis stopped when the app left the foreground. Model files are preserved; reopen the app and analyze again.");analysisTask?.cancel()}}
+            .onChange(of:mode){_,_ in parts=[];products=[:];engine="";error=nil}
+            .onChange(of:phase){_,value in if value != .active,busy{cancellationMessage=diary.t("أُوقف التحليل عند مغادرة التطبيق. لم تُسجّل الوجبة؛ افتح التطبيق وحاول مجددًا.", "Analysis stopped when the app left the foreground. No meal was logged; reopen the app and retry.");analysisTask?.cancel()}}
             .onReceive(NotificationCenter.default.publisher(for:UIApplication.didReceiveMemoryWarningNotification)){_ in if busy{cancellationMessage=diary.t("أوقفنا التحليل بسبب ضغط الذاكرة. أعد فتح لقمة وحاول مجددًا أو اختر التحليل الخفيف.", "Analysis stopped because of memory pressure. Reopen Luqma and retry or choose lightweight analysis.");analysisTask?.cancel()}}
-            .task{recoveredRun=await VisionAnalyzer.shared.recoverInterruptedRun()}
+            .task{refreshCloudKey();recoveredRun=await VisionAnalyzer.shared.recoverInterruptedRun()}
             .onDisappear{analysisTask?.cancel()}
     }
     private var stageText:String {
+        if stage=="prepare-cloud" {return diary.t("تجهيز الصورة وحذف بيانات الموقع…","Preparing photo and removing location metadata…")}
+        if stage=="cloud" {return diary.t("تحليل الوجبة عبر Gemini…","Analyzing meal with Gemini…")}
+        if stage=="validate-cloud" {return diary.t("التحقق من الأصناف والكميات…","Validating foods and portions…")}
         if stage.hasPrefix("download") { return diary.t("تنزيل النموذج… ", "Downloading model… ") + (stage.contains(":") ? stage.replacingOccurrences(of: "download:", with: "") + "%" : "") }
         if stage=="verify" { return diary.t("التحقق من النموذج…", "Verifying model…") }
         if stage=="load" { return diary.t("تجهيز الذكاء الاصطناعي…", "Loading the vision model…") }
@@ -77,6 +89,7 @@ import UIKit
     private var review:some View {
         VStack(alignment:.leading,spacing:16){
             Text(diary.t("اختر منتجات الوجبة","Choose meal products")).font(.title3.bold())
+            if !engine.isEmpty{Text(engine).font(.caption).foregroundStyle(Theme.muted)}
             Text(diary.t("الصورة تقترح الأصناف فقط. اختر المنتج والكمية من Open Food Facts لكل مكوّن قبل الإضافة.","The photo suggests food names only. Choose an Open Food Facts product and amount for each component before logging.")).font(.footnote).foregroundStyle(Theme.muted)
             ForEach(parts){part in
                 VStack(alignment:.leading,spacing:10){
@@ -91,6 +104,7 @@ import UIKit
                         if let nutrition=try? product.0.total(product.1,unit:product.2){NutritionView(value:nutrition)}
                     }else if part.basis != "selected" {
                         Text(diary.t("وزن تقريبي من الصورة: ","Rough photo weight: ")+decimal(part.grams,0)+diary.t(" جم — راجع الكمية عند اختيار المنتج"," g — review the amount when choosing a product")).font(.caption).foregroundStyle(Theme.muted)
+                        if part.basis=="cloud"{Text(diary.t("النطاق المقترح: ","Suggested range: ")+decimal(part.low,0)+"–"+decimal(part.high,0)+diary.t(" جم"," g")).font(.caption).foregroundStyle(Theme.muted)}
                     }
                     Button{selection=ProductSelection(id:part.id,name:part.food.food.label(diary.language))}label:{Label(diary.t(products[part.id]==nil ? "اختيار المنتج والكمية":"تغيير المنتج أو الكمية",products[part.id]==nil ? "Choose product and amount":"Change product or amount"),systemImage:"magnifyingglass")}.buttonStyle(.bordered)
                 }.luqmaCard()
@@ -104,18 +118,25 @@ import UIKit
             }.buttonStyle(.borderedProminent).disabled(parts.isEmpty || parts.contains{products[$0.id]==nil})
         }
     }
-    private func analyze(){guard let imageData else{return};busy=true;error=nil;cancellationMessage=nil;parts=[];products=[:];stage=""
+    private func refreshCloudKey(){do{hasCloudKey=try GeminiKeyStore.read() != nil}catch{hasCloudKey=false;self.error=(error as? AppError)?.message(diary.language)}}
+    private func analyze(){guard let imageData else{return}
+        let selectedMode=mode, context=description
+        busy=true;error=nil;cancellationMessage=nil;parts=[];products=[:];engine="";stage=""
         analysisTask=Task{do{
-            let refs=try await PhotoAnalyzer.shared.foods()
             let result:PhotoResult
-            if advanced {
-                result=try await VisionAnalyzer.shared.analyze(imageData,description:description,foods:refs){value in Task{@MainActor in stage=value;if value.hasPrefix("model:"){activeModel=String(value.dropFirst(6))}}}
+            if selectedMode == .cloud {
+                guard let key=try GeminiKeyStore.read() else{throw AppError.invalid("أضف مفتاح Gemini في إعدادات تحليل الصور.","Add your Gemini key in Photo analysis settings.")}
+                result=try await CloudPhotoAnalyzer.shared.analyze(imageData,description:context,key:key){value in Task{@MainActor in if busy{stage=value}}}
+                engine=diary.t("تحليل سحابي • ","Online analysis • ")+GeminiMeal.displayName
+            }else if selectedMode == .advanced {
+                let refs=try await PhotoAnalyzer.shared.foods()
+                result=try await VisionAnalyzer.shared.analyze(imageData,description:context,foods:refs){value in Task{@MainActor in stage=value;if value.hasPrefix("model:"){activeModel=String(value.dropFirst(6))}}}
                 engine=diary.t("تحليل متقدم • ", "Advanced analysis • ")+activeModel+diary.t(" • على الجهاز", " • on-device")
             } else {
-                result=try await PhotoAnalyzer.shared.analyze(imageData,description:description){value in Task{@MainActor in stage=value}}
+                result=try await PhotoAnalyzer.shared.analyze(imageData,description:context){value in Task{@MainActor in stage=value}}
                 engine=diary.t("تحليل خفيف • CLIP • على الجهاز", "Lightweight analysis • CLIP • on-device")
             }
-            try Task.checkCancellation();references=refs;parts=result.parts;sauceSuggested=result.sauceSuggested;unmatched=result.unmatched
+            try Task.checkCancellation();parts=result.parts;sauceSuggested=result.sauceSuggested;unmatched=result.unmatched
             if parts.isEmpty{error=diary.t("لم تتضح مكونات الطعام. جرّب صورة أقرب ووصفًا اختياريًا.","Food components were unclear. Try a closer photo and an optional description.")}
         }catch is CancellationError{error=cancellationMessage}catch{self.error=Task.isCancelled ? cancellationMessage : ((error as? AppError)?.message(diary.language) ?? diary.t("تعذّر التحليل. تحقق من الاتصال والمساحة لتنزيل النموذج؛ يمكنك إعادة المحاولة أو اختيار التحليل الخفيف.","Analysis failed. Check your connection and storage for the model download; retry or choose lightweight analysis."))};busy=false;analysisTask=nil}
     }

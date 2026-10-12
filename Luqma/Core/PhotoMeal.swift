@@ -8,6 +8,12 @@ struct PhotoFood: Codable, Identifiable {
     init(id:String,name:String,nameEn:String,grams:Double,kcal:Double,protein:Double,carbs:Double,fat:Double) {
         self.id=id;self.name=name;self.nameEn=nameEn;self.grams=grams;self.kcal=kcal;self.protein=protein;self.carbs=carbs;self.fat=fat
     }
+    /// A detected name/portion is not a nutritional record or an OFF product.
+    static func recognition(id:String,name:String,nameEn:String,grams:Double) -> PhotoFood {
+        var food=PhotoFood(id:id,name:name,nameEn:nameEn,grams:grams,kcal:0,protein:0,carbs:0,fat:0)
+        food.recognitionOnly=true
+        return food
+    }
     enum CodingKeys:String,CodingKey {case id,name,nameEn,grams,kcal,protein,carbs,fat}
     init(from decoder:Decoder) throws {
         let c=try decoder.container(keyedBy:CodingKeys.self)

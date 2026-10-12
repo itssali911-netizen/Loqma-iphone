@@ -2,7 +2,7 @@ name: Luqma iPhone build
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'codex/cloud-vision-*']
     paths:
       - 'Luqma/**'
       - 'Luqma.xcodeproj/**'
