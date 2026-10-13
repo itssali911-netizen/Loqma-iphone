@@ -123,7 +123,10 @@ enum FoodSuggestions {
         let tokens: [String]
         init(_ value: String) {
             self.value = value; normalized = FoodSearch.normalized(value)
-            tokens = normalized.split(separator: " ").map { FoodSearch.token(String($0)) }
+            let words = normalized.split(separator: " ").map(String.init)
+            // Preserve original word prefixes alongside translated equivalents:
+            // “mil” completes the word “milk” before “buttermilk”.
+            tokens = Array(Set(words + words.map(FoodSearch.token)))
         }
     }
     private struct Entry {
