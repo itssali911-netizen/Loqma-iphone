@@ -213,7 +213,7 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
             launched = command(["xcrun", "simctl", "launch", "--terminate-running-process",
                                 device, bundle, *arguments,
                                 "-AppleLanguages", "(ar)", "-AppleLocale", "ar_SA"],
-                               output, "preview-launch-" + screen, 120)
+                               output, "preview-launch-" + screen, 300 if number == 1 else 120)
             match = re.search(r":\s*(\d+)\s*$", launched)
             if not match:
                 raise BuildError(f"Launch of {screen} returned no application process ID.")
