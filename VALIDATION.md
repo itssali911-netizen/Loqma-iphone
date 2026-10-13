@@ -1,3 +1,7 @@
+# Version 1.7 — native validation pending
+
+Meal photo REST validation passed on a pinned public fixture and blank control. Recipe REST validation is pending because the provider returned temporary high-demand HTTP503 responses. Native unit tests, iPhone compilation and six UI screenshots will be recorded after this build finishes. Earlier results below do not validate the new code.
+
 # Validation — version 1.6 build 35
 
 [Build 35](https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/38278925435) from `745a4a9bc40274ec14160e6e511e285af87d4031`. 88 Swift tests, 26 Python tests, iPhoneOS Release build, independent IPA verification and four actual SwiftUI Simulator screenshots passed. The unchanged optional local model was not revalidated for this release; its earlier build31 fixture failure is retained separately. The workflow was deliberately stopped after the native app and four screenshots passed. Gemini is the default and passed a separate real API test on a public meal and a blank control. Physical iPhone, personal Apple signing and Health authorization remain to be verified on the device.

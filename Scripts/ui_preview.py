@@ -4,6 +4,9 @@
 Requires an Apple Silicon Mac, Xcode, and an installed iOS Simulator runtime.
 This builds a Debug Simulator app, launches each native tab using the app's
 DEBUG-only -loqma-preview-tab argument, and captures the Simulator framebuffer.
+Two more launches use -loqma-preview-photo and -loqma-preview-recipe to show
+synthetic fixtures in the production meal and recipe reviews. These are native
+UI evidence, not live analyses.
 It creates no mock UI, sends no image to an API, and modifies no existing device.
 
 Apple command-line screenshot documentation:
@@ -36,6 +39,9 @@ from vision_compat import apply_vision_compat
 ROOT = Path(__file__).resolve().parent.parent
 DEVICE_TYPE = "com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro"
 SCREENS = ((0, "today"), (1, "kitchen"), (2, "progress"), (3, "settings"))
+PHOTO_SCREEN = "photo-estimate"
+RECIPE_SCREEN = "recipe-import"
+EXPECTED_SCREEN_COUNT = len(SCREENS) + 2
 
 
 def command(arguments: list[str], output: Path, label: str, timeout: int = 120,
@@ -156,6 +162,9 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
         "capture_method": "Native Debug SwiftUI app and simctl framebuffer screenshot",
         "fresh_simulator": False, "existing_device_data_modified": False,
         "api_key_used": False, "physical_device_verified": False,
+        "expected_screenshot_count": EXPECTED_SCREEN_COUNT,
+        "synthetic_photo_fixture": True,
+        "synthetic_recipe_fixture": True,
         "layout_review": "Pending visual inspection of the native screenshots",
         "screenshots": [],
     }
@@ -193,9 +202,11 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
                 output, "preview-status-bar")
         command(["xcrun", "simctl", "install", device, str(app)],
                 output, "preview-install", 180)
-        for tab, screen in SCREENS:
+        cases = list(SCREENS) + [(None, PHOTO_SCREEN), (None, RECIPE_SCREEN)]
+        for number, (tab, screen) in enumerate(cases, 1):
+            arguments = (["-loqma-preview-recipe"] if screen == RECIPE_SCREEN else ["-loqma-preview-photo"]) if tab is None else ["-loqma-preview-tab", str(tab)]
             launched = command(["xcrun", "simctl", "launch", "--terminate-running-process",
-                                device, bundle, "-loqma-preview-tab", str(tab),
+                                device, bundle, *arguments,
                                 "-AppleLanguages", "(ar)", "-AppleLocale", "ar_SA"],
                                output, "preview-launch-" + screen, 120)
             match = re.search(r":\s*(\d+)\s*$", launched)
@@ -203,16 +214,20 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
                 raise BuildError(f"Launch of {screen} returned no application process ID.")
             pid = int(match.group(1))
             confirm_process(pid, settle_seconds)
-            screenshot = output / f"{tab + 1:02d}-{screen}.png"
+            screenshot = output / f"{number:02d}-{screen}.png"
             command(["xcrun", "simctl", "io", device, "screenshot", "--type=png",
                      str(screenshot)], output, "preview-capture-" + screen, 90)
             confirm_process(pid, 0.25)
             report["screenshots"].append({"tab": tab, "screen": screen,
+                                          "kind": "recipe-import" if screen == RECIPE_SCREEN else "meal-estimate" if tab is None else "tab",
+                                          "synthetic_fixture": tab is None,
                                           "process_still_running": True,
                                           **png_details(screenshot)})
             print(f"Captured native {screen}: {screenshot.name}", flush=True)
-        if len({item["frame_sha256"] for item in report["screenshots"]}) != len(SCREENS):
-            raise BuildError("Screenshots are identical; verify the DEBUG preview tab argument is installed.")
+        if len(report["screenshots"]) != EXPECTED_SCREEN_COUNT:
+            raise BuildError("The native preview did not capture all four tabs and both meal/recipe reviews.")
+        if len({item["frame_sha256"] for item in report["screenshots"]}) != EXPECTED_SCREEN_COUNT:
+            raise BuildError("Screenshots are identical; verify the DEBUG preview tab and meal/recipe fixture routes are installed.")
         report["status"] = "captured"
     except BaseException as error:
         report["status"] = "cancelled" if isinstance(error, (SystemExit, KeyboardInterrupt)) else "failed"
@@ -235,6 +250,7 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
                     report.setdefault("cleanup_warnings", []).append(str(error))
         report["completed_at"] = datetime.now(timezone.utc).isoformat()
         report["elapsed_seconds"] = round(time.monotonic() - started, 2)
+        report["screenshot_count"] = len(report["screenshots"])
         (output / "ui-preview.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
 
 

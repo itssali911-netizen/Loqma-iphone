@@ -10,8 +10,11 @@ on:
       - 'Tests/**'
       - 'Scripts/import_off_catalog.py'
       - 'Scripts/export_off_catalog.py'
+      - 'Scripts/import_mfp_catalog.py'
       - 'Scripts/Data/**'
+      - 'Scripts/build_project.py'
       - 'Scripts/build_ios.py'
+      - 'Scripts/ui_preview.py'
       - 'Scripts/model_smoke.py'
       - 'Scripts/vision_compat.py'
       - 'Scripts/qwen3vl-compat.json'
@@ -31,6 +34,11 @@ on:
           - sideload
           - ad-hoc
           - app-store
+      run_local_vision_audit:
+        description: Also run the optional on-device Qwen/CLIP model audit
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -42,7 +50,7 @@ concurrency:
 jobs:
   build:
     runs-on: macos-15
-    timeout-minutes: 50
+    timeout-minutes: 75
     defaults:
       run:
         shell: bash
@@ -101,8 +109,7 @@ jobs:
           retention-days: 7
 
       - name: Capture native SwiftUI screens
-        if: success() && (github.event_name == 'push' || inputs.mode == 'sideload' || inputs.mode == 'check')
-        continue-on-error: true
+        if: success()
         timeout-minutes: 25
         env:
           BUNDLE_ID: ${{ vars.BUNDLE_ID }}
@@ -123,11 +130,12 @@ jobs:
           retention-days: 7
 
       - name: Check local vision runtime on a supported runner
-        if: success() && (github.event_name == 'push' || inputs.mode == 'sideload')
+        if: success() && github.event_name == 'workflow_dispatch' && inputs.run_local_vision_audit
+        timeout-minutes: 30
         run: python3 Scripts/model_smoke.py
 
       - name: Vision runtime report
-        if: always()
+        if: always() && github.event_name == 'workflow_dispatch' && inputs.run_local_vision_audit
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: Luqma-model-runtime-${{ github.run_number }}

@@ -48,11 +48,12 @@ enum FoodSearch {
     }
 
     static func isPersonalFood(_ food: Food) -> Bool {
-        food.source == "Your food" || (food.source == nil && food.catalogID == nil && food.barcode == nil)
+        food.source == "Your food" || MealPhotoEstimate.isValidPhotoEstimate(food) ||
+            (food.source == nil && food.catalogID == nil && food.barcode == nil)
     }
 
-    /// Keep old entries and backup caches intact while preventing an old USDA
-    /// cache or an image estimate from re-entering the new food picker.
+    /// Old catalog caches and recognition-only labels stay excluded. A checked
+    /// private photo estimate can be reused without becoming a catalog record.
     static func availableForAdding(_ food: Food) -> Bool { isCatalogFood(food) || isPersonalFood(food) }
 
     /// Keep the persisted Food identifiers unchanged. These normalization rules

@@ -56,10 +56,14 @@ struct RootView:View {
     @EnvironmentObject var diary:DiaryStore
     @State private var tab:Int
     @State private var adding=false
+    @State private var photoPreview=false
+    @State private var recipePreview=false
     init(){
         var selected=0
         #if DEBUG
         let arguments=ProcessInfo.processInfo.arguments
+        _photoPreview=State(initialValue:arguments.contains("-loqma-preview-photo"))
+        _recipePreview=State(initialValue:arguments.contains("-loqma-preview-recipe"))
         if let index=arguments.firstIndex(of:"-loqma-preview-tab"),arguments.indices.contains(index+1),let value=Int(arguments[index+1]),(0...3).contains(value){selected=value}
         #endif
         _tab=State(initialValue:selected)
@@ -77,25 +81,36 @@ struct RootView:View {
             }){food,amount,unit,meal in
                 do{return diary.add([try DiaryEntry(food:food,amount:amount,unit:unit,meal:meal,day:DayKey.today,language:diary.language)],foods:[food])}catch{diary.report(error);return false}
             }}
+            .sheet(isPresented:$photoPreview){
+                #if DEBUG
+                NavigationStack{ScrollView{PhotoMealView{_,_ in false}.padding(20)}.appBackground().navigationTitle(diary.t("تحليل الوجبة","Meal analysis"))}
+                #endif
+            }
+            .sheet(isPresented:$recipePreview){
+                #if DEBUG
+                RecipeImportView()
+                #endif
+            }
     }
     private var bottomNavigation:some View {
         HStack(alignment:.center,spacing:4){
             navigationButton(0,title:diary.t("اليوم","Today"),symbol:"house")
             navigationButton(1,title:diary.t("مطبخي","Kitchen"),symbol:"fork.knife")
-            Button{adding=true}label:{Image(systemName:"plus").font(.system(size:27,weight:.light)).foregroundStyle(Theme.card).frame(width:52,height:52).background(Theme.text,in:RoundedRectangle(cornerRadius:17))}.buttonStyle(.plain).frame(maxWidth:.infinity).accessibilityLabel(diary.t("إضافة طعام إلى اليوم","Add food to today"))
+            Button{adding=true}label:{Image(systemName:"plus").font(.system(size:27,weight:.medium)).foregroundStyle(Theme.text).frame(width:56,height:56).background(Theme.accent,in:RoundedRectangle(cornerRadius:20,style:.continuous)).shadow(color:Theme.accent.opacity(0.22),radius:12,y:6)}.buttonStyle(.plain).frame(maxWidth:.infinity).offset(y:-17).accessibilityLabel(diary.t("إضافة طعام إلى اليوم","Add food to today"))
             navigationButton(2,title:diary.t("تقدّمي","Progress"),symbol:"chart.bar")
             navigationButton(3,title:diary.t("الإعدادات","Settings"),symbol:"gearshape")
-        }.padding(.horizontal,14).padding(.top,14).padding(.bottom,8)
-            .background(Theme.card,in:UnevenRoundedRectangle(topLeadingRadius:24,topTrailingRadius:24))
-            .overlay(alignment:.top){Rectangle().fill(Theme.stroke).frame(height:0.5).padding(.horizontal,24)}
-            .background(Theme.card.ignoresSafeArea(edges:.bottom))
+        }.padding(.horizontal,10).padding(.top,8).padding(.bottom,7)
+            .background(Theme.surface,in:RoundedRectangle(cornerRadius:30,style:.continuous))
+            .overlay{RoundedRectangle(cornerRadius:30,style:.continuous).stroke(Theme.stroke,lineWidth:0.5)}
+            .padding(.horizontal,18).padding(.top,18).padding(.bottom,8)
+            .background(Theme.background.opacity(0.97))
     }
     private func navigationButton(_ value:Int,title:String,symbol:String)->some View {
-        Button{tab=value}label:{VStack(spacing:7){
-            Image(systemName:tab == value && value == 0 ? "house.fill":symbol).font(.system(size:22,weight:.regular)).frame(height:24)
-                .shadow(color:tab == value ? Theme.accent.opacity(0.55):.clear,radius:10,y:5)
+        Button{tab=value}label:{VStack(spacing:4){
+            Image(systemName:tab == value && value == 0 ? "house.fill":symbol).font(.system(size:20,weight:.regular)).frame(width:42,height:36)
+                .background(tab == value ? Theme.background:Color.clear,in:RoundedRectangle(cornerRadius:13,style:.continuous))
             Text(title).font(.system(size:10,weight:tab == value ? .semibold:.regular)).lineLimit(1).minimumScaleFactor(0.75)
             Capsule().fill(tab == value ? Theme.accent:Color.clear).frame(width:18,height:3)
-        }.foregroundStyle(tab == value ? Theme.text:Theme.muted).frame(maxWidth:.infinity,minHeight:54).contentShape(Rectangle())}.buttonStyle(.plain).accessibilityAddTraits(tab == value ? .isSelected:[])
+        }.foregroundStyle(tab == value ? Theme.text:Theme.muted).frame(maxWidth:.infinity,minHeight:54).contentShape(Rectangle())}.buttonStyle(.plain).accessibilityLabel(title).accessibilityAddTraits(tab == value ? .isSelected:[])
     }
 }

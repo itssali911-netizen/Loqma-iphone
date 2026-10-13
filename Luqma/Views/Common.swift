@@ -1,16 +1,16 @@
 import SwiftUI
 
 enum Theme {
-    // PowerPeak's black cards, orange focus, and soft charcoal canvas.
-    static let background=Color(red:0.086,green:0.082,blue:0.114)
-    static let card=Color(red:0.031,green:0.027,blue:0.035)
-    static let surface=Color(red:0.13,green:0.12,blue:0.145)
-    static let accent=Color(red:0.949,green:0.376,blue:0.153)
-    static let secondaryAccent=Color(red:0.961,green:0.729,blue:0.345)
-    static let muted=Color(red:0.65,green:0.64,blue:0.67)
-    static let text=Color(red:0.976,green:0.965,blue:0.949)
-    static let stroke=Color.white.opacity(0.075)
-    static let cardRadius:CGFloat=24
+    // Sandow v1.2's public dark preview: graphite, orange, and blue metrics.
+    static let background=Color(red:17.0/255,green:18.0/255,blue:20.0/255)
+    static let card=Color(red:0.12,green:0.133,blue:0.145)
+    static let surface=Color(red:0.18,green:0.192,blue:0.208)
+    static let accent=Color(red:1,green:0.49,blue:0.153)
+    static let secondaryAccent=Color(red:0.22,green:0.45,blue:0.82)
+    static let muted=Color(red:0.62,green:0.64,blue:0.67)
+    static let text=Color(red:0.98,green:0.984,blue:0.988)
+    static let stroke=Color.white.opacity(0.055)
+    static let cardRadius:CGFloat=26
 }
 extension View {
     func luqmaCard() -> some View {padding(20).frame(maxWidth:.infinity,alignment:.leading).background(Theme.card,in:RoundedRectangle(cornerRadius:Theme.cardRadius)).overlay{RoundedRectangle(cornerRadius:Theme.cardRadius).stroke(Theme.stroke,lineWidth:0.5)}}
@@ -23,12 +23,12 @@ struct LuqmaPageHeader:View {
     var symbol:String
     var body:some View {
         HStack(spacing:14){
-            Image(systemName:symbol).font(.system(size:23,weight:.semibold))
-                .foregroundStyle(Theme.accent).frame(width:52,height:52)
-                .background(Theme.accent.opacity(0.12),in:RoundedRectangle(cornerRadius:18))
+            Image(systemName:symbol).font(.system(size:21,weight:.semibold))
+                .foregroundStyle(Theme.text).frame(width:46,height:46)
+                .background(Theme.surface,in:RoundedRectangle(cornerRadius:16,style:.continuous)).accessibilityHidden(true)
             VStack(alignment:.leading,spacing:5){
                 Text(subtitle).font(.caption.weight(.medium)).foregroundStyle(Theme.muted)
-                Text(title).font(.system(size:29,weight:.bold)).foregroundStyle(Theme.text)
+                Text(title).font(.system(size:26,weight:.bold)).foregroundStyle(Theme.text).accessibilityAddTraits(.isHeader)
             }
             Spacer(minLength:0)
         }.padding(.top,6)
@@ -40,7 +40,7 @@ struct LuqmaSectionHeader:View {
     var detail:String?=nil
     var body:some View {
         HStack(alignment:.firstTextBaseline){
-            Text(title).font(.title3.bold()).foregroundStyle(Theme.text)
+            Text(title).font(.title3.bold()).foregroundStyle(Theme.text).accessibilityAddTraits(.isHeader)
             Spacer(minLength:8)
             if let detail{Text(detail).font(.caption).foregroundStyle(Theme.muted)}
         }
@@ -51,7 +51,7 @@ struct LuqmaPrimaryButtonStyle:ButtonStyle {
     func makeBody(configuration:Configuration)->some View {
         configuration.label.font(.headline).foregroundStyle(Theme.card)
             .frame(maxWidth:.infinity,minHeight:52)
-            .background(Theme.accent,in:RoundedRectangle(cornerRadius:16))
+            .background(Theme.accent,in:RoundedRectangle(cornerRadius:18,style:.continuous))
             .opacity(configuration.isPressed ? 0.8:1)
     }
 }
@@ -61,13 +61,34 @@ struct LuqmaProgressRing:View {
     var color:Color=Theme.accent
     var lineWidth:CGFloat=7
     var body:some View {
-        ZStack{
-            Circle().stroke(Theme.surface,lineWidth:lineWidth)
-            Circle().trim(from:0,to:min(1,max(0,progress.isFinite ? progress:0)))
-                .stroke(color,style:StrokeStyle(lineWidth:lineWidth,lineCap:.round))
-                .rotationEffect(.degrees(-90))
+        GeometryReader{geometry in
+            let radius=min(geometry.size.width,geometry.size.height)*0.32
+            ZStack{
+                RoundedRectangle(cornerRadius:radius,style:.continuous).stroke(Theme.surface,lineWidth:lineWidth)
+                RoundedRectangle(cornerRadius:radius,style:.continuous).trim(from:0,to:min(1,max(0,progress.isFinite ? progress:0)))
+                    .stroke(color,style:StrokeStyle(lineWidth:lineWidth,lineCap:.round))
+                    .rotationEffect(.degrees(-90))
+            }
         }.accessibilityHidden(true)
     }
+}
+
+struct LuqmaMacroRings:View {
+    var calorieProgress:Double
+    var proteinProgress:Double
+    var carbProgress:Double
+    @EnvironmentObject var diary:DiaryStore
+    var body:some View {
+        ZStack{
+            LuqmaProgressRing(progress:calorieProgress,color:Theme.accent,lineWidth:8)
+            LuqmaProgressRing(progress:proteinProgress,color:Theme.muted,lineWidth:8).padding(15)
+            LuqmaProgressRing(progress:carbProgress,color:Theme.secondaryAccent,lineWidth:8).padding(30)
+            Image(systemName:"fork.knife").font(.system(size:20,weight:.medium)).foregroundStyle(Theme.text).accessibilityHidden(true)
+        }.accessibilityElement(children:.ignore)
+            .accessibilityLabel(diary.t("التقدّم في السعرات والبروتين والكارب","Calorie, protein and carbohydrate progress"))
+            .accessibilityValue(diary.t("السعرات \(percentage(calorieProgress))٪، البروتين \(percentage(proteinProgress))٪، الكارب \(percentage(carbProgress))٪","Calories \(percentage(calorieProgress))%, protein \(percentage(proteinProgress))%, carbs \(percentage(carbProgress))%"))
+    }
+    private func percentage(_ value:Double)->String{decimal(min(1,max(0,value.isFinite ? value:0))*100,0)}
 }
 
 struct LuqmaPill:View {
@@ -118,11 +139,19 @@ struct FoodRow:View {
         if food.sourceDescription==FoodDatabase.searchSummarySourceDescription {return diary.t("لكل ١٠٠","per 100")}
         return food.unit == .serving ? diary.t("للحصة","per serving"):diary.t("لكل ١٠٠","per 100")+" "+food.unit.label(diary.language)
     }
+    private var sourceTitle:String? {
+        switch food.source {
+        case MealPhotoEstimate.source:return diary.t("تقديري","Estimated")
+        case "Your food":return diary.t("طعامك الخاص","Your private food")
+        case "MyFitnessPal supplied IPA":return diary.t("MyFitnessPal · ملفك","MyFitnessPal · your file")
+        default:return nil
+        }
+    }
     var body:some View {
         Button(action:action){HStack(spacing:14){
             Image(systemName:"fork.knife").font(.system(size:19,weight:.medium)).foregroundStyle(Theme.accent).frame(width:46,height:46).background(Theme.accent.opacity(0.1),in:RoundedRectangle(cornerRadius:14)).accessibilityHidden(true)
             VStack(alignment:.leading,spacing:6){Text(food.label(diary.language)).font(.headline).foregroundStyle(.primary);if let brand=food.brand{Text(brand).font(.caption).foregroundStyle(Theme.muted)}
-                if let source=food.source,source != "OpenFoodFacts" {Text(source=="Your food" ? diary.t("طعامك الخاص","Your private food"):source=="MyFitnessPal supplied IPA" ? diary.t("MyFitnessPal · ملفك","MyFitnessPal · your file"):source).font(.caption2).foregroundStyle(Theme.muted)}
+                if let sourceTitle{Text(sourceTitle).font(.caption2).foregroundStyle(Theme.muted)}
                 if let n=food.values(for:food.unit){Text("\(decimal(n.kcal,0)) \(diary.t("سعرة","kcal")) · \(reference)").font(.subheadline).foregroundStyle(Theme.accent)}
                 else{Text(diary.t("بيانات غذائية غير مكتملة","Incomplete nutrition data")).font(.caption).foregroundStyle(.orange)}
             };Spacer(minLength:0)

@@ -32,8 +32,14 @@ actor GeminiMealService {
         analyzing = true
         defer { analyzing = false }
         try Task.checkCancellation()
-        guard let key = try GeminiCredentialStore.load() else {
-            throw AppError.invalid("أضف مفتاح Gemini من إعدادات تحليل الوجبات أولًا.", "Add your Gemini key in meal analysis settings first.")
+        let key: String
+        do {
+            guard let saved = try GeminiCredentialStore.load() else {
+                throw AppError.invalid("فعّل تحليل الوجبات من الإعدادات أولًا.", "Enable meal analysis in Settings first.")
+            }
+            key = saved
+        } catch {
+            throw AppError.invalid("تعذّر الوصول إلى اتصال التحليل. افتح قفل الجهاز وراجع إعدادات تحليل الوجبات.", "The analysis connection could not be accessed. Unlock the device and check meal analysis settings.")
         }
         let jpeg = try Self.preparedJPEG(imageData)
         let request = try GeminiMeal.request(imageData: jpeg, context: context, language: language, key: key)
@@ -43,11 +49,11 @@ actor GeminiMealService {
             defer { bytes.task.cancel() }
             try Task.checkCancellation()
             guard let http = response as? HTTPURLResponse else {
-                throw AppError.invalid("تعذّر الاتصال بخدمة Gemini.", "The Gemini service could not be reached.")
+                throw AppError.invalid("تعذّر الاتصال بخدمة تحليل الوجبات.", "Meal analysis could not be reached.")
             }
             guard http.statusCode == 200 else { throw GeminiMeal.httpError(http.statusCode) }
             if let length = http.value(forHTTPHeaderField: "Content-Length").flatMap(Int.init), length > GeminiMeal.maximumResponseBytes {
-                throw AppError.invalid("نتيجة Gemini أكبر من المتوقع. حاول مجددًا.", "The Gemini response was larger than expected. Retry.")
+                throw AppError.invalid("نتيجة التحليل أكبر من المتوقع. حاول مجددًا.", "The analysis result was larger than expected. Retry.")
             }
             return try await withTaskCancellationHandler {
                 var data = Data()
@@ -55,7 +61,7 @@ actor GeminiMealService {
                 for try await byte in bytes {
                     if data.count % 1024 == 0 { try Task.checkCancellation() }
                     guard data.count < GeminiMeal.maximumResponseBytes else {
-                        throw AppError.invalid("نتيجة Gemini أكبر من المتوقع. حاول مجددًا.", "The Gemini response was larger than expected. Retry.")
+                        throw AppError.invalid("نتيجة التحليل أكبر من المتوقع. حاول مجددًا.", "The analysis result was larger than expected. Retry.")
                     }
                     data.append(byte)
                 }
@@ -68,9 +74,9 @@ actor GeminiMealService {
             if Task.isCancelled || (error as? URLError)?.code == .cancelled { throw CancellationError() }
             if let appError = error as? AppError { throw appError }
             if (error as? URLError)?.code == .timedOut {
-                throw AppError.invalid("استغرق Gemini وقتًا طويلًا. تحقق من الاتصال وحاول مجددًا.", "Gemini took too long. Check your connection and retry.")
+                throw AppError.invalid("استغرق التحليل وقتًا طويلًا. تحقق من الاتصال وحاول مجددًا.", "Analysis took too long. Check your connection and retry.")
             }
-            throw AppError.invalid("تعذّر الاتصال بخدمة Gemini. تحقق من الإنترنت وحاول مجددًا.", "Gemini could not be reached. Check your internet connection and retry.")
+            throw AppError.invalid("تعذّر الاتصال بخدمة التحليل. تحقق من الإنترنت وحاول مجددًا.", "Meal analysis could not be reached. Check your internet connection and retry.")
         }
     }
 

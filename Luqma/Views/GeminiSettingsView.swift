@@ -1,56 +1,67 @@
 import SwiftUI
-import UniformTypeIdentifiers
 
-struct GeminiSettingsView:View {
-    @EnvironmentObject var diary:DiaryStore
+struct GeminiSettingsView: View {
+    @EnvironmentObject var diary: DiaryStore
     @Environment(\.dismiss) private var dismiss
-    @State private var key=""
-    @State private var configured=GeminiCredentialStore.isConfigured
-    @State private var importing=false
-    @State private var message:String?
-    @State private var removing=false
-    var body:some View {
+    @State private var key = ""
+    @State private var configured = GeminiCredentialStore.isConfigured
+    @State private var message: String?
+    @State private var resetting = false
+
+    var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    Label("Gemini 3.8 Flash",systemImage:"sparkles").font(.headline)
-                    Label(diary.t(configured ? "المفتاح محفوظ على هذا الجهاز":"يلزم إعداد المفتاح",configured ? "Key saved on this device":"Key setup needed"),systemImage:configured ? "checkmark.circle.fill":"key.fill")
-                        .foregroundStyle(configured ? Theme.accent:Theme.muted)
-                    Text(diary.t("يحلل الصورة والوصف عبر Google. سجل الطعام وبيانات صحتي لا تُرسل إليه.","Analyzes the photo and description through Google. Your diary and Health data are not sent."))
+                    Label(diary.t("تحليل الوجبة", "Meal analysis"), systemImage: "sparkles").font(.headline)
+                    Label(diary.t(configured ? "جاهز على هذا الجهاز" : "يحتاج تفعيلًا على هذا الجهاز",
+                                  configured ? "Ready on this device" : "Activation needed on this device"),
+                          systemImage: configured ? "checkmark.circle.fill" : "circle.dashed")
+                        .foregroundStyle(configured ? Theme.accent : Theme.muted)
+                    Text(diary.t("تظهر السعرات والماكروز بعد تحليل الصورة. يمكنك تعديل الكمية قبل حفظ الوجبة.",
+                                 "Calories and macros appear after photo analysis. You can adjust the amount before saving the meal."))
                         .font(.footnote).foregroundStyle(Theme.muted)
                 }
-                Section(diary.t("إعداد التحليل","Analysis setup")) {
-                    Button{importing=true}label:{Label(diary.t("استيراد ملف إعداد Gemini","Import Gemini setup file"),systemImage:"square.and.arrow.down")}
-                    DisclosureGroup(diary.t("إدخال المفتاح يدويًا","Enter key manually")) {
-                        SecureField(diary.t("مفتاح Gemini API","Gemini API key"),text:$key).textInputAutocapitalization(.never).autocorrectionDisabled()
-                        Button(diary.t("حفظ المفتاح","Save key")){save(key)}.disabled(key.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty)
-                    }
-                    Link(diary.t("Google AI Studio","Google AI Studio"),destination:URL(string:"https://aistudio.google.com/api-keys")!)
-                }
-                if let message {Section{Text(message).font(.footnote)}}
+                if let message { Section { Text(message).font(.footnote) } }
                 Section {
-                    Text(diary.t("المفتاح يُحفظ في خزنة الجهاز، ولا يدخل النسخ الاحتياطية. استخدام النموذج يخضع لحصص Google وتسعير حسابك وسياسة بياناته.","The key is stored in the device Keychain and excluded from backups. Model use follows your Google account quotas, pricing and data policy."))
-                        .font(.footnote).foregroundStyle(Theme.muted)
-                    Link(diary.t("سياسة بيانات Gemini","Gemini data policy"),destination:URL(string:"https://ai.google.dev/gemini-api/terms")!)
-                    if configured {Button(diary.t("إزالة المفتاح من هذا الجهاز","Remove key from this device"),role:.destructive){removing=true}}
+                    DisclosureGroup(diary.t("إعدادات متقدمة", "Advanced settings")) {
+                        if !configured {
+                            SecureField(diary.t("مفتاح الاتصال", "Connection key"), text: $key)
+                                .keyboardType(.asciiCapable).textInputAutocapitalization(.never).autocorrectionDisabled().privacySensitive()
+                            Button(diary.t("تفعيل الاتصال", "Activate connection")) { save() }
+                                .disabled(key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                            Link(diary.t("إنشاء مفتاح اتصال", "Create a connection key"), destination: URL(string: "https://aistudio.google.com/api-keys")!)
+                        } else {
+                            Button(diary.t("إعادة ضبط الاتصال", "Reset connection"), role: .destructive) { resetting = true }
+                        }
+                    }
                 }
-            }.appBackground().navigationTitle(diary.t("تحليل الوجبات","Meal analysis"))
-                .toolbar{ToolbarItem(placement:.confirmationAction){Button(diary.t("تم","Done")){dismiss()}}}
+                Section {
+                    Text(diary.t("تُرسل صورة الوجبة والوصف فقط إلى خدمة التحليل. يبقى سجلك وبيانات صحتي على جهازك.",
+                                 "Only the meal photo and description are sent to the analysis service. Your diary and Health data stay on your device."))
+                        .font(.footnote).foregroundStyle(Theme.muted)
+                    Link(diary.t("سياسة خدمة التحليل", "Analysis service policy"), destination: URL(string: "https://ai.google.dev/gemini-api/terms")!)
+                }
+            }.appBackground().navigationTitle(diary.t("تحليل الوجبة", "Meal analysis"))
+                .toolbar { ToolbarItem(placement: .confirmationAction) { Button(diary.t("تم", "Done")) { dismiss() } } }
         }
-        .fileImporter(isPresented:$importing,allowedContentTypes:[.json],allowsMultipleSelection:false){result in
-            do {
-                let urls=try result.get();guard let url=urls.first else{return}
-                let access=url.startAccessingSecurityScopedResource();defer{if access{url.stopAccessingSecurityScopedResource()}}
-                let values=try url.resourceValues(forKeys:[.fileSizeKey]);guard (values.fileSize ?? 0)<=8192 else{throw AppError.invalid("ملف الإعداد كبير أو غير صالح.","The setup file is too large or invalid.")}
-                save(try GeminiConfiguration.key(from:Data(contentsOf:url)))
-            }catch{message=(error as? AppError)?.message(diary.language) ?? diary.t("تعذّر قراءة ملف الإعداد.","The setup file could not be read.")}
-        }
-        .confirmationDialog(diary.t("إزالة مفتاح Gemini؟","Remove the Gemini key?"),isPresented:$removing,titleVisibility:.visible){
-            Button(diary.t("إزالة","Remove"),role:.destructive){do{try GeminiCredentialStore.clear();configured=false;message=nil}catch{diary.report(error)}}
+        .confirmationDialog(diary.t("إعادة ضبط اتصال التحليل؟", "Reset the analysis connection?"), isPresented: $resetting, titleVisibility: .visible) {
+            Button(diary.t("إعادة ضبط", "Reset"), role: .destructive) {
+                do { try GeminiCredentialStore.clear(); configured = false; message = nil }
+                catch { diary.report(AppError.invalid("تعذّر إعادة ضبط الاتصال. افتح قفل الجهاز وحاول مجددًا.", "The connection could not be reset. Unlock the device and retry.")) }
+            }
+            Button(diary.t("إلغاء", "Cancel"), role: .cancel) {}
+        } message: {
+            Text(diary.t("ستحتاج إعادة تفعيل الاتصال على هذا الجهاز. يبقى سجلك محفوظًا.",
+                         "You will need to reactivate the connection on this device. Your diary stays saved."))
         }
     }
-    private func save(_ input:String) {
-        do{try GeminiCredentialStore.save(input);key="";configured=true;message=diary.t("تم إعداد Gemini. ارجع إلى صورة الوجبة وابدأ التحليل.","Gemini is configured. Return to the meal photo and analyze.")}
-        catch{message=(error as? AppError)?.message(diary.language) ?? diary.t("تعذّر حفظ المفتاح.","The key could not be saved.")}
+
+    private func save() {
+        do {
+            try GeminiCredentialStore.save(key); key = ""; configured = true
+            message = diary.t("التحليل جاهز. ارجع إلى صورة الوجبة وابدأ التحليل.", "Analysis is ready. Return to the meal photo and analyze.")
+        } catch {
+            message = diary.t("تعذّر تفعيل الاتصال. راجع مفتاح الاتصال وافتح قفل الجهاز ثم حاول مجددًا.", "The connection could not be activated. Check the connection key, unlock the device, and retry.")
+        }
     }
 }

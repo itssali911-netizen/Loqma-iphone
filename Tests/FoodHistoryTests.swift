@@ -155,7 +155,7 @@ final class FoodHistoryTests: XCTestCase {
         let usda = Food(catalogID: "usda:rice", name: "Rice", nutrition: nutrition, source: "USDA FoodData Central")
         let off = Food(name: "Milk", barcode: "12345678", nutrition: nutrition, source: "OpenFoodFacts")
         let recipe = Food(catalogID: UUID().uuidString, name: "My recipe", unit: .serving, nutrition: nutrition)
-        let photo = Food(name: "Photo meal", nutrition: nutrition, source: "Photo estimate")
+        let photo = Food(name: "Photo meal", nutrition: nutrition, source: "AI nutrition estimate")
         var state = DiarySnapshot()
         state.products = [manual, usda, off, recipe, photo]
         state.entries = [try entry(manual)]

@@ -74,21 +74,25 @@ enum FoodHistory {
     static func yourFoods(in state: DiarySnapshot) -> [Food] {
         let legacy = (state.barcodeHistory + state.searchHistory + state.products)
             .compactMap(personalFood)
-        return Array(deduplicated(legacy + (state.customFoods ?? [])).reversed())
+        return Array(deduplicated(legacy + (state.customFoods ?? []).compactMap(personalFood)).reversed())
     }
 
     static func candidates(in state: DiarySnapshot, catalog: [Food] = []) -> [Food] {
         deduplicated(catalog + state.barcodeHistory + state.searchHistory + state.products + yourFoods(in: state))
+            .filter { $0.source != MealPhotoEstimate.source || MealPhotoEstimate.isValidPhotoEstimate($0) }
     }
 
     /// Mutate a copy first, so a full personal collection leaves both the cache
     /// and personal foods untouched when the caller reports the error.
     static func remember(_ food: Food, in state: inout DiarySnapshot, barcode: Bool) throws {
+        if food.source == MealPhotoEstimate.source && !MealPhotoEstimate.isValidPhotoEstimate(food) {
+            throw AppError.invalid("بيانات تقدير الصورة غير متماسكة. راجع الوجبة قبل حفظها.", "The photo estimate is inconsistent. Review the meal before saving it.")
+        }
         var next = state
         let remembered = personalFood(food) ?? food
         var custom = Array(yourFoods(in: next).reversed())
         guard custom.count <= 1000 else { throw personalCapacityError }
-        if remembered.source == "Your food" {
+        if FoodSearch.isPersonalFood(remembered) {
             let existing = custom.contains { $0.id == remembered.id }
             guard existing || custom.count < 1000 else { throw personalCapacityError }
             custom.removeAll { $0.id == remembered.id }
@@ -128,8 +132,9 @@ enum FoodHistory {
     }
 
     private static func personalFood(_ food: Food) -> Food? {
+        if MealPhotoEstimate.isValidPhotoEstimate(food) { return food }
         // Version 1.3 manual foods had no source or external identifier.
-        // Catalog items, recipes and photo estimates retain their own origins.
+        // Catalog items, recipes and legacy photo labels keep their origins.
         guard food.source == "Your food" || (food.source == nil && food.catalogID == nil && food.barcode == nil) else { return nil }
         var result = food
         result.source = "Your food"

@@ -240,12 +240,13 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
         if token==queryToken {busy=false}
     }
     private func onPhoto(_ values:[(Food,Double,FoodUnit)],_ meal:Meal) -> Bool {
-        guard !values.isEmpty,values.allSatisfy({FoodSearch.isCatalogFood($0.0)}) else{return false}
+        guard !values.isEmpty,values.allSatisfy({FoodSearch.isCatalogFood($0.0) || MealPhotoEstimate.isValidPhotoEstimate($0.0)}) else{return false}
         if let onPhotoCommit {if onPhotoCommit(values,meal){dismiss();return true};return false}
-        if values.count==1,let first=values.first{return onCommit(first.0,first.1,first.2,meal)}
+        if values.count==1,let first=values.first{if onCommit(first.0,first.1,first.2,meal){dismiss();return true};return false}
         guard let combined=try? values.reduce(Nutrition.zero,{$0+(try $1.0.total($1.1,unit:$1.2))}) else{return false}
         let name=values.map{$0.0.label(diary.language)}.joined(separator:" + ")
-        let food=Food(catalogID:"personal:"+UUID().uuidString,name:String(name.prefix(180)),unit:.serving,nutrition:combined,servingNutrition:combined,source:"Your food")
+        var food=Food(catalogID:"personal:"+UUID().uuidString,name:String(name.prefix(180)),unit:.serving,nutrition:combined,servingNutrition:combined,source:"Your food")
+        if values.contains(where:{MealPhotoEstimate.isValidPhotoEstimate($0.0)}){food.sourceDescription="luqma:estimated-components"}
         if onCommit(food,1,.serving,meal){dismiss();return true};return false
     }
 }

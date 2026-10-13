@@ -1,0 +1,35 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "{\n  \"isFood\": true,\n  \"components\": [\n    {\n      \"name\": \"شاورما دجاج مشوية\",\n      \"nameEn\": \"Grilled chicken shawarma strips\",\n      \"grams\": 270,\n      \"low\": 220,\n      \"high\": 330,\n      \"kcal\": 450,\n      \"protein\": 68,\n      \"carbs\": 3,\n      \"fat\": 18,\n      \"kcalLow\": 370,\n      \"kcalHigh\": 550,\n      \"assumptions\": \"شرائح صدر دجاج متبلة ومشوية موزعة على الطبق وفي السندويشات، إجمالي الكمية تقريباً 270 غرام مطبوخ.\",\n      \"assumptionsEn\": \"Seasoned grilled chicken breast strips on platter and in wraps, total approx 270g cooked.\",\n      \"uncertain\": false\n    },\n    {\n      \"name\": \"خبز بيتا عربي\",\n      \"nameEn\": \"Pita flatbread\",\n      \"grams\": 180,\n      \"low\": 150,\n      \"high\": 220,\n      \"kcal\": 495,\n      \"protein\": 16,\n      \"carbs\": 99,\n      \"fat\": 3,\n      \"kcalLow\": 410,\n      \"kcalHigh\": 580,\n      \"assumptions\": \"رغيفان مفتوحان/ملفوفان مع خبز جانبي في الطبق الصغير، إجمالي حوالي 3 أرغفة متوسطة وصغيرة.\",\n      \"assumptionsEn\": \"Two breads for wraps plus pita rounds on the side, totaling roughly 3 small/medium flatbreads.\",\n      \"uncertain\": false\n    },\n    {\n      \"name\": \"صلصة ثوم (تومية)\",\n      \"nameEn\": \"Garlic sauce (Toum)\",\n      \"grams\": 80,\n      \"low\": 60,\n      \"high\": 110,\n      \"kcal\": 360,\n      \"protein\": 1,\n      \"carbs\": 5,\n      \"fat\": 38,\n      \"kcalLow\": 270,\n      \"kcalHigh\": 470,\n      \"assumptions\": \"وعاء صغير من صلصة الثوم بالإضافة للمدهون في السندويشات، صلصة غنية بالزيت.\",\n      \"assumptionsEn\": \"Small bowl of garlic whip plus amount spread inside wraps, oil-emulsified sauce.\",\n      \"uncertain\": false\n    },\n    {\n      \"name\": \"مخلل لفت وخيار\",\n      \"nameEn\": \"Pickled turnips and cucumbers\",\n      \"grams\": 120,\n      \"low\": 90,\n      \"high\": 150,\n      \"kcal\": 25,\n      \"protein\": 1,\n      \"carbs\": 5,\n      \"fat\": 0,\n      \"kcalLow\": 15,\n      \"kcalHigh\": 35,\n      \"assumptions\": \"مخلل اللفت الوردي ومخلل الخيار الأخضر في الطبق والسندويشات.\",\n      \"assumptionsEn\": \"Pickled pink turnip batons and green pickled cucumbers on platter and wraps.\",\n      \"uncertain\": false\n    }\n  ]\n}",
+            "thoughtSignature": "EmkKZwFpFH0TY7ku6hPocJOw9sIe1mM75VIVQ3Gq2fR3hbFF92EYfAWVtHskkDoeaoRSm9o/pz0fhHeYBiiRwjqI8lE6PRm3LELTjQjphrevCBD2NiueSLaxuNcA34ixda/foAEWbIA5uoY="
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "index": 0
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 1578,
+    "candidatesTokenCount": 784,
+    "totalTokenCount": 2362,
+    "promptTokensDetails": [
+      {
+        "modality": "IMAGE",
+        "tokenCount": 1064
+      },
+      {
+        "modality": "TEXT",
+        "tokenCount": 514
+      }
+    ],
+    "serviceTier": "standard"
+  },
+  "modelVersion": "gemini-3.8-flash",
+  "responseId": "wXLNapGRFoPR28oPnK6j6Q0"
+}

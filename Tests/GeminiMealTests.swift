@@ -4,7 +4,11 @@ import XCTest
 final class GeminiMealTests: XCTestCase {
     private let sampleKey = "test_Gemini_Key_For_Offline_Unit_Tests_12345"
     private func component(_ name: String, _ nameEn: String, grams: Double = 100, low: Double = 50, high: Double = 180) -> [String: Any] {
-        ["name": name, "nameEn": nameEn, "grams": grams, "low": low, "high": high, "uncertain": true]
+        let factor = grams / 100
+        return ["name": name, "nameEn": nameEn, "grams": grams, "low": low, "high": high, "uncertain": true,
+                "kcal": 150 * factor, "protein": 5 * factor, "carbs": 25 * factor, "fat": 3 * factor,
+                "kcalLow": 150 * low / 100 * 0.85, "kcalHigh": 150 * high / 100 * 1.15,
+                "assumptions": "كمية مطبوخة تقريبية دون وزن فعلي.", "assumptionsEn": "Approximate cooked portion without a measured weight."]
     }
     private func recognition(_ components: [[String: Any]], isFood: Bool = true) throws -> Data {
         try JSONSerialization.data(withJSONObject: ["isFood": isFood, "components": components])
@@ -15,7 +19,7 @@ final class GeminiMealTests: XCTestCase {
         return try JSONSerialization.data(withJSONObject: ["candidates": [["content": ["parts": parts], "finishReason": reason]]])
     }
 
-    func testRequestUsesExactModelHeaderAndStructuredRecognitionSchema() throws {
+    func testRequestUsesExactModelHeaderAndBoundedPhotoNutritionSchema() throws {
         let image = Data([0xFF, 0xD8, 0xFF, 0x00])
         let request = try GeminiMeal.request(imageData: image, context: "خبز وصوص", language: .ar, key: sampleKey)
         XCTAssertEqual(request.url?.absoluteString, "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent")
@@ -30,7 +34,11 @@ final class GeminiMealTests: XCTestCase {
         let schema = try XCTUnwrap(text["schema"] as? [String: Any])
         XCTAssertEqual(schema["additionalProperties"] as? Bool, false)
         let encoded = try XCTUnwrap(String(data: JSONSerialization.data(withJSONObject: schema), encoding: .utf8))
-        for forbidden in ["calories", "kcal", "protein", "carbs", "fat", "barcode", "catalogID"] { XCTAssertFalse(encoded.contains(forbidden)) }
+        for required in ["kcal", "protein", "carbs", "fat", "kcalLow", "kcalHigh", "assumptions", "assumptionsEn"] { XCTAssertTrue(encoded.contains(required)) }
+        for forbidden in ["barcode", "catalogID", "verified"] { XCTAssertFalse(encoded.contains(forbidden)) }
+        let thinking = try XCTUnwrap(config["thinkingConfig"] as? [String: Any])
+        XCTAssertEqual(thinking["thinkingLevel"] as? String, "LOW")
+        XCTAssertEqual(config["maxOutputTokens"] as? Int, 4096)
         let contents = try XCTUnwrap(body["contents"] as? [[String: Any]])
         let parts = try XCTUnwrap(contents.first?["parts"] as? [[String: Any]])
         let imagePart = try XCTUnwrap(parts.first?["inlineData"] as? [String: Any])
@@ -54,29 +62,41 @@ final class GeminiMealTests: XCTestCase {
         XCTAssertFalse(prompt.contains(String(repeating: "x", count: 1001)))
     }
 
-    func testRecognizesStandaloneComponentsWithoutCreatingFoodNutrition() throws {
+    func testEstimatesStandaloneComponentsWithoutPretendingToBeCatalogNutrition() throws {
         let data = try recognition([
             component("دجاج", "Chicken"), component("خبز", "Bread", grams: 40, low: 25, high: 65),
             component("صلصة ثوم", "Garlic sauce", grams: 30, low: 10, high: 55)
         ])
         let result = try GeminiMeal.parseRecognition(data)
         XCTAssertEqual(result.parts.map(\.food.nameEn), ["Chicken", "Bread", "Garlic sauce"])
-        XCTAssertTrue(result.parts.allSatisfy { $0.food.id.hasPrefix("gemini:") && $0.basis == "gemini" && $0.tentative })
+        XCTAssertTrue(result.parts.allSatisfy { $0.food.id.hasPrefix("ai:gemini:") && $0.basis == "photo-estimate" && $0.tentative })
         for part in result.parts {
-            XCTAssertNil(part.food.food.per100)
-            XCTAssertNil(part.food.food.servingNutrition)
-            XCTAssertEqual(part.food.food.source, "Image label")
+            let estimate = try XCTUnwrap(part.mealEstimate)
+            XCTAssertTrue(estimate.valid)
+            XCTAssertEqual(part.nutrition.kcal, estimate.nutrition.kcal, accuracy: 1e-9)
+            XCTAssertEqual(part.food.food.source, "AI nutrition estimate")
             XCTAssertFalse(FoodSearch.availableForAdding(part.food.food))
+            let food = try estimate.food(name: part.food.name, nameEn: part.food.nameEn)
+            XCTAssertEqual(food.source, "Photo estimate")
+            XCTAssertTrue(MealPhotoEstimate.isValidPhotoEstimate(food))
+            XCTAssertFalse(FoodSearch.isCatalogFood(food))
         }
         XCTAssertTrue(result.unmatched)
     }
 
-    func testUnexpectedNutritionIsIgnoredInsteadOfLogged() throws {
+    func testMissingOrInconsistentNutritionRejectsInsteadOfZeroFilling() throws {
         var value = component("خبز", "Bread")
-        value["kcal"] = 500; value["protein"] = 40; value["carbs"] = 60; value["fat"] = 15
-        let result = try GeminiMeal.parseRecognition(recognition([value]))
-        XCTAssertNil(result.parts.first?.food.food.per100)
-        XCTAssertNil(result.parts.first?.food.food.servingNutrition)
+        value.removeValue(forKey: "protein")
+        XCTAssertThrowsError(try GeminiMeal.parseRecognition(recognition([value])))
+        value = component("خبز", "Bread")
+        value["kcal"] = 900; value["kcalHigh"] = 950
+        XCTAssertThrowsError(try GeminiMeal.parseRecognition(recognition([value])))
+        value = component("خبز", "Bread")
+        value["kcalLow"] = 151
+        XCTAssertThrowsError(try GeminiMeal.parseRecognition(recognition([value])))
+        value = component("خبز", "Bread")
+        value["kcalLow"] = 148; value["kcalHigh"] = 152
+        XCTAssertThrowsError(try GeminiMeal.parseRecognition(recognition([value])))
     }
 
     func testExactDuplicateComponentsMergeBoundedAmountsOnly() throws {
@@ -89,6 +109,14 @@ final class GeminiMealTests: XCTestCase {
         XCTAssertEqual(result.parts[0].grams, 90)
         XCTAssertEqual(result.parts[0].low, 65)
         XCTAssertEqual(result.parts[0].high, 130)
+        let combined = try XCTUnwrap(result.parts[0].mealEstimate)
+        XCTAssertEqual(combined.nutrition.kcal, 135)
+        XCTAssertEqual(combined.nutrition.protein, 5)
+        XCTAssertEqual(combined.nutrition.carbs, 23)
+        XCTAssertEqual(combined.nutrition.fat, 3)
+        XCTAssertEqual(result.parts[0].nutrition.kcal, 135, accuracy: 1e-9)
+        XCTAssertEqual(combined.kcalLow, 75)
+        XCTAssertEqual(combined.kcalHigh, 230)
         XCTAssertThrowsError(try GeminiMeal.parseRecognition(recognition([
             component("خبز", "Bread", grams: 1700, low: 1000, high: 2000),
             component("خبز", "Bread", grams: 1700, low: 1000, high: 2000)
@@ -138,9 +166,10 @@ final class GeminiMealTests: XCTestCase {
                 XCTAssertFalse(error.message(.ar).contains("api-key-do-not-show"))
                 XCTAssertFalse(error.message(.en).contains("api-key-do-not-show"))
                 XCTAssertFalse(error.message(.en).isEmpty)
+                for name in ["Gemini", "Google", "Flash"] { XCTAssertFalse(error.message(.en).contains(name)) }
             }
         }
-        XCTAssertTrue(GeminiMeal.httpError(404).message(.en).contains("No alternative model"))
+        XCTAssertTrue(GeminiMeal.httpError(404).message(.en).contains("temporarily unavailable"))
     }
 
     func testAPIKeyInputValidationNeverEchoesInput() throws {

@@ -26,7 +26,7 @@ struct SettingsView:View {
                 Picker(diary.t("اللغة","Language"),selection:Binding(get:{diary.language},set:{value in diary.change{$0.language=value}})){Text("العربية").tag(AppLanguage.ar);Text("English").tag(AppLanguage.en)}.pickerStyle(.menu)
             }
             Section(diary.t("الربط والبيانات","Connections and data")){
-                Button{gemini=true}label:{Label(diary.t("تحليل الوجبات · Gemini","Meal analysis · Gemini"),systemImage:"sparkles")}
+                Button{gemini=true}label:{Label(diary.t("تحليل الوجبة","Meal analysis"),systemImage:"sparkles")}
                 NavigationLink{HealthConnectionView().toolbar(.visible,for:.navigationBar)}label:{
                     HStack{Label(diary.t("صحتي","Apple Health"),systemImage:"heart");Spacer();Text(health.signingBlocked ? diary.t("يحتاج إعداد","Setup needed") : (diary.state.healthEnabled ? diary.t("مفعّل","Enabled"):diary.t("غير مربوط","Not connected"))).font(.caption).foregroundStyle(.secondary)}
                 }
@@ -78,11 +78,16 @@ private struct AboutLuqmaView:View {
                 Text(diary.t("الإصدار ","Version ") + (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.4"))
             }
             Section(diary.t("الخصوصية","Privacy")){
-                Notice(text:diary.t("سجلك وبيانات صحتي محفوظة على الجهاز. عند اختيار Gemini تُرسل صورة الوجبة والوصف فقط إلى Google. التحليل على الجهاز يعمل محليًا بعد تنزيل النموذج. مفتاح Gemini لا يدخل النسخ الاحتياطية.","Your diary and Health data stay on the device. Gemini sends only the selected meal photo and description to Google. On-device analysis runs locally after its model download. The Gemini key is excluded from backups."))
+                Notice(text:diary.t("سجلك وبيانات صحتي محفوظة على الجهاز. تحليل الوجبة يرسل الصورة والوصف إلى Google. استيراد الوصفة يرسل الرابط العام الذي تختاره أو نص الوصفة. إعداد الربط محفوظ في خزنة الجهاز ولا يدخل النسخ الاحتياطية.","Your diary and Health data stay on the device. Meal analysis sends the selected photo and description to Google. Recipe import sends your selected public link or recipe text. Connection credentials are stored in the device Keychain and excluded from backups."))
             }
             Section(diary.t("مصادر الطعام","Food sources")){
                 Text(diary.t("٧٤٤ طعامًا من ملف MyFitnessPal الذي أضفته. هذه عينة محلية؛ البيانات الناقصة تحتاج مراجعة الملصق.","744 foods from your supplied MyFitnessPal file. This is a local sample; incomplete values need label review."))
                 Link("Open Food Facts",destination:URL(string:"https://world.openfoodfacts.org")!)
+            }
+            Section(diary.t("التصميم","Design")){
+                Link("Sandow · strangehelix.bio",destination:URL(string:"https://www.figma.com/community/file/1334779038193346013/sandow-ui-kit-ai-fitness-nutrition-app")!)
+                Text(diary.t("مقتبس من نسخة Community الداكنة، بتعديلات لواجهة لقمة العربية.","Adapted from the dark Community edition for Luqma's Arabic interface.")).font(.footnote).foregroundStyle(Theme.muted)
+                Link("CC BY 4.0",destination:URL(string:"https://creativecommons.org/licenses/by/4.0/")!)
             }
         }.appBackground().navigationTitle(diary.t("حول لُقمة","About Luqma"))
     }

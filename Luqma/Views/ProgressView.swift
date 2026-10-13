@@ -10,7 +10,7 @@ struct ProgressViewScreen:View {
     @State private var deleting:WeightReading?
     private var readings:[WeightReading] {diary.state.weights.filter{let days=WeightModel.days($0.day,DayKey.today);return days>=0 && (range==0 || days<range)}}
     var body:some View {
-        ScrollView{VStack(alignment:.leading,spacing:24){
+        ScrollView{VStack(alignment:.leading,spacing:20){
             LuqmaPageHeader(title:diary.t("تقدّمي","My progress"),subtitle:diary.t("خطوات صغيرة، أثر واضح","Small steps, visible progress"),symbol:"chart.xyaxis.line")
             weightSummary
             LuqmaSectionHeader(title:diary.t("اتجاه الوزن","Weight trend"))
@@ -28,11 +28,11 @@ struct ProgressViewScreen:View {
             HStack(alignment:.center,spacing:18){
                 VStack(alignment:.leading,spacing:10){
                     Text(diary.t("آخر وزن","Latest weight")).font(.subheadline).foregroundStyle(Theme.muted)
-                    HStack(alignment:.firstTextBaseline,spacing:8){Text(decimal(latest.kg)).font(.system(size:43,weight:.bold,design:.rounded)).monospacedDigit();Text(diary.t("كجم","kg")).foregroundStyle(Theme.muted)}
+                    HStack(alignment:.firstTextBaseline,spacing:8){Text(decimal(latest.kg)).font(.system(size:42,weight:.bold)).monospacedDigit();Text(diary.t("كجم","kg")).foregroundStyle(Theme.muted)}
                     Text(latest.day).font(.caption).monospacedDigit().foregroundStyle(Theme.muted)
                 }
                 Spacer(minLength:0)
-                Image(systemName:"scalemass").font(.system(size:29,weight:.light)).foregroundStyle(Theme.accent).frame(width:70,height:70).background(Theme.accent.opacity(0.12),in:Circle()).accessibilityHidden(true)
+                Image(systemName:"scalemass").font(.system(size:29,weight:.regular)).foregroundStyle(Theme.accent).frame(width:66,height:66).background(Theme.surface,in:RoundedRectangle(cornerRadius:22,style:.continuous)).accessibilityHidden(true)
             }
         } else {
             Text(diary.t("ابدأ بتسجيل وزنك","Start with your weight")).font(.headline)
@@ -72,7 +72,7 @@ struct ProgressViewScreen:View {
     }.luqmaCard()}.buttonStyle(.plain)}
     @ViewBuilder private var weightHistory:some View {
         if !readings.isEmpty{VStack(alignment:.leading,spacing:14){
-            Text(diary.t("سجل الوزن","Weight history")).font(.headline)
+            Text(diary.t("سجل الوزن","Weight history")).font(.headline).accessibilityAddTraits(.isHeader)
             if readings.count>30{Text(diary.t("آخر ٣٠ قراءة في المدة المختارة","Latest 30 readings in the selected range")).font(.caption).foregroundStyle(Theme.muted)}
             ForEach(Array(readings.reversed().prefix(30))){w in HStack(spacing:12){
                 VStack(alignment:.leading,spacing:4){Text(w.day).font(.subheadline).monospacedDigit();if let source=w.source{Text(source=="Manual" ? diary.t("إدخال يدوي","Manual entry"):source).font(.caption).foregroundStyle(Theme.muted)}}

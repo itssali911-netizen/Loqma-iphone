@@ -22,9 +22,9 @@ struct PhotoFood: Codable, Identifiable {
         if !recognitionOnly {try c.encode(kcal,forKey:.kcal);try c.encode(protein,forKey:.protein);try c.encode(carbs,forKey:.carbs);try c.encode(fat,forKey:.fat)}
     }
 }
-struct PhotoPart:Identifiable { var id=UUID();var food:PhotoFood;var grams:Double;var low:Double;var high:Double;var basis:String;var tentative:Bool=false;var count:Double?=nil
+struct PhotoPart:Identifiable { var id=UUID();var food:PhotoFood;var grams:Double;var low:Double;var high:Double;var basis:String;var tentative:Bool=false;var count:Double?=nil;var mealEstimate:MealPhotoEstimate?=nil
     var nutrition:Nutrition { food.nutrition.scaled(grams/100) }
-    mutating func setGrams(_ value:Double) { guard value.isFinite else {return};grams=value;low=value;high=value;basis="weight" }
+    mutating func setGrams(_ value:Double) { guard value.isFinite else {return};if let estimate=mealEstimate{guard let scaled=try? estimate.scaled(toGrams:value) else{return};mealEstimate=scaled;grams=scaled.grams;low=scaled.low;high=scaled.high;basis="weight";return};grams=value;low=value;high=value;basis="weight" }
 }
 struct PhotoLabel:Decodable { var id:String;var food:Bool;var vector:[Double] }
 struct PhotoLabels:Decodable { var modelId:String;var revision:String;var dimension:Int;var labels:[PhotoLabel];var regional:Regional

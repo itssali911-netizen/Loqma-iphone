@@ -5,11 +5,14 @@ enum DiaryValidation {
         func require(_ ok: Bool) throws { if !ok { throw AppError.invalid("راجع البيانات والكميات؛ توجد قيم غير صالحة ولم يُغيّر سجلك.", "Check the data and quantities. Some values are invalid; your diary was not changed.") } }
         try require(s.app == "luqma" && s.version == 2 && s.entries.count <= 50000 && s.recipes.count <= 50000 && s.weights.count <= 50000 && s.products.count <= 1000 && s.searchHistory.count <= 30 && s.barcodeHistory.count <= 30 && (s.customFoods?.count ?? 0) <= 1000)
         let customFoods = s.customFoods ?? []
-        try require(Set(customFoods.map(\.id)).count == customFoods.count && customFoods.allSatisfy { $0.source == "Your food" && !$0.id.isEmpty && $0.id.count <= 360 })
+        try require(Set(customFoods.map(\.id)).count == customFoods.count && customFoods.allSatisfy {
+            ($0.source == "Your food" || MealPhotoEstimate.isValidPhotoEstimate($0)) && !$0.id.isEmpty && $0.id.count <= 360
+        })
         try require(s.goals.valid && (500...10000).contains(s.goals.kcal))
         try require(Set(s.entries.map(\.id)).count == s.entries.count && Set(s.recipes.map(\.id)).count == s.recipes.count && Set(s.weights.map(\.day)).count == s.weights.count)
         for e in s.entries { try require(DayKey.valid(e.day) && !e.name.trimmingCharacters(in: .whitespaces).isEmpty && e.name.count <= 180 && e.amount.isFinite && e.amount > 0 && e.amount <= 10000 && e.nutrition.valid && (e.barcode?.count ?? 0) <= 20 && (e.foodID?.count ?? 0) <= 360 && (e.servingLabel?.count ?? 0) <= 240) }
         for r in s.recipes {
+            try r.importInfo?.validate(ingredients:r.ingredients)
             try require(!r.name.trimmingCharacters(in: .whitespaces).isEmpty && r.name.count <= 180 && ["recipe", "meal", "prep"].contains(r.type) && (1...80).contains(r.ingredients.count) && Set(r.ingredients.map(\.id)).count == r.ingredients.count && r.portions.isFinite && r.portions > 0 && r.portions <= 1000 && r.notes.count <= 2000 && r.total.valid)
             try require(r.cookedWeight.map { $0.isFinite && $0 > 0 && $0 <= 100000 } ?? true)
             for i in r.ingredients { try require(!i.name.isEmpty && i.name.count <= 180 && i.amount.isFinite && i.amount > 0 && i.amount <= 10000 && i.nutrition.valid) }
@@ -25,6 +28,7 @@ enum DiaryValidation {
             try require(h.updatedAt.map { $0.isFinite && $0 > 0 } ?? true)
         }
         for f in s.products + s.searchHistory + s.barcodeHistory + customFoods {
+            try require(f.source != MealPhotoEstimate.source || MealPhotoEstimate.isValidPhotoEstimate(f))
             try require(!f.name.isEmpty && f.name.count <= 180 && (f.barcode?.count ?? 0) <= 20)
             try require([f.kcal,f.protein,f.carbs,f.fat].allSatisfy { $0.map { $0.isFinite && $0 >= 0 && $0 <= 100000 } ?? true })
             try require(f.servingNutrition?.valid ?? true)

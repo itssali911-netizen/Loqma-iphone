@@ -87,6 +87,10 @@ struct Food: Codable, Equatable, Identifiable {
         return result
     }
     func withReference(_ nutrition: Nutrition, unit referenceUnit: FoodUnit) throws -> Food {
+        if source == MealPhotoEstimate.source {
+            guard referenceUnit == .serving else { throw AppError.invalid("عدّل قيم الحصة التقديرية.", "Edit the estimated serving values.") }
+            return try MealPhotoEstimate.correctedFood(self, nutrition: nutrition)
+        }
         guard nutrition.valid else { throw AppError.invalid("أدخل قيمًا غذائية صحيحة.", "Enter valid nutrition values.") }
         var result = self
         if referenceUnit == .serving {
@@ -124,6 +128,7 @@ struct Ingredient: Codable, Identifiable, Equatable { var id:UUID;var name:Strin
     var nutrition:Nutrition { Nutrition(kcal:kcal,protein:protein,carbs:carbs,fat:fat) }
 }
 struct Recipe: Codable, Identifiable, Equatable { var id:UUID;var name:String;var type:String;var ingredients:[Ingredient];var portions:Double;var cookedWeight:Double?;var notes:String
+    var importInfo:RecipeImportMetadata?=nil
     var total:Nutrition { ingredients.reduce(.zero){$0+$1.nutrition} }
     func food(byWeight:Bool=false) throws -> Food { guard !ingredients.isEmpty,portions.isFinite,portions>0,portions<=1000 else { throw AppError.invalid("أضف مكونات وعدد حصص صحيحًا.","Add ingredients and a valid yield.") };if byWeight { guard let w=cookedWeight,w.isFinite,w>0 else { throw AppError.invalid("أدخل وزن الوصفة النهائي.","Enter the final cooked weight.") };return Food(catalogID:id.uuidString,name:name,unit:.g,nutrition:total.scaled(100/w)) };return Food(catalogID:id.uuidString,name:name,unit:.serving,nutrition:total.scaled(1/portions),servingNutrition:total.scaled(1/portions)) }
 }

@@ -1,0 +1,6 @@
+Sandow UI Kit: AI Fitness & Nutrition App — Community v1.2 dark preview.
+Creator: strangehelix.bio
+Source: https://www.figma.com/community/file/1334779038193346013/sandow-ui-kit-ai-fitness-nutrition-app
+Community page licence observed: CC BY 4.0
+https://creativecommons.org/licenses/by/4.0/
+Adaptation: native SwiftUI views, Arabic layout, Loqma branding and real diary metrics. No paid kit or reference food photographs are redistributed.
