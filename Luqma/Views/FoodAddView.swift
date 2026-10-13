@@ -59,7 +59,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                     }
                     if tab==0 {searchContent}
                     if tab==1 {barcodeContent}
-                    if tab==2 && !productSelection {PhotoMealView(initialMeal:initialMeal){foods,meal in onPhoto(foods,meal)}}
+                    if tab==2 && !productSelection {AnyView(PhotoMealView(initialMeal:initialMeal){foods,meal in onPhoto(foods,meal)})}
                     if let notice,tab != 2 {Notice(text:notice)}
                     if busy || choosingFood {ProgressView(choosingFood ? diary.t("جلب تفاصيل المنتج…","Loading product details…"):"").frame(maxWidth:.infinity)}
                     if tab==0 && !displayedResults.isEmpty {

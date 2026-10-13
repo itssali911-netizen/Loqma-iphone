@@ -10,9 +10,12 @@ import UIKit
     @State private var item:PhotosPickerItem?
     @State private var imageData:Data?
     @State private var preview:UIImage?
-    @State private var camera=false,busy=false,showingSetup=false
+    @State private var camera=false
+    @State private var busy=false
+    @State private var showingSetup=false
     @State private var description=""
-    @State private var error:String?,cancellationMessage:String?
+    @State private var error:String?
+    @State private var cancellationMessage:String?
     @State private var parts:[PhotoPart]=[]
     private struct ProductSelection:Identifiable {var id:UUID;var name:String}
     private struct EstimateSelection:Identifiable {var id:UUID;var estimate:MealPhotoEstimate}
@@ -22,7 +25,8 @@ import UIKit
     @State private var meal:Meal = .lunch
     @State private var analysisTask:Task<Void,Never>?
     @State private var photoLoadTask:Task<Void,Never>?
-    @State private var photoGeneration=UUID(),analysisGeneration=UUID()
+    @State private var photoGeneration=UUID()
+    @State private var analysisGeneration=UUID()
     @State private var loadingPhoto=false
     @State private var ready=GeminiCredentialStore.isConfigured
     // Missing nutrition must never become zero or disappear from the meal.
@@ -69,14 +73,14 @@ import UIKit
                 products[request.id]=(food,1,.serving);editing=nil;return true
             }catch{diary.report(error);return false}
         }}
-        .sheet(item:$selection){request in FoodAddView(initial:products[request.id].flatMap{FoodSearch.isCatalogFood($0.0) ? $0.0:nil},initialQuery:request.name,productSelection:true){food,amount,unit,_ in
+        .sheet(item:$selection){request in AnyView(FoodAddView(initial:products[request.id].flatMap{FoodSearch.isCatalogFood($0.0) ? $0.0:nil},initialQuery:request.name,productSelection:true){food,amount,unit,_ in
             guard FoodSearch.isCatalogFood(food),(try? food.total(amount,unit:unit)) != nil else{return false}
             if !parts.contains(where:{$0.id==request.id}){
                 guard let n=food.values(for:food.unit) else{return false}
                 let label=PhotoFood(id:food.id,name:food.name,nameEn:food.nameEn ?? food.name,grams:1,kcal:n.kcal,protein:n.protein,carbs:n.carbs,fat:n.fat)
                 parts.append(PhotoPart(id:request.id,food:label,grams:1,low:1,high:1,basis:"selected"))
             };products[request.id]=(food,amount,unit);selection=nil;return true
-        }}
+        })}
         .onChange(of:item){_,value in loadPhoto(value)}
         .onChange(of:imageData){_,data in analysisGeneration=UUID();analysisTask?.cancel();analysisTask=nil;busy=false;parts=[];products.removeAll();preview=data.flatMap{try? PhotoAnalyzer.image($0,maxPixels:640)}.map{UIImage(cgImage:$0)}}
         .onChange(of:phase){_,value in if value != .active,busy{cancellationMessage=diary.t("توقف التحليل عند مغادرة الشاشة. افتح التطبيق وحاول مجددًا.","Analysis stopped when the app left the foreground. Reopen the app and retry.");analysisTask?.cancel()}}
