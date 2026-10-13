@@ -322,17 +322,24 @@ enum RecipeImport {
                   row.quantity.map({ positive($0, maximum: 10000) }) ?? true,
                   [row.kcal, row.protein, row.carbs, row.fat].allSatisfy({ $0.map { $0.isFinite && $0 >= 0 && $0 <= 100000 } ?? true }) else { throw invalidResult }
             var nutrition: Nutrition?
+            var assumption = row.assumption.trimmingCharacters(in: .whitespacesAndNewlines)
             let quantity = enforceSourceEvidence ? row.quantity.flatMap {
                 RecipeSourceQuantity.quantity($0, unit: row.unit, unitLabel: row.unitLabel, quote: row.sourceQuantityText, source: sourceText)
             } : row.quantity
-            if let declared = row.quantity, let kcal = row.kcal, let protein = row.protein, let carbs = row.carbs, let fat = row.fat {
+            // Unverified source quantities already have no usable nutrition.
+            // A bounded but impossible estimate must not discard other valid
+            // ingredients; retain an explicitly incomplete review draft.
+            if let declared = quantity, let kcal = row.kcal, let protein = row.protein, let carbs = row.carbs, let fat = row.fat {
                 let values = Nutrition(kcal: kcal, protein: protein, carbs: carbs, fat: fat)
-                guard nutritionIsPlausible(values, quantity: declared, unit: row.unit) else { throw invalidResult }
-                if quantity != nil { nutrition = values }
+                if nutritionIsPlausible(values, quantity: declared, unit: row.unit) { nutrition = values }
+                else if enforceSourceEvidence {
+                    let note = language.text("تقدير التغذية غير متسق مع الكمية؛ راجعه أو أعد الحساب.", "The nutrition estimate does not match the amount; review it or recalculate.")
+                    assumption = String((note + (assumption.isEmpty ? "" : " " + assumption)).prefix(240))
+                } else { throw invalidResult }
             }
             return RecipeImportIngredient(name: row.name.trimmingCharacters(in: .whitespacesAndNewlines), quantity: quantity,
                 unit: row.unit, unitLabel: row.unitLabel.trimmingCharacters(in: .whitespacesAndNewlines), nutrition: nutrition,
-                assumption: row.assumption.trimmingCharacters(in: .whitespacesAndNewlines))
+                assumption: assumption)
         }
         if enforceSourceEvidence, let sourceText {
             for fat in RecipeSourceQuantity.omittedCookingFats(in: sourceText, ingredientNames: ingredients.map(\.name)) {

@@ -52,6 +52,32 @@ final class RecipeGroundingTests: XCTestCase {
         XCTAssertFalse(draft.readyToSave)
     }
 
+    func testImpossibleNutritionPreservesVerifiedAmountAndOtherIngredientsForReview() throws {
+        let input = try RecipeImport.input(url: "", pastedText: "Ingredients: 60 g starch and 5 g olive oil. Mix and cook. Makes 2 servings.")
+        let rows = [row("Starch", quantity: 60, quote: "60 g starch", kcal: 440, carbs: 108, fat: 0),
+                    row("Olive oil", quantity: 5, quote: "5 g olive oil")]
+        let draft = try RecipeImport.parseResponse(response(rows), input: input, language: .en)
+        XCTAssertEqual(draft.ingredients.count, 2)
+        XCTAssertEqual(draft.ingredients[0].quantity, 60)
+        XCTAssertNil(draft.ingredients[0].nutrition)
+        XCTAssertTrue(draft.ingredients[0].assumption.contains("does not match"))
+        XCTAssertEqual(draft.ingredients[1].nutrition?.kcal, 44)
+        XCTAssertNil(draft.total); XCTAssertNil(draft.perServing); XCTAssertFalse(draft.readyToSave)
+        XCTAssertThrowsError(try draft.recipe(language: .en))
+    }
+
+    func testUnverifiedGramConversionCannotRejectOrPopulateThePartialDraft() throws {
+        let input = try RecipeImport.input(url: "", pastedText: "Ingredients: 1 cup starch and 5 g olive oil. Mix and cook. Makes 2 servings.")
+        let rows = [row("Starch", quantity: 60, quote: "1 cup starch", kcal: 440, carbs: 108, fat: 0),
+                    row("Olive oil", quantity: 5, quote: "5 g olive oil")]
+        let draft = try RecipeImport.parseResponse(response(rows), input: input, language: .en)
+        XCTAssertNil(draft.ingredients[0].quantity); XCTAssertNil(draft.ingredients[0].nutrition)
+        XCTAssertEqual(draft.ingredients[1].quantity, 5)
+        XCTAssertFalse(draft.readyToSave); XCTAssertNil(draft.total)
+        var invalid = rows; invalid[0]["carbs"] = -1
+        XCTAssertThrowsError(try RecipeImport.parseResponse(response(invalid), input: input, language: .en))
+    }
+
     func testSourceAmountsAcceptExactArabicFractionsDualCountsAndExplicitMeasuresOnly() {
         let examples: [(String, Double, FoodUnit, String)] = [
             ("نصف كيلو لحم", 500, .g, "جم"), ("٢٥٠ جرام دجاج", 250, .g, "جرام"), ("نصف لتر حليب", 500, .ml, "مل"),
