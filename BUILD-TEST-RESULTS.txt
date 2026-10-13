@@ -1,5 +1,5 @@
-Build 41, source fa9b453e6bce640462a282882aa6dd801b7cfad5
-https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/38376076214
+Build 44, source abc61f48ce1d7343bfd34f6170fbf2550c97743a
+https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/38452505784
 
 test_existing_output_is_not_overwritten (test_build.BuildTests.test_existing_output_is_not_overwritten) ... ok
 test_failed_sdk_build_stops_without_success_summary (test_build.BuildTests.test_failed_sdk_build_stops_without_success_summary) ... ok
@@ -17,18 +17,23 @@ test_real_almarai_label_preserves_250ml_serving_and_source_macros (test_food_cat
 test_rebuild_exactly_reproduces_catalog_and_provenance (test_food_catalog.FoodCatalogTests.test_rebuild_exactly_reproduces_catalog_and_provenance) ... ok
 test_tampered_source_response_is_rejected (test_food_catalog.FoodCatalogTests.test_tampered_source_response_is_rejected) ... ok
 test_usda_estimated_and_prepared_nutrition_sets_are_excluded (test_food_catalog.FoodCatalogTests.test_usda_estimated_and_prepared_nutrition_sets_are_excluded) ... ok
-test_ad_hoc_export_keeps_health_and_uses_registered_devices (test_signing.SigningTests.test_ad_hoc_export_keeps_health_and_uses_registered_devices) ... ok
+test_launch_and_views_have_no_health_connection_routes (test_removed_health.RemovedHealthTests.test_launch_and_views_have_no_health_connection_routes) ... ok
+test_release_requests_no_health_permission_or_capability (test_removed_health.RemovedHealthTests.test_release_requests_no_health_permission_or_capability) ... ok
+test_ad_hoc_export_uses_registered_devices_without_extra_capabilities (test_signing.SigningTests.test_ad_hoc_export_uses_registered_devices_without_extra_capabilities) ... ok
 test_app_store_export_is_not_direct_sideload (test_signing.SigningTests.test_app_store_export_is_not_direct_sideload) ... ok
 test_expired_development_enterprise_and_invalid_uuid_rejected (test_signing.SigningTests.test_expired_development_enterprise_and_invalid_uuid_rejected) ... ok
-test_healthkit_missing_team_bundle_platform_and_wildcard_rejected (test_signing.SigningTests.test_healthkit_missing_team_bundle_platform_and_wildcard_rejected) ... ok
+test_export_payload_extracts_only_application_and_rejects_unsafe_entries (test_signing.SigningTests.test_export_payload_extracts_only_application_and_rejects_unsafe_entries) ... ok
+test_exported_signature_matches_profile_and_rejects_removed_health_capabilities (test_signing.SigningTests.test_exported_signature_matches_profile_and_rejects_removed_health_capabilities) ... ok
 test_identity_must_include_matching_private_key_and_distribution_certificate (test_signing.SigningTests.test_identity_must_include_matching_private_key_and_distribution_certificate) ... ok
 test_legacy_app_prefix_can_differ_from_team (test_signing.SigningTests.test_legacy_app_prefix_can_differ_from_team) ... ok
+test_legacy_app_prefix_is_checked_in_actual_signature (test_signing.SigningTests.test_legacy_app_prefix_is_checked_in_actual_signature) ... ok
 test_linux_cannot_claim_to_compile_ios (test_signing.SigningTests.test_linux_cannot_claim_to_compile_ios) ... ok
+test_missing_team_bundle_platform_and_wildcard_rejected (test_signing.SigningTests.test_missing_team_bundle_platform_and_wildcard_rejected) ... ok
 test_secrets_not_in_build_process_environment (test_signing.SigningTests.test_secrets_not_in_build_process_environment) ... ok
 test_signing_cleanup_runs_after_build_failure_and_restores_existing_profiles (test_signing.SigningTests.test_signing_cleanup_runs_after_build_failure_and_restores_existing_profiles) ... ok
 test_strict_base64_private_permissions_and_no_overwrite (test_signing.SigningTests.test_strict_base64_private_permissions_and_no_overwrite) ... ok
 
 ----------------------------------------------------------------------
-Ran 26 tests in 0.050s
+Ran 31 tests in 0.038s
 
 OK

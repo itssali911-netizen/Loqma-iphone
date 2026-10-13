@@ -1,6 +1,6 @@
 # Luqma iPhone — version 1.9
 
-Native compilation, tests and screenshot review for this update are pending; verified results will be recorded in VALIDATION.md.
+167 Swift tests, 31 Python tests, iPhone Release compilation, independent IPA validation and eight native Simulator screenshots passed. [Build](https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/38452505784)
 
 Meal analysis estimates calories, protein, carbs and fat for every visible component and the whole meal, with editable weights and estimated servings. An existing iPhone Keychain connection is reused automatically; no model or setup file import is needed. A fresh device needs its own connection under advanced settings. The app uses the simple label “Meal analysis”; no service credential is embedded in the source or IPA. Photos and recipe inputs are sent to Google for analysis when the user starts the feature. Estimates require review and are not measured calorie accuracy.
 
