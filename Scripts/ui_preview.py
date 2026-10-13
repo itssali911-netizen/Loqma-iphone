@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capture real SwiftUI screens on a fresh iPhone 16 Pro Simulator.
+"""Capture real SwiftUI screens on a fresh iPhone 16 Pro Max Simulator.
 
 Requires an Apple Silicon Mac, Xcode, and an installed iOS Simulator runtime.
 This builds a Debug Simulator app, launches each native tab using the app's
@@ -183,7 +183,7 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
                                        output, "preview-inventory"))
         types = inventory.get("devicetypes", inventory.get("deviceTypes", []))
         if not any(item.get("identifier") == DEVICE_TYPE for item in types):
-            raise BuildError("The selected Xcode has no iPhone 16 Pro Simulator device type.")
+            raise BuildError("The selected Xcode has no iPhone 16 Pro Max Simulator device type.")
         runtime = select_runtime(inventory)
         name = "Luqma UI Preview " + uuid.uuid4().hex[:8]
         device = command(["xcrun", "simctl", "create", name, DEVICE_TYPE,
@@ -191,7 +191,7 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
         if not re.fullmatch(r"[0-9A-Fa-f-]{36}", device):
             device = None
             raise BuildError("Simulator creation did not return a valid device identifier.")
-        report["simulator"] = {"udid": device, "device": "iPhone 16 Pro",
+        report["simulator"] = {"udid": device, "device": "iPhone 16 Pro Max",
                                "runtime": runtime["name"], "runtime_id": runtime["identifier"]}
         report["fresh_simulator"] = True
         command(["xcrun", "simctl", "boot", device], output, "preview-boot", 120)

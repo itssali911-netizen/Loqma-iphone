@@ -77,10 +77,10 @@ struct RootView:View {
     }
     var body:some View {
         TabView(selection:$tab) {
-            NavigationStack{DiaryView()}.tabItem{Label(diary.t("اليوم","Today"),systemImage:"house")}.tag(0)
-            NavigationStack{KitchenView()}.tabItem{Label(diary.t("مطبخي","Kitchen"),systemImage:"fork.knife")}.tag(1)
-            NavigationStack{ProgressViewScreen()}.tabItem{Label(diary.t("تقدّمي","Progress"),systemImage:"chart.bar")}.tag(2)
-            NavigationStack{SettingsView()}.tabItem{Label(diary.t("الإعدادات","Settings"),systemImage:"gearshape")}.tag(3)
+            NavigationStack{DiaryView().toolbar(.hidden,for:.tabBar)}.tabItem{Label(diary.t("اليوم","Today"),systemImage:"house")}.tag(0)
+            NavigationStack{KitchenView().toolbar(.hidden,for:.tabBar)}.tabItem{Label(diary.t("مطبخي","Kitchen"),systemImage:"fork.knife")}.tag(1)
+            NavigationStack{ProgressViewScreen().toolbar(.hidden,for:.tabBar)}.tabItem{Label(diary.t("تقدّمي","Progress"),systemImage:"chart.bar")}.tag(2)
+            NavigationStack{SettingsView().toolbar(.hidden,for:.tabBar)}.tabItem{Label(diary.t("الإعدادات","Settings"),systemImage:"gearshape")}.tag(3)
         }.toolbar(.hidden,for:.tabBar)
             .safeAreaInset(edge:.bottom,spacing:0){bottomNavigation}
             .sheet(isPresented:$adding){FoodAddView(onPhotoCommit:{foods,meal in
@@ -125,7 +125,7 @@ struct RootView:View {
             .background(Theme.surface,in:RoundedRectangle(cornerRadius:30,style:.continuous))
             .overlay{RoundedRectangle(cornerRadius:30,style:.continuous).stroke(Theme.stroke,lineWidth:0.5)}
             .padding(.horizontal,18).padding(.top,18).padding(.bottom,8)
-            .background(Theme.background.opacity(0.97))
+            .background(Theme.background)
     }
     private func navigationButton(_ value:Int,title:String,symbol:String)->some View {
         Button{tab=value}label:{VStack(spacing:4){
