@@ -20,8 +20,14 @@ extension RecipeImportDraft {
             let unit=item.unit == .g ? "g":item.unit == .ml ? "ml":item.unitLabel
             return "- "+DisplayFormat.decimal(item.quantity!,digits:6)+" "+unit+" "+item.name
         }
-        let text="Recipe title: "+title+"\nMakes "+DisplayFormat.decimal(servings,digits:6)+" servings.\nIngredients:\n"+
-            rows.joined(separator:"\n")+"\nPreparation:\n"+steps.joined(separator:"\n")
+        let text="""
+        Recipe title: \(title)
+        Makes \(DisplayFormat.decimal(servings,digits:6)) servings.
+        Ingredients:
+        \(rows.joined(separator:"\n"))
+        Preparation:
+        \(steps.joined(separator:"\n"))
+        """
         return try RecipeImport.input(url:sourceURL ?? "",pastedText:text)
     }
 
