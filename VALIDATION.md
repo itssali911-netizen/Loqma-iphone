@@ -1,6 +1,32 @@
-# Version 1.7 — native validation pending
+# Validation — version 1.8 build 41
 
-Meal photo REST validation passed on a pinned public fixture and blank control. Recipe REST validation is pending because the provider returned temporary high-demand HTTP503 responses. Native unit tests, iPhone compilation and six UI screenshots will be recorded after this build finishes. Earlier results below do not validate the new code.
+Source fa9b453e6bce640462a282882aa6dd801b7cfad5. [Build 41](https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/38376076214). 140 Swift tests, 26 Python tests, iPhone Release compilation, independent IPA validation and nine native Simulator screenshots passed.
+
+Workflow: success. The historical local vision audit is explicitly optional and skipped. Required nutrition/provenance/privacy/design resources byte-match the built commit. IPA SHA256: 42dc64fc078ca94012e77a4ea9e0a1a216b4b44115061898244499ad80144c3d. Private credential bytes are absent from IPA and source.
+
+Version 1.8 checks retained failures honestly: build 38 caught a word-prefix suggestion ranking regression and the implementation was corrected without weakening its existing test. Build 39 passed all 140 Core tests, 26 Python tests, Release compilation and nine screens; visual review found the faint system tab bar behind custom navigation. Build 40 compiled both Release and Debug successfully, but its fresh Simulator cold launch exceeded 120 seconds before any Luqma process log or screenshot. A bounded 300-second first-launch budget was then added to the preview harness; app code remained unchanged for this final verification.
+
+Meal photo: real REST HTTP200 returned complete component calories/macros and meaningful ranges on a pinned public USDA/Wikimedia fixture. HTTP200 blank control returned no food. The captured response is replayed through the native parser, estimated serving and diary calculation test. This checks complete handling, not ground-truth weight/calorie accuracy or native iPhone network execution. Billing unchanged.
+
+Recipe: 14 focused native Core tests cover retrieval metadata, unknown quantities/yields/nutrients, original units, sane macros, whole-ingredient/per-serving sums, edits and metadata backups. Recorded live external outcomes: {"pastedText": true, "website": true, "youtube": false}. Provider/source failures remain in recipe-live-evidence.json; unavailable links are not presented as successful extractions. Private or blocked Instagram content needs pasted text. YouTube uses the available first ten minutes and marks this limit. Physical iPhone service execution remains unverified.
+
+The own-text live response is replayed through the native recipe parser, whole-recipe/per-serving calculation and backup persistence test. Website source retrieval was confirmed, but three ingredient quantities still needed review; a complete recipe total was not asserted from partial data. An additional 180-second SSE experiment on the same public YouTube request received no headers/events and timed out; transport-only changes did not prove video retrieval, so the app transport was left unchanged. No YouTube source or VIDEO-token proof succeeded in this run.
+
+Search: the user query التنمية صدر دجاج has no exact branded record in the supplied 744-food sample; real catalog chicken breast appears under Nearby. Arabic/singular/plural normalization and order-independent matching preserve source identity and nutrients. OFF transport preserves the original ة spelling, with bounded Tanmiah queries only after explicit submission. Public OFF evidence: التنمية returned two index hits, التنميه zero, Tanmiah one; authoritative details were HTTP200 for three products. None explicitly declares chicken breast. Nutrition omissions in index summaries are resolved from product details. Ten native tests cover the reported query, real source records, cancellation and prepared indexes. The 48-query real 750-food benchmark recorded 17.067ms per query on the macOS runner. Indexing and suggestions run on an actor away from keyboard handling; this is not a physical phone latency measurement.
+
+Numbers/meals: Arabic remains RTL with Gregorian Arabic date words and Western 123 digits. All four meal cards show saved calories/protein/carbs/fat for the selected diary day. Three native tests check format/source preservation and partial-quantity, edited and day-filtered totals.
+
+Health: native permissions and observers read steps, walking/running distance, active kcal, exercise minutes and workouts; aggregate snapshots replace previous values. Optional goal adjustment uses only active energy above the saved plan's included activity. Manual/imported/legacy goals cannot reuse an unassociated plan. Ten focused tests cover opt-in, stale days, goal provenance, no double counting, caps and backups. Actual user Health permissions, personal signing, Watch delivery and background execution remain unverified on a physical iPhone.
+
+UI: nine native screens on an isolated fresh iPhone 16 Pro Max Simulator, all inspected by root: four tabs, photo/recipe reviews, actual catalog search, four meal macro cards and Health onboarding. Photo/recipe/meal reviews use labelled synthetic data in production SwiftUI views, not live AI results. Search uses the actual catalog; Health uses no fake activity data and requests no authorization automatically. No key, personal diary or private photo was used. Fixtures and launch routes are excluded from Release.
+
+Design: exact Sandow v1.2 dark Community file by strangehelix.bio, observed CC BY 4.0. The free nutrition sections are flattened previews; the user's copy is in Figma Drafts. Native SwiftUI adapts graphite cards, an orange goal, white metrics and floating navigation. The paid kit and reference food photos are not redistributed.
+
+Food sources retain 744 supplied regional MFP foods plus six OFF seeds and live OFF. Original-IPA comparison covers 3830 portions, 94 unknown portions and 31 incomplete food references. Source multipliers are retained; unknown values remain absent. This is not MFP's complete server database.
+
+Existing device connection is reused without importing a file or downloading a model. A fresh device still needs a private connection in advanced settings. Personal Apple re-signing, camera/Health permissions and physical device checks remain device steps. Preserve app.luqma.diary.2AV9NV468K and the same Apple account after a backup.
+
+## Historical validation
 
 # Validation — version 1.6 build 35
 
