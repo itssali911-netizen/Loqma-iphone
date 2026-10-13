@@ -103,13 +103,13 @@ struct LuqmaPill:View {
             .buttonStyle(.plain).accessibilityAddTraits(selected ? .isSelected:[])
     }
 }
-func decimal(_ value:Double,_ digits:Int=1) -> String {value.isFinite ? String(format:"%.*f",digits,value):"—"}
+func decimal(_ value:Double,_ digits:Int=1) -> String {DisplayFormat.decimal(value,digits:digits)}
 struct NumericInput:View {
     var title:String;@Binding var value:Double;var suffix:String=""
     @State private var text=""
     @FocusState private var focused:Bool
     var body:some View {
-        HStack{Text(title);Spacer();TextField(title,text:$text).keyboardType(.decimalPad).focused($focused).multilineTextAlignment(.trailing).frame(minWidth:65,maxWidth:120).accessibilityLabel(title);if !suffix.isEmpty{Text(suffix).foregroundStyle(.secondary)}}
+        HStack{Text(title);Spacer();TextField(title,text:$text).keyboardType(.decimalPad).focused($focused).multilineTextAlignment(.trailing).frame(minWidth:65,maxWidth:120).accessibilityLabel(title);if !suffix.isEmpty{Text(DisplayFormat.westernDigits(suffix)).foregroundStyle(.secondary)}}
             .onAppear{text=decimal(value,value.rounded()==value ? 0:1)}
             .onChange(of:text){_,s in
                 guard focused else{return} // Formatting another macro must not edit its value.
@@ -150,7 +150,7 @@ struct FoodRow:View {
     var body:some View {
         Button(action:action){HStack(spacing:14){
             Image(systemName:"fork.knife").font(.system(size:19,weight:.medium)).foregroundStyle(Theme.accent).frame(width:46,height:46).background(Theme.accent.opacity(0.1),in:RoundedRectangle(cornerRadius:14)).accessibilityHidden(true)
-            VStack(alignment:.leading,spacing:6){Text(food.label(diary.language)).font(.headline).foregroundStyle(.primary);if let brand=food.brand{Text(brand).font(.caption).foregroundStyle(Theme.muted)}
+            VStack(alignment:.leading,spacing:6){Text(food.label(diary.language)).font(.headline).foregroundStyle(.primary);if let brand=food.brand{Text(DisplayFormat.westernDigits(brand)).font(.caption).foregroundStyle(Theme.muted)}
                 if let sourceTitle{Text(sourceTitle).font(.caption2).foregroundStyle(Theme.muted)}
                 if let n=food.values(for:food.unit){Text("\(decimal(n.kcal,0)) \(diary.t("سعرة","kcal")) · \(reference)").font(.subheadline).foregroundStyle(Theme.accent)}
                 else{Text(diary.t("بيانات غذائية غير مكتملة","Incomplete nutrition data")).font(.caption).foregroundStyle(.orange)}
@@ -159,4 +159,4 @@ struct FoodRow:View {
         }.padding(.vertical,10)}.buttonStyle(.plain)
     }
 }
-struct Notice:View {var text:String;var body:some View {Text(text).font(.footnote).foregroundStyle(Theme.muted).frame(maxWidth:.infinity,alignment:.leading).fixedSize(horizontal:false,vertical:true)}}
+struct Notice:View {var text:String;var body:some View {Text(DisplayFormat.westernDigits(text)).font(.footnote).foregroundStyle(Theme.muted).frame(maxWidth:.infinity,alignment:.leading).fixedSize(horizontal:false,vertical:true)}}

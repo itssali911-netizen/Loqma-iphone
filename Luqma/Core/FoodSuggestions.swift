@@ -14,14 +14,23 @@ enum FoodSuggestions {
     /// The caller supplies history in its preferred recent/frequent order.
     static func suggestions(query: String, foods: [Food], language: AppLanguage,
                             history: [Food] = [], limit: Int = 6) -> [FoodSuggestion] {
+        Index(foods).suggestions(query: query, language: language, history: Index(history), limit: limit)
+    }
+
+    /// The UI keeps this prepared index outside its body. Both languages,
+    /// brands and aliases are normalized once when catalog/history changes.
+    struct Index {
+        private let entries: [Entry]
+        init(_ foods: [Food]) {
+            var seen = Set<String>()
+            entries = foods.filter { FoodSearch.availableForAdding($0) && seen.insert($0.id).inserted }.map(Entry.init)
+        }
+        func suggestions(query: String, language: AppLanguage, history: Index = Index([]), limit: Int = 6) -> [FoodSuggestion] {
         guard limit > 0 else { return [] }
         let typed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         let normalized = FoodSearch.normalized(typed)
         let words = normalized.split(separator: " ").map(String.init)
         let hasQuery = !words.isEmpty
-        // Suggestions must not reintroduce old USDA caches or image estimates.
-        let allowedHistory = history.filter(FoodSearch.availableForAdding)
-        let allowedFoods = foods.filter(FoodSearch.availableForAdding)
         var candidates: [Candidate] = []
         var position = 0
 
@@ -36,44 +45,42 @@ enum FoodSuggestions {
             position += 1
         }
 
-        func addFoods(_ values: [Food], kind: FoodSuggestion.Kind, priority: Int) {
-            var seen = Set<String>()
-            for food in values where seen.insert(food.id).inserted {
-                let preferred = food.label(language).trimmingCharacters(in: .whitespacesAndNewlines)
+        func addFoods(_ values: [Entry], kind: FoodSuggestion.Kind, priority: Int) {
+            for (position, entry) in values.enumerated() {
+                if position.isMultiple(of: 64), Task.isCancelled { return }
+                let preferred = language == .ar ? entry.ar : entry.en
                 guard !preferred.isEmpty else { continue }
-                let nameFields = [preferred, food.name, food.nameEn ?? ""]
-                let aliases = split(food.aliases ?? "")
-                let fields = nameFields + aliases
-                let combined = queryForFood(food, language: language)
+                let fields = language == .ar ? entry.arFields : entry.enFields
+                let combined = language == .ar ? entry.arQuery : entry.enQuery
                 if !hasQuery {
                     append(preferred, query: combined, kind: kind, sourcePriority: priority, rank: 0)
                 } else {
                     let matches = fields.enumerated().compactMap { offset, field -> (String, Int, Int)? in
                         guard let rank = matchRank(field, query: normalized, words: words) else { return nil }
-                        return (field, rank, offset)
+                        return (field.value, rank, offset)
                     }.sorted { lhs, rhs in lhs.1 == rhs.1 ? lhs.2 < rhs.2 : lhs.1 < rhs.1 }
                     if let best = matches.first {
                         // Complete names preserve brand specificity; aliases stay useful
                         // when an alternate spelling is what the user is completing.
-                        let phrase = best.2 < nameFields.count ? combined : best.0
+                        let phrase = best.2 < 3 ? combined : best.0
                         append(preferred, query: phrase, kind: kind, sourcePriority: priority, rank: best.1)
-                    } else if FoodSearch.matches(food, query: typed) {
+                    } else if words.allSatisfy({ word in entry.text.contains(word) || entry.tokens.contains(where: { $0.hasPrefix(FoodSearch.token(word)) }) }) {
                         // A query may span the product title, its brand and aliases.
                         append(preferred, query: combined, kind: kind, sourcePriority: priority, rank: 3)
                     }
                 }
-                for brand in split(food.brand ?? "") {
+                for brand in entry.brands {
                     if !hasQuery {
-                        append(brand, query: brand, kind: .brand, sourcePriority: priority + 2, rank: 0)
+                        append(brand.value, query: brand.value, kind: .brand, sourcePriority: priority + 2, rank: 0)
                     } else if let rank = matchRank(brand, query: normalized, words: words) {
-                        append(brand, query: brand, kind: .brand, sourcePriority: priority + 2, rank: rank)
+                        append(brand.value, query: brand.value, kind: .brand, sourcePriority: priority + 2, rank: rank)
                     }
                 }
             }
         }
 
-        addFoods(allowedHistory, kind: .history, priority: 0)
-        addFoods(allowedFoods, kind: .local, priority: 1)
+        addFoods(history.entries, kind: .history, priority: 0)
+        addFoods(entries, kind: .local, priority: 1)
         // These are independently chosen search terms, with no nutrient values
         // or proprietary product IDs. A category opens the ordinary OFF search.
         for (ar, en) in [("حليب", "Milk"), ("خبز", "Bread"), ("زبادي", "Yogurt"),
@@ -82,7 +89,7 @@ enum FoodSuggestions {
             if !hasQuery {
                 append(label, query: label, kind: .popular, sourcePriority: 4, rank: 0)
             } else {
-                let ranks = [ar, en].compactMap { matchRank($0, query: normalized, words: words) }
+                let ranks = [ar, en].compactMap { matchRank(Field($0), query: normalized, words: words) }
                 if let rank = ranks.min() {
                     append(label, query: label, kind: .popular, sourcePriority: 4, rank: rank)
                 }
@@ -107,6 +114,33 @@ enum FoodSuggestions {
                 query: typed, kind: .searchAll))
         }
         return result
+        }
+    }
+
+    private struct Field {
+        let value: String
+        let normalized: String
+        let tokens: [String]
+        init(_ value: String) {
+            self.value = value; normalized = FoodSearch.normalized(value)
+            tokens = normalized.split(separator: " ").map { FoodSearch.token(String($0)) }
+        }
+    }
+    private struct Entry {
+        let ar: String; let en: String; let arQuery: String; let enQuery: String
+        let arFields: [Field]; let enFields: [Field]; let brands: [Field]
+        let text: String; let tokens: [String]
+        init(_ food: Food) {
+            ar = food.label(.ar).trimmingCharacters(in: .whitespacesAndNewlines)
+            en = food.label(.en).trimmingCharacters(in: .whitespacesAndNewlines)
+            arQuery = queryForFood(food, language: .ar); enQuery = queryForFood(food, language: .en)
+            let aliases = split(food.aliases ?? "")
+            arFields = ([ar, food.name, food.nameEn ?? ""] + aliases).map(Field.init)
+            enFields = ([en, food.name, food.nameEn ?? ""] + aliases).map(Field.init)
+            brands = split(food.brand ?? "").map(Field.init)
+            text = (arFields + brands).map(\.normalized).joined(separator: " ")
+            tokens = Array(Set(text.split(separator: " ").map { FoodSearch.token(String($0)) }))
+        }
     }
 
     private struct Candidate {
@@ -126,12 +160,11 @@ enum FoodSuggestions {
         return label + " " + brand
     }
 
-    private static func matchRank(_ field: String, query: String, words: [String]) -> Int? {
-        let value = FoodSearch.normalized(field)
+    private static func matchRank(_ field: Field, query: String, words: [String]) -> Int? {
+        let value = field.normalized
         guard !value.isEmpty else { return nil }
         if value.hasPrefix(query) { return 0 }
-        let fieldWords = value.split(separator: " ").map(String.init)
-        if words.allSatisfy({ word in fieldWords.contains(where: { $0.hasPrefix(word) }) }) { return 1 }
+        if words.allSatisfy({ word in field.tokens.contains(where: { $0.hasPrefix(FoodSearch.token(word)) }) }) { return 1 }
         if words.allSatisfy({ value.contains($0) }) { return 2 }
         return nil
     }

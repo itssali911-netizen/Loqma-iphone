@@ -94,11 +94,56 @@ enum FoodSearch {
         Index(foods).results(query)
     }
 
+    /// Search spelling is deliberately separate from persisted names and IDs.
+    /// Small, inspectable word equivalents help Arabic singular/plural queries;
+    /// they never assign a brand or nutrition to a different product.
+    static func token(_ word: String) -> String {
+        var value = word
+        if value.hasPrefix("ال"), value.count > 4 { value = String(value.dropFirst(2)) }
+        switch value {
+        case "tanmiah": return "تنميه"
+        case "chicken": return "دجاج"
+        case "breast", "breasts": return "صدر"
+        case "rice": return "ارز"
+        case "milk": return "حليب"
+        case "egg", "eggs": return "بيض"
+        case "صدور": return "صدر"
+        case "افخاذ": return "فخذ"
+        case "اجنحه": return "جناح"
+        default: return value
+        }
+    }
+
+    /// OFF's Arabic index distinguishes ة from ه. Never send our local
+    /// identity-insensitive spelling to that service as its only query.
+    static func onlineQueries(_ query: String) -> [String] {
+        let typed = query.split(whereSeparator: { $0.isWhitespace }).joined(separator: " ")
+        guard !normalized(typed).isEmpty else { return [] }
+        let words = normalized(typed).split(separator: " ").map { token(String($0)) }
+        var values = [typed]
+        if words.contains("تنميه") || words.contains("tanmiah") {
+            let arabic = typed.replacingOccurrences(of: "التنميه", with: "التنمية")
+                .replacingOccurrences(of: "تنميه", with: "تنمية")
+            if normalized(arabic) == normalized(typed), arabic != typed { values.append(arabic) }
+            values.append(contentsOf: ["التنمية", "Tanmiah"])
+        }
+        var seen = Set<String>()
+        return values.filter { seen.insert($0.lowercased()).inserted }
+    }
+
+    struct Matches {
+        var exact: [Food] = []
+        var nearby: [Food] = []
+    }
+
     /// The catalog can contain thousands of foods. Build its text once, rather
     /// than repeatedly normalizing every name on each keystroke.
     struct Index {
         private let entries: [Entry]
-        init(_ foods: [Food]) { entries = foods.map(Entry.init) }
+        init(_ foods: [Food]) {
+            var seen = Set<String>()
+            entries = foods.filter { seen.insert($0.id).inserted }.map(Entry.init)
+        }
         var foods: [Food] { entries.map(\.food) }
 
         func historyCandidates(_ diary: [DiaryEntry]) -> [Food] {
@@ -109,31 +154,44 @@ enum FoodSearch {
         }
 
         func results(_ query: String, additional: [Food] = []) -> [Food] {
+            matches(query, additional: additional, nearbyLimit: 0).exact
+        }
+
+        func matches(_ query: String, additional: [Food] = [], nearbyLimit: Int = 20) -> Matches {
             let term = Query(query)
-            guard !term.words.isEmpty else { return [] }
+            guard !term.words.isEmpty else { return Matches() }
             var seen = Set<String>()
-            let candidates = (additional.map(Entry.init) + entries).enumerated().compactMap { offset, entry -> Ranked? in
-                guard entry.matches(term), seen.insert(entry.food.id).inserted else { return nil }
-                return Ranked(entry: entry, rank: entry.rank(term), offset: offset)
+            var exact: [Ranked] = [], nearby: [Ranked] = []
+            for (offset, entry) in (additional.map(Entry.init) + entries).enumerated() {
+                if offset.isMultiple(of: 64), Task.isCancelled { return Matches() }
+                guard seen.insert(entry.food.id).inserted else { continue }
+                if entry.matches(term) {
+                    exact.append(Ranked(entry: entry, rank: entry.rank(term), offset: offset))
+                } else if nearbyLimit > 0, let score = entry.nearbyRank(term) {
+                    nearby.append(Ranked(entry: entry, rank: score, offset: offset))
+                }
             }
-            return candidates.sorted { lhs, rhs in
+            func ordered(_ candidates: [Ranked]) -> [Food] { candidates.sorted { lhs, rhs in
                 if lhs.rank != rhs.rank { return lhs.rank < rhs.rank }
                 if lhs.entry.complete != rhs.entry.complete { return lhs.entry.complete }
                 if lhs.entry.nameWords != rhs.entry.nameWords { return lhs.entry.nameWords < rhs.entry.nameWords }
                 if lhs.entry.names[0] != rhs.entry.names[0] { return lhs.entry.names[0] < rhs.entry.names[0] }
                 if lhs.entry.food.id != rhs.entry.food.id { return lhs.entry.food.id < rhs.entry.food.id }
                 return lhs.offset < rhs.offset
-            }.map { $0.entry.food }
+            }.map { $0.entry.food } }
+            return Matches(exact: ordered(exact), nearby: Array(ordered(nearby).prefix(max(0, nearbyLimit))))
         }
     }
 
     private struct Query {
         let text: String
         let words: [String]
+        let tokens: [String]
         init(_ query: String) {
             text = normalized(query)
             var seen = Set<String>()
             words = text.split(separator: " ").map(String.init).filter { seen.insert($0).inserted }
+            tokens = words.map(FoodSearch.token)
         }
     }
 
@@ -148,6 +206,8 @@ enum FoodSearch {
         let names: [String]
         let aliases: [String]
         let text: String
+        let tokens: [String]
+        let nameTokens: [String]
         let nameWords: Int
         let complete: Bool
 
@@ -156,12 +216,36 @@ enum FoodSearch {
             names = [normalized(food.name)] + (food.nameEn.map { [normalized($0)] } ?? [])
             aliases = (food.aliases ?? "").components(separatedBy: CharacterSet(charactersIn: ",،;؛|\n")).map(normalized).filter { !$0.isEmpty }
             text = (names + aliases + [normalized(food.brand ?? "")]).joined(separator: " ")
+            let words = text.split(separator: " ").map(String.init)
+            tokens = Array(Set(words + words.map(FoodSearch.token)))
+            let namedWords = (names + aliases).joined(separator: " ").split(separator: " ").map(String.init)
+            nameTokens = Array(Set(namedWords + namedWords.map(FoodSearch.token)))
             nameWords = names.map { $0.split(separator: " ").count }.min() ?? 0
             complete = food.per100 != nil || food.servingNutrition?.valid == true
         }
 
         func matches(_ query: Query) -> Bool {
-            query.words.allSatisfy { text.contains($0) }
+            query.words.enumerated().allSatisfy { position, word in
+                text.contains(word) || tokens.contains(where: { $0.hasPrefix(query.tokens[position]) })
+            }
+        }
+
+        /// Approximate products are returned separately, never promoted to an
+        /// exact branded match. Short/number-only typos and unrelated names
+        /// cannot create an approximate match.
+        func nearbyRank(_ query: Query) -> Int? {
+            let exactWords = query.tokens.filter { candidate in tokens.contains(where: { $0.hasPrefix(candidate) }) }
+            let missing = query.tokens.filter { candidate in !tokens.contains(where: { $0.hasPrefix(candidate) }) }
+            if missing.count == 1, let candidate = missing.first,
+               candidate.count >= 4, !candidate.allSatisfy(\.isNumber),
+               tokens.contains(where: { FoodSearch.oneEditApart(candidate, $0) }) {
+                return 21
+            }
+            guard query.tokens.count >= 2, !exactWords.isEmpty,
+                  exactWords.count * 2 >= query.tokens.count,
+                  exactWords.contains(where: { $0.count >= 3 && !$0.allSatisfy(\.isNumber) }),
+                  exactWords.contains(where: { candidate in nameTokens.contains(where: { $0.hasPrefix(candidate) }) }) else { return nil }
+            return 40 + missing.count * 10 - exactWords.count
         }
 
         func rank(_ query: Query) -> Int {
@@ -175,5 +259,26 @@ enum FoodSearch {
             if aliases.contains(where: { field in query.words.allSatisfy { field.contains($0) } }) { return 7 }
             return 8
         }
+    }
+
+    private static func oneEditApart(_ lhs: String, _ rhs: String) -> Bool {
+        let a = Array(lhs), b = Array(rhs)
+        guard min(a.count, b.count) >= 4, abs(a.count - b.count) <= 1 else { return false }
+        if a.count == b.count {
+            let differences = a.indices.filter { a[$0] != b[$0] }
+            if differences.count == 1 { return true }
+            if differences.count == 2 {
+                let first = differences[0], second = differences[1]
+                return second == first + 1 && a[first] == b[second] && a[second] == b[first]
+            }
+            return false
+        }
+        let short = a.count < b.count ? a : b, long = a.count < b.count ? b : a
+        var i = 0, j = 0, edits = 0
+        while i < short.count && j < long.count {
+            if short[i] == long[j] { i += 1; j += 1 }
+            else { edits += 1; j += 1; if edits > 1 { return false } }
+        }
+        return true
     }
 }

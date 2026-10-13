@@ -10,13 +10,25 @@ import UIKit
     @Published private(set) var readings = 0
     @Published private(set) var steps: Double?
     @Published private(set) var activeCalories: Double?
+    @Published private(set) var distanceKM: Double?
+    @Published private(set) var exerciseMinutes: Double?
+    @Published private(set) var workoutCount: Int?
     @Published private(set) var heightCM: Double?
     @Published private(set) var message: String?
     @Published private(set) var signingBlocked = false
     @Published private(set) var backgroundStatus: BackgroundStatus = .inactive
     @Published private(set) var waitingForUnlock = false
     private let health = HKHealthStore()
-    private let identifiers: [HKQuantityTypeIdentifier] = [.bodyMass, .height, .stepCount, .activeEnergyBurned]
+    private let identifiers: [HKQuantityTypeIdentifier] = [.bodyMass, .height, .stepCount, .activeEnergyBurned, .distanceWalkingRunning, .appleExerciseTime]
+    private let activityIdentifiers: Set<HKQuantityTypeIdentifier> = [.stepCount, .activeEnergyBurned, .distanceWalkingRunning, .appleExerciseTime]
+    private var observedTypes: [(type: HKSampleType, kinds: Set<HKQuantityTypeIdentifier>)] {
+        var result: [(type: HKSampleType, kinds: Set<HKQuantityTypeIdentifier>)] = []
+        for identifier in identifiers {
+            if let type = HKObjectType.quantityType(forIdentifier: identifier) { result.append((type, Set([identifier]))) }
+        }
+        result.append((HKObjectType.workoutType(), activityIdentifiers))
+        return result
+    }
     private var observers: [HKObserverQuery] = []
     private var pending = Set<HKQuantityTypeIdentifier>()
     private var acknowledgements: [() -> Void] = []
@@ -38,7 +50,7 @@ import UIKit
         generation += 1
         stopObservers()
         if UIApplication.shared.isProtectedDataAvailable && !diary.waitingForUnlock { diary.change { $0.healthEnabled = false } }
-        message = diary.t("النسخة المثبتة لا تحمل صلاحية HealthKit. يلزم إعادة توقيعها بصلاحية صحتي قبل الربط؛ تغيير أذونات الآيفون وحده لا يكفي.", "This installation lacks the HealthKit entitlement. Re-sign it with Health access before connecting; changing iPhone permissions alone cannot fix it.")
+        message = diary.t("هذه النسخة تحتاج إعادة توقيع تسمح بالوصول إلى صحتي. اتبع خطوات الربط، ثم اسمح بالقراءة على الآيفون.", "This installation needs a signature that allows Health access. Follow the connection steps, then allow reading on your iPhone.")
     }
     func checkInstallation(_ diary: DiaryStore) {
         guard available, profileAllowsHealth == false, !signingBlocked else { return }
@@ -57,8 +69,10 @@ import UIKit
         let cache = diary.state.healthSync
         if let stamp = cache?.updatedAt { lastSync = Date(timeIntervalSince1970: stamp) }
         heightCM = cache?.heightCM
-        if cache?.activityDay == DayKey.today { steps = cache?.steps; activeCalories = cache?.activeCalories }
-        else { steps = nil; activeCalories = nil }
+        if cache?.activityDay == DayKey.today {
+            steps = cache?.steps; activeCalories = cache?.activeCalories
+            distanceKM = cache?.distanceKM; exerciseMinutes = cache?.exerciseMinutes; workoutCount = cache?.workoutCount
+        } else { steps = nil; activeCalories = nil; distanceKM = nil; exerciseMinutes = nil; workoutCount = nil }
         readings = diary.state.weights.filter { $0.source == "Apple Health" }.count
     }
 
@@ -70,14 +84,13 @@ import UIKit
         guard observers.isEmpty else { return }
         signingBlocked = false
         let observerGeneration = generation
-        for identifier in identifiers {
-            guard let type = HKObjectType.quantityType(forIdentifier: identifier) else { continue }
+        for (type, kinds) in observedTypes {
             let query = HKObserverQuery(sampleType: type, predicate: nil) { [weak self, weak diary] _, completion, error in
                 Task { @MainActor in
                     guard let self, let diary else { completion(); return }
                     guard self.generation == observerGeneration else { completion(); return }
                     if let error { self.handle(error, diary: diary); completion(); return }
-                    self.enqueue([identifier], diary: diary, acknowledgement: completion)
+                    self.enqueue(kinds, diary: diary, acknowledgement: completion)
                 }
             }
             observers.append(query); health.execute(query)
@@ -88,8 +101,8 @@ import UIKit
     private func configureBackground(_ diary: DiaryStore, token: Int) async {
         guard profileAllowsBackground != false else { backgroundStatus = .unavailable; return }
         var successes = 0
-        for identifier in identifiers {
-            guard generation == token, !Task.isCancelled, let type = HKObjectType.quantityType(forIdentifier: identifier) else { return }
+        for (type, _) in observedTypes {
+            guard generation == token, !Task.isCancelled else { return }
             do {
                 // iOS still throttles background steps to at most hourly.
                 try await health.enableBackgroundDelivery(for: type, frequency: .immediate)
@@ -98,7 +111,7 @@ import UIKit
             } catch { /* Foreground observation can work without background delivery. */ }
         }
         guard generation == token else { return }
-        backgroundStatus = successes == identifiers.count ? .enabled : (successes > 0 ? .limited : .unavailable)
+        backgroundStatus = successes == observedTypes.count ? .enabled : (successes > 0 ? .limited : .unavailable)
     }
     func connect(_ diary: DiaryStore) async {
         guard !busy else { return }
@@ -106,6 +119,7 @@ import UIKit
         guard profileAllowsHealth != false else { explainSigning(diary); return }
         message = nil; signingBlocked = false; busy = true
         var types = Set<HKObjectType>(identifiers.compactMap { HKObjectType.quantityType(forIdentifier: $0) })
+        types.insert(HKObjectType.workoutType())
         if let dob = HKObjectType.characteristicType(forIdentifier: .dateOfBirth) { types.insert(dob) }
         if let sex = HKObjectType.characteristicType(forIdentifier: .biologicalSex) { types.insert(sex) }
         do {
@@ -159,7 +173,7 @@ import UIKit
     }
     private func refreshActivity(_ diary: DiaryStore) async {
         await withCheckedContinuation { continuation in
-            enqueue([.stepCount, .activeEnergyBurned], diary: diary) { continuation.resume() }
+            enqueue(activityIdentifiers, diary: diary) { continuation.resume() }
         }
     }
     private func enqueue(_ kinds: Set<HKQuantityTypeIdentifier>, diary: DiaryStore, acknowledgement: @escaping () -> Void) {
@@ -205,13 +219,24 @@ import UIKit
             }; health.execute(query)
         }
     }
-    private func todaySum(_ identifier: HKQuantityTypeIdentifier, unit: HKUnit) async throws -> Double? {
+    private func todaySum(_ identifier: HKQuantityTypeIdentifier, unit: HKUnit, at date: Date) async throws -> Double? {
         guard let type = HKObjectType.quantityType(forIdentifier: identifier) else { return nil }
-        let start = Calendar.current.startOfDay(for: Date()), predicate = HKQuery.predicateForSamples(withStart: start, end: Date(), options: .strictStartDate)
+        let start = Calendar.current.startOfDay(for: date), predicate = HKQuery.predicateForSamples(withStart: start, end: date, options: .strictStartDate)
         return try await withCheckedThrowingContinuation { continuation in
             let query = HKStatisticsQuery(quantityType: type, quantitySamplePredicate: predicate, options: .cumulativeSum) { _, statistics, error in
                 if let error { continuation.resume(throwing: error) } else { continuation.resume(returning: statistics?.sumQuantity()?.doubleValue(for: unit)) }
             }; health.execute(query)
+        }
+    }
+    private func todayWorkouts(at date: Date) async throws -> [UUID] {
+        let start = Calendar.current.startOfDay(for: date)
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: date, options: .strictStartDate)
+        return try await withCheckedThrowingContinuation { continuation in
+            let query = HKSampleQuery(sampleType: HKObjectType.workoutType(), predicate: predicate, limit: 10000, sortDescriptors: nil) { _, samples, error in
+                if let error { continuation.resume(throwing: error) }
+                else { continuation.resume(returning: (samples as? [HKWorkout] ?? []).map(\.uuid)) }
+            }
+            health.execute(query)
         }
     }
     private func refresh(_ kinds: Set<HKQuantityTypeIdentifier>, diary: DiaryStore, token: Int) async throws {
@@ -234,14 +259,18 @@ import UIKit
             let value = try await samples(.height).first?.quantity.doubleValue(for: .meterUnit(with: .centi))
             cache.heightCM = value.flatMap { $0.isFinite && (120...240).contains($0) ? $0 : nil }
         }
-        if cache.activityDay != DayKey.today { cache.steps = nil; cache.activeCalories = nil; cache.activityDay = DayKey.today }
-        if kinds.contains(.stepCount) {
-            let value = try await todaySum(.stepCount, unit: .count())
-            cache.steps = value.flatMap { $0.isFinite && (0...300000).contains($0) ? $0 : nil }
-        }
-        if kinds.contains(.activeEnergyBurned) {
-            let value = try await todaySum(.activeEnergyBurned, unit: .kilocalorie())
-            cache.activeCalories = value.flatMap { $0.isFinite && (0...50000).contains($0) ? $0 : nil }
+        if !kinds.isDisjoint(with: activityIdentifiers) {
+            // One frozen window keeps all values on the same local day, including
+            // an update that crosses midnight. HealthKit merges quantity sources;
+            // do not sum raw phone/watch samples or workout energy again.
+            let date = Date()
+            let stepValue = try await todaySum(.stepCount, unit: .count(), at: date)
+            let calories = try await todaySum(.activeEnergyBurned, unit: .kilocalorie(), at: date)
+            let distance = try await todaySum(.distanceWalkingRunning, unit: .meterUnit(with: .kilo), at: date)
+            let exercise = try await todaySum(.appleExerciseTime, unit: .minute(), at: date)
+            let workouts = try await todayWorkouts(at: date)
+            cache = HealthActivity.update(cache, day: DayKey.string(date), steps: stepValue, activeCalories: calories,
+                                          distanceKM: distance, exerciseMinutes: exercise, workoutIDs: workouts)
         }
         guard generation == token, diary.state.healthEnabled else { return }
         guard UIApplication.shared.isProtectedDataAvailable else { throw AppError.invalid("افتح قفل الآيفون لإكمال المزامنة.", "Unlock your iPhone to finish syncing.") }
@@ -251,12 +280,25 @@ import UIKit
             let merged = HealthSync.apply(added: added, deleted: deleted, to: cache, weights: diary.state.weights)
             cache = merged.cache; weights = merged.weights
         }
+        // Preserve a preference edited while HealthKit queries were awaiting.
+        cache.adjustmentEnabled = diary.state.healthSync?.adjustmentEnabled
+        cache.planGoalAssociated = diary.state.healthSync?.planGoalAssociated
+        // Repeated polls with unchanged statistics do not rewrite the complete
+        // diary on the main actor or invalidate every screen while typing.
+        if cache == diary.state.healthSync && (weights == nil || weights == diary.state.weights) {
+            if waitingForUnlock { waitingForUnlock = false }
+            updateMessage(cache, diary: diary); return
+        }
         cache.updatedAt = Date().timeIntervalSince1970
         guard diary.applyHealth(cache, weights: weights) else { message = diary.error; return }
         restoreCache(diary); waitingForUnlock = false
-        message = cache.records.isEmpty && cache.steps == nil && cache.activeCalories == nil && cache.heightCM == nil
+        updateMessage(cache, diary: diary)
+    }
+    private func updateMessage(_ cache: HealthSyncState, diary: DiaryStore) {
+        let next: String? = cache.records.isEmpty && cache.steps == nil && cache.activeCalories == nil && cache.heightCM == nil && cache.distanceKM == nil && cache.exerciseMinutes == nil && cache.workoutCount == nil
             ? diary.t("لم تصل قراءات. قد لا توجد بيانات أو لم تسمح بقراءتها. راجع صلاحيات لقمة داخل صحتي.", "No readings received. Data may be absent or read access disabled. Check Luqma permissions in Health.")
             : nil
+        if message != next { message = next }
     }
     func profile() async -> (weight: Double?, height: Double?, age: Double?, sex: String?) {
         guard !signingBlocked, profileAllowsHealth != false else { return (nil, nil, nil, nil) }

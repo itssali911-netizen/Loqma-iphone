@@ -37,11 +37,12 @@ from vision_compat import apply_vision_compat
 
 
 ROOT = Path(__file__).resolve().parent.parent
-DEVICE_TYPE = "com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro"
+DEVICE_TYPE = "com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro-Max"
 SCREENS = ((0, "today"), (1, "kitchen"), (2, "progress"), (3, "settings"))
 PHOTO_SCREEN = "photo-estimate"
 RECIPE_SCREEN = "recipe-import"
-EXPECTED_SCREEN_COUNT = len(SCREENS) + 2
+EXTRA_ROUTES = (("search", "-loqma-preview-search"), ("meal-macros", "-loqma-preview-meals"), ("health-access", "-loqma-preview-health"))
+EXPECTED_SCREEN_COUNT = len(SCREENS) + 2 + len(EXTRA_ROUTES)
 
 
 def command(arguments: list[str], output: Path, label: str, timeout: int = 120,
@@ -165,6 +166,9 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
         "expected_screenshot_count": EXPECTED_SCREEN_COUNT,
         "synthetic_photo_fixture": True,
         "synthetic_recipe_fixture": True,
+        "synthetic_meal_fixture": True,
+        "search_uses_actual_catalog": True,
+        "health_data_fixture_used": False,
         "layout_review": "Pending visual inspection of the native screenshots",
         "screenshots": [],
     }
@@ -202,9 +206,10 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
                 output, "preview-status-bar")
         command(["xcrun", "simctl", "install", device, str(app)],
                 output, "preview-install", 180)
-        cases = list(SCREENS) + [(None, PHOTO_SCREEN), (None, RECIPE_SCREEN)]
+        cases = list(SCREENS) + [(None, PHOTO_SCREEN), (None, RECIPE_SCREEN)] + [(None, screen) for screen, _ in EXTRA_ROUTES]
         for number, (tab, screen) in enumerate(cases, 1):
-            arguments = (["-loqma-preview-recipe"] if screen == RECIPE_SCREEN else ["-loqma-preview-photo"]) if tab is None else ["-loqma-preview-tab", str(tab)]
+            routes = {PHOTO_SCREEN: "-loqma-preview-photo", RECIPE_SCREEN: "-loqma-preview-recipe", **dict(EXTRA_ROUTES)}
+            arguments = [routes[screen]] if tab is None else ["-loqma-preview-tab", str(tab)]
             launched = command(["xcrun", "simctl", "launch", "--terminate-running-process",
                                 device, bundle, *arguments,
                                 "-AppleLanguages", "(ar)", "-AppleLocale", "ar_SA"],
@@ -219,15 +224,15 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
                      str(screenshot)], output, "preview-capture-" + screen, 90)
             confirm_process(pid, 0.25)
             report["screenshots"].append({"tab": tab, "screen": screen,
-                                          "kind": "recipe-import" if screen == RECIPE_SCREEN else "meal-estimate" if tab is None else "tab",
-                                          "synthetic_fixture": tab is None,
+                                          "kind": "tab" if tab is not None else screen,
+                                          "synthetic_fixture": screen in {PHOTO_SCREEN, RECIPE_SCREEN, "meal-macros"},
                                           "process_still_running": True,
                                           **png_details(screenshot)})
             print(f"Captured native {screen}: {screenshot.name}", flush=True)
         if len(report["screenshots"]) != EXPECTED_SCREEN_COUNT:
-            raise BuildError("The native preview did not capture all four tabs and both meal/recipe reviews.")
+            raise BuildError("The native preview did not capture all nine required screens.")
         if len({item["frame_sha256"] for item in report["screenshots"]}) != EXPECTED_SCREEN_COUNT:
-            raise BuildError("Screenshots are identical; verify the DEBUG preview tab and meal/recipe fixture routes are installed.")
+            raise BuildError("Screenshots are identical; verify the DEBUG preview routes are installed.")
         report["status"] = "captured"
     except BaseException as error:
         report["status"] = "cancelled" if isinstance(error, (SystemExit, KeyboardInterrupt)) else "failed"

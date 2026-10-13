@@ -17,6 +17,7 @@ struct ProgressViewScreen:View {
             weightChart
             weightPlan
             healthConnection
+            if diary.state.healthEnabled && !health.signingBlocked { DailyActivitySummaryView() }
             weightHistory
         }.padding(20).padding(.bottom,10)}.appBackground().navigationTitle(diary.t("تقدّمي","My progress"))
             .toolbar(.hidden,for:.navigationBar)
@@ -65,7 +66,7 @@ struct ProgressViewScreen:View {
         Image(systemName:"heart.fill").foregroundStyle(.pink).font(.title2).frame(width:46,height:46).background(Theme.surface,in:RoundedRectangle(cornerRadius:15))
         VStack(alignment:.leading,spacing:4){
             Text("Apple Health").font(.headline).foregroundStyle(.primary)
-            Text(health.signingBlocked ? diary.t("يحتاج إعداد الربط","Connection setup needed") : (diary.state.healthEnabled ? diary.t("الربط مفعّل","Connection enabled") : diary.t("اربط الوزن والخطوات","Connect weight and steps"))).font(.subheadline).foregroundStyle(Theme.muted)
+            Text(health.signingBlocked ? diary.t("يحتاج إعداد الربط","Connection setup needed") : (diary.state.healthEnabled ? diary.t("مزامنة نشاطك اليومي","Sync your daily activity") : diary.t("اربط نشاطك اليومي والوزن","Connect daily activity and weight"))).font(.subheadline).foregroundStyle(Theme.muted)
         }
         Spacer(minLength:0)
         Image(systemName:"chevron.forward").font(.caption).foregroundStyle(Theme.muted)

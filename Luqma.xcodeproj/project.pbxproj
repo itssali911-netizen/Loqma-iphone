@@ -15,6 +15,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = E905FBAED38800B358467D68;
 		};
+		"06E6E33C6B127B3730065E22" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "DisplayFormat.swift";
+			"sourceTree" = "<group>";
+		};
+		"4A236428F71056DCD2F907B6" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 06E6E33C6B127B3730065E22;
+		};
 		"AD5F6C86957F15655ED65354" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -94,6 +104,16 @@
 		"98141A9EE077F7BCF208865C" = {
 			"isa" = "PBXBuildFile";
 			"fileRef" = 99FD76BD119C231294A67C24;
+		};
+		"13978D5F2FE1DE5CB357BB6A" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "MealDiarySummary.swift";
+			"sourceTree" = "<group>";
+		};
+		"60ECFF57867921AABCC19DDD" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 13978D5F2FE1DE5CB357BB6A;
 		};
 		"7A9B9F71D1BACA24E0583B7D" = {
 			"isa" = "PBXFileReference";
@@ -179,6 +199,7 @@
 			"isa" = "PBXGroup";
 			"children" = (
 				E905FBAED38800B358467D68,
+				06E6E33C6B127B3730065E22,
 				AD5F6C86957F15655ED65354,
 				6788AB226F815121F5C5056F,
 				67042EE0EA50AF773CD7EF74,
@@ -187,6 +208,7 @@
 				88B76ECB732F1C2ADD459E0B,
 				740B6574D4BE2DB81E89F3F4,
 				99FD76BD119C231294A67C24,
+				13978D5F2FE1DE5CB357BB6A,
 				7A9B9F71D1BACA24E0583B7D,
 				007FBEEB3DCFA7A65B8ECEC2,
 				1E894F72A51B5F2C4EE0C0D6,
@@ -765,6 +787,7 @@
 			"buildActionMask" = 2147483647;
 			"files" = (
 				20126CEF08FC5BF70D8ED5F6,
+				4A236428F71056DCD2F907B6,
 				B29BC5AE96FFAC126BF5DE69,
 				3C7850613A45F50FB9A4B6D3,
 				A3ED49B7297D82ECF3C54A6C,
@@ -773,6 +796,7 @@
 				296B7C7F92ECAB568E3064DB,
 				FD770A0D1190CA0559B018D1,
 				98141A9EE077F7BCF208865C,
+				60ECFF57867921AABCC19DDD,
 				A02B2E13FB1A663D18B94E01,
 				223C3154D98275519A803E3F,
 				513E77FD1223B72D245CC4B7,
@@ -878,7 +902,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				"MARKETING_VERSION" = "1.7";
+				"MARKETING_VERSION" = "1.8";
 				"PRODUCT_BUNDLE_IDENTIFIER" = "app.luqma.diary";
 				"PRODUCT_NAME" = "$(TARGET_NAME)";
 				"SDKROOT" = "iphoneos";
@@ -926,7 +950,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				"MARKETING_VERSION" = "1.7";
+				"MARKETING_VERSION" = "1.8";
 				"PRODUCT_BUNDLE_IDENTIFIER" = "app.luqma.diary";
 				"PRODUCT_NAME" = "$(TARGET_NAME)";
 				"SDKROOT" = "iphoneos";

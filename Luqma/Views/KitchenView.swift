@@ -44,7 +44,7 @@ struct KitchenView:View {
         VStack(alignment:.leading,spacing:18){
             HStack(alignment:.top,spacing:13){
                 Image(systemName:recipe.type == "prep" ? "takeoutbag.and.cup.and.straw":recipe.type == "meal" ? "fork.knife":"book.closed").font(.system(size:24)).foregroundStyle(Theme.accent).frame(width:54,height:54).background(Theme.surface,in:RoundedRectangle(cornerRadius:17)).accessibilityHidden(true)
-                VStack(alignment:.leading,spacing:7){Text(recipe.name).font(.title3.bold());Text(recipeKind(recipe.type)).font(.caption).foregroundStyle(Theme.muted)}
+                VStack(alignment:.leading,spacing:7){Text(DisplayFormat.westernDigits(recipe.name)).font(.title3.bold());Text(recipeKind(recipe.type)).font(.caption).foregroundStyle(Theme.muted)}
                 Spacer(minLength:0)
                 Menu{Button(diary.t("تعديل","Edit")){editing=recipe};Button(diary.t("حذف","Delete"),role:.destructive){deleting=recipe}}label:{Image(systemName:"ellipsis").font(.system(size:20)).foregroundStyle(Theme.muted).frame(minWidth:44,minHeight:44)}.accessibilityLabel(diary.t("خيارات ","Options for ")+recipe.name)
             }
@@ -72,7 +72,7 @@ struct RecipeEditor:View {
         NavigationStack{Form{
             Section{TextField(diary.t("اسم الوصفة أو الوجبة","Recipe or meal name"),text:$recipe.name);Picker(diary.t("النوع","Type"),selection:$recipe.type){Text(diary.t("وصفة","Recipe")).tag("recipe");Text(diary.t("وجبة محفوظة","Saved meal")).tag("meal");Text(diary.t("تحضير وجبات","Meal prep")).tag("prep")}}
             Section(diary.t("المكونات","Ingredients")){
-                ForEach(recipe.ingredients){i in VStack(alignment:.leading){Text(i.name);Text("\(decimal(i.amount)) \(recipe.importInfo?.ingredientUnitLabels[i.id.uuidString] ?? i.unit.label(diary.language)) · \(decimal(i.kcal,0)) \(diary.t("سعرة","kcal"))").font(.caption).foregroundStyle(.secondary)}}.onDelete{indices in
+                ForEach(recipe.ingredients){i in VStack(alignment:.leading){Text(DisplayFormat.westernDigits(i.name));Text("\(decimal(i.amount)) \(DisplayFormat.westernDigits(recipe.importInfo?.ingredientUnitLabels[i.id.uuidString] ?? i.unit.label(diary.language))) · \(decimal(i.kcal,0)) \(diary.t("سعرة","kcal"))").font(.caption).foregroundStyle(.secondary)}}.onDelete{indices in
                     recipe.ingredients.remove(atOffsets:indices)
                     let remaining=Set(recipe.ingredients.map{$0.id.uuidString})
                     recipe.importInfo?.ingredientUnitLabels=recipe.importInfo?.ingredientUnitLabels.filter{remaining.contains($0.key)} ?? [:]
@@ -87,7 +87,7 @@ struct RecipeEditor:View {
             if !recipe.ingredients.isEmpty{Section(diary.t("لكل حصة","Per serving")){NutritionView(value:recipe.total.scaled(1/max(recipe.portions,0.001)))};if byWeight,let w=recipe.cookedWeight,w>0{Section(diary.t("لكل ١٠٠ جم بعد الطبخ","Per 100 g cooked")){NutritionView(value:recipe.total.scaled(100/w))}}}
             Section{DisclosureGroup(diary.t("ملاحظات اختيارية","Optional notes"),isExpanded:$showingNotes){TextField(diary.t("ملاحظاتك","Your notes"),text:$recipe.notes,axis:.vertical).lineLimit(2...5)}}
             if let info=recipe.importInfo{
-                Section(diary.t("خطوات التحضير","Preparation steps")){ForEach(Array(info.steps.enumerated()),id:\.offset){index,step in Text("\(index+1). "+step)}}
+                Section(diary.t("خطوات التحضير","Preparation steps")){ForEach(Array(info.steps.enumerated()),id:\.offset){index,step in Text("\(index+1). "+DisplayFormat.westernDigits(step))}}
                 Section(diary.t("المصدر والتقدير","Source and estimate")){
                     if let source=info.sourceURL,let url=URL(string:source){Link(diary.t("فتح الوصفة الأصلية","Open original recipe"),destination:url)}
                     if info.nutritionIsEstimated{Notice(text:diary.t("القيم الغذائية تقديرية؛ راجع المقادير وعدد الحصص.","Nutrition is estimated; review quantities and servings."))}

@@ -139,9 +139,9 @@ import SwiftUI
                 }
                 ForEach(Array(result.steps.enumerated()), id: \.offset) { number, step in
                     HStack(alignment: .top, spacing: 12) {
-                        Text("\(number + 1)").font(.caption.bold()).foregroundStyle(Theme.accent)
+                        Text(String(number + 1)).font(.caption.bold()).foregroundStyle(Theme.accent)
                             .frame(width: 30, height: 30).background(Theme.surface, in: Circle()).accessibilityHidden(true)
-                        Text(step).font(.subheadline).frame(maxWidth: .infinity, alignment: .leading)
+                        Text(DisplayFormat.westernDigits(step)).font(.subheadline).frame(maxWidth: .infinity, alignment: .leading)
                     }.accessibilityElement(children: .combine)
                 }
             }.luqmaCard()
@@ -155,7 +155,7 @@ import SwiftUI
                         DisclosureGroup(diary.t("ملاحظات التقدير", "Estimate notes")) {
                             VStack(alignment: .leading, spacing: 8) {
                                 ForEach(Array(result.assumptions.enumerated()), id: \.offset) { _, note in
-                                    Text(note).font(.caption).foregroundStyle(Theme.muted)
+                                    Text(DisplayFormat.westernDigits(note)).font(.caption).foregroundStyle(Theme.muted)
                                 }
                             }.padding(.top, 10)
                         }
@@ -250,12 +250,12 @@ import SwiftUI
     @State private var fat = ""
     @State private var error: String?
     @State private var nutritionPending = false
-    private var unitLabel: String { ingredient.unitLabel.isEmpty ? ingredient.unit.label(diary.language) : ingredient.unitLabel }
+    private var unitLabel: String { DisplayFormat.westernDigits(ingredient.unitLabel.isEmpty ? ingredient.unit.label(diary.language) : ingredient.unitLabel) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text(ingredient.name).font(.headline)
+                Text(DisplayFormat.westernDigits(ingredient.name)).font(.headline)
                 Spacer()
                 Button(role: .destructive) { onRemove(ingredient.id) } label: { Image(systemName: "minus.circle") }
                     .accessibilityLabel(diary.t("إزالة ", "Remove ") + ingredient.name)
@@ -270,7 +270,7 @@ import SwiftUI
                     Text(diary.t("بروتين ", "P ")+decimal(nutrition.protein)+diary.t(" · كارب ", " · C ")+decimal(nutrition.carbs)+diary.t(" · دهون ", " · F ")+decimal(nutrition.fat)).foregroundStyle(Theme.muted)
                 }.font(.caption)
             } else { Text(diary.t("القيم الغذائية غير مكتملة", "Nutrition is incomplete")).font(.caption).foregroundStyle(.orange) }
-            if !ingredient.assumption.isEmpty { Text(ingredient.assumption).font(.caption).foregroundStyle(Theme.muted) }
+            if !ingredient.assumption.isEmpty { Text(DisplayFormat.westernDigits(ingredient.assumption)).font(.caption).foregroundStyle(Theme.muted) }
             DisclosureGroup(diary.t("تعديل المكوّن", "Edit ingredient"), isExpanded: $editing) {
                 VStack(alignment: .leading, spacing: 12) {
                     TextField(diary.t("اسم المكوّن", "Ingredient name"), text: $ingredient.name)

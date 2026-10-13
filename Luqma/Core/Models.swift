@@ -1,7 +1,7 @@
 import Foundation
 
 enum AppLanguage: String, Codable, CaseIterable { case ar, en
-    func text(_ ar: String, _ en: String) -> String { self == .ar ? ar : en }
+    func text(_ ar: String, _ en: String) -> String { DisplayFormat.westernDigits(self == .ar ? ar : en) }
 }
 enum AppError: LocalizedError {
     case invalid(String, String)
@@ -52,7 +52,7 @@ struct Food: Codable, Equatable, Identifiable {
     var source: String?; var sourceId: String?; var sourceDescription: String?
     var id: String { barcode.map { "barcode:"+$0 } ?? catalogID ?? TextSearch.normalized(name + (brand ?? "")) }
     var per100: Nutrition? { guard let k=kcal,let p=protein,let c=carbs,let f=fat else { return nil }; let v=Nutrition(kcal:k,protein:p,carbs:c,fat:f); return v.valid ? v : nil }
-    func label(_ l: AppLanguage) -> String { l == .en ? nameEn ?? name : name }
+    func label(_ l: AppLanguage) -> String { DisplayFormat.westernDigits(l == .en ? nameEn ?? name : name) }
     var servingChoices: [FoodServing] { unit == .g && per100 != nil ? (servings ?? []).filter(\.valid) : [] }
     var portionChoices: [FoodPortionChoice] { (portions ?? []).filter(\.valid) }
     func values(for u: FoodUnit) -> Nutrition? { u == .serving ? servingNutrition ?? (unit == .serving ? per100 : servingChoices.first.flatMap { per100?.scaled($0.grams / 100) }) : (u == unit ? per100 : nil) }
@@ -120,7 +120,7 @@ struct Food: Codable, Equatable, Identifiable {
 struct DiaryEntry: Codable, Identifiable, Equatable {
     var id: UUID;var day: String;var meal: Meal;var name: String;var amount: Double;var unit: FoodUnit;var kcal: Double;var protein: Double;var carbs: Double;var fat: Double;var barcode: String?;var created: String?;var foodID: String?;var servingLabel: String?
     var nutrition: Nutrition { Nutrition(kcal:kcal,protein:protein,carbs:carbs,fat:fat) }
-    func unitLabel(_ language: AppLanguage) -> String { unit == .serving ? servingLabel ?? unit.label(language) : unit.label(language) }
+    func unitLabel(_ language: AppLanguage) -> String { DisplayFormat.westernDigits(unit == .serving ? servingLabel ?? unit.label(language) : unit.label(language)) }
     init(food: Food,amount: Double,unit: FoodUnit,meal: Meal,day: String,language:AppLanguage) throws { let n=try food.total(amount,unit:unit);self.id=UUID();self.day=day;self.meal=meal;self.name=food.label(language);self.amount=amount;self.unit=unit;self.kcal=n.kcal;self.protein=n.protein;self.carbs=n.carbs;self.fat=n.fat;self.barcode=food.barcode;self.created=ISO8601DateFormatter().string(from:Date());self.foodID=food.id;self.servingLabel=unit == .serving ? food.serving ?? food.servingChoices.first?.label : nil }
     mutating func resize(_ newAmount:Double) throws { guard amount>0,newAmount.isFinite,newAmount>0,newAmount<=10000 else { throw AppError.invalid("أدخل كمية صحيحة.","Enter a valid amount.") };let n=nutrition.scaled(newAmount/amount);amount=newAmount;kcal=n.kcal;protein=n.protein;carbs=n.carbs;fat=n.fat }
 }

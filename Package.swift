@@ -6,7 +6,7 @@ let package = Package(
     products: [.library(name: "LuqmaCore", targets: ["LuqmaCore"])],
     targets: [
         .target(name: "LuqmaCore", path: "Luqma/Core"),
-        .testTarget(name: "LuqmaCoreTests", dependencies: ["LuqmaCore"], path: "Tests", exclude: ["Fixtures"], resources: [.copy("niddk-weight-golden.json"), .copy("foods-data.json"), .copy("photo-foods.json"), .copy("gemini-calorie-response.json")])
+        .testTarget(name: "LuqmaCoreTests", dependencies: ["LuqmaCore"], path: "Tests", exclude: ["Fixtures"], resources: [.copy("niddk-weight-golden.json"), .copy("foods-data.json"), .copy("photo-foods.json"), .copy("gemini-calorie-response.json"), .copy("recipe-pasted-response.json")])
     ],
     swiftLanguageVersions: [.v5]
 )

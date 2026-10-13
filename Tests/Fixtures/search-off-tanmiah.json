@@ -1,0 +1,500 @@
+{
+  "source": "Open Food Facts public API v3.6 and Search-a-licious",
+  "capturedUTC": "2026-10-13T08:28:11.744049+00:00",
+  "license": "ODbL 1.0",
+  "queries": [
+    {
+      "query": "Tanmiah",
+      "count": 1,
+      "barcodes": [
+        "6281028102400"
+      ],
+      "snapshot": "Tanmiah.json",
+      "sha256": "2c875d2a5cd954e3d31a7a04fc3e7bae90c947229b72cb49da91efebc1d4e745"
+    },
+    {
+      "query": "التنمية",
+      "count": 2,
+      "barcodes": [
+        "6281028002915",
+        "7802040045972"
+      ],
+      "snapshot": "التنمية.json",
+      "sha256": "1f6d16e1d0ffe992d344d276f6ee70a5ef164b84de0fe5a2d5eca9f9831b2941"
+    },
+    {
+      "query": "التنميه",
+      "count": 0,
+      "barcodes": [],
+      "snapshot": "التنميه.json",
+      "sha256": "6296a4e4534d51371a3c09bb5c491fb449dc31eb12e453b456fde614f6d47730"
+    }
+  ],
+  "responses": [
+    {
+      "url": "https://world.openfoodfacts.org/api/v3.6/product/6281028102400.json?fields=code,product_name,product_name_ar,product_name_en,brands,nutriments,nutrition,nutrition_data_per,serving_size,serving_quantity,serving_quantity_unit,product_quantity_unit",
+      "sha256": "65851a187b1bd942a522d799276be0b9824c3ed0ce12366b8d201cd719fa181a",
+      "response": {
+        "code": "6281028102400",
+        "errors": [],
+        "product": {
+          "brands": "Tanmiah",
+          "code": "6281028102400",
+          "nutrition": {
+            "aggregated_set": {
+              "nutrients": {
+                "carbohydrates": {
+                  "source": "packaging",
+                  "source_index": 0,
+                  "source_per": "100g",
+                  "unit": "g",
+                  "value": 5
+                },
+                "energy": {
+                  "source": "packaging",
+                  "source_index": 0,
+                  "source_per": "100g",
+                  "unit": "kJ",
+                  "value": 560
+                },
+                "energy-kcal": {
+                  "source": "packaging",
+                  "source_index": 0,
+                  "source_per": "100g",
+                  "unit": "kcal",
+                  "value": 134
+                },
+                "fat": {
+                  "source": "packaging",
+                  "source_index": 0,
+                  "source_per": "100g",
+                  "unit": "g",
+                  "value": 4
+                },
+                "fiber": {
+                  "source": "packaging",
+                  "source_index": 0,
+                  "source_per": "100g",
+                  "unit": "g",
+                  "value": 0
+                },
+                "proteins": {
+                  "source": "packaging",
+                  "source_index": 0,
+                  "source_per": "100g",
+                  "unit": "g",
+                  "value": 20
+                },
+                "saturated-fat": {
+                  "source": "packaging",
+                  "source_index": 0,
+                  "source_per": "100g",
+                  "unit": "g",
+                  "value": 1.25
+                },
+                "sugars": {
+                  "source": "packaging",
+                  "source_index": 0,
+                  "source_per": "100g",
+                  "unit": "g",
+                  "value": 1
+                }
+              },
+              "per": "100g",
+              "preparation": "as_sold"
+            },
+            "input_sets": [
+              {
+                "last_updated_t": 1791880091,
+                "nutrients": {
+                  "carbohydrates": {
+                    "unit": "g",
+                    "value": 5,
+                    "value_string": "5"
+                  },
+                  "energy-kcal": {
+                    "unit": "kcal",
+                    "value": 134,
+                    "value_string": "134"
+                  },
+                  "fat": {
+                    "unit": "g",
+                    "value": 4,
+                    "value_string": "4"
+                  },
+                  "fiber": {
+                    "unit": "g",
+                    "value": 0,
+                    "value_string": "0"
+                  },
+                  "proteins": {
+                    "unit": "g",
+                    "value": 20,
+                    "value_string": "20"
+                  },
+                  "saturated-fat": {
+                    "unit": "g",
+                    "value": 1.25,
+                    "value_string": "1.25"
+                  },
+                  "sugars": {
+                    "unit": "g",
+                    "value": 1,
+                    "value_string": "1"
+                  }
+                },
+                "per": "100g",
+                "per_quantity": 100,
+                "per_unit": "g",
+                "preparation": "as_sold",
+                "source": "packaging"
+              }
+            ]
+          },
+          "product_name": "Marinated Spicy Chicken",
+          "product_name_en": "Marinated Spicy Chicken",
+          "serving_quantity": "100",
+          "serving_quantity_unit": "g",
+          "serving_size": "100 g"
+        },
+        "result": {
+          "id": "product_found",
+          "lc_name": "Product found",
+          "name": "Product found"
+        },
+        "status": "success",
+        "warnings": []
+      }
+    },
+    {
+      "url": "https://world.openfoodfacts.org/api/v3.6/product/6281028002915.json?fields=code,product_name,product_name_ar,product_name_en,brands,nutriments,nutrition,nutrition_data_per,serving_size,serving_quantity,serving_quantity_unit,product_quantity_unit",
+      "sha256": "95ef1f6cedf187a5ec8726ebed87a4165d0282f7da335dfa9ccc395ea970a0ef",
+      "response": {
+        "code": "6281028002915",
+        "errors": [],
+        "product": {
+          "brands": "Tanmiah",
+          "code": "6281028002915",
+          "nutrition": {
+            "aggregated_set": {
+              "nutrients": {
+                "carbohydrates": {
+                  "source": "packaging",
+                  "source_index": 0,
+                  "source_per": "100g",
+                  "unit": "g",
+                  "value": 0
+                },
+                "energy": {
+                  "source": "packaging",
+                  "source_index": 0,
+                  "source_per": "100g",
+                  "unit": "kJ",
+                  "value": 431
+                },
+                "energy-kcal": {
+                  "source": "packaging",
+                  "source_index": 0,
+                  "source_per": "100g",
+                  "unit": "kcal",
+                  "value": 103
+                },
+                "energy-kj": {
+                  "source": "packaging",
+                  "source_index": 0,
+                  "source_per": "100g",
+                  "unit": "kJ",
+                  "value": 431
+                },
+                "fat": {
+                  "source": "packaging",
+                  "source_index": 0,
+                  "source_per": "100g",
+                  "unit": "g",
+                  "value": 1
+                },
+                "proteins": {
+                  "source": "packaging",
+                  "source_index": 0,
+                  "source_per": "100g",
+                  "unit": "g",
+                  "value": 24
+                },
+                "salt": {
+                  "source": "packaging",
+                  "source_index": 0,
+                  "source_per": "100g",
+                  "unit": "g",
+                  "value": 0.1825
+                },
+                "sodium": {
+                  "source": "packaging",
+                  "source_index": 0,
+                  "source_per": "100g",
+                  "unit": "g",
+                  "value": 0.073
+                }
+              },
+              "per": "100g",
+              "preparation": "as_sold"
+            },
+            "input_sets": [
+              {
+                "last_updated_t": 1791880091,
+                "nutrients": {
+                  "carbohydrates": {
+                    "unit": "g",
+                    "value": 0,
+                    "value_string": "0"
+                  },
+                  "energy-kcal": {
+                    "unit": "kcal",
+                    "value": 103,
+                    "value_string": "103"
+                  },
+                  "energy-kj": {
+                    "unit": "kJ",
+                    "value": 431,
+                    "value_string": "431"
+                  },
+                  "fat": {
+                    "unit": "g",
+                    "value": 1,
+                    "value_string": "1"
+                  },
+                  "proteins": {
+                    "unit": "g",
+                    "value": 24,
+                    "value_string": "24"
+                  },
+                  "salt": {
+                    "unit": "g",
+                    "value": 0.1825,
+                    "value_string": "0.1825"
+                  },
+                  "sodium": {
+                    "unit": "g",
+                    "value": 0.073,
+                    "value_string": "0.073"
+                  }
+                },
+                "per": "100g",
+                "per_quantity": 100,
+                "per_unit": "g",
+                "preparation": "as_sold",
+                "source": "packaging"
+              }
+            ]
+          },
+          "product_name": "التنمية",
+          "product_name_en": "التنمية",
+          "serving_quantity": "100",
+          "serving_quantity_unit": "g",
+          "serving_size": "100 g"
+        },
+        "result": {
+          "id": "product_found",
+          "lc_name": "Product found",
+          "name": "Product found"
+        },
+        "status": "success",
+        "warnings": []
+      }
+    },
+    {
+      "url": "https://world.openfoodfacts.org/api/v3.6/product/7802040045972.json?fields=code,product_name,product_name_ar,product_name_en,brands,nutriments,nutrition,nutrition_data_per,serving_size,serving_quantity,serving_quantity_unit,product_quantity_unit",
+      "sha256": "6244c4065490fd75a51238f8bfbd25fa3d8ad50925cea2ef7c996a90c41496c2",
+      "response": {
+        "code": "7802040045972",
+        "errors": [],
+        "product": {
+          "brands": "التنمية",
+          "code": "7802040045972",
+          "nutrition": {
+            "aggregated_set": {
+              "nutrients": {
+                "added-sugars": {
+                  "source": "packaging",
+                  "source_index": 0,
+                  "source_per": "serving",
+                  "unit": "g",
+                  "value": 0.0
+                },
+                "carbohydrates": {
+                  "source": "packaging",
+                  "source_index": 0,
+                  "source_per": "serving",
+                  "unit": "g",
+                  "value": 0.0
+                },
+                "cholesterol": {
+                  "source": "packaging",
+                  "source_index": 0,
+                  "source_per": "serving",
+                  "unit": "g",
+                  "value": 0.189
+                },
+                "energy": {
+                  "source": "packaging",
+                  "source_index": 0,
+                  "source_per": "serving",
+                  "unit": "kJ",
+                  "value": 430
+                },
+                "energy-kcal": {
+                  "source": "packaging",
+                  "source_index": 0,
+                  "source_per": "serving",
+                  "unit": "kcal",
+                  "value": 103.0
+                },
+                "fat": {
+                  "source": "packaging",
+                  "source_index": 0,
+                  "source_per": "serving",
+                  "unit": "g",
+                  "value": 2.0
+                },
+                "fiber": {
+                  "source": "packaging",
+                  "source_index": 0,
+                  "source_per": "serving",
+                  "unit": "g",
+                  "value": 0.0
+                },
+                "proteins": {
+                  "source": "packaging",
+                  "source_index": 0,
+                  "source_per": "serving",
+                  "unit": "g",
+                  "value": 20.0
+                },
+                "salt": {
+                  "source": "packaging",
+                  "source_index": 0,
+                  "source_per": "serving",
+                  "unit": "g",
+                  "value": 0.475
+                },
+                "saturated-fat": {
+                  "source": "packaging",
+                  "source_index": 0,
+                  "source_per": "serving",
+                  "unit": "g",
+                  "value": 0.1
+                },
+                "sodium": {
+                  "source": "packaging",
+                  "source_index": 0,
+                  "source_per": "serving",
+                  "unit": "g",
+                  "value": 0.19
+                },
+                "sugars": {
+                  "source": "packaging",
+                  "source_index": 0,
+                  "source_per": "serving",
+                  "unit": "g",
+                  "value": 0.0
+                },
+                "trans-fat": {
+                  "source": "packaging",
+                  "source_index": 0,
+                  "source_per": "serving",
+                  "unit": "g",
+                  "value": 0.0
+                }
+              },
+              "per": "100g",
+              "preparation": "as_sold"
+            },
+            "input_sets": [
+              {
+                "last_updated_t": 1791880091,
+                "nutrients": {
+                  "added-sugars": {
+                    "unit": "g",
+                    "value": 0,
+                    "value_string": "0"
+                  },
+                  "carbohydrates": {
+                    "unit": "g",
+                    "value": 0,
+                    "value_string": "0"
+                  },
+                  "cholesterol": {
+                    "unit": "g",
+                    "value": 0.189,
+                    "value_string": "0.189"
+                  },
+                  "energy-kcal": {
+                    "unit": "kcal",
+                    "value": 103,
+                    "value_string": "103"
+                  },
+                  "fat": {
+                    "unit": "g",
+                    "value": 2,
+                    "value_string": "2"
+                  },
+                  "fiber": {
+                    "unit": "g",
+                    "value": 0,
+                    "value_string": "0"
+                  },
+                  "proteins": {
+                    "unit": "g",
+                    "value": 20,
+                    "value_string": "20"
+                  },
+                  "salt": {
+                    "unit": "g",
+                    "value": 0.475,
+                    "value_string": "0.475"
+                  },
+                  "saturated-fat": {
+                    "unit": "g",
+                    "value": 0.1,
+                    "value_string": "0.1"
+                  },
+                  "sodium": {
+                    "unit": "g",
+                    "value": 0.19,
+                    "value_string": "0.19"
+                  },
+                  "sugars": {
+                    "unit": "g",
+                    "value": 0,
+                    "value_string": "0"
+                  },
+                  "trans-fat": {
+                    "unit": "g",
+                    "value": 0,
+                    "value_string": "0"
+                  }
+                },
+                "per": "serving",
+                "per_quantity": "100",
+                "per_unit": "g",
+                "preparation": "as_sold",
+                "source": "packaging"
+              }
+            ]
+          },
+          "product_name": "Chicken شيش",
+          "product_name_en": "Chicken شيش",
+          "serving_quantity": "100",
+          "serving_quantity_unit": "g",
+          "serving_size": "100 g"
+        },
+        "result": {
+          "id": "product_found",
+          "lc_name": "Product found",
+          "name": "Product found"
+        },
+        "status": "success",
+        "warnings": []
+      }
+    }
+  ]
+}

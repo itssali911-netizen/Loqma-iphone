@@ -110,12 +110,13 @@ import UIKit
         guard state.adaptive,let plan=state.weightPlan else { return }
         let average=DiaryValidation.average(state.weights,ending: DayKey.today)
         guard average.count>=3,let kg=average.kg else { adaptiveMessage=t("أضف ٣ قراءات خلال أسبوع لتحديث الهدف.", "Add three readings this week to update the goal."); return }
-        do { let goals=try WeightModel.revised(plan,weight:kg,today:DayKey.today); guard !goals.kcal.isNaN else { return }; change { $0.goals=goals }; adaptiveMessage=t("الهدف محسوب من متوسط الوزن خلال الأسبوع.", "The goal uses this week's average weight.") } catch { adaptiveMessage=(error as? AppError)?.message(language) ?? error.localizedDescription }
+        do { let goals=try WeightModel.revised(plan,weight:kg,today:DayKey.today); guard !goals.kcal.isNaN else { return }; change { snapshot in snapshot.goals=goals; HealthActivity.setGoalAssociation(true, in: &snapshot) }; adaptiveMessage=t("الهدف محسوب من متوسط الوزن خلال الأسبوع.", "The goal uses this week's average weight.") } catch { adaptiveMessage=(error as? AppError)?.message(language) ?? error.localizedDescription }
     }
-    @discardableResult func applyPlan(_ p: WeightPlan, _ result: WeightResult) -> Bool {do{var s=state;s.weightPlan=p;s.goals=result.goals;try commit(s);adapt();return true}catch{report(error);return false}}
-    @discardableResult func setGoals(_ n: Nutrition) -> Bool {do{var s=state;s.goals=n.balanced();s.adaptive=false;try commit(s);return true}catch{report(error);return false}}
+    @discardableResult func applyPlan(_ p: WeightPlan, _ result: WeightResult) -> Bool {do{var s=state;s.weightPlan=p;s.goals=result.goals;HealthActivity.setGoalAssociation(true, in: &s);try commit(s);adapt();return true}catch{report(error);return false}}
+    @discardableResult func setGoals(_ n: Nutrition) -> Bool {do{var s=state;s.goals=n.balanced();s.adaptive=false;HealthActivity.setGoalAssociation(false, in: &s);try commit(s);return true}catch{report(error);return false}}
     func importBackup(_ incoming: DiarySnapshot) -> Bool {
         do { let next=try Backup.merge(incoming,into:state); try commit(next,recovery:true); adapt(); return true } catch { report(error); return false }
     }
     func total(_ day: String) -> Nutrition { state.entries.filter { $0.day == day }.reduce(.zero) { $0+$1.nutrition } }
+    func dailyGoals(_ day: String) -> Nutrition { HealthActivity.goals(state, day: day) }
 }

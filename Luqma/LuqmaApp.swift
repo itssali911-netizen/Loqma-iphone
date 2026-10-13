@@ -40,7 +40,8 @@ import UIKit
         WindowGroup {
             RootView().foregroundStyle(Theme.text).environmentObject(diary).environmentObject(health)
                 .environment(\.layoutDirection,diary.language == .ar ? .rightToLeft:.leftToRight)
-                .environment(\.locale,Locale(identifier:diary.language == .ar ? "ar_SA":"en_US"))
+                .environment(\.locale,DisplayFormat.locale(diary.language))
+                .environment(\.calendar,DisplayFormat.calendar(diary.language))
                 .tint(Theme.accent).preferredColorScheme(.dark)
                 .onChange(of:phase, initial:true) { _,value in
                     // SwiftUI scenes own foreground transitions; app-delegate launch
@@ -58,12 +59,18 @@ struct RootView:View {
     @State private var adding=false
     @State private var photoPreview=false
     @State private var recipePreview=false
+    @State private var searchPreview=false
+    @State private var mealsPreview=false
+    @State private var healthPreview=false
     init(){
         var selected=0
         #if DEBUG
         let arguments=ProcessInfo.processInfo.arguments
         _photoPreview=State(initialValue:arguments.contains("-loqma-preview-photo"))
         _recipePreview=State(initialValue:arguments.contains("-loqma-preview-recipe"))
+        _searchPreview=State(initialValue:arguments.contains("-loqma-preview-search"))
+        _mealsPreview=State(initialValue:arguments.contains("-loqma-preview-meals"))
+        _healthPreview=State(initialValue:arguments.contains("-loqma-preview-health"))
         if let index=arguments.firstIndex(of:"-loqma-preview-tab"),arguments.indices.contains(index+1),let value=Int(arguments[index+1]),(0...3).contains(value){selected=value}
         #endif
         _tab=State(initialValue:selected)
@@ -83,12 +90,27 @@ struct RootView:View {
             }}
             .sheet(isPresented:$photoPreview){
                 #if DEBUG
-                NavigationStack{ScrollView{PhotoMealView{_,_ in false}.padding(20)}.appBackground().navigationTitle(diary.t("تحليل الوجبة","Meal analysis"))}
+                NavigationStack{ScrollView{PhotoMealView{_,_ in false}.padding(20)}.appBackground().navigationTitle(diary.t("تحليل الوجبة","Meal analysis")).navigationBarTitleDisplayMode(.inline).toolbar{ToolbarItem(placement:.cancellationAction){Button(diary.t("إغلاق","Close")){photoPreview=false}}}}
                 #endif
             }
             .sheet(isPresented:$recipePreview){
                 #if DEBUG
                 RecipeImportView()
+                #endif
+            }
+            .sheet(isPresented:$searchPreview){
+                #if DEBUG
+                FoodAddView(initialQuery:"التنمية صدر دجاج"){_,_,_,_ in false}
+                #endif
+            }
+            .fullScreenCover(isPresented:$mealsPreview){
+                #if DEBUG
+                NavigationStack{DiaryView()}
+                #endif
+            }
+            .sheet(isPresented:$healthPreview){
+                #if DEBUG
+                NavigationStack{HealthConnectionView().navigationBarTitleDisplayMode(.inline).toolbar{ToolbarItem(placement:.cancellationAction){Button(diary.t("إغلاق","Close")){healthPreview=false}}}}
                 #endif
             }
     }

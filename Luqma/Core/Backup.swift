@@ -24,6 +24,9 @@ enum DiaryValidation {
             try require(h.activityDay.map(DayKey.valid) ?? true)
             try require(h.steps.map { $0.isFinite && (0...300000).contains($0) } ?? true)
             try require(h.activeCalories.map { $0.isFinite && (0...50000).contains($0) } ?? true)
+            try require(h.distanceKM.map { $0.isFinite && (0...1000).contains($0) } ?? true)
+            try require(h.exerciseMinutes.map { $0.isFinite && (0...1440).contains($0) } ?? true)
+            try require(h.workoutCount.map { (0...10000).contains($0) } ?? true)
             try require(h.heightCM.map { $0.isFinite && (120...240).contains($0) } ?? true)
             try require(h.updatedAt.map { $0.isFinite && $0 > 0 } ?? true)
         }
@@ -92,6 +95,9 @@ enum Backup {
         if current.customFoods != nil || incoming.customFoods != nil || !currentPersonal.isEmpty || !incomingPersonal.isEmpty { result.customFoods = combine(currentPersonal, incomingPersonal, id: { $0.id }) }
         result.goals = incoming.goals.balanced(); result.weightPlan = incoming.weightPlan ?? current.weightPlan
         result.adaptive = incoming.adaptive && result.weightPlan != nil
+        // Imported goals may use a different activity assumption. Require a
+        // fresh opt-in before attaching current Health activity to those goals.
+        HealthActivity.setGoalAssociation(false, in: &result)
         try DiaryValidation.check(result); return result
     }
 }

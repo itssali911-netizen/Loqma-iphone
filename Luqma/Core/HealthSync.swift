@@ -18,6 +18,73 @@ struct HealthSyncState: Codable, Equatable {
     var activeCalories: Double?
     var heightCM: Double?
     var updatedAt: Double?
+    // Optional fields preserve backups made before daily activity syncing.
+    var distanceKM: Double?
+    var exerciseMinutes: Double?
+    var workoutCount: Int?
+    var adjustmentEnabled: Bool?
+    // Only a goal actually applied/recomputed from the saved plan has a known
+    // activity baseline. Older backups intentionally decode as unknown.
+    var planGoalAssociated: Bool?
+}
+
+/// HealthKit statistics are the sole source of activity energy. Step counts,
+/// exercise minutes and workout totals must never be converted into a second
+/// calorie allowance on top of that energy.
+enum HealthActivity {
+    static func setGoalAssociation(_ associated: Bool, in snapshot: inout DiarySnapshot) {
+        if associated {
+            var cache = snapshot.healthSync ?? HealthSyncState()
+            cache.planGoalAssociated = true; snapshot.healthSync = cache
+        } else if var cache = snapshot.healthSync {
+            if cache.planGoalAssociated == true { cache.planGoalAssociated = false }
+            if cache.adjustmentEnabled == true { cache.adjustmentEnabled = false }
+            snapshot.healthSync = cache
+        }
+    }
+    static func valid(_ value: Double?, maximum: Double) -> Double? {
+        value.flatMap { $0.isFinite && (0...maximum).contains($0) ? $0 : nil }
+    }
+    static func update(_ cache: HealthSyncState, day: String, steps: Double?, activeCalories: Double?,
+                       distanceKM: Double?, exerciseMinutes: Double?, workoutIDs: [UUID]) -> HealthSyncState {
+        var next = cache
+        next.activityDay = day
+        next.steps = valid(steps, maximum: 300000)
+        next.activeCalories = valid(activeCalories, maximum: 50000)
+        next.distanceKM = valid(distanceKM, maximum: 1000)
+        next.exerciseMinutes = valid(exerciseMinutes, maximum: 1440)
+        // Replacing each daily snapshot also handles deleted activity samples.
+        // UUID uniqueness prevents a repeated query result from duplicating workouts.
+        next.workoutCount = workoutIDs.isEmpty ? nil : Set(workoutIDs).count
+        return next
+    }
+    static func plannedCalories(_ snapshot: DiarySnapshot, day: String) -> Double? {
+        // A manually entered goal does not declare its activity assumption.
+        // Never guess that baseline and then add the same activity twice.
+        guard snapshot.healthSync?.planGoalAssociated == true, var plan = snapshot.weightPlan else { return nil }
+        do { try plan.validate() } catch { return nil }
+        if snapshot.adaptive {
+            let average = DiaryValidation.average(snapshot.weights, ending: day)
+            if average.count >= 3, let kg = average.kg { plan.weight = kg }
+        }
+        let baseline = WeightModel.baseline(plan)
+        let value = baseline.activity * plan.weight * (1 + plan.activityChange / 100)
+        return valid(value, maximum: 50000)
+    }
+    static func adjustment(_ snapshot: DiarySnapshot, day: String, today: String = DayKey.today) -> Double {
+        guard day == today, snapshot.healthEnabled, let cache = snapshot.healthSync,
+              cache.adjustmentEnabled == true, cache.activityDay == day,
+              let active = valid(cache.activeCalories, maximum: 50000),
+              let planned = plannedCalories(snapshot, day: day), snapshot.goals.valid,
+              (500...10000).contains(snapshot.goals.kcal) else { return 0 }
+        return min(max(0, active - planned), 10000 - snapshot.goals.kcal).rounded(.down)
+    }
+    static func goals(_ snapshot: DiarySnapshot, day: String, today: String = DayKey.today) -> Nutrition {
+        let extra = adjustment(snapshot, day: day, today: today)
+        guard extra > 0 else { return snapshot.goals }
+        // Keep the saved macro split coherent without mutating the saved plan.
+        return snapshot.goals.scaled((snapshot.goals.kcal + extra) / snapshot.goals.kcal)
+    }
 }
 
 enum HealthSync {

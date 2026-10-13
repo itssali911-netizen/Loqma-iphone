@@ -6,7 +6,15 @@ import FoundationNetworking
 actor FoodDatabase {
     static let shared = FoodDatabase()
     static let searchSummarySourceDescription = "openfoodfacts-search-summary"
-    private let catalog: FoodSearch.Index
+    private var catalog = FoodSearch.Index([])
+    private var catalogReady = false
+    private var cachedFoods: [Food] = []
+    private var localIndex = FoodSearch.Index([])
+    private var suggestionIndex = FoodSuggestions.Index([])
+    private var suggestionHistory: [Food] = []
+    private var historySuggestionIndex = FoodSuggestions.Index([])
+    private var indexesReady = false
+    private var resolvedQueries: [String: String] = [:]
     private var searchStarts: [TimeInterval] = []
     private var barcodeStarts: [TimeInterval] = []
     private var searchBlockedUntil: TimeInterval = 0
@@ -15,7 +23,12 @@ actor FoodDatabase {
     private static let pageSize = 50
     private static let fields = ["code", "product_name", "product_name_ar", "product_name_en", "brands", "nutriments", "nutrition", "nutrition_data_per", "serving_size", "serving_quantity", "serving_quantity_unit", "product_quantity_unit"]
 
-    init() {
+    init() {}
+
+    /// Constructing `shared` on a UI task stays cheap. File reads and preparing
+    /// the bundled index happen only inside the actor's first isolated call.
+    private func ensureCatalog() {
+        guard !catalogReady else { return }
         var foods: [Food] = []
         for name in ["foods-data", "mfp-foods-data"] {
             if let url = Bundle.main.url(forResource: name, withExtension: "json"), let data = try? Data(contentsOf: url) {
@@ -23,21 +36,63 @@ actor FoodDatabase {
             }
         }
         catalog = FoodSearch.Index(foods.filter(FoodSearch.isCatalogFood))
+        catalogReady = true
     }
 
     func local(_ query: String, cached: [Food]) -> [Food] {
-        catalog.results(query, additional: Array(cached.filter(FoodSearch.availableForAdding).reversed()))
+        prepareIndexes(cached)
+        return localIndex.results(query)
+    }
+
+    struct Presentation {
+        var exact: [Food]
+        var nearby: [Food]
+        var suggestions: [FoodSuggestion]
+    }
+
+    private func prepareIndexes(_ cached: [Food]) {
+        ensureCatalog()
+        guard !indexesReady || cached != cachedFoods else { return }
+        cachedFoods = cached; indexesReady = true
+        let values = (Array(cached.reversed()) + catalog.foods).filter(FoodSearch.availableForAdding)
+        localIndex = FoodSearch.Index(values)
+        suggestionIndex = FoodSuggestions.Index(values)
+    }
+
+    /// All normalization, fuzzy matching and suggestions run on this actor,
+    /// away from the main actor that handles keyboard events and SwiftUI.
+    func presentation(_ query: String, cached: [Food], history: [Food], personal: [Food]? = nil,
+                      language: AppLanguage, catalogOnly: Bool) -> Presentation {
+        prepareIndexes(cached)
+        if history != suggestionHistory {
+            suggestionHistory = history; historySuggestionIndex = FoodSuggestions.Index(history)
+        }
+        let term = FoodSearch.normalized(query)
+        let found: FoodSearch.Matches
+        if let personal {
+            let allowed = personal.filter { FoodSearch.availableForAdding($0) && (!catalogOnly || FoodSearch.isCatalogFood($0)) }
+            found = term.isEmpty ? FoodSearch.Matches(exact: allowed) : FoodSearch.Index(allowed).matches(query, nearbyLimit: 0)
+        } else {
+            found = localIndex.matches(query)
+        }
+        let exact = catalogOnly ? found.exact.filter(FoodSearch.isCatalogFood) : found.exact
+        let nearby = catalogOnly ? found.nearby.filter(FoodSearch.isCatalogFood) : found.nearby
+        return Presentation(exact: exact, nearby: nearby,
+                            suggestions: suggestionIndex.suggestions(query: query, language: language,
+                                                                    history: historySuggestionIndex, limit: 6))
     }
 
     func suggestionCandidates(cached: [Food]) -> [Food] {
+        ensureCatalog()
         var seen = Set<String>()
         return (Array(cached.reversed()) + catalog.foods).filter {
             FoodSearch.availableForAdding($0) && seen.insert($0.id).inserted
         }
     }
 
-    func historyFoods(_ entries: [DiaryEntry]) -> [Food] { catalog.historyCandidates(entries) }
+    func historyFoods(_ entries: [DiaryEntry]) -> [Food] { ensureCatalog(); return catalog.historyCandidates(entries) }
     func historyLists(_ state: DiarySnapshot) -> (recent: [Food], frequent: [Food], personal: [Food]) {
+        ensureCatalog()
         var filtered = state
         filtered.products = state.products.filter(FoodSearch.availableForAdding)
         filtered.searchHistory = state.searchHistory.filter(FoodSearch.availableForAdding)
@@ -47,6 +102,11 @@ actor FoodDatabase {
 
     func combined(_ query: String, local: [Food], remote: [Food]) -> [Food] {
         FoodSearch.results(query, in: (local + remote).filter(FoodSearch.availableForAdding))
+    }
+
+    func combinedMatches(_ query: String, local: [Food], remote: [Food], catalogOnly: Bool) -> FoodSearch.Matches {
+        let values = (local + remote).filter { FoodSearch.availableForAdding($0) && (!catalogOnly || FoodSearch.isCatalogFood($0)) }
+        return FoodSearch.Index(values).matches(query)
     }
 
     /// OFF asks apps not to search online on every keystroke. The UI submits a
@@ -159,12 +219,49 @@ actor FoodDatabase {
         let now = ProcessInfo.processInfo.systemUptime
         pages = pages.filter { now - $0.value.saved < 300 }
         if let cached = pages[key] { return cached.page }
+        let variants = page == 1 ? FoodSearch.onlineQueries(query) : [resolvedQueries[term] ?? FoodSearch.onlineQueries(query).first ?? query]
+        var selected: FoodSearchPage?
+        var selectedScore = -1
+        var collected: [Food] = []
+        var seen = Set<String>()
+        // Extra spelling/brand requests happen only after an explicit Search.
+        // Return source products unchanged and let exact/nearby matching label
+        // them; a brand-only fallback is never declared an exact chest product.
+        for variant in variants {
+            try Task.checkCancellation()
+            let result: FoodSearchPage
+            do { result = try await remotePage(variant, page: page) }
+            catch {
+                try Task.checkCancellation()
+                if !collected.isEmpty { break }
+                throw error
+            }
+            collected += result.foods.filter { seen.insert($0.id).inserted }
+            let matches = FoodSearch.Index(result.foods).matches(query)
+            let score = matches.exact.count * 1000 + matches.nearby.count
+            if score > selectedScore {
+                selected = result; selectedScore = score; resolvedQueries[term] = variant
+            }
+            if !matches.exact.isEmpty { break }
+        }
+        var result = selected ?? FoodSearchPage(foods: [], nextPage: nil, sourceTotal: 0)
+        result.foods = collected
+        try Task.checkCancellation()
+        pages[key] = (ProcessInfo.processInfo.systemUptime, result)
+        if pages.count > 24, let oldest = pages.min(by: { $0.value.saved < $1.value.saved })?.key {
+            pages.removeValue(forKey: oldest)
+            resolvedQueries.removeValue(forKey: String(oldest.split(separator: "|").first ?? ""))
+        }
+        return result
+    }
+
+    private func remotePage(_ query: String, page: Int) async throws -> FoodSearchPage {
         try reserveSearch()
         var req = URLRequest(url: URL(string: "https://search.openfoodfacts.org/search")!)
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.httpBody = try JSONSerialization.data(withJSONObject: [
-            "q": term, "page": page, "page_size": Self.pageSize, "langs": ["ar", "en"],
+            "q": query, "page": page, "page_size": Self.pageSize, "langs": ["ar", "en"],
             "fields": Self.fields, "boost_phrase": true
         ])
         let json = try await request(req, searching: true)
@@ -177,12 +274,10 @@ actor FoodDatabase {
             summary.sourceDescription = Self.searchSummarySourceDescription
             return summary
         }
-        let result = FoodSearchPage(foods: FoodSearch.results(term, in: summaries),
+        let result = FoodSearchPage(foods: summaries,
                                     nextPage: pagination.nextPage, sourceTotal: pagination.sourceTotal,
                                     reachedSourceWindow: pagination.reachedSourceWindow)
         try Task.checkCancellation()
-        pages[key] = (ProcessInfo.processInfo.systemUptime, result)
-        if pages.count > 24, let oldest = pages.min(by: { $0.value.saved < $1.value.saved })?.key { pages.removeValue(forKey: oldest) }
         return result
     }
 

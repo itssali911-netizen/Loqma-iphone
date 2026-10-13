@@ -40,16 +40,12 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
     @State private var historyTask:Task<Void,Never>?
     @State private var suggestedQuery:String?
     @State private var photoToken=UUID()
-    @State private var suggestionFoods:[Food]=[]
+    @State private var suggestions:[FoodSuggestion]=[]
+    @State private var nearbyResults:[Food]=[]
+    @State private var bestMatch:Food?
+    @State private var otherResults:[Food]=[]
     private var term:String {query.trimmingCharacters(in:.whitespacesAndNewlines)}
-    private var personalList:[Food] {
-        let foods = filter == 1 ? recentFoods : filter == 2 ? frequentFoods : savedFoods
-        return term.isEmpty ? foods : foods.filter { FoodSearch.matches($0,query:term) }
-    }
-    private var displayedResults:[Food] {let found=filter == 0 ? results:personalList;return productSelection ? found.filter{FoodSearch.isCatalogFood($0)}:found}
-    private var bestMatch:Food? {filter == 0 && !term.isEmpty ? displayedResults.first : nil}
-    private var otherResults:[Food] {guard let bestMatch else{return displayedResults};return displayedResults.filter{$0.id != bestMatch.id}}
-    private var suggestions:[FoodSuggestion] {FoodSuggestions.suggestions(query:term,foods:suggestionFoods,language:diary.language,history:recentFoods,limit:6)}
+    private var displayedResults:[Food] {results}
     var body:some View {
         NavigationStack {
             ScrollView {
@@ -62,6 +58,26 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                     if tab==2 && !productSelection {AnyView(PhotoMealView(initialMeal:initialMeal){foods,meal in onPhoto(foods,meal)})}
                     if let notice,tab != 2 {Notice(text:notice)}
                     if busy || choosingFood {ProgressView(choosingFood ? diary.t("جلب تفاصيل المنتج…","Loading product details…"):"").frame(maxWidth:.infinity)}
+                    resultsContent
+                }.padding(20)
+            }.appBackground().navigationBarTitleDisplayMode(.inline).navigationTitle(diary.t(tab==1 ? "باركود":tab==2 ? "صورة الوجبة":"إضافة طعام",tab==1 ? "Barcode":tab==2 ? "Meal photo":"Add food"))
+                .toolbar {ToolbarItem(placement:.cancellationAction){Button(diary.t("إغلاق","Close")){searchTask?.cancel();selectionTask?.cancel();barcodePhotoTask?.cancel();queryToken=UUID();photoToken=UUID();dismiss()}}}
+                .sheet(item:$selected){food in FoodPortionView(food:food,sourceBarcode:tab==1,initialMeal:initialMeal,onCommit:{f,a,u,m in if onCommit(f,a,u,m){dismiss();return true};return false})}
+                .sheet(isPresented:$manual){FoodPortionView(food:Food(name:""),manual:true,initialMeal:initialMeal,onCommit:{f,a,u,m in if onCommit(f,a,u,m){dismiss();return true};return false})}
+                .sheet(isPresented:$scanning){NavigationStack{BarcodeCamera(completion:{value in scanning=false;code=value;startLookup()},failed:{message in scanning=false;notice=message}).ignoresSafeArea().navigationTitle(diary.t("مسح الباركود","Scan barcode")).toolbar{ToolbarItem(placement:.cancellationAction){Button(diary.t("إغلاق","Close")){scanning=false}}}}}
+        }.onAppear{if let initial{selected=initial};if query.isEmpty && !initialQuery.isEmpty {query=initialQuery};refreshHistory();if tab==0 {searchTask=Task{await refreshLocal()}}}
+            .onChange(of:diary.state.entries){_,_ in refreshHistory()}
+            .onChange(of:diary.state.customFoods){_,_ in refreshHistory()}
+            .onChange(of:diary.state.products){_,_ in refreshHistory()}
+            .onChange(of:diary.language){_,_ in resetSearch();searchTask=Task{await refreshLocal()}}
+            .onChange(of:query){_,value in let submit=suggestedQuery==value;suggestedQuery=nil;resetSearch();searchTask=Task{if submit{await search()}else{await refreshLocal()}}}
+            .onChange(of:filter){_,_ in resetSearch();searchTask=Task{await refreshLocal()}}
+            .onChange(of:tab){_,value in resetSearch();barcodePhotoTask?.cancel();photoToken=UUID();photo=nil;if value==0 {searchTask=Task{await refreshLocal()}}}
+            .onDisappear{searchTask?.cancel();selectionTask?.cancel();historyTask?.cancel();queryToken=UUID();busy=false;pageLoading=false;choosingFood=false;barcodePhotoTask?.cancel();photoToken=UUID()}
+            .onChange(of:photo){_,item in readBarcodePhoto(item)}
+    }
+    private var resultsContent:some View {
+        Group {
                     if tab==0 && !displayedResults.isEmpty {
                         if let bestMatch {
                             VStack(alignment:.leading,spacing:8){
@@ -81,26 +97,19 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                     } else if tab==0 && filter==0 && nextPage != nil {
                         Button(diary.t("متابعة نتائج المنتجات","Continue product results")){startMore()}.buttonStyle(.bordered).disabled(pageLoading || busy || choosingFood)
                     }
+                    if tab==0 && filter==0 && !nearbyResults.isEmpty {
+                        VStack(alignment:.leading,spacing:10) {
+                            Label(diary.t("منتجات قريبة من بحثك","Nearby products"),systemImage:"text.magnifyingglass").font(.headline)
+                            Text(diary.t("تشابه في الاسم فقط؛ قد تختلف العلامة التجارية أو نوع المنتج.","Similar names; the brand or product type may differ.")).font(.caption).foregroundStyle(Theme.muted)
+                            LazyVStack(alignment:.leading,spacing:4){ForEach(nearbyResults){food in FoodRow(food:food){select(food)}.disabled(choosingFood)}}
+                        }.luqmaCard()
+                    }
                     if tab==0 && filter==0 && reachedSourceWindow {Notice(text:diary.t("البحث واسع جدًا. أضف كلمة مثل نوع الطعام أو العلامة التجارية للوصول إلى منتجات أخرى.","This search is very broad. Add a food type or brand to find other products."))}
                     if tab==0 && filter != 0 && displayedResults.isEmpty {Notice(text:diary.t(filter==3 ? "الأطعمة التي تضيفها يدويًا تُحفظ هنا لك وحدك." : "تظهر هنا الأطعمة التي تسجّلها في يومياتك. جرّب «الكل» للبحث في القاعدة.",filter==3 ? "Foods you create manually are saved here privately." : "Foods logged in your diary appear here. Choose All to search the database."))}
                     if tab==0 && !productSelection {
                         Button {manual=true} label: {Label(diary.t("إضافة طعام يدويًا","Add food manually"),systemImage:"square.and.pencil")}.padding(.top,4).disabled(choosingFood)
                     }
-                }.padding(20)
-            }.appBackground().navigationTitle(diary.t(tab==1 ? "باركود":tab==2 ? "صورة الوجبة":"إضافة طعام",tab==1 ? "Barcode":tab==2 ? "Meal photo":"Add food"))
-                .toolbar {ToolbarItem(placement:.cancellationAction){Button(diary.t("إغلاق","Close")){searchTask?.cancel();selectionTask?.cancel();barcodePhotoTask?.cancel();queryToken=UUID();photoToken=UUID();dismiss()}}}
-                .sheet(item:$selected){food in FoodPortionView(food:food,sourceBarcode:tab==1,initialMeal:initialMeal,onCommit:{f,a,u,m in if onCommit(f,a,u,m){dismiss();return true};return false})}
-                .sheet(isPresented:$manual){FoodPortionView(food:Food(name:""),manual:true,initialMeal:initialMeal,onCommit:{f,a,u,m in if onCommit(f,a,u,m){dismiss();return true};return false})}
-                .sheet(isPresented:$scanning){NavigationStack{BarcodeCamera(completion:{value in scanning=false;code=value;startLookup()},failed:{message in scanning=false;notice=message}).ignoresSafeArea().navigationTitle(diary.t("مسح الباركود","Scan barcode")).toolbar{ToolbarItem(placement:.cancellationAction){Button(diary.t("إغلاق","Close")){scanning=false}}}}}
-        }.onAppear{if let initial{selected=initial};if query.isEmpty && !initialQuery.isEmpty {query=initialQuery};refreshHistory();if tab==0 {searchTask=Task{await refreshLocal()}}}
-            .task{suggestionFoods=await FoodDatabase.shared.suggestionCandidates(cached:diary.state.products+diary.personalFoods)}
-            .onChange(of:diary.state.entries){_,_ in refreshHistory()}
-            .onChange(of:diary.state.customFoods){_,_ in refreshHistory()}
-            .onChange(of:query){_,value in let submit=suggestedQuery==value;suggestedQuery=nil;resetSearch();searchTask=Task{if submit{await search()}else{await refreshLocal()}}}
-            .onChange(of:filter){_,_ in resetSearch();searchTask=Task{await refreshLocal()}}
-            .onChange(of:tab){_,value in resetSearch();barcodePhotoTask?.cancel();photoToken=UUID();photo=nil;if value==0 {searchTask=Task{await refreshLocal()}}}
-            .onDisappear{searchTask?.cancel();selectionTask?.cancel();historyTask?.cancel();queryToken=UUID();busy=false;pageLoading=false;choosingFood=false;barcodePhotoTask?.cancel();photoToken=UUID()}
-            .onChange(of:photo){_,item in readBarcodePhoto(item)}
+        }
     }
     private var searchContent:some View {
         VStack(alignment:.leading,spacing:16) {
@@ -119,8 +128,8 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
             }.buttonStyle(.bordered)
             if filter==0 && term.isEmpty && !recentFoods.isEmpty {recent(diary.t("الأخيرة","Recent foods"),Array(recentFoods.prefix(8)),reverse:false)}
             if filter==0 {
-                if !suggestions.isEmpty {VStack(alignment:.leading,spacing:10){Text(diary.t(term.isEmpty ? "ابدأ البحث":"اقتراحات البحث",term.isEmpty ? "Start searching":"Suggested searches")).font(.subheadline.bold());ForEach(suggestions){suggestion in Button {submitSuggestion(suggestion.query)} label:{HStack{Image(systemName:suggestion.kind == .history ? "clock":"magnifyingglass");Text(suggestion.label).lineLimit(2).multilineTextAlignment(.leading);Spacer();Image(systemName:"arrow.up.left").font(.caption)}}.buttonStyle(.plain).disabled(choosingFood)}}.luqmaCard()}
-                if !term.isEmpty {Text(diary.t("الأطعمة المحفوظة • بحث لعرض منتجات Open Food Facts","Saved foods • Search for Open Food Facts products")).font(.caption).foregroundStyle(Theme.muted)}
+                if !suggestions.isEmpty {VStack(alignment:.leading,spacing:10){Text(diary.t(term.isEmpty ? "ابدأ البحث":"اقتراحات البحث",term.isEmpty ? "Start searching":"Suggested searches")).font(.subheadline.bold());ForEach(suggestions){suggestion in Button {submitSuggestion(suggestion.query)} label:{HStack{Image(systemName:suggestion.kind == .history ? "clock":"magnifyingglass");Text(DisplayFormat.westernDigits(suggestion.label)).lineLimit(2).multilineTextAlignment(.leading);Spacer();Image(systemName:"arrow.up.left").font(.caption)}}.buttonStyle(.plain).disabled(choosingFood)}}.luqmaCard()}
+                if !term.isEmpty {Text(diary.t("البحث في الأطعمة المحفوظة • اضغط بحث لعرض المزيد من المنتجات","Searching saved foods • Tap Search for more products")).font(.caption).foregroundStyle(Theme.muted)}
             }
         }
     }
@@ -147,7 +156,8 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                 guard !Task.isCancelled,token==queryToken,selectionQuery==query,selectionTab==tab else{return}
                 localResults=localResults.map{$0.id==food.id ? resolved:$0}
                 remoteResults=remoteResults.map{$0.id==food.id ? resolved:$0}
-                results=results.map{$0.id==food.id ? resolved:$0}
+                publishResults(results.map{$0.id==food.id ? resolved:$0})
+                nearbyResults=nearbyResults.map{$0.id==food.id ? resolved:$0}
                 choosingFood=false;diary.remember(resolved,barcode:fromBarcode);selected=resolved
             } catch {
                 guard !Task.isCancelled,token==queryToken,selectionQuery==query,selectionTab==tab else{return}
@@ -159,11 +169,11 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
     private func recent(_ title:String,_ foods:[Food],reverse:Bool=true) -> some View {let available=foods.filter{FoodSearch.availableForAdding($0) && (!productSelection || FoodSearch.isCatalogFood($0))};return VStack(alignment:.leading,spacing:4){Text(title).font(.headline);ForEach(Array((reverse ? Array(available.reversed()):available).prefix(8))){food in FoodRow(food:food){select(food)}.disabled(choosingFood)}}.luqmaCard()}
     private func resetSearch() {
         searchTask?.cancel();selectionTask?.cancel();queryToken=UUID();busy=false;pageLoading=false;choosingFood=false;nextPage=nil;reachedSourceWindow=false
-        localResults=[];remoteResults=[];results=[];notice=nil
+        localResults=[];remoteResults=[];publishResults([]);nearbyResults=[];suggestions=[];notice=nil
     }
     private func refreshHistory() {
         historyTask?.cancel();let snapshot=diary.state
-        historyTask=Task{let lists=await FoodDatabase.shared.historyLists(snapshot);guard !Task.isCancelled else{return};recentFoods=lists.recent;frequentFoods=lists.frequent;savedFoods=lists.personal}
+        historyTask=Task{let lists=await FoodDatabase.shared.historyLists(snapshot);guard !Task.isCancelled else{return};recentFoods=lists.recent;frequentFoods=lists.frequent;savedFoods=lists.personal;if !busy && tab==0{await refreshLocal(debounce:false)}}
     }
     private func startSearch(){guard !choosingFood else{return};searchTask?.cancel();searchTask=Task{await search()}}
     private func submitSuggestion(_ value:String){if query==value{startSearch()}else{suggestedQuery=value;query=value}}
@@ -187,31 +197,42 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
             }
         }
     }
-    private func mergeResults(_ token:UUID) async -> Bool {
-        let found=await FoodDatabase.shared.combined(term,local:localResults,remote:remoteResults)
-        guard !Task.isCancelled,token==queryToken else{return false}
-        results=found;return true
+    private func publishResults(_ found:[Food]) {
+        results=found
+        bestMatch=filter==0 && !term.isEmpty ? found.first:nil
+        otherResults=bestMatch == nil ? found:Array(found.dropFirst())
     }
-    private func refreshLocal() async {
-        let token=queryToken,value=term
-        guard tab==0,filter==0,!value.isEmpty else{return}
-        do{try await Task.sleep(nanoseconds:250_000_000)}catch{return}
-        let found=await FoodDatabase.shared.local(value,cached:diary.state.products+diary.personalFoods)
-        guard !Task.isCancelled,token==queryToken,tab==0 else{return}
-        localResults=found;_ = await mergeResults(token)
+    private func mergeResults(_ token:UUID) async -> Bool {
+        let value=term
+        let found=await FoodDatabase.shared.combinedMatches(value,local:localResults,remote:remoteResults,catalogOnly:productSelection)
+        guard !Task.isCancelled,token==queryToken,value==term else{return false}
+        publishResults(found.exact);nearbyResults=found.nearby;return true
+    }
+    private func refreshLocal(debounce:Bool=true) async {
+        let token=queryToken,value=term,currentFilter=filter,language=diary.language
+        guard tab==0 else{return}
+        if debounce {do{try await Task.sleep(nanoseconds:280_000_000)}catch{return}}
+        guard !Task.isCancelled,token==queryToken else{return}
+        let personal:[Food]? = currentFilter==0 ? nil:currentFilter==1 ? recentFoods:currentFilter==2 ? frequentFoods:savedFoods
+        let found=await FoodDatabase.shared.presentation(value,cached:diary.state.products+savedFoods,history:recentFoods,personal:personal,language:language,catalogOnly:productSelection)
+        guard !Task.isCancelled,token==queryToken,tab==0,currentFilter==filter,value==term,language==diary.language else{return}
+        suggestions=found.suggestions
+        localResults=found.exact+found.nearby
+        if currentFilter==0 && !remoteResults.isEmpty {_ = await mergeResults(token)}
+        else {publishResults(found.exact);nearbyResults=found.nearby}
     }
     private func search() async {
         let value=term;guard !Task.isCancelled,tab==0,filter==0,!value.isEmpty else{return}
         let token=UUID();queryToken=token;busy=true;pageLoading=false;notice=nil;nextPage=nil;reachedSourceWindow=false;remoteResults=[]
-        let found=await FoodDatabase.shared.local(value,cached:diary.state.products+diary.personalFoods)
-        guard !Task.isCancelled,token==queryToken else{return};localResults=found
+        let found=await FoodDatabase.shared.presentation(value,cached:diary.state.products+savedFoods,history:recentFoods,language:diary.language,catalogOnly:productSelection)
+        guard !Task.isCancelled,token==queryToken else{return};localResults=found.exact+found.nearby;suggestions=found.suggestions
         guard await mergeResults(token) else{return}
         do {
             let page=try await FoodDatabase.shared.remote(value)
             guard !Task.isCancelled,token==queryToken else{return}
             remoteResults=page.foods;nextPage=page.nextPage;reachedSourceWindow=page.reachedSourceWindow
             guard await mergeResults(token) else{return}
-            if results.isEmpty {notice=diary.t("لم نجد طعامًا مطابقًا في النتائج الحالية. جرّب كلمة أخرى أو أضفه يدويًا.","No matching food in the current results. Try another word or add it manually.")}
+            if results.isEmpty {notice=diary.t(nearbyResults.isEmpty ? "لم نجد منتجًا مطابقًا. اختصر البحث أو جرّب اسم العلامة التجارية." : "لم نجد تطابقًا لكل الكلمات. المنتجات القريبة أدناه قد تختلف في العلامة أو النوع؛ راجعها قبل الإضافة.",nearbyResults.isEmpty ? "No matching product. Shorten the query or try its brand name.":"No product matches every word. Nearby products may have a different brand or type; review them before adding.")}
         } catch {
             guard !Task.isCancelled,token==queryToken else{return}
             notice=(error as? AppError)?.message(diary.language) ?? diary.t("البحث عبر الإنترنت غير متاح. نعرض الأطعمة المحفوظة.","Online search is unavailable. Saved foods are shown.")
@@ -284,25 +305,25 @@ struct FoodPortionView:View {
     var body:some View {
         NavigationStack{Form{
             Section{
-                if manual {TextField(diary.t("اسم الطعام","Food name"),text:$name)}else{Text(name).font(.headline);if let brand=food.brand{Text(brand).font(.caption).foregroundStyle(Theme.muted)}}
+                if manual {TextField(diary.t("اسم الطعام","Food name"),text:$name)}else{Text(name).font(.headline);if let brand=food.brand{Text(DisplayFormat.westernDigits(brand)).font(.caption).foregroundStyle(Theme.muted)}}
                 Picker(diary.t("الوجبة","Meal"),selection:$meal){ForEach(Meal.allCases){Text($0.label(diary.language)).tag($0)}}
             }
             Section(diary.t("الكمية","Amount")) {
                 Picker(diary.t("الوحدة","Unit"),selection:$unit){ForEach(manual ? [.serving,.g,.ml]:food.additionUnits,id:\.self){Text($0.label(diary.language)).tag($0)}}.pickerStyle(.segmented)
                 if unit == .serving && !food.servingChoices.isEmpty {
                     Picker(diary.t("حجم الحصة","Serving size"),selection:$servingID){
-                        if food.servingNutrition != nil {Text(food.serving ?? diary.t("الحصة المحفوظة","Saved serving")).tag("")}
-                        ForEach(food.servingChoices){choice in Text("\(choice.label) · \(decimal(choice.grams)) \(diary.t("جم","g"))").tag(choice.id)}
+                        if food.servingNutrition != nil {Text(DisplayFormat.westernDigits(food.serving ?? diary.t("الحصة المحفوظة","Saved serving"))).tag("")}
+                        ForEach(food.servingChoices){choice in Text("\(DisplayFormat.westernDigits(choice.label)) · \(decimal(choice.grams)) \(diary.t("جم","g"))").tag(choice.id)}
                     }
                 }
                 if unit == .serving && !food.portionChoices.isEmpty {
-                    Picker(diary.t("حجم الحصة","Serving size"),selection:$portionID){ForEach(food.portionChoices){choice in Text(choice.label).tag(choice.id)}}
+                    Picker(diary.t("حجم الحصة","Serving size"),selection:$portionID){ForEach(food.portionChoices){choice in Text(DisplayFormat.westernDigits(choice.label)).tag(choice.id)}}
                 }
                 if unit == .serving && needsServingSize {
                     input(diary.t(food.unit == .ml ? "حجم الحصة (مل)":"وزن الحصة (جم)",food.unit == .ml ? "Serving volume (ml)":"Serving weight (g)"),$servingWeight)
                     Text(diary.t("لا يحدد المصدر حجم الحصة. أدخله من الملصق أو اختر وحدة المنتج.","The source has no serving size. Enter it from the label, or choose the product's unit.")).font(.caption).foregroundStyle(Theme.muted)
                 }
-                if let serving=portionFood.serving,unit == .serving{Text(serving).font(.footnote).foregroundStyle(.secondary)}
+                if let serving=portionFood.serving,unit == .serving{Text(DisplayFormat.westernDigits(serving)).font(.footnote).foregroundStyle(.secondary)}
                 input(diary.t(unit == .serving ? "عدد الحصص":"الكمية المستهلكة",unit == .serving ? "Number of servings":"Consumed amount"),$amount)
                 if base != nil {NutritionView(value:total,large:true)}else{Text(diary.t("حدد الحصة لعرض مجموع التغذية","Set the serving to see nutrition totals")).font(.subheadline).foregroundStyle(Theme.muted)}
             }
