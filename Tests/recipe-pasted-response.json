@@ -4,8 +4,8 @@
       "content": {
         "parts": [
           {
-            "text": "{\n  \"isRecipe\": true,\n  \"sourceAvailable\": true,\n  \"title\": \"بيض مخفوق بسيط\",\n  \"servings\": 2,\n  \"ingredients\": [\n    {\n      \"name\": \"بيض كبير\",\n      \"quantity\": 100,\n      \"unit\": \"g\",\n      \"unitLabel\": \"g\",\n      \"kcal\": 143,\n      \"protein\": 12.6,\n      \"carbs\": 0.7,\n      \"fat\": 9.5,\n      \"assumption\": \"بيض كامل طازج بوزن إجمالي 100 غرام\"\n    },\n    {\n      \"name\": \"زيت زيتون\",\n      \"quantity\": 5,\n      \"unit\": \"g\",\n      \"unitLabel\": \"g\",\n      \"kcal\": 44,\n      \"protein\": 0,\n      \"carbs\": 0,\n      \"fat\": 5,\n      \"assumption\": \"زيت زيتون نقي بوزن 5 غرامات\"\n    }\n  ],\n  \"steps\": [\n    \"اخفق البيض.\",\n    \"سخّن الزيت في المقلاة.\",\n    \"اطهِ البيض حتى يتماسك تماماً.\",\n    \"قسّم المزيج إلى حصتين متساويتين.\"\n  ],\n  \"assumptions\": [\n    \"تم حساب القيم الغذائية بناءً على المكونات الخام المذكورة بالوزن الإجمالي.\"\n  ]\n}",
-            "thoughtSignature": "EmkKZwFpFH0TiGKmZ6HLHSTBomdm9kxYeEStiWzcR1hPoHLr0phVXkaa1lRcRvVyaAF41kV1V4nqfz0j2ycqaNvnT7BdfFYVhki47bbHD94SGxqzBR0SvQCWeeHzxcAlvX4zWylvS5zJlfE="
+            "text": "{\n  \"assumptions\": [\n    \"Nutrition values estimated based on standard food composition data for large eggs and olive oil.\"\n  ],\n  \"ingredients\": [\n    {\n      \"assumption\": \"Calculated for 100g of large eggs.\",\n      \"carbs\": 0.7,\n      \"fat\": 9.5,\n      \"kcal\": 155,\n      \"name\": \"large eggs\",\n      \"protein\": 12.6,\n      \"quantity\": 100,\n      \"sourceQuantityText\": \"100 g\",\n      \"unit\": \"g\",\n      \"unitLabel\": \"g\"\n    },\n    {\n      \"assumption\": \"Calculated for 5g of olive oil.\",\n      \"carbs\": 0,\n      \"fat\": 5,\n      \"kcal\": 44,\n      \"name\": \"olive oil\",\n      \"protein\": 0,\n      \"quantity\": 5,\n      \"sourceQuantityText\": \"5 g\",\n      \"unit\": \"g\",\n      \"unitLabel\": \"g\"\n    }\n  ],\n  \"isRecipe\": true,\n  \"servings\": 2,\n  \"sourceAvailable\": true,\n  \"sourceServingsText\": \"Makes 2 servings\",\n  \"steps\": [\n    \"اخفق البيض.\",\n    \"سخن زيت الزيتون في مقلاة.\",\n    \"اطبخ البيض حتى يتماسك.\",\n    \"قسم الطبق إلى حصتين متساويتين.\"\n  ],\n  \"title\": \"بيض مخفوق بسيط\"\n}",
+            "thoughtSignature": "EnMKcQFpFH0TrlwX4BH/ew/CY8fX8BdhC2F5QvME0WFwVYddUV+EoEo8LA3X029m0F5Vnd4x+rdVSjcd728r8+lLnjR0kY1KPlSlHZJEul0900jQrjnOl1qZCGk7h+lJsihHRrHnOl7X/yEnwI1xovpTxP26"
           }
         ],
         "role": "model"
@@ -15,17 +15,17 @@
     }
   ],
   "usageMetadata": {
-    "promptTokenCount": 579,
-    "candidatesTokenCount": 347,
-    "totalTokenCount": 926,
+    "promptTokenCount": 741,
+    "candidatesTokenCount": 363,
+    "totalTokenCount": 1104,
     "promptTokensDetails": [
       {
         "modality": "TEXT",
-        "tokenCount": 579
+        "tokenCount": 741
       }
     ],
     "serviceTier": "standard"
   },
-  "modelVersion": "gemini-3.8-flash",
-  "responseId": "RHjNar6lJtmpvdIPjbCkqQ0"
+  "modelVersion": "gemini-3.1-flash-lite",
+  "responseId": "N3vOap2CMprrxN8PifeX4Qk"
 }

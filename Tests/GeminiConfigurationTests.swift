@@ -19,4 +19,8 @@ final class GeminiConfigurationTests:XCTestCase {
             XCTAssertThrowsError(try GeminiConfiguration.key(from:value))
         }
     }
+    func testLegacyConnectionKeySurvivesModelMigration() throws {
+        XCTAssertEqual(try GeminiConfiguration.key(from:data(model:"gemini-3.8-flash")),fakeKey)
+        XCTAssertEqual(try GeminiConfiguration.key(from:data(model:AnalysisModel.backup.modelID)),fakeKey)
+    }
 }

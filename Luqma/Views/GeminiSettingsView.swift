@@ -36,8 +36,8 @@ struct GeminiSettingsView: View {
                     }
                 }
                 Section {
-                    Text(diary.t("تُرسل صورة الوجبة والوصف فقط إلى خدمة التحليل. يبقى سجلك وبيانات صحتي على جهازك.",
-                                 "Only the meal photo and description are sent to the analysis service. Your diary and Health data stay on your device."))
+                    Text(diary.t("تُرسل صورة الوجبة والوصف فقط إلى خدمة التحليل. يبقى سجلك على جهازك.",
+                                 "Only the meal photo and description are sent to the analysis service. Your diary stays on your device."))
                         .font(.footnote).foregroundStyle(Theme.muted)
                     Link(diary.t("سياسة خدمة التحليل", "Analysis service policy"), destination: URL(string: "https://ai.google.dev/gemini-api/terms")!)
                 }

@@ -3,7 +3,6 @@ import Charts
 
 struct PlanView:View {
     @EnvironmentObject var diary:DiaryStore
-    @EnvironmentObject var health:HealthService
     @State private var plan=WeightPlan()
     @State private var result:WeightResult?
     @State private var advanced=false
@@ -19,7 +18,6 @@ struct PlanView:View {
                 NumericInput(title:diary.t("العمر","Age"),value:$plan.age)
                 NumericInput(title:diary.t("الطول","Height"),value:$plan.height,suffix:diary.t("سم","cm"))
                 NumericInput(title:diary.t("الوزن الحالي","Current weight"),value:$plan.weight,suffix:diary.t("كجم","kg"))
-                Button(diary.t("تعبئة المتاح من صحتي","Fill available Health data")){Task{if !diary.state.healthEnabled{await health.connect(diary)};let p=await health.profile();if let w=p.weight,(35...300).contains(w){plan.weight=w};if let h=p.height,(120...230).contains(h){plan.height=h};if let age=p.age,(18...100).contains(age){plan.age=age};if let sex=p.sex{plan.sex=sex}}}
             }
             Section(diary.t("الهدف والنشاط","Goal and activity")){
                 NumericInput(title:diary.t("وزن الهدف","Goal weight"),value:$plan.targetWeight,suffix:diary.t("كجم","kg"))

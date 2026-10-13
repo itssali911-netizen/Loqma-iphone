@@ -6,8 +6,8 @@ import FoundationNetworking
 /// Photo nutrition is an estimate for the depicted portion. It stays separate
 /// from catalog nutrition and includes bounds and preparation assumptions.
 enum GeminiMeal {
-    static let modelID = "gemini-3.8-flash"
-    static let endpoint = URL(string: "https://generativelanguage.googleapis.com/v1beta/models/\(modelID):generateContent")!
+    static let modelID = AnalysisModel.fast.modelID
+    static let endpoint = AnalysisModel.fast.endpoint
     static let maximumImageBytes = 7 * 1024 * 1024
     static let maximumResponseBytes = 512 * 1024
     static let maximumComponents = 12
@@ -53,13 +53,14 @@ enum GeminiMeal {
         ]
     }
 
-    static func request(imageData: Data, context: String, language: AppLanguage, key: String) throws -> URLRequest {
+    static func request(imageData: Data, context: String, language: AppLanguage, key: String, model: AnalysisModel = .fast) throws -> URLRequest {
         guard !imageData.isEmpty, imageData.count <= maximumImageBytes,
               imageData.starts(with: [0xFF, 0xD8, 0xFF]) else {
             throw AppError.invalid("تعذّر تجهيز الصورة. اختر صورة أصغر وحاول مجددًا.", "The image could not be prepared. Choose a smaller image and retry.")
         }
         let description = String(context.prefix(1000))
         let prompt = """
+        FIRST inspect the actual image and decide whether edible food is visibly present. A blank, white, black, empty, abstract, landscape, person-only, or object-only image has no identifiable food: return {"isFood":false,"components":[]} immediately. Never infer a meal from this prompt or user description when food is not visible in the image.
         Identify the edible components and estimate nutrition for the depicted meal portion. Return JSON only, matching the response schema.
         Return short Arabic names in name and English names in nameEn, suitable for a food search.
         Keep separately visible bread, rice, meat, vegetables, and sauce as separate components. Do not count the same food twice or list both a dish and its ingredients for the same portion.
@@ -79,14 +80,9 @@ enum GeminiMeal {
                 ["inlineData": ["mimeType": "image/jpeg", "data": imageData.base64EncodedString()]],
                 ["text": prompt]
             ]]],
-            "generationConfig": [
-                "candidateCount": 1, "maxOutputTokens": 4096,
-                "thinkingConfig": ["thinkingLevel": "LOW", "includeThoughts": false],
-                // The new format field uses an enum, unlike responseMimeType.
-                "responseFormat": ["text": ["mimeType": "APPLICATION_JSON", "schema": responseSchema]]
-            ]
+            "generationConfig": model.generationConfig(schema: responseSchema, maxOutputTokens: 4096)
         ]
-        var request = URLRequest(url: endpoint, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 90)
+        var request = URLRequest(url: model.endpoint, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: AnalysisAttemptPolicy.photoTimeout)
         request.httpMethod = "POST"
         request.setValue(try validatedKey(key), forHTTPHeaderField: "x-goog-api-key")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")

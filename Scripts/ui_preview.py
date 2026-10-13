@@ -41,7 +41,7 @@ DEVICE_TYPE = "com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro-Max"
 SCREENS = ((0, "today"), (1, "kitchen"), (2, "progress"), (3, "settings"))
 PHOTO_SCREEN = "photo-estimate"
 RECIPE_SCREEN = "recipe-import"
-EXTRA_ROUTES = (("search", "-loqma-preview-search"), ("meal-macros", "-loqma-preview-meals"), ("health-access", "-loqma-preview-health"))
+EXTRA_ROUTES = (("search", "-loqma-preview-search"), ("meal-macros", "-loqma-preview-meals"))
 EXPECTED_SCREEN_COUNT = len(SCREENS) + 2 + len(EXTRA_ROUTES)
 
 

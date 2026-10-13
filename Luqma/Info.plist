@@ -26,8 +26,6 @@
 	<string>$(IPHONEOS_DEPLOYMENT_TARGET)</string>
 	<key>NSCameraUsageDescription</key>
 	<string>تستخدم لُقمة الكاميرا لمسح باركود المنتجات أو تصوير وجبتك. / Luqma uses the camera to scan products and photograph meals.</string>
-	<key>NSHealthShareUsageDescription</key>
-	<string>تقرأ لُقمة الوزن والطول والخطوات ومسافة المشي والجري ودقائق التمرين والتمارين وسعرات النشاط بإذنك، لعرض نشاطك اليومي وتحديث خطتك عند اختيارك. ويُستخدم تاريخ الميلاد والجنس لتعبئة خطة الوزن. تبقى البيانات على جهازك. / Luqma reads weight, height, steps, walking and running distance, exercise minutes, workouts and active energy with your permission to show daily activity and optionally adjust your goal. Birth date and sex fill the weight plan. Data stays on your device.</string>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UISupportedInterfaceOrientations</key>

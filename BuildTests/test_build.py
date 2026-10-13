@@ -12,7 +12,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "Scripts"))
 from build_ios import build, prepare_sideload
 from signing import BuildError
-from test_signing import BUNDLE, FINGERPRINT, TEAM, profile_data, validated
+from test_signing import BUNDLE, CERTIFICATE, FINGERPRINT, TEAM, profile_data, validated
 
 
 class BuildTests(unittest.TestCase):
@@ -105,6 +105,7 @@ class BuildTests(unittest.TestCase):
 
     def test_signed_export_checks_embedded_profile_and_never_uploads(self):
         calls = []
+        private_calls = []
         profile = validated()
         @contextmanager
         def signing(*_):
@@ -119,15 +120,35 @@ class BuildTests(unittest.TestCase):
                     with zipfile.ZipFile(output / "export/Luqma.ipa", "w") as ipa:
                         ipa.writestr("Payload/Luqma.app/Info.plist", plistlib.dumps({"CFBundleIdentifier": BUNDLE}))
                         ipa.writestr("Payload/Luqma.app/embedded.mobileprovision", b"synthetic-CMS")
+                        ipa.writestr("Payload/Luqma.app/Luqma", b"synthetic executable, not an iOS binary")
+            def private(args, label):
+                private_calls.append(args)
+                if args[0] == "security" and "cms" in args:
+                    return plistlib.dumps(profile_data())
+                if args[0] == "codesign" and "--entitlements" in args:
+                    return plistlib.dumps(profile_data()["Entitlements"])
+                if args[0] == "codesign" and "--extract-certificates" in args:
+                    prefix = args[args.index("--extract-certificates") + 1]
+                    Path(prefix + "0").write_bytes(CERTIFICATE)
+                    return b""
+                if args[0] == "codesign" and "--verify" in args:
+                    return b""
+                raise AssertionError("Unexpected private signing command in fixture: " + label)
             with patch("build_ios.require_mac"), patch("build_ios.run", side_effect=run), \
                     patch("build_ios.installed_signing", signing), \
-                    patch("build_ios.private_command", return_value=plistlib.dumps(profile_data())), \
+                    patch("build_ios.private_command", side_effect=private), \
                     patch.dict(os.environ, {"BUNDLE_ID": BUNDLE, "APPLE_TEAM_ID": TEAM, "BUILD_NUMBER": "12"}):
                 build("ad-hoc", output)
             self.assertTrue((output / "Luqma.ipa").is_file())
             self.assertIn('"uploaded": false', (output / "build-summary.json").read_text())
+            self.assertIn('"exported_signature_verified": true', (output / "build-summary.json").read_text())
+            self.assertIn('"exported_requested_entitlements_verified": true', (output / "build-summary.json").read_text())
+            self.assertTrue(any("--verify" in args and Path(args[-1]).parts[-2:] == ("Payload", "Luqma.app") for args in private_calls))
+            self.assertTrue(any("--entitlements" in args for args in private_calls))
+            self.assertTrue(any("--extract-certificates" in args for args in private_calls))
             self.assertTrue(any("archive" in args for args in calls))
             self.assertFalse(any("upload" in args or "-allowProvisioningUpdates" in args for args in calls))
+            self.assertFalse(any("upload" in args for args in private_calls))
 
     def test_existing_output_is_not_overwritten(self):
         with tempfile.TemporaryDirectory() as directory:

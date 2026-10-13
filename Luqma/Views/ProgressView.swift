@@ -3,7 +3,6 @@ import Charts
 
 struct ProgressViewScreen:View {
     @EnvironmentObject var diary:DiaryStore
-    @EnvironmentObject var health:HealthService
     @State private var range=90
     @State private var adding=false
     @State private var adaptiveDetails=false
@@ -16,8 +15,6 @@ struct ProgressViewScreen:View {
             LuqmaSectionHeader(title:diary.t("اتجاه الوزن","Weight trend"))
             weightChart
             weightPlan
-            healthConnection
-            if diary.state.healthEnabled && !health.signingBlocked { DailyActivitySummaryView() }
             weightHistory
         }.padding(20).padding(.bottom,10)}.appBackground().navigationTitle(diary.t("تقدّمي","My progress"))
             .toolbar(.hidden,for:.navigationBar)
@@ -62,15 +59,6 @@ struct ProgressViewScreen:View {
             }.font(.footnote)
         }
     }.luqmaCard()}
-    private var healthConnection:some View {NavigationLink{HealthConnectionView().toolbar(.visible,for:.navigationBar)}label:{HStack(spacing:12){
-        Image(systemName:"heart.fill").foregroundStyle(.pink).font(.title2).frame(width:46,height:46).background(Theme.surface,in:RoundedRectangle(cornerRadius:15))
-        VStack(alignment:.leading,spacing:4){
-            Text("Apple Health").font(.headline).foregroundStyle(.primary)
-            Text(health.signingBlocked ? diary.t("يحتاج إعداد الربط","Connection setup needed") : (diary.state.healthEnabled ? diary.t("مزامنة نشاطك اليومي","Sync your daily activity") : diary.t("اربط نشاطك اليومي والوزن","Connect daily activity and weight"))).font(.subheadline).foregroundStyle(Theme.muted)
-        }
-        Spacer(minLength:0)
-        Image(systemName:"chevron.forward").font(.caption).foregroundStyle(Theme.muted)
-    }.luqmaCard()}.buttonStyle(.plain)}
     @ViewBuilder private var weightHistory:some View {
         if !readings.isEmpty{VStack(alignment:.leading,spacing:14){
             Text(diary.t("سجل الوزن","Weight history")).font(.headline).accessibilityAddTraits(.isHeader)
@@ -104,5 +92,5 @@ struct WeightEditor:View {
     @Environment(\.dismiss) var dismiss
     @State private var date=Date()
     @State private var kg:Double=0
-    var body:some View {NavigationStack{Form{DatePicker(diary.t("التاريخ","Date"),selection:$date,in:...Date(),displayedComponents:.date);NumericInput(title:diary.t("الوزن","Weight"),value:$kg,suffix:diary.t("كجم","kg"));Notice(text:diary.t("تُحفظ قراءة واحدة لكل يوم. الإدخال اليدوي له أولوية على قراءات صحتي.","One reading is kept per day. Manual entries take priority over Health readings."))}.appBackground().navigationTitle(diary.t("تسجيل الوزن","Log weight")).toolbar{ToolbarItem(placement:.cancellationAction){Button(diary.t("إلغاء","Cancel")){dismiss()}};ToolbarItem(placement:.confirmationAction){Button(diary.t("حفظ","Save")){if diary.saveWeight(WeightReading(day:DayKey.string(date),kg:kg,source:"Manual",timestamp:Date().timeIntervalSince1970)){dismiss()}}.disabled(!(35...300).contains(kg))}}}.onAppear{kg=diary.state.weights.last?.kg ?? diary.state.weightPlan?.weight ?? 0}}
+    var body:some View {NavigationStack{Form{DatePicker(diary.t("التاريخ","Date"),selection:$date,in:...Date(),displayedComponents:.date);NumericInput(title:diary.t("الوزن","Weight"),value:$kg,suffix:diary.t("كجم","kg"));Notice(text:diary.t("تُحفظ قراءة واحدة لكل يوم. يمكنك تعديل وزن اليوم بتسجيله من جديد.","One reading is kept per day. Log it again to update that day's weight."))}.appBackground().navigationTitle(diary.t("تسجيل الوزن","Log weight")).toolbar{ToolbarItem(placement:.cancellationAction){Button(diary.t("إلغاء","Cancel")){dismiss()}};ToolbarItem(placement:.confirmationAction){Button(diary.t("حفظ","Save")){if diary.saveWeight(WeightReading(day:DayKey.string(date),kg:kg,source:"Manual",timestamp:Date().timeIntervalSince1970)){dismiss()}}.disabled(!(35...300).contains(kg))}}}.onAppear{kg=diary.state.weights.last?.kg ?? diary.state.weightPlan?.weight ?? 0}}
 }

@@ -3,10 +3,10 @@ import Charts
 
 struct DiaryView:View {
     @EnvironmentObject var diary:DiaryStore
-    @EnvironmentObject var health:HealthService
     @State private var date=Date()
     @State private var adding=false
     @State private var goals=false
+    @State private var selectingDate=false
     @State private var editing:DiaryEntry?
     @State private var chosenMeal:Meal?
     private var day:String {DayKey.string(date)}
@@ -16,6 +16,15 @@ struct DiaryView:View {
             .sheet(isPresented:$adding){FoodAddView(initialMeal:chosenMeal,onPhotoCommit:{foods,meal in do{let entries=try foods.map{try DiaryEntry(food:$0.0,amount:$0.1,unit:$0.2,meal:meal,day:day,language:diary.language)};return diary.add(entries,foods:foods.map{$0.0})}catch{diary.report(error);return false}}){food,amount,unit,meal in do{let entry=try DiaryEntry(food:food,amount:amount,unit:unit,meal:meal,day:day,language:diary.language);return diary.add([entry],foods:[food])}catch{diary.report(error);return false}}}
             .sheet(item:$editing){EntryEditor(entry:$0)}
             .sheet(isPresented:$goals){GoalEditor()}
+            .sheet(isPresented:$selectingDate){
+                NavigationStack{
+                    DatePicker(diary.t("اختيار التاريخ","Choose date"),selection:$date,displayedComponents:.date)
+                        .datePickerStyle(.graphical).tint(Theme.accent).padding(20).appBackground()
+                        .navigationTitle(diary.t("اختيار التاريخ","Choose date"))
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar{ToolbarItem(placement:.confirmationAction){Button(diary.t("تم","Done")){selectingDate=false}}}
+            }.presentationDetents([.medium,.large])
+            }
     }
     @ViewBuilder private var diaryContent:some View {
         #if DEBUG
@@ -27,11 +36,10 @@ struct DiaryView:View {
         #endif
     }
     private var normalDiaryContent:some View {
-        VStack(alignment:.leading,spacing:20){
-            header
+        VStack(alignment:.leading,spacing:16){
             weekSelector
+            header
             summary
-            activity
             LuqmaSectionHeader(title:diary.t("وجباتي","My meals"),detail:diary.t("سجل اليوم","Daily diary"))
             ForEach(MealDiarySummary.forDay(day,entries:diary.state.entries)){mealSection($0)}
         }
@@ -80,56 +88,72 @@ struct DiaryView:View {
         DisplayFormat.date(value,template:template,language:diary.language)
     }
     private var weekSelector:some View {
-        VStack(spacing:12){
-            HStack{
-                Text(diary.t("اليوم المختار","Selected day")).font(.subheadline.bold())
-                Spacer()
-                DatePicker(diary.t("اختيار التاريخ","Choose date"),selection:$date,displayedComponents:.date).labelsHidden().datePickerStyle(.compact).tint(Theme.accent)
-            }
-            HStack(spacing:6){ForEach(weekDates,id:\.self){value in
+        HStack(spacing:10){
+            HStack(spacing:4){ForEach(weekDates,id:\.self){value in
                 let selected=DayKey.string(value)==day
-                Button{date=value}label:{VStack(spacing:5){
-                    Text(localizedDate(value,"EEEEE")).font(.system(size:10,weight:.medium)).foregroundStyle(selected ? Theme.text:Theme.muted)
-                    Text(localizedDate(value,"d")).font(.system(size:16,weight:.bold)).foregroundStyle(Theme.text)
-                    Circle().fill(selected ? Theme.text:Color.clear).frame(width:3,height:3)
-                }.frame(maxWidth:.infinity,minHeight:58).background(selected ? Theme.accent:Theme.background,in:RoundedRectangle(cornerRadius:15,style:.continuous))}.buttonStyle(.plain)
+                Button{date=value}label:{VStack(spacing:3){
+                    Text(localizedDate(value,"EEEEE")).font(.system(size:9,weight:.medium)).foregroundStyle(selected ? Theme.text:Theme.muted)
+                    Text(localizedDate(value,"d")).font(.system(size:13,weight:.semibold)).monospacedDigit().foregroundStyle(Theme.text)
+                }.frame(maxWidth:.infinity,minHeight:38).background(selected ? Theme.accent:Theme.background,in:RoundedRectangle(cornerRadius:10,style:.continuous))}.buttonStyle(.plain)
                     .accessibilityLabel(localizedDate(value,"EEEE, d MMMM"))
                     .accessibilityAddTraits(selected ? .isSelected:[])
             }}
-        }.padding(14).background(Theme.card,in:RoundedRectangle(cornerRadius:24,style:.continuous))
+            Button{selectingDate=true}label:{
+                VStack(spacing:3){
+                    HStack(spacing:4){Image(systemName:"calendar");Text(diary.t("اليوم المختار","Selected day"))}.font(.system(size:9,weight:.medium)).foregroundStyle(Theme.muted)
+                    Text(day.replacingOccurrences(of:"-",with:"/")).font(.system(size:11,weight:.semibold)).monospacedDigit().foregroundStyle(Theme.text)
+                }.frame(width:96).frame(minHeight:38)
+            }.buttonStyle(.plain).accessibilityLabel(diary.t("اختيار التاريخ","Choose date"))
+                .accessibilityValue(localizedDate(date,"EEEE, d MMMM yyyy"))
+        }.padding(10).background(Theme.card,in:RoundedRectangle(cornerRadius:16,style:.continuous))
     }
     private var summary:some View {
         let consumed=diary.total(day),goals=diary.dailyGoals(day)
-        let remaining=goals.kcal-consumed.kcal
-        return VStack(alignment:.leading,spacing:16){
+        return VStack(alignment:.leading,spacing:10){
             LuqmaSectionHeader(title:diary.t("هدف السعرات","Calorie goal"))
             calorieGoal(consumed:consumed.kcal,goal:goals.kcal)
-            VStack(spacing:10){
-                Text(diary.t("السعرات المسجلة","Calorie intake")).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.muted)
-                HStack(alignment:.firstTextBaseline,spacing:7){Image(systemName:"flame.fill").font(.system(size:21)).foregroundStyle(Theme.accent);Text(decimal(consumed.kcal,0)).font(.system(size:42,weight:.bold)).monospacedDigit();Text(diary.t("سعرة","kcal")).font(.subheadline).foregroundStyle(Theme.muted)}
-                Text("\(decimal(abs(remaining),0)) "+(remaining >= 0 ? diary.t("سعرة متبقية","kcal left"):diary.t("سعرة فوق الهدف","kcal above goal"))).font(.caption.weight(.medium)).foregroundStyle(Theme.text)
-                intakeChart
-            }.frame(maxWidth:.infinity).padding(.top,8)
-            HStack(spacing:12){macroProgress(.carbs,consumed,goals);macroProgress(.protein,consumed,goals);macroProgress(.fat,consumed,goals)}.padding(18).background(Theme.surface,in:RoundedRectangle(cornerRadius:24,style:.continuous))
+            HStack(spacing:12){
+                macroProgress(.carbs,consumed,goals)
+                Divider().frame(height:42)
+                macroProgress(.protein,consumed,goals)
+                Divider().frame(height:42)
+                macroProgress(.fat,consumed,goals)
+            }.padding(14).background(Theme.surface,in:RoundedRectangle(cornerRadius:18,style:.continuous))
             Button{chosenMeal=nil;adding=true}label:{Label(diary.t("إضافة طعام","Add food"),systemImage:"plus")}.buttonStyle(LuqmaPrimaryButtonStyle())
+            if intakeHistory.count>=2{
+                DisclosureGroup(diary.t("السعرات خلال آخر 7 أيام","Calories over the last 7 days")){
+                    intakeChart.padding(.top,12)
+                }.font(.caption).foregroundStyle(Theme.muted).padding(.top,4)
+            }
         }
     }
     private func calorieGoal(consumed:Double,goal:Double)->some View {
-        VStack(alignment:.leading,spacing:16){
+        let remaining=goal-consumed
+        return VStack(alignment:.leading,spacing:12){
             HStack(alignment:.center){HStack(alignment:.firstTextBaseline,spacing:7){Text(decimal(goal,0)).font(.system(size:31,weight:.bold)).monospacedDigit();Text(diary.t("سعرة","kcal")).font(.subheadline)};Spacer();Button{goals=true}label:{Image(systemName:"gearshape").font(.system(size:18)).frame(width:42,height:42).background(Color.white.opacity(0.12),in:RoundedRectangle(cornerRadius:13,style:.continuous)).overlay{RoundedRectangle(cornerRadius:13,style:.continuous).stroke(Color.white.opacity(0.35),lineWidth:1)}}.buttonStyle(.plain).accessibilityLabel(diary.t("تعديل هدف السعرات","Edit calorie goal"))}
+            HStack(alignment:.firstTextBaseline,spacing:6){
+                Text(decimal(consumed,0)+" / "+decimal(goal,0)).font(.system(size:16,weight:.semibold)).monospacedDigit()
+                Text(diary.t("مستهلكة","consumed")).font(.caption)
+                Spacer(minLength:8)
+                Text(decimal(abs(remaining),0)+" "+(remaining >= 0 ? diary.t("متبقية","left"):diary.t("فوق الهدف","above goal"))).font(.caption.weight(.medium)).lineLimit(1).minimumScaleFactor(0.8)
+            }
             ProgressView(value:goal>0 ? min(1,max(0,consumed/goal)):0).tint(Theme.text)
                 .accessibilityLabel(diary.t("التقدّم نحو هدف السعرات","Progress toward your calorie goal"))
-        }.foregroundStyle(Theme.text).padding(18).frame(maxWidth:.infinity,alignment:.leading).background(Theme.accent,in:RoundedRectangle(cornerRadius:24,style:.continuous))
+        }.foregroundStyle(Theme.text).padding(16).frame(maxWidth:.infinity,alignment:.leading).background(Theme.accent,in:RoundedRectangle(cornerRadius:20,style:.continuous))
     }
     private func macroProgress(_ key:MacroKey,_ current:Nutrition,_ goal:Nutrition) -> some View {
         let color=key == .carbs ? Theme.accent:key == .protein ? Theme.secondaryAccent:Theme.text
         let symbol=key == .carbs ? "leaf.fill":key == .protein ? "fish.fill":"drop.fill"
-        return VStack(spacing:6){
-            Image(systemName:symbol).font(.system(size:17)).foregroundStyle(color).accessibilityHidden(true)
-            Text(decimal(current[key],0)+" "+diary.t("جم","g")).font(.system(size:19,weight:.bold)).monospacedDigit().minimumScaleFactor(0.7).lineLimit(1)
-            Text(key.label(diary.language)).font(.caption).foregroundStyle(Theme.muted)
-            Text(diary.t("من ","of ")+decimal(goal[key],0)+" "+diary.t("جم","g")).font(.system(size:10)).foregroundStyle(Theme.muted)
-        }.frame(maxWidth:.infinity).accessibilityElement(children:.combine)
+        let progress=goal[key]>0 ? min(1,max(0,current[key]/goal[key])):0
+        return VStack(alignment:.leading,spacing:6){
+            HStack(spacing:5){Text(key.label(diary.language)).font(.system(size:11,weight:.medium)).foregroundStyle(Theme.muted);Spacer(minLength:0);Image(systemName:symbol).font(.system(size:12)).foregroundStyle(color).accessibilityHidden(true)}
+            HStack(alignment:.firstTextBaseline,spacing:3){
+                Text(decimal(current[key],0)).font(.system(size:17,weight:.bold)).foregroundStyle(Theme.text)
+                Text("/ "+decimal(goal[key],0)+" "+diary.t("جم","g")).font(.system(size:10,weight:.medium)).foregroundStyle(Theme.muted)
+            }.monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
+            ProgressView(value:progress).tint(color)
+                .accessibilityLabel(key.label(diary.language)+" "+diary.t("التقدّم اليومي","daily progress"))
+        }.frame(maxWidth:.infinity,alignment:.leading).accessibilityElement(children:.combine)
     }
     private struct IntakePoint:Identifiable{var day:String;var date:Date;var kcal:Double;var id:String{day}}
     private var intakeHistory:[IntakePoint]{
@@ -156,14 +180,9 @@ struct DiaryView:View {
             }}.frame(height:135).accessibilityLabel(diary.t("السعرات المسجلة خلال آخر سبعة أيام","Calories logged over the last seven days"))
         }
     }
-    @ViewBuilder private var activity:some View {
-        if diary.state.healthEnabled && day == DayKey.today && !health.signingBlocked {
-            DailyActivitySummaryView()
-        }
-    }
     private func mealSection(_ summary:MealDiarySummary,showEntries:Bool=true) -> some View {
         let meal=summary.meal,items=summary.entries,total=summary.nutrition
-        return VStack(alignment:.leading,spacing:14){
+        return VStack(alignment:.leading,spacing:10){
             HStack(spacing:12){
                 Image(systemName:meal == .snack ? "carrot":meal.symbol).font(.system(size:21)).foregroundStyle(Theme.accent).frame(width:44,height:44).background(Theme.surface,in:RoundedRectangle(cornerRadius:15)).accessibilityHidden(true)
                 VStack(alignment:.leading,spacing:4){Text(meal.label(diary.language)).font(.headline);Text("\(decimal(total.kcal,0)) \(diary.t("سعرة","kcal"))").font(.caption).foregroundStyle(Theme.muted)}
@@ -183,19 +202,21 @@ struct DiaryView:View {
                     if entry.id != items.last?.id{Divider()}
                 }
             }
-        }.luqmaCard()
+        }.padding(14).frame(maxWidth:.infinity,alignment:.leading)
+            .background(Theme.card,in:RoundedRectangle(cornerRadius:20,style:.continuous))
+            .overlay{RoundedRectangle(cornerRadius:20,style:.continuous).stroke(Theme.stroke,lineWidth:0.5)}
     }
     private func mealMacros(_ total:Nutrition)->some View {
         HStack(spacing:10){
             mealMacro(.protein,value:total.protein,color:Theme.secondaryAccent)
             mealMacro(.carbs,value:total.carbs,color:Theme.accent)
             mealMacro(.fat,value:total.fat,color:Theme.text)
-        }.padding(12).background(Theme.surface,in:RoundedRectangle(cornerRadius:16,style:.continuous))
+        }.padding(.horizontal,10).padding(.vertical,8).background(Theme.surface,in:RoundedRectangle(cornerRadius:12,style:.continuous))
     }
     private func mealMacro(_ key:MacroKey,value:Double,color:Color)->some View {
-        VStack(alignment:.leading,spacing:5){
-            Text(key.label(diary.language)).font(.caption).foregroundStyle(Theme.muted)
-            Text(decimal(value)+" "+diary.t("جم","g")).font(.subheadline.weight(.semibold)).monospacedDigit().foregroundStyle(color)
+        VStack(alignment:.leading,spacing:2){
+            Text(key.label(diary.language)).font(.system(size:10,weight:.medium)).foregroundStyle(Theme.muted)
+            Text(decimal(value)+" "+diary.t("جم","g")).font(.system(size:12,weight:.semibold)).monospacedDigit().foregroundStyle(color).lineLimit(1).minimumScaleFactor(0.8)
         }.frame(maxWidth:.infinity,alignment:.leading).accessibilityElement(children:.combine)
     }
 }

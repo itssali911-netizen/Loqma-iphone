@@ -60,7 +60,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                     if busy || choosingFood {ProgressView(choosingFood ? diary.t("جلب تفاصيل المنتج…","Loading product details…"):"").frame(maxWidth:.infinity)}
                     resultsContent
                 }.padding(20)
-            }.appBackground().navigationBarTitleDisplayMode(.inline).navigationTitle(diary.t(tab==1 ? "باركود":tab==2 ? "صورة الوجبة":"إضافة طعام",tab==1 ? "Barcode":tab==2 ? "Meal photo":"Add food"))
+            }.appBackground().navigationBarTitleDisplayMode(.inline).navigationTitle(diary.t(tab==1 ? "باركود":tab==2 ? "تحليل الوجبة":"إضافة طعام",tab==1 ? "Barcode":tab==2 ? "Meal analysis":"Add food"))
                 .toolbar {ToolbarItem(placement:.cancellationAction){Button(diary.t("إغلاق","Close")){searchTask?.cancel();selectionTask?.cancel();barcodePhotoTask?.cancel();queryToken=UUID();photoToken=UUID();dismiss()}}}
                 .sheet(item:$selected){food in FoodPortionView(food:food,sourceBarcode:tab==1,initialMeal:initialMeal,onCommit:{f,a,u,m in if onCommit(f,a,u,m){dismiss();return true};return false})}
                 .sheet(isPresented:$manual){FoodPortionView(food:Food(name:""),manual:true,initialMeal:initialMeal,onCommit:{f,a,u,m in if onCommit(f,a,u,m){dismiss();return true};return false})}
@@ -83,10 +83,10 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                             VStack(alignment:.leading,spacing:8){
                                 Label(diary.t("أفضل تطابق","Best match"),systemImage:"star.fill").font(.subheadline.bold()).foregroundStyle(Theme.accent)
                                 FoodRow(food:bestMatch){select(bestMatch)}.disabled(choosingFood)
-                            }.luqmaCard()
+                            }
                         }
                         if !otherResults.isEmpty {Text(diary.t(bestMatch == nil ? "الأطعمة":"نتائج أخرى",bestMatch == nil ? "Foods":"Other results")+" (\(otherResults.count))").font(.headline)}
-                        LazyVStack(alignment:.leading,spacing:4) {
+                        LazyVStack(alignment:.leading,spacing:10) {
                             ForEach(otherResults) {food in FoodRow(food:food){select(food)}.disabled(choosingFood).contextMenu{if filter==3{Button(role:.destructive){diary.removePersonal(food.id)}label:{Label(diary.t("حذف من أطعمتي","Remove from My foods"),systemImage:"trash")}}}}
                         }
                         if filter==0 && nextPage != nil {
@@ -101,8 +101,8 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                         VStack(alignment:.leading,spacing:10) {
                             Label(diary.t("منتجات قريبة من بحثك","Nearby products"),systemImage:"text.magnifyingglass").font(.headline)
                             Text(diary.t("تشابه في الاسم فقط؛ قد تختلف العلامة التجارية أو نوع المنتج.","Similar names; the brand or product type may differ.")).font(.caption).foregroundStyle(Theme.muted)
-                            LazyVStack(alignment:.leading,spacing:4){ForEach(nearbyResults){food in FoodRow(food:food){select(food)}.disabled(choosingFood)}}
-                        }.luqmaCard()
+                            LazyVStack(alignment:.leading,spacing:10){ForEach(nearbyResults){food in FoodRow(food:food){select(food)}.disabled(choosingFood)}}
+                        }
                     }
                     if tab==0 && filter==0 && reachedSourceWindow {Notice(text:diary.t("البحث واسع جدًا. أضف كلمة مثل نوع الطعام أو العلامة التجارية للوصول إلى منتجات أخرى.","This search is very broad. Add a food type or brand to find other products."))}
                     if tab==0 && filter != 0 && displayedResults.isEmpty {Notice(text:diary.t(filter==3 ? "الأطعمة التي تضيفها يدويًا تُحفظ هنا لك وحدك." : "تظهر هنا الأطعمة التي تسجّلها في يومياتك. جرّب «الكل» للبحث في القاعدة.",filter==3 ? "Foods you create manually are saved here privately." : "Foods logged in your diary appear here. Choose All to search the database."))}
@@ -166,7 +166,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
             }
         }
     }
-    private func recent(_ title:String,_ foods:[Food],reverse:Bool=true) -> some View {let available=foods.filter{FoodSearch.availableForAdding($0) && (!productSelection || FoodSearch.isCatalogFood($0))};return VStack(alignment:.leading,spacing:4){Text(title).font(.headline);ForEach(Array((reverse ? Array(available.reversed()):available).prefix(8))){food in FoodRow(food:food){select(food)}.disabled(choosingFood)}}.luqmaCard()}
+    private func recent(_ title:String,_ foods:[Food],reverse:Bool=true) -> some View {let available=foods.filter{FoodSearch.availableForAdding($0) && (!productSelection || FoodSearch.isCatalogFood($0))};return VStack(alignment:.leading,spacing:10){Text(title).font(.headline);ForEach(Array((reverse ? Array(available.reversed()):available).prefix(8))){food in FoodRow(food:food){select(food)}.disabled(choosingFood)}}}
     private func resetSearch() {
         searchTask?.cancel();selectionTask?.cancel();queryToken=UUID();busy=false;pageLoading=false;choosingFood=false;nextPage=nil;reachedSourceWindow=false
         localResults=[];remoteResults=[];publishResults([]);nearbyResults=[];suggestions=[];notice=nil

@@ -29,6 +29,7 @@ import UIKit
     @State private var analysisGeneration=UUID()
     @State private var loadingPhoto=false
     @State private var ready=GeminiCredentialStore.isConfigured
+    @FocusState private var descriptionFocused:Bool
     // Missing nutrition must never become zero or disappear from the meal.
     private var total:Nutrition? {
         guard !parts.isEmpty else{return nil};var value=Nutrition.zero
@@ -55,7 +56,7 @@ import UIKit
             }.disabled(busy)
             VStack(alignment:.leading,spacing:8){
                 Text(diary.t("وصف الوجبة (اختياري)","Meal description (optional)")).font(.subheadline.bold())
-                TextField(diary.t("مثلاً: الوزن، طريقة الطبخ وكمية الزيت","For example: weight, cooking method and oil amount"),text:$description,axis:.vertical).lineLimit(2...4).padding(12).background(Theme.card,in:RoundedRectangle(cornerRadius:12)).accessibilityLabel(diary.t("وصف الوجبة الاختياري","Optional meal description")).disabled(busy)
+                TextField(diary.t("مثلاً: الوزن، طريقة الطبخ وكمية الزيت","For example: weight, cooking method and oil amount"),text:$description,axis:.vertical).focused($descriptionFocused).lineLimit(2...4).padding(12).background(Theme.card,in:RoundedRectangle(cornerRadius:12)).accessibilityLabel(diary.t("وصف الوجبة الاختياري","Optional meal description")).disabled(busy)
                 Notice(text:diary.t("تُرسل الصورة والوصف لخدمة التحليل. الوزن والزيت والصلصات تؤثر في التقدير؛ أضف ما تعرفه لتحسينه.","The photo and description are sent to the analysis service. Weight, oil and sauces affect the estimate; add what you know to improve it."))
             }
             if loadingPhoto{ProgressView(diary.t("تجهيز الصورة…","Preparing photo…"))}
@@ -133,7 +134,7 @@ import UIKit
             if photoGeneration==token{loadingPhoto=false;photoLoadTask=nil}
         }
     }
-    private func analyze(){guard let imageData,!loadingPhoto else{return};busy=true;error=nil;cancellationMessage=nil;parts=[];products=[:]
+    private func analyze(){guard let imageData,!loadingPhoto else{return};descriptionFocused=false;busy=true;error=nil;cancellationMessage=nil;parts=[];products=[:]
         let token=UUID();analysisGeneration=token;let context=description,language=diary.language
         analysisTask=Task{do{
             let result=try await GeminiMealService.shared.analyze(imageData:imageData,context:context,language:language);try Task.checkCancellation();guard analysisGeneration==token else{return}

@@ -95,9 +95,9 @@ for name in ['Debug','Release']:
     targetconfigs.append(add('config:target:'+name,'XCBuildConfiguration',buildSettings=ts,name=name))
 pc=add('configs:project','XCConfigurationList',buildConfigurations=projectconfigs,defaultConfigurationIsVisible=0,defaultConfigurationName='Release')
 tc=add('configs:target','XCConfigurationList',buildConfigurations=targetconfigs,defaultConfigurationIsVisible=0,defaultConfigurationName='Release')
-for config in targetconfigs: objects[config]['buildSettings']['MARKETING_VERSION']='1.8'
+for config in targetconfigs: objects[config]['buildSettings']['MARKETING_VERSION']='1.9'
 target=add('target','PBXNativeTarget',buildConfigurationList=tc,buildPhases=phases,buildRules=[],dependencies=[],name='Luqma',packageProductDependencies=[ort]+mlxproducts,productName='Luqma',productReference=product,productType='com.apple.product-type.application')
-project=add('project','PBXProject',attributes=dict(BuildIndependentTargetsInParallel='YES',LastUpgradeCheck='1600',TargetAttributes={target:dict(CreatedOnToolsVersion='16.0',ProvisioningStyle='Automatic',SystemCapabilities={'com.apple.HealthKit':dict(enabled=1)})}),buildConfigurationList=pc,compatibilityVersion='Xcode 14.0',developmentRegion='ar',hasScannedForEncodings=0,knownRegions=['ar','en','Base'],mainGroup=main,packageReferences=[package,mlxpackage,mlxbase,transformers],productRefGroup=productgroup,projectDirPath='',projectRoot='',targets=[target])
+project=add('project','PBXProject',attributes=dict(BuildIndependentTargetsInParallel='YES',LastUpgradeCheck='1600',TargetAttributes={target:dict(CreatedOnToolsVersion='16.0',ProvisioningStyle='Automatic')}),buildConfigurationList=pc,compatibilityVersion='Xcode 14.0',developmentRegion='ar',hasScannedForEncodings=0,knownRegions=['ar','en','Base'],mainGroup=main,packageReferences=[package,mlxpackage,mlxbase,transformers],productRefGroup=productgroup,projectDirPath='',projectRoot='',targets=[target])
 payload=dict(archiveVersion=1,classes={},objectVersion=56,objects=objects,rootObject=project)
 (PROJECT/'project.pbxproj').write_text('// !$*UTF8*$!\n'+encode(payload)+'\n', encoding='utf-8', newline='\n')
 scheme=PROJECT/'xcshareddata/xcschemes';scheme.mkdir(parents=True,exist_ok=True)

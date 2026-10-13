@@ -10,7 +10,6 @@ struct BackupDocument:FileDocument {
 }
 struct SettingsView:View {
     @EnvironmentObject var diary:DiaryStore
-    @EnvironmentObject var health:HealthService
     @State private var goals=false
     @State private var gemini=false
     var body:some View {
@@ -27,9 +26,6 @@ struct SettingsView:View {
             }
             Section(diary.t("الربط والبيانات","Connections and data")){
                 Button{gemini=true}label:{Label(diary.t("تحليل الوجبة","Meal analysis"),systemImage:"sparkles")}
-                NavigationLink{HealthConnectionView().toolbar(.visible,for:.navigationBar)}label:{
-                    HStack{Label(diary.t("صحتي","Apple Health"),systemImage:"heart");Spacer();Text(health.signingBlocked ? diary.t("يحتاج إعداد","Setup needed") : (diary.state.healthEnabled ? diary.t("مفعّل","Enabled"):diary.t("غير مربوط","Not connected"))).font(.caption).foregroundStyle(.secondary)}
-                }
                 NavigationLink{BackupSettingsView().toolbar(.visible,for:.navigationBar)}label:{Label(diary.t("النسخ الاحتياطي والنقل","Backup and transfer"),systemImage:"externaldrive")}
             }
             Section{
@@ -78,7 +74,7 @@ private struct AboutLuqmaView:View {
                 Text(diary.t("الإصدار ","Version ") + (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.4"))
             }
             Section(diary.t("الخصوصية","Privacy")){
-                Notice(text:diary.t("سجلك وبيانات صحتي محفوظة على الجهاز. تحليل الوجبة يرسل الصورة والوصف إلى Google. استيراد الوصفة يرسل الرابط العام الذي تختاره أو نص الوصفة. إعداد الربط محفوظ في خزنة الجهاز ولا يدخل النسخ الاحتياطية.","Your diary and Health data stay on the device. Meal analysis sends the selected photo and description to Google. Recipe import sends your selected public link or recipe text. Connection credentials are stored in the device Keychain and excluded from backups."))
+                Notice(text:diary.t("سجلك محفوظ على الجهاز. تحليل الوجبة يرسل الصورة والوصف إلى Google. استيراد الوصفة يرسل الرابط العام الذي تختاره أو نص الوصفة. إعداد الربط محفوظ في خزنة الجهاز ولا يدخل النسخ الاحتياطية.","Your diary stays on the device. Meal analysis sends the selected photo and description to Google. Recipe import sends your selected public link or recipe text. Connection credentials are stored in the device Keychain and excluded from backups."))
             }
             Section(diary.t("مصادر الطعام","Food sources")){
                 Text(diary.t("٧٤٤ طعامًا من ملف MyFitnessPal الذي أضفته. هذه عينة محلية؛ البيانات الناقصة تحتاج مراجعة الملصق.","744 foods from your supplied MyFitnessPal file. This is a local sample; incomplete values need label review."))
@@ -96,6 +92,6 @@ struct ImportPreview:View {
     let snapshot:DiarySnapshot;let apply:()->Bool
     @EnvironmentObject var diary:DiaryStore
     @Environment(\.dismiss) var dismiss
-    var body:some View {NavigationStack{Form{Section(diary.t("البيانات التي ستُدمج","Data to merge")){row(diary.t("الأطعمة المسجلة","Diary entries"),snapshot.entries.count);row(diary.t("الوصفات والوجبات","Recipes and meals"),snapshot.recipes.count);row(diary.t("قراءات الوزن","Weight readings"),snapshot.weights.count);row(diary.t("المنتجات المحفوظة","Saved products"),snapshot.products.count)};Section{Notice(text:diary.t("ستُعتمد أهداف السعرات من النسخة. السجل الحالي يبقى محفوظًا، والمطابق يُحدَّث. صلاحيات صحتي وإعداد اللغة الحالية لا تتغير.","Calorie goals will use the backup values. Existing records remain, matching records update. Health access and the current language stay as they are."));Button(diary.t("تأكيد الاستيراد","Confirm import")){if apply(){dismiss()}}}}.appBackground().navigationTitle(diary.t("استيراد النسخة","Import backup")).toolbar{ToolbarItem(placement:.cancellationAction){Button(diary.t("إلغاء","Cancel")){dismiss()}}}}}
+    var body:some View {NavigationStack{Form{Section(diary.t("البيانات التي ستُدمج","Data to merge")){row(diary.t("الأطعمة المسجلة","Diary entries"),snapshot.entries.count);row(diary.t("الوصفات والوجبات","Recipes and meals"),snapshot.recipes.count);row(diary.t("قراءات الوزن","Weight readings"),snapshot.weights.count);row(diary.t("المنتجات المحفوظة","Saved products"),snapshot.products.count)};Section{Notice(text:diary.t("ستُعتمد أهداف السعرات من النسخة. السجل الحالي يبقى محفوظًا، والمطابق يُحدَّث. إعداد اللغة الحالية لا يتغير.","Calorie goals will use the backup values. Existing records remain, matching records update. The current language stays as it is."));Button(diary.t("تأكيد الاستيراد","Confirm import")){if apply(){dismiss()}}}}.appBackground().navigationTitle(diary.t("استيراد النسخة","Import backup")).toolbar{ToolbarItem(placement:.cancellationAction){Button(diary.t("إلغاء","Cancel")){dismiss()}}}}}
     private func row(_ title:String,_ n:Int) -> some View {HStack{Text(title);Spacer();Text(String(n)).foregroundStyle(.secondary)}}
 }

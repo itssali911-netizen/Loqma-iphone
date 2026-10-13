@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import platform
@@ -18,9 +19,10 @@ import tempfile
 import zipfile
 from contextlib import contextmanager
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
-from signing import BuildError, decode_secret, select_identity, validate_identifiers, validate_profile
+from signing import (BuildError, decode_secret, select_identity, validate_identifiers,
+                     validate_profile, validate_signed_entitlements)
 from vision_compat import apply_vision_compat
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -140,6 +142,36 @@ def result_summary(output: Path, mode: str, bundle: str, **details) -> None:
     (output / "build-summary.json").write_text(json.dumps(payload, indent=2) + "\n")
 
 
+def extract_exported_app(archive: zipfile.ZipFile, folder: Path) -> Path:
+    """Extract the known application payload for verification after Xcode export."""
+    members = [item for item in archive.infolist()
+               if item.filename.startswith("Payload/Luqma.app/")]
+    if not members or len(members) > 50000 or sum(item.file_size for item in members) > 512 * 1024 * 1024:
+        raise BuildError("The exported application payload is missing or unexpectedly large.")
+    seen = set()
+    for item in members:
+        relative = PurePosixPath(item.filename)
+        if (item.orig_filename != item.filename
+                or "\\" in item.filename or ":" in item.filename or ".." in relative.parts
+                or relative.is_absolute() or item.filename in seen
+                or relative.as_posix() != item.filename.rstrip("/")
+                or item.file_size > 128 * 1024 * 1024
+                or (item.external_attr >> 16) & 0o170000 == 0o120000):
+            raise BuildError("The exported application payload contains an unsafe path or entry.")
+        seen.add(item.filename)
+        target = folder.joinpath(*relative.parts)
+        if item.is_dir():
+            target.mkdir(parents=True, exist_ok=True)
+        else:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            with archive.open(item) as source, target.open("xb") as destination:
+                shutil.copyfileobj(source, destination)
+            permissions = (item.external_attr >> 16) & 0o777
+            if permissions:
+                target.chmod(permissions)
+    return folder / "Payload/Luqma.app"
+
+
 def prepare_sideload(app: Path, output: Path, bundle: str) -> Path:
     """Package a device build for re-signing by AltStore on the user's computer.
 
@@ -214,7 +246,7 @@ def build(mode: str, output: Path) -> None:
         app = output / "device-derived/Build/Products/Release-iphoneos/Luqma.app"
         apply_vision_compat(packages, verify_only=True)
         prepare_sideload(app, output, bundle)
-        (output / "READ-ME.txt").write_text("Luqma-Sideload.ipa is an iPhoneOS build requiring personal re-signing by AltStore/AltServer. It has no Apple developer certificate or provisioning profile and cannot install directly. A free account requires refreshing every 7 days. Native SDK/device/HealthKit behavior still needs validation after installation. No Apple account was accessed and no store upload was performed.\n")
+        (output / "READ-ME.txt").write_text("Luqma-Sideload.ipa is an iPhoneOS build requiring personal re-signing by AltStore/AltServer. It has no Apple developer certificate or provisioning profile and cannot install directly. A free account requires refreshing every 7 days. Physical device behavior needs validation after installation. Apple Health integration was removed at the user's request. No Apple account was accessed and no store upload was performed.\n")
         result_summary(output, mode, bundle, signed=False, apple_signed=False,
                        requires_personal_resigning=True, uploaded=False)
         return
@@ -258,23 +290,36 @@ def build(mode: str, output: Path) -> None:
             with zipfile.ZipFile(exported[0]) as ipa:
                 plist_name = "Payload/Luqma.app/Info.plist"
                 info = plistlib.loads(ipa.read(plist_name))
-                embedded = ipa.read("Payload/Luqma.app/embedded.mobileprovision")
+                ipa.getinfo("Payload/Luqma.app/embedded.mobileprovision")
                 if info.get("CFBundleIdentifier") != bundle:
                     raise BuildError("The exported IPA has a different bundle identifier.")
                 with tempfile.TemporaryDirectory(prefix="luqma-ipa-", dir=os.environ.get("RUNNER_TEMP")) as folder:
-                    embedded_path = Path(folder) / "embedded.mobileprovision"
-                    embedded_path.write_bytes(embedded)
+                    exported_app = extract_exported_app(ipa, Path(folder))
+                    embedded_path = exported_app / "embedded.mobileprovision"
                     embedded_path.chmod(0o600)
                     decoded = private_command(["security", "cms", "-D", "-i", str(embedded_path)], "Exported profile decoding")
                     exported_profile = validate_profile(decoded, team, bundle, mode)
                     if exported_profile.uuid != profile.uuid or identity not in exported_profile.certificates:
                         raise BuildError("The exported IPA uses a different signing profile or certificate.")
+                    private_command(["codesign", "--verify", "--deep", "--strict", str(exported_app)],
+                                    "Exported application signature verification")
+                    claims = private_command(["codesign", "--display", "--entitlements", "-", "--xml", str(exported_app)],
+                                             "Exported signing entitlement verification")
+                    validate_signed_entitlements(claims, exported_profile)
+                    certificate_prefix = Path(folder) / "exported-signer-"
+                    private_command(["codesign", "--display", "--extract-certificates", str(certificate_prefix), str(exported_app)],
+                                    "Exported signing certificate verification")
+                    leaf = Path(str(certificate_prefix) + "0")
+                    if not leaf.is_file() or hashlib.sha1(leaf.read_bytes()).hexdigest().upper() != identity:
+                        raise BuildError("The exported application's actual signing certificate differs from the validated certificate.")
         except (zipfile.BadZipFile, KeyError, plistlib.InvalidFileException) as error:
             raise BuildError("The exported IPA is missing valid application/signing metadata.") from error
         shutil.copyfile(exported[0], output / "Luqma.ipa")
         result_summary(output, mode, bundle, signed=True, uploaded=False,
                        export_method=profile.method, profile_expires=profile.expires.isoformat(),
-                       registered_device_count=profile.device_count)
+                       registered_device_count=profile.device_count,
+                       exported_signature_verified=True,
+                       exported_requested_entitlements_verified=True)
         instruction = ("Ad Hoc IPA: install only on iPhones included in the provisioning profile.\n"
                        if mode == "ad-hoc" else
                        "App Store Connect IPA: upload through your Apple distribution account for TestFlight/App Store. No upload was performed. This IPA is not for direct sideloading.\n")

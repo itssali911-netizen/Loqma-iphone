@@ -148,15 +148,18 @@ struct FoodRow:View {
         }
     }
     var body:some View {
-        Button(action:action){HStack(spacing:14){
-            Image(systemName:"fork.knife").font(.system(size:19,weight:.medium)).foregroundStyle(Theme.accent).frame(width:46,height:46).background(Theme.accent.opacity(0.1),in:RoundedRectangle(cornerRadius:14)).accessibilityHidden(true)
-            VStack(alignment:.leading,spacing:6){Text(food.label(diary.language)).font(.headline).foregroundStyle(.primary);if let brand=food.brand{Text(DisplayFormat.westernDigits(brand)).font(.caption).foregroundStyle(Theme.muted)}
+        Button(action:action){HStack(spacing:12){
+            Image(systemName:"fork.knife").font(.system(size:16,weight:.medium)).foregroundStyle(Theme.accent).frame(width:38,height:38).background(Theme.accent.opacity(0.1),in:RoundedRectangle(cornerRadius:12)).accessibilityHidden(true)
+            VStack(alignment:.leading,spacing:4){Text(food.label(diary.language)).font(.system(size:15,weight:.semibold)).foregroundStyle(Theme.text).multilineTextAlignment(.leading).fixedSize(horizontal:false,vertical:true);if let brand=food.brand{Text(DisplayFormat.westernDigits(brand)).font(.caption).foregroundStyle(Theme.muted)}
                 if let sourceTitle{Text(sourceTitle).font(.caption2).foregroundStyle(Theme.muted)}
-                if let n=food.values(for:food.unit){Text("\(decimal(n.kcal,0)) \(diary.t("سعرة","kcal")) · \(reference)").font(.subheadline).foregroundStyle(Theme.accent)}
+                if let n=food.values(for:food.unit){Text("\(decimal(n.kcal,0)) \(diary.t("سعرة","kcal")) · \(reference)").font(.system(size:12,weight:.medium)).foregroundStyle(Theme.accent)}
                 else{Text(diary.t("بيانات غذائية غير مكتملة","Incomplete nutrition data")).font(.caption).foregroundStyle(.orange)}
             };Spacer(minLength:0)
-            Image(systemName:"plus").font(.system(size:17,weight:.semibold)).foregroundStyle(Theme.accent).frame(width:36,height:36).background(Theme.surface,in:Circle()).accessibilityHidden(true)
-        }.padding(.vertical,10)}.buttonStyle(.plain)
+            Image(systemName:"plus").font(.system(size:16,weight:.semibold)).foregroundStyle(Theme.accent).frame(width:32,height:32).background(Theme.surface,in:Circle()).accessibilityHidden(true)
+        }.padding(14).frame(maxWidth:.infinity,alignment:.leading)
+            .background(Theme.card,in:RoundedRectangle(cornerRadius:18,style:.continuous))
+            .overlay{RoundedRectangle(cornerRadius:18,style:.continuous).stroke(Theme.stroke,lineWidth:0.5)}
+            .contentShape(RoundedRectangle(cornerRadius:18,style:.continuous))}.buttonStyle(.plain)
     }
 }
 struct Notice:View {var text:String;var body:some View {Text(DisplayFormat.westernDigits(text)).font(.footnote).foregroundStyle(Theme.muted).frame(maxWidth:.infinity,alignment:.leading).fixedSize(horizontal:false,vertical:true)}}

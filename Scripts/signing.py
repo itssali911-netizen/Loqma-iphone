@@ -15,6 +15,8 @@ from pathlib import Path
 class BuildError(RuntimeError):
     pass
 
+REQUESTED_ENTITLEMENTS=plistlib.loads((Path(__file__).resolve().parents[1]/"Luqma/Luqma.entitlements").read_bytes())
+
 
 @dataclass(frozen=True)
 class SigningProfile:
@@ -25,6 +27,8 @@ class SigningProfile:
     expires: datetime
     certificates: tuple[str, ...]
     device_count: int
+    application_identifier: str
+    allowed_entitlements: dict
 
     def export_options(self, identity: str) -> dict:
         return {
@@ -77,10 +81,9 @@ def validate_profile(data: bytes, team: str, bundle: str, mode: str,
         raise BuildError("BUNDLE_ID does not match the profile's explicit App ID.")
     if entitlements.get("com.apple.developer.team-identifier") != team:
         raise BuildError("The profile's entitlement team does not match APPLE_TEAM_ID.")
-    if entitlements.get("com.apple.developer.healthkit") is not True:
-        raise BuildError("Enable HealthKit on the App ID and regenerate the provisioning profile.")
-    if entitlements.get("com.apple.developer.healthkit.background-delivery") is not True:
-        raise BuildError("Enable HealthKit Background Delivery and regenerate the provisioning profile.")
+    for key,value in REQUESTED_ENTITLEMENTS.items():
+        if entitlements.get(key)!=value or type(entitlements.get(key)) is not type(value):
+            raise BuildError("The provisioning profile does not allow the requested capability: "+key)
     if entitlements.get("get-task-allow", False) is not False:
         raise BuildError("A distribution profile is required, not a development profile.")
     if profile.get("ProvisionsAllDevices"):
@@ -106,7 +109,43 @@ def validate_profile(data: bytes, team: str, bundle: str, mode: str,
         raise BuildError("The profile contains no valid signing certificate data.")
     return SigningProfile(identifier, team, bundle,
                           "release-testing" if mode == "ad-hoc" else "app-store-connect",
-                          expires, tuple(hashlib.sha1(x).hexdigest().upper() for x in certificates), len(devices))
+                          expires, tuple(hashlib.sha1(x).hexdigest().upper() for x in certificates), len(devices),
+                          application_id, dict(entitlements))
+
+
+def validate_signed_entitlements(data: bytes, profile: SigningProfile) -> None:
+    """Check the *exported executable's* claims, not only the profile allowlist.
+
+    codesign verifies the signature and resource seal separately. The actual
+    claims must match the app's requested capabilities and the profile allowlist.
+    """
+    try:
+        claims = plistlib.loads(data)
+    except (ValueError, TypeError, plistlib.InvalidFileException) as error:
+        raise BuildError("The exported application has no valid code-signing entitlements.") from error
+    if not isinstance(claims, dict):
+        raise BuildError("The exported application's signing entitlements must be a dictionary.")
+    required = {
+        "application-identifier": profile.application_identifier,
+        "com.apple.developer.team-identifier": profile.team,
+    }
+    required.update(REQUESTED_ENTITLEMENTS)
+    for key, expected in required.items():
+        actual = claims.get(key)
+        if actual != expected or type(actual) is not type(expected):
+            raise BuildError(f"The exported application's signature is missing or changes {key}.")
+    if claims.get("get-task-allow", False) is not False:
+        raise BuildError("The exported distribution application still permits debugging.")
+    # Apply the allowlist to every claimed Apple capability. Extra source
+    # capabilities (such as legacy memory limits) cannot silently slip through.
+    for key, value in claims.items():
+        if not key.startswith("com.apple.developer."):
+            continue
+        if key != "com.apple.developer.team-identifier" and key not in REQUESTED_ENTITLEMENTS:
+            raise BuildError("The exported application claims a capability removed from this app: "+key)
+        allowed = profile.allowed_entitlements.get(key)
+        if value != allowed or type(value) is not type(allowed):
+            raise BuildError(f"The exported application claims an unprovisioned capability: {key}.")
 
 
 def decode_secret(value: str, path: Path) -> None:

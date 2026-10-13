@@ -1,0 +1,35 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "{\n  \"components\": [\n    {\n      \"assumptions\": \"صدر دجاج مطبوخ مقطع شرائح (شاورما).\",\n      \"assumptionsEn\": \"Cooked chicken breast slices, typical for shawarma.\",\n      \"carbs\": 0,\n      \"fat\": 12,\n      \"grams\": 250,\n      \"high\": 300,\n      \"kcal\": 380,\n      \"kcalHigh\": 450,\n      \"kcalLow\": 320,\n      \"low\": 200,\n      \"name\": \"صدر دجاج مشوي\",\n      \"nameEn\": \"Grilled chicken breast\",\n      \"protein\": 65,\n      \"uncertain\": false\n    },\n    {\n      \"assumptions\": \"خبز بيتا طازج (حوالي 3 أرغفة).\",\n      \"assumptionsEn\": \"Fresh pita bread, approximately 3 pieces.\",\n      \"carbs\": 95,\n      \"fat\": 3,\n      \"grams\": 180,\n      \"high\": 220,\n      \"kcal\": 480,\n      \"kcalHigh\": 580,\n      \"kcalLow\": 400,\n      \"low\": 150,\n      \"name\": \"خبز بيتا\",\n      \"nameEn\": \"Pita bread\",\n      \"protein\": 14,\n      \"uncertain\": false\n    },\n    {\n      \"assumptions\": \"صلصة الثومية المصنوعة من الزيت والنشا والثوم.\",\n      \"assumptionsEn\": \"Toum (garlic sauce) made with oil, starch, and garlic.\",\n      \"carbs\": 5,\n      \"fat\": 40,\n      \"grams\": 60,\n      \"high\": 80,\n      \"kcal\": 380,\n      \"kcalHigh\": 500,\n      \"kcalLow\": 300,\n      \"low\": 40,\n      \"name\": \"صلصة ثومية\",\n      \"nameEn\": \"Garlic sauce (Toum)\",\n      \"protein\": 0,\n      \"uncertain\": false\n    },\n    {\n      \"assumptions\": \"مخللات متنوعة، لفت وخيار.\",\n      \"assumptionsEn\": \"Assorted pickles, including turnips and cucumbers.\",\n      \"carbs\": 6,\n      \"fat\": 0,\n      \"grams\": 100,\n      \"high\": 130,\n      \"kcal\": 25,\n      \"kcalHigh\": 35,\n      \"kcalLow\": 15,\n      \"low\": 70,\n      \"name\": \"مخلل\",\n      \"nameEn\": \"Pickled vegetables\",\n      \"protein\": 0,\n      \"uncertain\": false\n    }\n  ],\n  \"isFood\": true\n}",
+            "thoughtSignature": "EnMKcQFpFH0TrM//F1r844rL4ltlmMaGgMhxBigUs6IqTt5YJzqYdG1uzmg7j/Id1gJi1/zVxLgh8AQ7K2+IWsxi53c4JZITh2GOZFFQO6jdevXBTYkMFOy2InC5ClVsvcG2xD4k37CbBCRwROQ4l6cVsa9o"
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "index": 0
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 1578,
+    "candidatesTokenCount": 671,
+    "totalTokenCount": 2249,
+    "promptTokensDetails": [
+      {
+        "modality": "TEXT",
+        "tokenCount": 514
+      },
+      {
+        "modality": "IMAGE",
+        "tokenCount": 1064
+      }
+    ],
+    "serviceTier": "standard"
+  },
+  "modelVersion": "gemini-3.1-flash-lite",
+  "responseId": "1EjOaqqvNtCrkdUPjMOfwAw"
+}

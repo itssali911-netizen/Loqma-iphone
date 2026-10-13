@@ -14,6 +14,9 @@ import SwiftUI
     @State private var pendingIngredientEdits = Set<UUID>()
     @State private var previewFixtureLoaded = false
     @State private var saved = false
+    @State private var stage: RecipeImportStage = .readingSource
+    private enum InputFocus: Hashable { case link, paste }
+    @FocusState private var inputFocus: InputFocus?
 
     private var hasInput: Bool {
         !link.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
@@ -37,12 +40,21 @@ import SwiftUI
                     if busy {
                         HStack(spacing: 12) {
                             ProgressView()
-                            Text(diary.t("نقرأ الوصفة ونرتب مكوناتها…", "Reading the recipe and organizing its ingredients…")).font(.subheadline)
+                            Text(stage == .readingSource ? diary.t("نقرأ المقادير من الرابط…", "Reading ingredients from the link…") :
+                                diary.t("نحسب السعرات ونرتب الوصفة…", "Calculating nutrition and organizing the recipe…")).font(.subheadline)
                             Spacer(minLength: 8)
                             Button(diary.t("إيقاف", "Stop")) { cancel() }
                         }.luqmaCard()
                     }
-                    if let error { Text(error).font(.footnote).foregroundStyle(.orange).accessibilityLabel(error) }
+                    if let error {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text(error).font(.footnote).foregroundStyle(.orange).accessibilityLabel(error)
+                            if let url = try? RecipeImport.canonicalURL(link) {
+                                Link(destination: url) { Label(diary.t("فتح المصدر ونسخ الوصفة", "Open source and copy recipe"), systemImage: "arrow.up.right.square") }
+                                    .font(.subheadline).foregroundStyle(Theme.accent)
+                            }
+                        }
+                    }
                     if let draft { review(draft) }
                 }.padding(20)
             }.scrollDismissesKeyboard(.interactively).appBackground()
@@ -61,6 +73,7 @@ import SwiftUI
             Text(diary.t("رابط الوصفة", "Recipe link")).font(.headline)
             TextField(diary.t("الصق رابط الموقع أو المنشور", "Paste the page or post link"), text: $link)
                 .keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
+                .focused($inputFocus, equals: .link)
                 .submitLabel(.go).onSubmit { if hasInput && !busy { extract() } }
                 .padding(14).background(Theme.surface, in: RoundedRectangle(cornerRadius: 14))
                 .accessibilityLabel(diary.t("رابط الوصفة", "Recipe link"))
@@ -71,14 +84,18 @@ import SwiftUI
                         "Private or blocked posts need the recipe text. Copy the description, quantities and steps and paste them here."))
                         .font(.caption).foregroundStyle(Theme.muted)
                     TextEditor(text: $pastedText).frame(minHeight: 150)
+                        .focused($inputFocus, equals: .paste)
                         .scrollContentBackground(.hidden).padding(10)
                         .background(Theme.surface, in: RoundedRectangle(cornerRadius: 14))
                         .accessibilityLabel(diary.t("نص الوصفة", "Recipe text"))
                         .onChange(of: pastedText) { _, _ in if !busy { draft = nil; error = nil } }
                 }.padding(.top, 12)
             }.font(.subheadline)
-            Text(diary.t("يُرسل الرابط والنص إلى خدمة تحليل الوصفات. راجع المقادير والتقديرات قبل الحفظ.",
-                "The link and text are sent to the recipe analysis service. Review quantities and estimates before saving."))
+            Text(diary.t("مواقع الوصفات، يوتيوب، تيك توك وإنستقرام. يجب أن تكون المقادير متاحة للعامة في الصفحة أو وصف المنشور.",
+                "Recipe websites, YouTube, TikTok and Instagram. Ingredients must be publicly available in the page or post description."))
+                .font(.caption).foregroundStyle(Theme.muted)
+            Text(diary.t("يُرسل محتوى الوصفة العام أو النص الذي تلصقه إلى خدمة التحليل. راجع المقادير والتقديرات قبل الحفظ.",
+                "Public recipe content or your pasted text is sent to the analysis service. Review quantities and estimates before saving."))
                 .font(.caption).foregroundStyle(Theme.muted)
             Button(action: extract) {
                 Label(diary.t("استخراج الوصفة", "Extract recipe"), systemImage: "sparkles")
@@ -118,6 +135,14 @@ import SwiftUI
                     NutritionView(value: perServing)
                 }
             }.luqmaCard()
+
+            Button(action: recalculate) {
+                Label(diary.t("حساب السعرات بعد تعديل المقادير", "Calculate nutrition after editing amounts"),systemImage:"sparkles")
+            }.buttonStyle(LuqmaPrimaryButtonStyle()).disabled(!result.canRecalculate || busy || saved || !pendingIngredientEdits.isEmpty)
+            if !result.canRecalculate {
+                Text(diary.t("حدّد الحصص ومقادير المكونات، ثم اضغط حساب السعرات.", "Set servings and ingredient amounts, then calculate nutrition."))
+                    .font(.caption).foregroundStyle(Theme.muted)
+            }
 
             VStack(alignment: .leading, spacing: 14) {
                 LuqmaSectionHeader(title: diary.t("المكونات", "Ingredients"), detail: "\(result.ingredients.count)")
@@ -183,10 +208,14 @@ import SwiftUI
         guard hasInput && !busy else { return }
         let source = link, text = pastedText, language = diary.language
         let token = UUID(); generation = token
+        inputFocus = nil
+        stage = text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .readingSource : .calculating
         busy = true; error = nil; draft = nil; saved = false; pendingIngredientEdits.removeAll()
         extraction = Task {
             do {
-                let result = try await RecipeImportService.shared.extract(url: source, pastedText: text, language: language)
+                let result = try await RecipeImportService.shared.extract(url: source, pastedText: text, language: language) { value in
+                    Task { @MainActor in guard generation == token else { return }; stage = value }
+                }
                 try Task.checkCancellation()
                 guard generation == token else { return }
                 draft = result
@@ -199,6 +228,25 @@ import SwiftUI
                 showPaste = true
             }
             if generation == token { busy = false; extraction = nil }
+        }
+    }
+
+    private func recalculate() {
+        guard let original=draft,original.canRecalculate,!busy,!saved,pendingIngredientEdits.isEmpty else{return}
+        let input:RecipeImport.Input
+        do {input=try original.recalculationInput()}catch {self.error=(error as? AppError)?.message(diary.language);return}
+        let token=UUID();generation=token;let language=diary.language
+        inputFocus=nil;busy=true;stage = .calculating;error=nil
+        extraction=Task {
+            do {
+                let value=try await RecipeImportService.shared.extract(url:input.sourceURL?.absoluteString ?? "",pastedText:input.pastedText,language:language)
+                try Task.checkCancellation();guard generation==token else{return}
+                draft=value.retainingSource(of:original,language:language)
+            }catch is CancellationError {}catch {
+                guard generation==token,!Task.isCancelled else{return}
+                self.error=(error as? AppError)?.message(language) ?? diary.t("تعذّر الحساب. مقاديرك محفوظة؛ حاول مجددًا.","Calculation failed. Your amounts remain; retry.")
+            }
+            if generation==token {busy=false;extraction=nil}
         }
     }
 
@@ -274,6 +322,12 @@ import SwiftUI
             DisclosureGroup(diary.t("تعديل المكوّن", "Edit ingredient"), isExpanded: $editing) {
                 VStack(alignment: .leading, spacing: 12) {
                     TextField(diary.t("اسم المكوّن", "Ingredient name"), text: $ingredient.name)
+                    if ingredient.nutrition == nil {
+                        Picker(diary.t("وحدة المقدار", "Quantity unit"),selection:Binding(get:{ingredient.unit},set:{unit in
+                            ingredient.unit=unit;ingredient.unitLabel=unit.label(diary.language);ingredient.nutrition=nil
+                            nutritionPending=false;onPendingEdit(ingredient.id,false);loadNutrition()
+                        })) {ForEach(FoodUnit.allCases,id:\.self){unit in Text(unit.label(diary.language)).tag(unit)}}
+                    }
                     NumericInput(title: diary.t("المقدار", "Quantity"), value: Binding(
                         get: { ingredient.quantity ?? 0 }, set: changeQuantity), suffix: unitLabel)
                     Text(diary.t("القيم لهذه الكمية كاملة، وليست لكل ١٠٠ جم.", "These values describe this whole quantity, not 100 g."))

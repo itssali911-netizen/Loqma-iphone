@@ -8,13 +8,13 @@ final class RecipeImportTests: XCTestCase {
 
     private func row(_ name: String = "Cooked rice", quantity: Any = 200, unit: String = "g",
                      kcal: Any = 260, protein: Any = 5.4, carbs: Any = 56, fat: Any = 0.6) -> [String: Any] {
-        ["name": name, "quantity": quantity, "unit": unit, "unitLabel": unit == "g" ? "g" : "cup",
+        ["name": name, "quantity": quantity, "sourceQuantityText": "\(name) \(quantity) \(unit)", "unit": unit, "unitLabel": unit == "g" ? "g" : "cup",
          "kcal": kcal, "protein": protein, "carbs": carbs, "fat": fat, "assumption": "Typical cooked food profile; values are estimates."]
     }
     private func payload(rows: [[String: Any]]? = nil, servings: Any = 2, steps: [String] = ["Cook the rice.", "Mix with cooked chicken.", "Serve."],
                          assumptions: [String] = [], available: Bool = true) throws -> Data {
         try JSONSerialization.data(withJSONObject: ["isRecipe": available, "sourceAvailable": available, "title": "Rice with chicken",
-            "servings": servings, "ingredients": rows ?? [row(), row("Cooked chicken", quantity: 150, kcal: 250, protein: 46, carbs: 0, fat: 5.5)],
+            "servings": servings, "sourceServingsText": "Makes \(servings) servings.", "ingredients": rows ?? [row(), row("Cooked chicken", quantity: 150, kcal: 250, protein: 46, carbs: 0, fat: 5.5)],
             "steps": steps, "assumptions": assumptions])
     }
     private func envelope(_ payload: Data, retrieved: String? = nil, retrievalStatus: String = "URL_RETRIEVAL_STATUS_SUCCESS",
@@ -32,7 +32,7 @@ final class RecipeImportTests: XCTestCase {
     }
     private func body(_ input: RecipeImport.Input) throws -> [String: Any] {
         let request = try RecipeImport.request(input, language: .en, key: sampleKey)
-        XCTAssertEqual(request.url, GeminiMeal.endpoint)
+        XCTAssertEqual(request.url, AnalysisModel.fast.endpoint)
         XCTAssertNil(request.url?.query)
         XCTAssertEqual(request.value(forHTTPHeaderField: "x-goog-api-key"), sampleKey)
         let bytes = try XCTUnwrap(request.httpBody)
@@ -43,6 +43,9 @@ final class RecipeImportTests: XCTestCase {
     func testPublicURLNormalizationDropsTrackingAndPrivateFragments() throws {
         let value = try RecipeImport.canonicalURL(" HTTPS://WWW.INSTAGRAM.COM/reel/abc/?igsh=tracking&utm_source=share#private ")
         XCTAssertEqual(value.absoluteString, "https://www.instagram.com/reel/abc/")
+        XCTAssertEqual(try RecipeImport.canonicalURL("https://www.instagram.com/reel/DP_xI84DBN0/?dlrf=MXhtc3RwaWUweXk4eg==").absoluteString,
+                       "https://www.instagram.com/reel/DP_xI84DBN0/")
+        XCTAssertEqual(try RecipeImport.canonicalURL("https://www.tt.site/t/ZSboQ9F2g/").absoluteString, "https://www.tt.site/t/ZSboQ9F2g/")
         XCTAssertEqual(try RecipeImport.canonicalURL("https://www.bbcgoodfood.com/recipes/soup?sort=popular&fbclid=tracking").query, "sort=popular")
         XCTAssertEqual(try RecipeImport.canonicalURL("https://www.example.com:443/recipe").absoluteString, "https://www.example.com/recipe")
     }
@@ -89,11 +92,9 @@ final class RecipeImportTests: XCTestCase {
         let tools = try XCTUnwrap(webBody["tools"] as? [[String: Any]])
         XCTAssertNotNil(tools.first?["urlContext"])
         let config = try XCTUnwrap(webBody["generationConfig"] as? [String: Any])
-        XCTAssertEqual((config["thinkingConfig"] as? [String: Any])?["thinkingLevel"] as? String, "LOW")
-        let format = try XCTUnwrap(config["responseFormat"] as? [String: Any])
-        let text = try XCTUnwrap(format["text"] as? [String: Any])
-        XCTAssertEqual(text["mimeType"] as? String, "APPLICATION_JSON")
-        let schema = try XCTUnwrap(text["schema"] as? [String: Any])
+        XCTAssertEqual((config["thinkingConfig"] as? [String: Any])?["thinkingLevel"] as? String, "MINIMAL")
+        XCTAssertEqual(config["responseMimeType"] as? String, "application/json")
+        let schema = try XCTUnwrap(config["responseJsonSchema"] as? [String: Any])
         let encoded = String(data: try JSONSerialization.data(withJSONObject: schema), encoding: .utf8)!
         XCTAssertTrue(encoded.contains("null")); XCTAssertFalse(encoded.contains("minimum"))
         let videoBody = try body(RecipeImport.input(url: "https://youtu.be/9hE5-98ZeCg", pastedText: ""))
@@ -102,6 +103,37 @@ final class RecipeImportTests: XCTestCase {
         let parts = try XCTUnwrap(contents.first?["parts"] as? [[String: Any]])
         XCTAssertEqual((parts.first?["fileData"] as? [String: Any])?["fileUri"] as? String, "https://www.youtube.com/watch?v=9hE5-98ZeCg")
         XCTAssertEqual((parts.first?["videoMetadata"] as? [String: Any])?["endOffset"] as? String, "600s")
+    }
+
+    func testCapturedPublicCaptionUsesSourceTextWithoutPretendingVideoWasProcessed() throws {
+        let url = try RecipeImport.canonicalURL("https://www.instagram.com/reel/recipe123/")
+        let content = RecipeSourceContent(text: "2 eggs, 5 g olive oil. Whisk eggs, fry in oil. Makes 2 servings.", kind: .publicCaption)
+        let source = try RecipeImport.input(url: url.absoluteString, pastedText: "").withCapturedSource(content, finalURL: url)
+        let request = try body(source)
+        XCTAssertNil(request["tools"])
+        let contents = try XCTUnwrap(request["contents"] as? [[String: Any]])
+        let parts = try XCTUnwrap(contents.first?["parts"] as? [[String: Any]])
+        XCTAssertTrue(parts.allSatisfy { $0["fileData"] == nil })
+        XCTAssertTrue((parts.last?["text"] as? String)?.contains("not a transcript") == true)
+        let draft = try RecipeImport.parseResponse(envelope(payload()), input: source, language: .en)
+        XCTAssertEqual(draft.sourceKind, .website)
+        XCTAssertEqual(draft.sourceURL, url.absoluteString)
+        XCTAssertTrue(draft.assumptions.contains { $0.contains("public post description") })
+        XCTAssertFalse(draft.assumptions.contains { $0.contains("ten minutes") })
+        // Identical model output without captured source evidence remains invalid.
+        XCTAssertThrowsError(try RecipeImport.parseResponse(envelope(payload()),
+            input: RecipeImport.input(url: url.absoluteString, pastedText: ""), language: .en))
+    }
+
+    func testBackupRequestRetainsSchemaAndUsesShortSeparateDeadline() throws {
+        let request = try RecipeImport.request(input(), language: .en, key: sampleKey, model: .backup)
+        XCTAssertEqual(request.url, AnalysisModel.backup.endpoint)
+        XCTAssertEqual(request.timeoutInterval, AnalysisAttemptPolicy.backupTimeout)
+        let body = try XCTUnwrap(JSONSerialization.jsonObject(with: try XCTUnwrap(request.httpBody)) as? [String: Any])
+        let config = try XCTUnwrap(body["generationConfig"] as? [String: Any])
+        let format = try XCTUnwrap(config["responseFormat"] as? [String: Any])
+        XCTAssertNotNil((format["text"] as? [String: Any])?["schema"])
+        XCTAssertNil(body["tools"])
     }
 
     func testWebsiteRequiresSuccessfulRetrievalOfThisExactSource() throws {

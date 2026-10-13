@@ -5,6 +5,16 @@
 	};
 	"objectVersion" = 56;
 	"objects" = {
+		"999DEB4D280D81A4EA40CA46" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "AnalysisModel.swift";
+			"sourceTree" = "<group>";
+		};
+		"D02DFE00B3F0D7B50D562066" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 999DEB4D280D81A4EA40CA46;
+		};
 		"E905FBAED38800B358467D68" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -115,6 +125,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = 13978D5F2FE1DE5CB357BB6A;
 		};
+		"D55BC573688C6D7AFDDC1865" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "MealImageContent.swift";
+			"sourceTree" = "<group>";
+		};
+		"71C30DC924309B360D451538" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = D55BC573688C6D7AFDDC1865;
+		};
 		"7A9B9F71D1BACA24E0583B7D" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -165,6 +185,26 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = BF5E9B0B03A1B08CADE8C46A;
 		};
+		"13D4FF53F409426D1B4DAAB9" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "RecipeRecalculation.swift";
+			"sourceTree" = "<group>";
+		};
+		"7D05374718928637A140CD05" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 13D4FF53F409426D1B4DAAB9;
+		};
+		"BAFAA157BECEAFE793BB7738" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "RecipeSource.swift";
+			"sourceTree" = "<group>";
+		};
+		"E0D20144630682CEEAA8B67E" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = BAFAA157BECEAFE793BB7738;
+		};
 		"F866668F7C766A3FE269DA0B" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -198,6 +238,7 @@
 		"2BA340BF271E1A0E2D6B10FC" = {
 			"isa" = "PBXGroup";
 			"children" = (
+				999DEB4D280D81A4EA40CA46,
 				E905FBAED38800B358467D68,
 				06E6E33C6B127B3730065E22,
 				AD5F6C86957F15655ED65354,
@@ -209,11 +250,14 @@
 				740B6574D4BE2DB81E89F3F4,
 				99FD76BD119C231294A67C24,
 				13978D5F2FE1DE5CB357BB6A,
+				D55BC573688C6D7AFDDC1865,
 				7A9B9F71D1BACA24E0583B7D,
 				007FBEEB3DCFA7A65B8ECEC2,
 				1E894F72A51B5F2C4EE0C0D6,
 				F78575E7CF35BE9BEF0982EF,
 				BF5E9B0B03A1B08CADE8C46A,
+				13D4FF53F409426D1B4DAAB9,
+				BAFAA157BECEAFE793BB7738,
 				F866668F7C766A3FE269DA0B,
 				1F0D75ECCB677A0C7DCB66DA,
 				B051277896438AB6FF8F5F11,
@@ -271,16 +315,6 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = 20744C83D0394496367E6FF9;
 		};
-		"97A0CB0974ACD09ACD0BF0E3" = {
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "sourcecode.swift";
-			"path" = "HealthService.swift";
-			"sourceTree" = "<group>";
-		};
-		"402DA145132AAD9769C44221" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = 97A0CB0974ACD09ACD0BF0E3;
-		};
 		"E540AB74E9432128CD9051EC" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -319,7 +353,6 @@
 				1843CD3E6F8E7EB8B56ABA91,
 				653DD8E88E923295DB76B7AD,
 				20744C83D0394496367E6FF9,
-				97A0CB0974ACD09ACD0BF0E3,
 				E540AB74E9432128CD9051EC,
 				6CD95E8C5F11D12097591DAE,
 				48D10B5AE5F72B6836EDFCD5,
@@ -376,26 +409,6 @@
 		"0B2634EBC8B3FF8510852636" = {
 			"isa" = "PBXBuildFile";
 			"fileRef" = BFE17ACE05D898E290332E40;
-		};
-		"3759170AED1C2D7C901295F6" = {
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "sourcecode.swift";
-			"path" = "HealthConnectionView.swift";
-			"sourceTree" = "<group>";
-		};
-		"D04ED25BCA9CF73FE9FDA19E" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = 3759170AED1C2D7C901295F6;
-		};
-		"3EA6656D40209CE7623FD71E" = {
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "sourcecode.swift";
-			"path" = "HealthImportView.swift";
-			"sourceTree" = "<group>";
-		};
-		"437B4B5D1B4C9BA846CD0DF3" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = 3EA6656D40209CE7623FD71E;
 		};
 		"3E31BDA889FB25A6C7913241" = {
 			"isa" = "PBXFileReference";
@@ -465,8 +478,6 @@
 				11772A999B0CF5E648C47233,
 				29048C922B421BBD73B1A875,
 				BFE17ACE05D898E290332E40,
-				3759170AED1C2D7C901295F6,
-				3EA6656D40209CE7623FD71E,
 				3E31BDA889FB25A6C7913241,
 				69C4B1C7AA72B29F8292B817,
 				C8ADF73E9B38238D03760F45,
@@ -786,6 +797,7 @@
 			"isa" = "PBXSourcesBuildPhase";
 			"buildActionMask" = 2147483647;
 			"files" = (
+				D02DFE00B3F0D7B50D562066,
 				20126CEF08FC5BF70D8ED5F6,
 				4A236428F71056DCD2F907B6,
 				B29BC5AE96FFAC126BF5DE69,
@@ -797,11 +809,14 @@
 				FD770A0D1190CA0559B018D1,
 				98141A9EE077F7BCF208865C,
 				60ECFF57867921AABCC19DDD,
+				71C30DC924309B360D451538,
 				A02B2E13FB1A663D18B94E01,
 				223C3154D98275519A803E3F,
 				513E77FD1223B72D245CC4B7,
 				25D59F21AF9CF7B0695BC555,
 				356CDBB91A8C3BF5F5F8C28D,
+				7D05374718928637A140CD05,
+				E0D20144630682CEEAA8B67E,
 				7156749514081042D0DEDDA9,
 				7F8C55211A3045987A30FBB4,
 				D7764BDF2E8F543F56223B46,
@@ -810,7 +825,6 @@
 				E9DF33C90C95BE46CC7B5561,
 				71A948B0477A77F7B102F007,
 				279360EAF13099BDBE667F01,
-				402DA145132AAD9769C44221,
 				76A090779134DCD58DA2D30F,
 				082B6D20E4622E96660533DF,
 				32A69040FD1EC58A7366E44B,
@@ -819,8 +833,6 @@
 				0E5577C4BBC679748E6C3F13,
 				531B4A74ADCF42F28BF17735,
 				0B2634EBC8B3FF8510852636,
-				D04ED25BCA9CF73FE9FDA19E,
-				437B4B5D1B4C9BA846CD0DF3,
 				B9FCD0B7DEB5015571206492,
 				B7953420073CFA82ED6F7D0D,
 				AEE8BD9FC54BA9E2B3082726,
@@ -902,7 +914,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				"MARKETING_VERSION" = "1.8";
+				"MARKETING_VERSION" = "1.9";
 				"PRODUCT_BUNDLE_IDENTIFIER" = "app.luqma.diary";
 				"PRODUCT_NAME" = "$(TARGET_NAME)";
 				"SDKROOT" = "iphoneos";
@@ -950,7 +962,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				"MARKETING_VERSION" = "1.8";
+				"MARKETING_VERSION" = "1.9";
 				"PRODUCT_BUNDLE_IDENTIFIER" = "app.luqma.diary";
 				"PRODUCT_NAME" = "$(TARGET_NAME)";
 				"SDKROOT" = "iphoneos";
@@ -1015,11 +1027,6 @@
 					"34A04005BCAF206EEC990BD9" = {
 						"CreatedOnToolsVersion" = "16.0";
 						"ProvisioningStyle" = "Automatic";
-						"SystemCapabilities" = {
-							"com.apple.HealthKit" = {
-								"enabled" = 1;
-							};
-						};
 					};
 				};
 			};

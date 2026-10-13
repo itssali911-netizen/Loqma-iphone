@@ -1,19 +1,22 @@
 """Synthetic profiles only. No real Apple certificates, device IDs or secrets."""
 import base64
 import hashlib
+import io
 import os
 import plistlib
 import sys
 import tempfile
 import unittest
+import zipfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import patch
 
 SCRIPTS = Path(__file__).resolve().parents[1] / "Scripts"
 sys.path.insert(0, str(SCRIPTS))
-from signing import BuildError, decode_secret, select_identity, validate_profile
-from build_ios import installed_signing, public_environment, require_mac
+from signing import (BuildError, decode_secret, select_identity, validate_profile,
+                     validate_signed_entitlements)
+from build_ios import extract_exported_app, installed_signing, public_environment, require_mac
 
 TEAM = "A1B2C3D4E5"
 BUNDLE = "app.example.luqma"
@@ -31,8 +34,7 @@ def profile_data(mode="ad-hoc"):
         "DeveloperCertificates": [CERTIFICATE],
         "Entitlements": {"application-identifier": TEAM + "." + BUNDLE,
                          "com.apple.developer.team-identifier": TEAM,
-                         "com.apple.developer.healthkit": True,
-                         "com.apple.developer.healthkit.background-delivery": True, "get-task-allow": False},
+                         "get-task-allow": False},
     }
     if mode == "ad-hoc":
         data["ProvisionedDevices"] = ["synthetic-test-device"]
@@ -44,7 +46,7 @@ def validated(data=None, mode="ad-hoc"):
 
 
 class SigningTests(unittest.TestCase):
-    def test_ad_hoc_export_keeps_health_and_uses_registered_devices(self):
+    def test_ad_hoc_export_uses_registered_devices_without_extra_capabilities(self):
         profile = validated()
         self.assertEqual(profile.method, "release-testing")
         self.assertEqual(profile.device_count, 1)
@@ -62,10 +64,8 @@ class SigningTests(unittest.TestCase):
         with self.assertRaisesRegex(BuildError, "registered"):
             validated(profile_data("app-store"))
 
-    def test_healthkit_missing_team_bundle_platform_and_wildcard_rejected(self):
+    def test_missing_team_bundle_platform_and_wildcard_rejected(self):
         changes = [
-            ("health", lambda p: p["Entitlements"].pop("com.apple.developer.healthkit")),
-            ("background", lambda p: p["Entitlements"].pop("com.apple.developer.healthkit.background-delivery")),
             ("team", lambda p: p.update(TeamIdentifier=["WRONGTEAM1"])),
             ("bundle", lambda p: p["Entitlements"].update({"application-identifier": TEAM + ".app.other"})),
             ("wildcard", lambda p: p["Entitlements"].update({"application-identifier": TEAM + ".*"})),
@@ -106,6 +106,58 @@ class SigningTests(unittest.TestCase):
                         output.replace("Apple Distribution:", "Apple Development:")):
             with self.assertRaises(BuildError):
                 select_identity(invalid, validated())
+
+    def test_exported_signature_matches_profile_and_rejects_removed_health_capabilities(self):
+        claims = dict(profile_data()["Entitlements"])
+        validate_signed_entitlements(plistlib.dumps(claims), validated())
+        changes = [
+            lambda c: c.update({"com.apple.developer.healthkit": True}),
+            lambda c: c.update({"com.apple.developer.healthkit.background-delivery": True}),
+            lambda c: c.pop("application-identifier"),
+            lambda c: c.update({"application-identifier": TEAM + ".app.other"}),
+            lambda c: c.update({"com.apple.developer.team-identifier": "WRONGTEAM1"}),
+            lambda c: c.update({"get-task-allow": True}),
+            lambda c: c.update({"com.apple.developer.kernel.increased-memory-limit": True}),
+        ]
+        for change in changes:
+            changed = dict(claims); change(changed)
+            with self.assertRaises(BuildError):
+                validate_signed_entitlements(plistlib.dumps(changed), validated())
+        with self.assertRaises(BuildError):
+            validate_signed_entitlements(b"missing signing plist", validated())
+
+    def test_legacy_app_prefix_is_checked_in_actual_signature(self):
+        data = profile_data()
+        data["ApplicationIdentifierPrefix"] = ["OLDPREFIX1"]
+        data["Entitlements"]["application-identifier"] = "OLDPREFIX1." + BUNDLE
+        validate_signed_entitlements(plistlib.dumps(data["Entitlements"]), validated(data))
+
+    def test_export_payload_extracts_only_application_and_rejects_unsafe_entries(self):
+        def package(name, symbolic=False):
+            buffer = io.BytesIO()
+            with zipfile.ZipFile(buffer, "w") as archive:
+                archive.writestr("SwiftSupport/ignored", b"not part of app")
+                info = zipfile.ZipInfo(name)
+                # Keep the raw archive spelling even on Windows, where ZipInfo
+                # normalizes backslashes when constructed from a filename.
+                info.filename = name
+                if symbolic:
+                    info.external_attr = (0o120777 << 16)
+                archive.writestr(info, b"payload")
+            buffer.seek(0)
+            return zipfile.ZipFile(buffer)
+        with tempfile.TemporaryDirectory() as directory, package("Payload/Luqma.app/Info.plist") as archive:
+            folder = Path(directory)
+            app = extract_exported_app(archive, folder)
+            self.assertEqual((app / "Info.plist").read_bytes(), b"payload")
+            self.assertFalse((folder / "SwiftSupport").exists())
+        for name, symbolic in [("Payload/Luqma.app/../escape", False),
+                               ("Payload/Luqma.app//nested", False),
+                               ("Payload/Luqma.app/a\\escape", False),
+                               ("Payload/Luqma.app/link", True)]:
+            with tempfile.TemporaryDirectory() as directory, package(name, symbolic) as archive:
+                with self.assertRaises(BuildError):
+                    extract_exported_app(archive, Path(directory))
 
     def test_strict_base64_private_permissions_and_no_overwrite(self):
         with tempfile.TemporaryDirectory() as directory:
