@@ -1,5 +1,5 @@
-Build 44, source abc61f48ce1d7343bfd34f6170fbf2550c97743a
-https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/38452505784
+Build 45, source eda27071191e1b314944454a1044a8cf264e771f
+https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/38534039880
 
 test_existing_output_is_not_overwritten (test_build.BuildTests.test_existing_output_is_not_overwritten) ... ok
 test_failed_sdk_build_stops_without_success_summary (test_build.BuildTests.test_failed_sdk_build_stops_without_success_summary) ... ok
@@ -7,6 +7,10 @@ test_sideload_packages_device_only_without_apple_secrets_or_claiming_signed_inst
 test_signed_export_checks_embedded_profile_and_never_uploads (test_build.BuildTests.test_signed_export_checks_embedded_profile_and_never_uploads) ... ok
 test_simulator_app_cannot_be_packaged_for_iphone_sideloading (test_build.BuildTests.test_simulator_app_cannot_be_packaged_for_iphone_sideloading) ... ok
 test_unsigned_check_builds_both_sdks_without_claiming_an_ipa (test_build.BuildTests.test_unsigned_check_builds_both_sdks_without_claiming_an_ipa) ... ok
+test_declared_font_files_and_full_license_are_pinned (test_bundled_fonts.BundledFontTests.test_declared_font_files_and_full_license_are_pinned) ... ok
+test_every_weight_covers_arabic_latin_and_western_digits (test_bundled_fonts.BundledFontTests.test_every_weight_covers_arabic_latin_and_western_digits) ... ok
+test_fonts_and_license_are_in_xcode_resource_copy_phase (test_bundled_fonts.BundledFontTests.test_fonts_and_license_are_in_xcode_resource_copy_phase) ... ok
+test_registered_faces_match_actual_postscript_names (test_bundled_fonts.BundledFontTests.test_registered_faces_match_actual_postscript_names) ... ok
 test_active_catalog_contains_six_unique_off_products_only (test_food_catalog.FoodCatalogTests.test_active_catalog_contains_six_unique_off_products_only) ... ok
 test_active_photo_categories_have_no_nutritional_reference_values (test_food_catalog.FoodCatalogTests.test_active_photo_categories_have_no_nutritional_reference_values) ... ok
 test_explicit_zero_and_source_kcal_are_preserved (test_food_catalog.FoodCatalogTests.test_explicit_zero_and_source_kcal_are_preserved) ... ok
@@ -32,8 +36,22 @@ test_missing_team_bundle_platform_and_wildcard_rejected (test_signing.SigningTes
 test_secrets_not_in_build_process_environment (test_signing.SigningTests.test_secrets_not_in_build_process_environment) ... ok
 test_signing_cleanup_runs_after_build_failure_and_restores_existing_profiles (test_signing.SigningTests.test_signing_cleanup_runs_after_build_failure_and_restores_existing_profiles) ... ok
 test_strict_base64_private_permissions_and_no_overwrite (test_signing.SigningTests.test_strict_base64_private_permissions_and_no_overwrite) ... ok
+test_black_frame_is_preserved_and_same_process_recaptured_once (test_ui_preview.CaptureRetryTests.test_black_frame_is_preserved_and_same_process_recaptured_once) ... Native daily-overview was near-empty black; waiting for the same process before recapture.
+ok
+test_exited_process_cannot_be_recaptured (test_ui_preview.CaptureRetryTests.test_exited_process_cannot_be_recaptured) ... Native daily-overview was near-empty black; waiting for the same process before recapture.
+ok
+test_overview_is_the_ninth_native_preview_route (test_ui_preview.CaptureRetryTests.test_overview_is_the_ninth_native_preview_route) ... ok
+test_retry_bound_is_two_and_final_empty_capture_remains_unmodified (test_ui_preview.CaptureRetryTests.test_retry_bound_is_two_and_final_empty_capture_remains_unmodified) ... Native daily-overview was near-empty black; waiting for the same process before recapture.
+Native daily-overview was near-empty black; waiting for the same process before recapture.
+ok
+test_all_png_scanline_filters_decode_known_rgb_values (test_ui_preview.FramebufferTests.test_all_png_scanline_filters_decode_known_rgb_values) ... ok
+test_dark_cards_on_black_background_are_not_rejected (test_ui_preview.FramebufferTests.test_dark_cards_on_black_background_are_not_rejected) ... ok
+test_invalid_crc_size_filter_and_truncated_png_are_rejected (test_ui_preview.FramebufferTests.test_invalid_crc_size_filter_and_truncated_png_are_rejected) ... ok
+test_phone_dimensions_are_checked_after_pixel_decoding (test_ui_preview.FramebufferTests.test_phone_dimensions_are_checked_after_pixel_decoding) ... ok
+test_rgba_and_grayscale_pixels_decode_and_transparency_is_black (test_ui_preview.FramebufferTests.test_rgba_and_grayscale_pixels_decode_and_transparency_is_black) ... ok
+test_status_bar_and_home_indicator_do_not_mask_black_launch_frame (test_ui_preview.FramebufferTests.test_status_bar_and_home_indicator_do_not_mask_black_launch_frame) ... ok
 
 ----------------------------------------------------------------------
-Ran 31 tests in 0.038s
+Ran 45 tests in 0.164s
 
 OK

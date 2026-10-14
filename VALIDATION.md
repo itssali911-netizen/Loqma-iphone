@@ -1,3 +1,19 @@
+# Validation — version 2.0 build 45
+
+Built source eda27071191e1b314944454a1044a8cf264e771f. [Native build](https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/38534039880). 167 Swift tests, 45 Python tests, iPhone Release compilation, independent IPA validation and nine visually reviewed native Simulator screenshots passed.
+
+The actual editable dark Home frame 1:2 was inspected in the user's Figma duplicate: 414×896, background #0B0B12, card #161626, Blue 1 #2F80ED, 20pt corners and 165×225 activity cards. Inspector text styles were Gilroy ExtraBold 22 and Gilroy Light 16. SwiftUI reuses that palette and hierarchy with a compact calendar, real calorie circle, one consumed/target macro panel, 2×2 meal cards, readable macro rows and a circular blue add action. Surface/secondary text shades, extra food controls and Arabic spacing are adaptations. Reference map, profile photographs, water/step/sleep values and proprietary font binaries are not packaged.
+
+Five actual Tajawal TrueType files and the complete SIL OFL licence are registered in UIAppFonts and included in the resource-copy phase. Portable tests inspect pinned resource hashes, actual PostScript names and Arabic/Latin/123 glyph coverage. Independent IPA validation matches every font/licence byte against the immutable built commit. Gilroy's app embedding/distribution licence was not supplied; the typography is a licensed Arabic substitute, not an exact Gilroy match.
+
+Nine real Simulator framebuffer images were visually reviewed: four tabs, photo review, recipe review, actual food search, populated meal cards, and a populated overview. Photo/recipe/meal/overview numbers are DEBUG-only synthetic fixtures; the search uses the actual bundled catalog. No diary mutations or live API requests are needed for these fixtures. The capture harness rejects near-black launch frames and retries at most twice while confirming process liveness. Pixel checks do not prove all layout content; manual visual review remains necessary. The unchanged original screenshots are delivered.
+
+The existing 750 foods, 3830 declared MFP portions, 31 incomplete foods, 94 unknown portions, OFF identity safeguards, Serving quantity 1, 123 formatting, source-grounded recipe parsing, analysis cancellation/cache and backup formats remain. HealthKit controls/permissions/entitlements remain removed as requested. No Apple membership was created and no credential is embedded. Search timing in current Core tests is in TEST-RESULTS.txt; physical iPhone keyboard latency is unmeasured.
+
+Only presentation/resources and the native screenshot harness changed for 2.0. External analysis/recipe benchmarks below are historical 1.9 evidence; no new provider-speed or calorie-accuracy claim is made. The prior raw blank-image model test failed; the existing local featureless-image guard remains. TikTok caption extraction worked but full trustworthy nutrition was not proved; unknown quantities remain reviewable. Private links and video-only recipes may still need pasted text. Physical iPhone installation, camera, network and keyboard tests remain pending. The IPA needs personal Apple re-signing with the same account/installed identifier app.luqma.diary.2AV9NV468K to preserve data.
+
+## Historical validation
+
 # Validation —2.0 local source, not yet compiled
 
 The user explicitly chose to keep these changes local. No2.0 source commit is published to GitHub and no new remote build is started. The existing1.9 IPA/build44 and its evidence below remain the latest compiled release.
