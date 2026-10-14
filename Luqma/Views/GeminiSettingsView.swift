@@ -12,36 +12,37 @@ struct GeminiSettingsView: View {
         NavigationStack {
             Form {
                 Section {
-                    Label(diary.t("تحليل الوجبة", "Meal analysis"), systemImage: "sparkles").font(LTypography.headline)
+                    Label(diary.t("تحليل الوجبة", "Meal analysis"), systemImage: "sparkles").luqmaFont(.headline)
                     Label(diary.t(configured ? "جاهز على هذا الجهاز" : "يحتاج تفعيلًا على هذا الجهاز",
                                   configured ? "Ready on this device" : "Activation needed on this device"),
                           systemImage: configured ? "checkmark.circle.fill" : "circle.dashed")
                         .foregroundStyle(configured ? Theme.accent : Theme.muted)
                     Text(diary.t("تظهر السعرات والماكروز بعد تحليل الصورة. يمكنك تعديل الكمية قبل حفظ الوجبة.",
                                  "Calories and macros appear after photo analysis. You can adjust the amount before saving the meal."))
-                        .font(LTypography.footnote).foregroundStyle(Theme.muted)
-                }
-                if let message { Section { Text(message).font(LTypography.footnote) } }
+                        .luqmaFont(.footnote).foregroundStyle(Theme.muted)
+                }.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
+                if let message { Section { Text(message).luqmaFont(.footnote) }.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke) }
                 Section {
                     DisclosureGroup(diary.t("إعدادات متقدمة", "Advanced settings")) {
                         if !configured {
                             SecureField(diary.t("مفتاح الاتصال", "Connection key"), text: $key)
                                 .keyboardType(.asciiCapable).textInputAutocapitalization(.never).autocorrectionDisabled().privacySensitive()
                             Button(diary.t("تفعيل الاتصال", "Activate connection")) { save() }
+                                .buttonStyle(LuqmaPrimaryButtonStyle())
                                 .disabled(key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                             Link(diary.t("إنشاء مفتاح اتصال", "Create a connection key"), destination: URL(string: "https://aistudio.google.com/api-keys")!)
                         } else {
                             Button(diary.t("إعادة ضبط الاتصال", "Reset connection"), role: .destructive) { resetting = true }
                         }
                     }
-                }
+                }.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
                 Section {
                     Text(diary.t("تُرسل صورة الوجبة والوصف فقط إلى خدمة التحليل. يبقى سجلك على جهازك.",
                                  "Only the meal photo and description are sent to the analysis service. Your diary stays on your device."))
-                        .font(LTypography.footnote).foregroundStyle(Theme.muted)
+                        .luqmaFont(.footnote).foregroundStyle(Theme.muted)
                     Link(diary.t("سياسة خدمة التحليل", "Analysis service policy"), destination: URL(string: "https://ai.google.dev/gemini-api/terms")!)
-                }
-            }.appBackground().navigationTitle(diary.t("تحليل الوجبة", "Meal analysis"))
+                }.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
+            }.sandowForm().navigationTitle(diary.t("تحليل الوجبة", "Meal analysis")).navigationBarTitleDisplayMode(.inline)
                 .toolbar { ToolbarItem(placement: .confirmationAction) { Button(diary.t("تم", "Done")) { dismiss() } } }
         }
         .confirmationDialog(diary.t("إعادة ضبط اتصال التحليل؟", "Reset the analysis connection?"), isPresented: $resetting, titleVisibility: .visible) {

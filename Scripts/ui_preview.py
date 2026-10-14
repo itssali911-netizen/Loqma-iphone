@@ -4,9 +4,10 @@
 Requires an Apple Silicon Mac, Xcode, and an installed iOS Simulator runtime.
 This builds a Debug Simulator app, launches each native tab using the app's
 DEBUG-only -loqma-preview-tab argument, and captures the Simulator framebuffer.
-Two more launches use -loqma-preview-photo and -loqma-preview-recipe to show
-synthetic fixtures in the production meal and recipe reviews. These are native
-UI evidence, not live analyses.
+Additional launches show read-only meal/recipe fixtures, secondary native forms,
+and an accessibility-sized dashboard. These are native UI evidence, not live
+analyses. Fixture names identify display examples, and new form routes disable
+interaction so their save actions cannot write to the diary.
 It creates no mock UI, sends no image to an API, and modifies no existing device.
 
 Apple command-line screenshot documentation:
@@ -44,9 +45,36 @@ RECIPE_SCREEN = "recipe-import"
 EXTRA_ROUTES = (("search", "-loqma-preview-search"),
                 ("meal-macros", "-loqma-preview-meals"),
                 ("daily-overview", "-loqma-preview-overview"))
-EXPECTED_SCREEN_COUNT = len(SCREENS) + 2 + len(EXTRA_ROUTES)
+TEMPLATE_ROUTES = (("macro-goals", "goals"),
+                   ("food-portion", "portion"),
+                   ("recipe-editor", "recipe"),
+                   ("weight-plan", "plan"),
+                   ("weight-editor", "weight"),
+                   ("analysis-connection", "connection"),
+                   ("backup", "backup"),
+                   ("about", "about"))
+VARIANT_ROUTES = (("accessibility-today", ("-loqma-preview-overview", "-loqma-preview-accessibility")),)
+EXPECTED_SCREEN_COUNT = len(SCREENS) + 2 + len(EXTRA_ROUTES) + len(TEMPLATE_ROUTES) + len(VARIANT_ROUTES)
 MAX_EMPTY_FRAME_RETRIES = 2
 EMPTY_FRAME_RETRY_SECONDS = 5.0
+
+
+def preview_cases() -> list[dict]:
+    cases = [{"tab": tab, "screen": screen, "arguments": ["-loqma-preview-tab", str(tab)],
+              "synthetic_fixture": False} for tab, screen in SCREENS]
+    routes = ((PHOTO_SCREEN, "-loqma-preview-photo"),
+              (RECIPE_SCREEN, "-loqma-preview-recipe")) + EXTRA_ROUTES
+    cases += [{"tab": None, "screen": screen, "arguments": [argument],
+               "synthetic_fixture": screen in {PHOTO_SCREEN, RECIPE_SCREEN, "meal-macros", "daily-overview"}}
+              for screen, argument in routes]
+    cases += [{"tab": None, "screen": screen, "arguments": ["-loqma-preview-template", route],
+               "template_route": route, "read_only_preview": True,
+               "synthetic_fixture": route in {"portion", "recipe"}}
+              for screen, route in TEMPLATE_ROUTES]
+    cases += [{"tab": None, "screen": screen, "arguments": list(arguments),
+               "synthetic_fixture": True, "dynamic_type_override": "accessibility3"}
+              for screen, arguments in VARIANT_ROUTES]
+    return cases
 
 
 def command(arguments: list[str], output: Path, label: str, timeout: int = 120,
@@ -289,6 +317,11 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
         "synthetic_recipe_fixture": True,
         "synthetic_meal_fixture": True,
         "synthetic_overview_fixture": True,
+        "synthetic_portion_fixture": True,
+        "synthetic_recipe_editor_fixture": True,
+        "secondary_form_previews_read_only": True,
+        "accessibility_preview_dynamic_type": "accessibility3",
+        "english_preview_skipped_reason": "DiaryStore exposes no temporary language override; preview does not write language settings",
         "search_uses_actual_catalog": True,
         "health_data_fixture_used": False,
         "layout_review": "Pending visual inspection of the native screenshots",
@@ -332,10 +365,8 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
                 output, "preview-status-bar")
         command(["xcrun", "simctl", "install", device, str(app)],
                 output, "preview-install", 180)
-        cases = list(SCREENS) + [(None, PHOTO_SCREEN), (None, RECIPE_SCREEN)] + [(None, screen) for screen, _ in EXTRA_ROUTES]
-        for number, (tab, screen) in enumerate(cases, 1):
-            routes = {PHOTO_SCREEN: "-loqma-preview-photo", RECIPE_SCREEN: "-loqma-preview-recipe", **dict(EXTRA_ROUTES)}
-            arguments = [routes[screen]] if tab is None else ["-loqma-preview-tab", str(tab)]
+        for number, case in enumerate(preview_cases(), 1):
+            tab, screen, arguments = case["tab"], case["screen"], case["arguments"]
             launched = command(["xcrun", "simctl", "launch", "--terminate-running-process",
                                 device, bundle, *arguments,
                                 "-AppleLanguages", "(ar)", "-AppleLocale", "ar_SA"],
@@ -349,7 +380,8 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
             details = capture_screenshot(output, device, screen, pid, screenshot)
             report["screenshots"].append({"tab": tab, "screen": screen,
                                           "kind": "tab" if tab is not None else screen,
-                                          "synthetic_fixture": screen in {PHOTO_SCREEN, RECIPE_SCREEN, "meal-macros", "daily-overview"},
+                                          "synthetic_fixture": case["synthetic_fixture"],
+                                          **{key: case[key] for key in ("template_route", "read_only_preview", "dynamic_type_override") if key in case},
                                           "process_still_running": True,
                                           **details})
             print(f"Captured native {screen}: {screenshot.name}", flush=True)

@@ -14,7 +14,8 @@ import zlib
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "Scripts"))
 from ui_preview import (BuildError, EXPECTED_SCREEN_COUNT, EXTRA_ROUTES,
-                        capture_screenshot, decode_png, framebuffer_content, png_details)
+                        SCREENS, TEMPLATE_ROUTES, VARIANT_ROUTES,
+                        capture_screenshot, decode_png, framebuffer_content, png_details, preview_cases)
 
 
 def chunk(kind, content):
@@ -156,9 +157,32 @@ class CaptureRetryTests(unittest.TestCase):
             self.assertFalse((Path(directory) / "09-daily-overview.png").exists())
             self.assertEqual(len(list((Path(directory) / "rejected-framebuffers").glob("*.png"))), 1)
 
-    def test_overview_is_the_ninth_native_preview_route(self):
-        self.assertEqual(EXPECTED_SCREEN_COUNT, 9)
+    def test_all_routes_have_distinct_names_and_the_count_tracks_coverage(self):
+        cases = preview_cases()
+        self.assertEqual(EXPECTED_SCREEN_COUNT,
+                         len(SCREENS) + 2 + len(EXTRA_ROUTES) + len(TEMPLATE_ROUTES) + len(VARIANT_ROUTES))
+        self.assertEqual(len(cases), EXPECTED_SCREEN_COUNT)
+        self.assertEqual(len({case["screen"] for case in cases}), len(cases))
+        self.assertTrue(all(case["arguments"] and all(isinstance(value, str) for value in case["arguments"])
+                            for case in cases))
         self.assertIn(("daily-overview", "-loqma-preview-overview"), EXTRA_ROUTES)
+        self.assertEqual(cases[len(SCREENS) + 2 + len(EXTRA_ROUTES) - 1]["screen"], "daily-overview")
+
+    def test_secondary_forms_use_one_read_only_route_and_mark_only_synthetic_examples(self):
+        cases = {case["screen"]: case for case in preview_cases()}
+        for screen, route in TEMPLATE_ROUTES:
+            with self.subTest(route=route):
+                case = cases[screen]
+                self.assertEqual(case["arguments"], ["-loqma-preview-template", route])
+                self.assertTrue(case["read_only_preview"])
+                self.assertEqual(case["synthetic_fixture"], route in {"portion", "recipe"})
+
+    def test_accessibility_dashboard_composes_the_same_read_only_overview(self):
+        cases = {case["screen"]: case for case in preview_cases()}
+        case = cases["accessibility-today"]
+        self.assertEqual(case["arguments"], ["-loqma-preview-overview", "-loqma-preview-accessibility"])
+        self.assertEqual(case["dynamic_type_override"], "accessibility3")
+        self.assertTrue(case["synthetic_fixture"])
 
 
 if __name__ == "__main__":

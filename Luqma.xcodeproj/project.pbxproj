@@ -679,6 +679,76 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = 56BA6AEC0C3BED80CF76CBE3;
 		};
+		"A8603091C12E8E71A195EC65" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "file";
+			"path" = "WorkSans-Bold.ttf";
+			"sourceTree" = "<group>";
+		};
+		"23217785B5637FC60DD9C57E" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = A8603091C12E8E71A195EC65;
+		};
+		"EF26EC3D4922639D638406FB" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "file";
+			"path" = "WorkSans-ExtraBold.ttf";
+			"sourceTree" = "<group>";
+		};
+		"E3C6668AF0ADBEB3C1D72B4D" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = EF26EC3D4922639D638406FB;
+		};
+		"F8C5C6A96F49E1590DD57B14" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "file";
+			"path" = "WorkSans-Light.ttf";
+			"sourceTree" = "<group>";
+		};
+		"78D21236C028E9101CEAEAA7" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = F8C5C6A96F49E1590DD57B14;
+		};
+		"2237B60501798711C6B5DA0A" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "file";
+			"path" = "WorkSans-Medium.ttf";
+			"sourceTree" = "<group>";
+		};
+		"FB37E5A9C8451BA54CFC06AD" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 2237B60501798711C6B5DA0A;
+		};
+		"ACEA5B2E93BDB31676D0B761" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "text";
+			"path" = "WorkSans-OFL.txt";
+			"sourceTree" = "<group>";
+		};
+		"F73231D82F0B8DD772995849" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = ACEA5B2E93BDB31676D0B761;
+		};
+		"7447E4B0ABDFF54CF40ABBD0" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "file";
+			"path" = "WorkSans-Regular.ttf";
+			"sourceTree" = "<group>";
+		};
+		"C187643C4AC30ACA608330CF" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 7447E4B0ABDFF54CF40ABBD0;
+		};
+		"11C13CD65E0D11A17939427B" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "file";
+			"path" = "WorkSans-SemiBold.ttf";
+			"sourceTree" = "<group>";
+		};
+		"F71A0944C645BB84AFD94521" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 11C13CD65E0D11A17939427B;
+		};
 		"8BF729FFE074CAEE622C0292" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "folder.assetcatalog";
@@ -737,6 +807,13 @@
 				9969C7BC3A1B2EF15AD2E4AE,
 				EDA65B4D24B32C0FA7CDB1C5,
 				56BA6AEC0C3BED80CF76CBE3,
+				A8603091C12E8E71A195EC65,
+				EF26EC3D4922639D638406FB,
+				F8C5C6A96F49E1590DD57B14,
+				2237B60501798711C6B5DA0A,
+				ACEA5B2E93BDB31676D0B761,
+				7447E4B0ABDFF54CF40ABBD0,
+				11C13CD65E0D11A17939427B,
 				8BF729FFE074CAEE622C0292,
 				A3CACB75505CC02B52B47594,
 			);
@@ -954,6 +1031,13 @@
 				32BF30BDE4C6BF727FBF7351,
 				0DDB06225CC44BC673292414,
 				BFE363997595FFAF9F2056A7,
+				23217785B5637FC60DD9C57E,
+				E3C6668AF0ADBEB3C1D72B4D,
+				78D21236C028E9101CEAEAA7,
+				FB37E5A9C8451BA54CFC06AD,
+				F73231D82F0B8DD772995849,
+				C187643C4AC30ACA608330CF,
+				F71A0944C645BB84AFD94521,
 				5522B3B3B2EACC1C8F9BEAAC,
 				D70E903F5CEE6AF46A292C3F,
 			);
@@ -998,7 +1082,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				"MARKETING_VERSION" = "2.0";
+				"MARKETING_VERSION" = "2.1";
 				"PRODUCT_BUNDLE_IDENTIFIER" = "app.luqma.diary";
 				"PRODUCT_NAME" = "$(TARGET_NAME)";
 				"SDKROOT" = "iphoneos";
@@ -1046,7 +1130,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				"MARKETING_VERSION" = "2.0";
+				"MARKETING_VERSION" = "2.1";
 				"PRODUCT_BUNDLE_IDENTIFIER" = "app.luqma.diary";
 				"PRODUCT_NAME" = "$(TARGET_NAME)";
 				"SDKROOT" = "iphoneos";

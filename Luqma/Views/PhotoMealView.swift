@@ -48,21 +48,27 @@ import UIKit
         };return estimated ? (low,high):nil
     }
     var body:some View {
-        VStack(alignment:.leading,spacing:18){
-            if let preview{Image(uiImage:preview).resizable().scaledToFit().frame(maxHeight:240).clipShape(RoundedRectangle(cornerRadius:20))}
-            HStack{
-                PhotosPicker(selection:$item,matching:.images){Label(diary.t("رفع صورة","Choose photo"),systemImage:"photo")}.buttonStyle(.bordered)
-                Button{Task{if UIImagePickerController.isSourceTypeAvailable(.camera),await CameraAccess.request(){camera=true}else{error=diary.t("الكاميرا غير متاحة أو تحتاج إذنًا من الإعدادات.","Camera is unavailable or needs access in Settings.")}}}label:{Label(diary.t("الكاميرا","Camera"),systemImage:"camera")}.buttonStyle(.bordered)
+        VStack(alignment:.leading,spacing:16){
+            if let preview{
+                Image(uiImage:preview).resizable().scaledToFit().frame(maxWidth:.infinity,maxHeight:240)
+                    .background(Theme.card,in:RoundedRectangle(cornerRadius:20)).clipShape(RoundedRectangle(cornerRadius:20))
+            }else if parts.isEmpty{
+                VStack(spacing:12){Image(systemName:"camera.viewfinder").font(.system(size:36,weight:.light)).foregroundStyle(Theme.accent);Text(diary.t("صوّر وجبتك أو اختر صورتها","Take or choose a meal photo")).luqmaFont(.subheadline).foregroundStyle(Theme.muted)}
+                    .frame(maxWidth:.infinity,minHeight:140).background(Theme.card,in:RoundedRectangle(cornerRadius:20)).accessibilityElement(children:.combine)
+            }
+            HStack(spacing:12){
+                PhotosPicker(selection:$item,matching:.images){Label(diary.t("رفع صورة","Choose photo"),systemImage:"photo")}.buttonStyle(LuqmaSecondaryButtonStyle())
+                Button{Task{if UIImagePickerController.isSourceTypeAvailable(.camera),await CameraAccess.request(){camera=true}else{error=diary.t("الكاميرا غير متاحة أو تحتاج إذنًا من الإعدادات.","Camera is unavailable or needs access in Settings.")}}}label:{Label(diary.t("الكاميرا","Camera"),systemImage:"camera")}.buttonStyle(LuqmaSecondaryButtonStyle())
             }.disabled(busy)
             VStack(alignment:.leading,spacing:8){
-                Text(diary.t("وصف الوجبة (اختياري)","Meal description (optional)")).font(LTypography.font(size:15,weight:.bold,relativeTo:.subheadline))
-                TextField(diary.t("مثلاً: الوزن، طريقة الطبخ وكمية الزيت","For example: weight, cooking method and oil amount"),text:$description,axis:.vertical).focused($descriptionFocused).lineLimit(2...4).padding(12).background(Theme.card,in:RoundedRectangle(cornerRadius:12)).accessibilityLabel(diary.t("وصف الوجبة الاختياري","Optional meal description")).disabled(busy)
+                Text(diary.t("وصف الوجبة (اختياري)","Meal description (optional)")).luqmaFont(size:15,weight:.bold,relativeTo:.subheadline)
+                TextField(diary.t("مثلاً: الوزن، طريقة الطبخ وكمية الزيت","For example: weight, cooking method and oil amount"),text:$description,axis:.vertical).focused($descriptionFocused).lineLimit(2...4).padding(16).background(Theme.card,in:RoundedRectangle(cornerRadius:16)).accessibilityLabel(diary.t("وصف الوجبة الاختياري","Optional meal description")).disabled(busy)
                 Notice(text:diary.t("تُرسل الصورة والوصف لخدمة التحليل. الوزن والزيت والصلصات تؤثر في التقدير؛ أضف ما تعرفه لتحسينه.","The photo and description are sent to the analysis service. Weight, oil and sauces affect the estimate; add what you know to improve it."))
             }
             if loadingPhoto{ProgressView(diary.t("تجهيز الصورة…","Preparing photo…"))}
             Button{if ready{analyze()}else{showingSetup=true}}label:{Label(diary.t("تحليل الوجبة","Meal analysis"),systemImage:"sparkles")}.buttonStyle(LuqmaPrimaryButtonStyle()).disabled(imageData==nil || busy || loadingPhoto)
-            if busy{HStack{ProgressView();Text(diary.t("تقدير المكونات والسعرات…","Estimating components and calories…")).font(LTypography.footnote);Spacer();Button(diary.t("إلغاء","Cancel")){analysisTask?.cancel()}}}
-            if let error{Text(error).foregroundStyle(.orange).font(LTypography.footnote)}
+            if busy{HStack(spacing:12){ProgressView().tint(Theme.accent);Text(diary.t("تقدير المكونات والسعرات…","Estimating components and calories…")).luqmaFont(.footnote);Spacer(minLength:0);Button(diary.t("إلغاء","Cancel")){analysisTask?.cancel()}.frame(minHeight:44)}.luqmaCard()}
+            if let error{Label(error,systemImage:"exclamationmark.circle").foregroundStyle(Theme.accent).luqmaFont(.footnote).fixedSize(horizontal:false,vertical:true).luqmaCard()}
             if !parts.isEmpty{review}
         }
         .sheet(isPresented:$camera){CameraPhoto{data in camera=false;if let data{photoGeneration=UUID();photoLoadTask?.cancel();loadingPhoto=false;imageData=data;parts=[];error=nil}}.ignoresSafeArea()}
@@ -96,14 +102,15 @@ import UIKit
     private var review:some View {
         VStack(alignment:.leading,spacing:16){
             VStack(alignment:.leading,spacing:10){
-                Text(diary.t("تقدير الوجبة","Meal estimate")).font(LTypography.font(size:18,weight:.bold,relativeTo:.title3))
+                Text(diary.t("تقدير الوجبة","Meal estimate")).luqmaFont(size:18,weight:.bold,relativeTo:.title3)
                 if let total{NutritionView(value:total,large:true)}
-                if let range=calorieRange{Text(diary.t("النطاق التقريبي: ","Estimated range: ")+decimal(range.0,0)+"–"+decimal(range.1,0)+diary.t(" سعرة"," kcal")).font(LTypography.caption).foregroundStyle(Theme.muted)}
+                if let range=calorieRange{Text(diary.t("النطاق التقريبي: ","Estimated range: ")+decimal(range.0,0)+"–"+decimal(range.1,0)+diary.t(" سعرة"," kcal")).luqmaFont(.caption).foregroundStyle(Theme.muted)}
                 Notice(text:diary.t("راجع الكمية قبل الإضافة. التقدير من الصورة قد يتغير حسب الزيت والصلصات وطريقة التحضير.","Review the amount before logging. Photo estimates vary with oil, sauces and preparation."))
             }.luqmaCard()
+            LuqmaSectionHeader(title:diary.t("مكونات الوجبة","Meal components"),detail:"\(parts.count)")
             ForEach(parts){part in component(part)}
-            Button{selection=ProductSelection(id:UUID(),name:"")}label:{Label(diary.t("إضافة مكوّن","Add component"),systemImage:"plus.circle")}
-            Picker(diary.t("الوجبة","Meal"),selection:$meal){ForEach(Meal.allCases){Text($0.label(diary.language)).tag($0)}}.pickerStyle(.menu)
+            Button{selection=ProductSelection(id:UUID(),name:"")}label:{Label(diary.t("إضافة مكوّن","Add component"),systemImage:"plus.circle")}.buttonStyle(LuqmaSecondaryButtonStyle())
+            HStack{Text(diary.t("أضفها إلى","Log under")).luqmaFont(.subheadline);Spacer(minLength:8);Picker(diary.t("الوجبة","Meal"),selection:$meal){ForEach(Meal.allCases){Text($0.label(diary.language)).tag($0)}}.pickerStyle(.menu)}.luqmaCard()
             Button(diary.t("إضافة الوجبة","Log meal")){
                 guard total != nil else{return};let values=parts.compactMap{products[$0.id]};guard values.count==parts.count else{return}
                 if onCommit(values,meal){parts=[];products=[:]}
@@ -111,18 +118,26 @@ import UIKit
         }
     }
     private func component(_ part:PhotoPart)->some View {
-        VStack(alignment:.leading,spacing:10){
-            HStack{Text(products[part.id]?.0.label(diary.language) ?? part.food.food.label(diary.language)).font(LTypography.headline);Spacer();Button(role:.destructive){parts.removeAll{$0.id==part.id};products.removeValue(forKey:part.id)}label:{Image(systemName:"minus.circle")}.accessibilityLabel(diary.t("إزالة المكوّن","Remove component"))}
+        VStack(alignment:.leading,spacing:14){
+            HStack(alignment:.top,spacing:12){
+                Image(systemName:"fork.knife").font(.system(size:20,weight:.medium)).foregroundStyle(Theme.accent).frame(width:44,height:44).background(Theme.surface,in:RoundedRectangle(cornerRadius:12)).accessibilityHidden(true)
+                Text(products[part.id]?.0.label(diary.language) ?? part.food.food.label(diary.language)).luqmaFont(.headline).fixedSize(horizontal:false,vertical:true).frame(maxWidth:.infinity,alignment:.leading)
+                Button(role:.destructive){parts.removeAll{$0.id==part.id};products.removeValue(forKey:part.id)}label:{Image(systemName:"minus.circle").frame(minWidth:32,minHeight:44)}.accessibilityLabel(diary.t("إزالة المكوّن","Remove component"))
+            }
             if let product=products[part.id],let n=try? product.0.total(product.1,unit:product.2){
-                Text(MealPhotoEstimate.isValidPhotoEstimate(product.0) ? diary.t("حصة تقديرية · ","Estimated portion · ")+decimal(part.grams,0)+diary.t(" جم"," g") : decimal(product.1)+" "+product.2.label(diary.language)).font(LTypography.caption).foregroundStyle(Theme.muted)
-                NutritionView(value:n)
+                Text(MealPhotoEstimate.isValidPhotoEstimate(product.0) ? diary.t("حصة تقديرية · ","Estimated portion · ")+decimal(part.grams,0)+diary.t(" جم"," g") : decimal(product.1)+" "+product.2.label(diary.language)).luqmaFont(.caption).foregroundStyle(Theme.muted)
+                HStack(alignment:.firstTextBaseline,spacing:5){Text(decimal(n.kcal,0)).luqmaFont(size:24,weight:.bold,relativeTo:.title2).monospacedDigit().foregroundStyle(Theme.accent);Text(diary.t("سعرة","kcal")).luqmaFont(.caption).foregroundStyle(Theme.muted)}
+                HStack(spacing:12){componentMacro(diary.t("بروتين","Protein"),n.protein);componentMacro(diary.t("كارب","Carbs"),n.carbs);componentMacro(diary.t("دهون","Fat"),n.fat)}.padding(12).background(Theme.surface,in:RoundedRectangle(cornerRadius:12))
                 if MealPhotoEstimate.isValidPhotoEstimate(product.0),let e=part.mealEstimate{
                     Notice(text:diary.language == .ar ? e.assumptions:e.assumptionsEn)
-                    Button{editing=EstimateSelection(id:part.id,estimate:e)}label:{Label(diary.t("تعديل الكمية","Adjust amount"),systemImage:"slider.horizontal.3")}.buttonStyle(.bordered)
+                    Button{editing=EstimateSelection(id:part.id,estimate:e)}label:{Label(diary.t("تعديل الكمية","Adjust amount"),systemImage:"slider.horizontal.3")}.buttonStyle(LuqmaSecondaryButtonStyle())
                 }
             }else{Notice(text:diary.t("أكمل بيانات هذا المكوّن قبل الحفظ.","Complete this component before logging."))}
-            Button{selection=ProductSelection(id:part.id,name:part.food.food.label(diary.language))}label:{Label(diary.t("اختيار منتج من قاعدة الطعام","Choose a catalog product"),systemImage:"magnifyingglass")}.font(LTypography.subheadline).buttonStyle(.borderless)
+            Button{selection=ProductSelection(id:part.id,name:part.food.food.label(diary.language))}label:{Label(diary.t("اختيار منتج من قاعدة الطعام","Choose a catalog product"),systemImage:"magnifyingglass").luqmaFont(.subheadline).frame(maxWidth:.infinity,alignment:.leading).frame(minHeight:44)}.buttonStyle(.plain).foregroundStyle(Theme.accent)
         }.luqmaCard()
+    }
+    private func componentMacro(_ title:String,_ value:Double)->some View {
+        VStack(alignment:.leading,spacing:4){Text(title).luqmaFont(.caption).foregroundStyle(Theme.muted);Text(decimal(value)+" "+diary.t("جم","g")).luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline).monospacedDigit()}.frame(maxWidth:.infinity,alignment:.leading)
     }
     private func loadPhoto(_ value:PhotosPickerItem?){
         photoLoadTask?.cancel();let token=UUID();photoGeneration=token
@@ -165,9 +180,9 @@ private struct PhotoEstimateEditor:View {
     init(estimate:MealPhotoEstimate,apply:@escaping(MealPhotoEstimate)->Bool){self.estimate=estimate;self.apply=apply;_grams=State(initialValue:estimate.grams)}
     private var updated:MealPhotoEstimate?{try? estimate.scaled(toGrams:grams)}
     var body:some View {NavigationStack{Form{
-        Section(diary.t("الكمية","Amount")){NumericInput(title:diary.t("الوزن","Weight"),value:$grams,suffix:diary.t("جم","g"))}
-        Section{if let updated{NutritionView(value:updated.nutrition)};Notice(text:diary.t("تتغير السعرات مع الوزن. إذا كانت طريقة الطبخ أو كمية الزيت مختلفة، أضف وصفها وأعد التحليل.","Calories scale with weight. If preparation or oil differs, describe it and analyze again."))}
-    }.appBackground().navigationTitle(diary.t("تعديل الكمية","Adjust amount")).toolbar{
+        Section(diary.t("الكمية","Amount")){NumericInput(title:diary.t("الوزن","Weight"),value:$grams,suffix:diary.t("جم","g"))}.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
+        Section{if let updated{NutritionView(value:updated.nutrition)};Notice(text:diary.t("تتغير السعرات مع الوزن. إذا كانت طريقة الطبخ أو كمية الزيت مختلفة، أضف وصفها وأعد التحليل.","Calories scale with weight. If preparation or oil differs, describe it and analyze again."))}.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
+    }.sandowForm().navigationTitle(diary.t("تعديل الكمية","Adjust amount")).toolbar{
         ToolbarItem(placement:.cancellationAction){Button(diary.t("إلغاء","Cancel")){dismiss()}}
         ToolbarItem(placement:.confirmationAction){Button(diary.t("حفظ","Save")){if let updated,apply(updated){dismiss()}}.disabled(updated==nil)}
     }}}

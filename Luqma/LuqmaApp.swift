@@ -25,13 +25,13 @@ import UIKit
         navigation.largeTitleTextAttributes=[.foregroundColor:UIColor(Theme.text),.font:LTypography.uiFont(size:22,weight:.heavy,relativeTo:.title1)]
         UINavigationBar.appearance().standardAppearance=navigation
         UINavigationBar.appearance().scrollEdgeAppearance=navigation
-        UISegmentedControl.appearance().selectedSegmentTintColor=UIColor(Theme.accent)
-        UISegmentedControl.appearance().setTitleTextAttributes([.foregroundColor:UIColor(Theme.text),.font:LTypography.uiFont(size:14,weight:.bold,relativeTo:.subheadline)],for:.selected)
+        UISegmentedControl.appearance().selectedSegmentTintColor=UIColor(Theme.text)
+        UISegmentedControl.appearance().setTitleTextAttributes([.foregroundColor:UIColor(Theme.background),.font:LTypography.uiFont(size:14,weight:.bold,relativeTo:.subheadline)],for:.selected)
         UISegmentedControl.appearance().setTitleTextAttributes([.foregroundColor:UIColor(Theme.muted),.font:LTypography.uiFont(size:14,relativeTo:.subheadline)],for:.normal)
     }
     var body:some Scene {
         WindowGroup {
-            RootView().font(LTypography.body).foregroundStyle(Theme.text).environmentObject(diary)
+            RootView().luqmaFont(.body).foregroundStyle(Theme.text).environmentObject(diary)
                 .environment(\.layoutDirection,diary.language == .ar ? .rightToLeft:.leftToRight)
                 .environment(\.locale,DisplayFormat.locale(diary.language))
                 .environment(\.calendar,DisplayFormat.calendar(diary.language))
@@ -51,6 +51,14 @@ struct RootView:View {
     @State private var recipePreview=false
     @State private var searchPreview=false
     @State private var mealsPreview=false
+    #if DEBUG
+    @Environment(\.dynamicTypeSize) private var typeSize
+    private enum TemplatePreviewRoute:String,Identifiable {
+        case goals,portion,recipe,plan,weight,connection,backup,about
+        var id:String{rawValue}
+    }
+    @State private var templatePreview:TemplatePreviewRoute?
+    #endif
     init(){
         var selected=0
         #if DEBUG
@@ -59,6 +67,9 @@ struct RootView:View {
         _recipePreview=State(initialValue:arguments.contains("-loqma-preview-recipe"))
         _searchPreview=State(initialValue:arguments.contains("-loqma-preview-search"))
         _mealsPreview=State(initialValue:arguments.contains("-loqma-preview-meals"))
+        if let index=arguments.firstIndex(of:"-loqma-preview-template"),arguments.indices.contains(index+1){
+            _templatePreview=State(initialValue:TemplatePreviewRoute(rawValue:arguments[index+1]))
+        }
         if let index=arguments.firstIndex(of:"-loqma-preview-tab"),arguments.indices.contains(index+1),let value=Int(arguments[index+1]),(0...3).contains(value){selected=value}
         #endif
         _tab=State(initialValue:selected)
@@ -96,21 +107,57 @@ struct RootView:View {
                 NavigationStack{DiaryView()}
                 #endif
             }
+            #if DEBUG
+            .sheet(item:$templatePreview){route in templatePreviewContent(route)}
+            .environment(\.dynamicTypeSize,ProcessInfo.processInfo.arguments.contains("-loqma-preview-accessibility") ? .accessibility3:typeSize)
+            #endif
     }
+    #if DEBUG
+    @ViewBuilder private func templatePreviewContent(_ route:TemplatePreviewRoute)->some View {
+        Group{
+            switch route {
+            case .goals:GoalEditor()
+            case .portion:FoodPortionView(food:previewPortionFood){_,_,_,_ in false}
+            case .recipe:RecipeEditor(recipe:previewRecipe)
+            case .plan:NavigationStack{PlanView().navigationBarTitleDisplayMode(.inline)}
+            case .weight:WeightEditor()
+            case .connection:GeminiSettingsView()
+            case .backup:NavigationStack{BackupSettingsView().navigationBarTitleDisplayMode(.inline)}
+            case .about:NavigationStack{AboutLuqmaView().navigationBarTitleDisplayMode(.inline)}
+            }
+        }.allowsHitTesting(false)
+    }
+    private var previewPortionFood:Food {
+        let serving=Nutrition(kcal:124,protein:17,carbs:8,fat:2.66)
+        return Food(catalogID:"preview:serving",name:"زبادي يوناني — مثال للعرض فقط",nameEn:"Greek yogurt — display example only",unit:.g,
+            nutrition:serving.scaled(100.0/150.0),serving:diary.t("حصة 150 جم · مثال للعرض فقط","150 g serving · display example only"),
+            servingQuantity:150,servingUnit:"g",servingNutrition:serving,source:"Preview fixture")
+    }
+    private var previewRecipe:Recipe {
+        let ingredients=[
+            Ingredient(id:UUID(),name:diary.t("دجاج مطهو","Cooked chicken"),amount:100,unit:.g,kcal:165,protein:31,carbs:0,fat:4.55),
+            Ingredient(id:UUID(),name:diary.t("أرز مطهو","Cooked rice"),amount:100,unit:.g,kcal:128,protein:2,carbs:29.5,fat:0.22)
+        ]
+        return Recipe(id:UUID(),name:diary.t("أرز بالدجاج — مثال للعرض فقط","Chicken and rice — display example only"),type:"recipe",ingredients:ingredients,
+            portions:2,cookedWeight:200,notes:diary.t("مثال للعرض فقط؛ لا يُحفظ في سجلّك ولا يستخدم التحليل.","Display example only; it is not saved to your diary and uses no analysis request."))
+    }
+    #endif
     private var bottomNavigation:some View {
         HStack(alignment:.center,spacing:4){
             navigationButton(0,title:diary.t("اليوم","Today"),symbol:"house")
             navigationButton(1,title:diary.t("مطبخي","Kitchen"),symbol:"fork.knife")
-            Button{adding=true}label:{Image(systemName:"plus").font(.system(size:27,weight:.regular)).foregroundStyle(Theme.text).frame(width:52,height:52).background(Theme.accent,in:Circle())}.buttonStyle(.plain).frame(maxWidth:.infinity,minHeight:60).accessibilityLabel(diary.t("إضافة طعام إلى اليوم","Add food to today"))
+            Button{adding=true}label:{Image(systemName:"plus").font(.system(size:27,weight:.medium)).foregroundStyle(Theme.background).frame(width:54,height:54).background(Theme.accent,in:RoundedRectangle(cornerRadius:17,style:.continuous))}.buttonStyle(.plain).frame(maxWidth:.infinity,minHeight:60).accessibilityLabel(diary.t("إضافة طعام إلى اليوم","Add food to today"))
             navigationButton(2,title:diary.t("تقدّمي","Progress"),symbol:"chart.bar")
             navigationButton(3,title:diary.t("الإعدادات","Settings"),symbol:"gearshape")
-        }.padding(.horizontal,22).padding(.top,10).padding(.bottom,4)
-            .background(Theme.background)
+        }.padding(.horizontal,12).padding(.vertical,8)
+            .background(Theme.card,in:RoundedRectangle(cornerRadius:28,style:.continuous))
+            .padding(.horizontal,20).padding(.top,8).padding(.bottom,4).background(Theme.background)
     }
     private func navigationButton(_ value:Int,title:String,symbol:String)->some View {
         Button{tab=value}label:{VStack(spacing:4){
             Image(systemName:tab == value && value == 0 ? "house.fill":symbol).font(.system(size:21,weight:.regular)).frame(width:42,height:30)
-            Text(title).font(LTypography.font(size:10,weight:tab == value ? .bold:.regular,relativeTo:.caption2)).lineLimit(1).minimumScaleFactor(0.75)
+            Text(title).luqmaFont(size:10,weight:tab == value ? .bold:.regular,relativeTo:.caption2).lineLimit(1).minimumScaleFactor(0.75)
+            Capsule().fill(tab == value ? Theme.accent:Color.clear).frame(width:18,height:3)
         }.foregroundStyle(tab == value ? Theme.accent:Theme.muted).frame(maxWidth:.infinity,minHeight:54).contentShape(Rectangle())}.buttonStyle(.plain).accessibilityLabel(title).accessibilityAddTraits(tab == value ? .isSelected:[])
     }
 }

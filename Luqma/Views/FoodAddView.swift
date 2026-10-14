@@ -81,26 +81,26 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                     if tab==0 && !displayedResults.isEmpty {
                         if let bestMatch {
                             VStack(alignment:.leading,spacing:8){
-                                Label(diary.t("أفضل تطابق","Best match"),systemImage:"star.fill").font(LTypography.font(size:15,weight:.bold,relativeTo:.subheadline)).foregroundStyle(Theme.accent)
+                                Label(diary.t("أفضل تطابق","Best match"),systemImage:"star.fill").luqmaFont(size:15,weight:.bold,relativeTo:.subheadline).foregroundStyle(Theme.accent)
                                 FoodRow(food:bestMatch){select(bestMatch)}.disabled(choosingFood)
                             }
                         }
-                        if !otherResults.isEmpty {Text(diary.t(bestMatch == nil ? "الأطعمة":"نتائج أخرى",bestMatch == nil ? "Foods":"Other results")+" (\(otherResults.count))").font(LTypography.headline)}
+                        if !otherResults.isEmpty {Text(diary.t(bestMatch == nil ? "الأطعمة":"نتائج أخرى",bestMatch == nil ? "Foods":"Other results")+" (\(otherResults.count))").luqmaFont(.headline)}
                         LazyVStack(alignment:.leading,spacing:10) {
                             ForEach(otherResults) {food in FoodRow(food:food){select(food)}.disabled(choosingFood).contextMenu{if filter==3{Button(role:.destructive){diary.removePersonal(food.id)}label:{Label(diary.t("حذف من أطعمتي","Remove from My foods"),systemImage:"trash")}}}}
                         }
                         if filter==0 && nextPage != nil {
                             Button {startMore()} label: {
                                 HStack {if pageLoading {ProgressView()};Text(diary.t("عرض المزيد من المنتجات","Show more products"))}.frame(maxWidth:.infinity).padding(10)
-                            }.buttonStyle(.bordered).disabled(pageLoading || busy || choosingFood)
+                            }.buttonStyle(LuqmaSecondaryButtonStyle()).disabled(pageLoading || busy || choosingFood)
                         }
                     } else if tab==0 && filter==0 && nextPage != nil {
-                        Button(diary.t("متابعة نتائج المنتجات","Continue product results")){startMore()}.buttonStyle(.bordered).disabled(pageLoading || busy || choosingFood)
+                        Button(diary.t("متابعة نتائج المنتجات","Continue product results")){startMore()}.buttonStyle(LuqmaSecondaryButtonStyle()).disabled(pageLoading || busy || choosingFood)
                     }
                     if tab==0 && filter==0 && !nearbyResults.isEmpty {
                         VStack(alignment:.leading,spacing:10) {
-                            Label(diary.t("منتجات قريبة من بحثك","Nearby products"),systemImage:"text.magnifyingglass").font(LTypography.headline)
-                            Text(diary.t("تشابه في الاسم فقط؛ قد تختلف العلامة التجارية أو نوع المنتج.","Similar names; the brand or product type may differ.")).font(LTypography.caption).foregroundStyle(Theme.muted)
+                            Label(diary.t("منتجات قريبة من بحثك","Nearby products"),systemImage:"text.magnifyingglass").luqmaFont(.headline)
+                            Text(diary.t("تشابه في الاسم فقط؛ قد تختلف العلامة التجارية أو نوع المنتج.","Similar names; the brand or product type may differ.")).luqmaFont(.caption).foregroundStyle(Theme.muted)
                             LazyVStack(alignment:.leading,spacing:10){ForEach(nearbyResults){food in FoodRow(food:food){select(food)}.disabled(choosingFood)}}
                         }
                     }
@@ -118,24 +118,24 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                 TextField(diary.t("اسم الطعام أو المنتج","Food or product name"),text:$query).submitLabel(.search).autocorrectionDisabled().onSubmit{startSearch()}
                 if !query.isEmpty {Button {query=""} label:{Image(systemName:"xmark.circle.fill")}.accessibilityLabel(diary.t("مسح البحث","Clear search"))}
                 if filter==0 {Button(diary.t("بحث","Search")){startSearch()}.disabled(term.isEmpty || busy || pageLoading || choosingFood)}
-            }.padding(14).background(Theme.card,in:RoundedRectangle(cornerRadius:16))
+            }.padding(14).frame(minHeight:52).background(Theme.card,in:RoundedRectangle(cornerRadius:16))
             Picker(diary.t("قائمة الأطعمة","Food list"),selection:$filter) {
                 Text(diary.t("الكل","All")).tag(0);Text(diary.t("الأخيرة","Recent")).tag(1);Text(diary.t("المتكررة","Frequent")).tag(2);if !productSelection {Text(diary.t("أطعمتي","My foods")).tag(3)}
             }.pickerStyle(.segmented).disabled(choosingFood)
             HStack(spacing:12) {
                 Button {tab=1} label:{Label(diary.t("باركود","Barcode"),systemImage:"barcode.viewfinder").frame(maxWidth:.infinity).padding(.vertical,10)}
                 if !productSelection {Button {tab=2} label:{Label(diary.t("صورة الوجبة","Meal photo"),systemImage:"camera").frame(maxWidth:.infinity).padding(.vertical,10)}}
-            }.buttonStyle(.bordered)
+            }.buttonStyle(LuqmaSecondaryButtonStyle())
             if filter==0 && term.isEmpty && !recentFoods.isEmpty {recent(diary.t("الأخيرة","Recent foods"),Array(recentFoods.prefix(8)),reverse:false)}
             if filter==0 {
-                if !suggestions.isEmpty {VStack(alignment:.leading,spacing:10){Text(diary.t(term.isEmpty ? "ابدأ البحث":"اقتراحات البحث",term.isEmpty ? "Start searching":"Suggested searches")).font(LTypography.font(size:15,weight:.bold,relativeTo:.subheadline));ForEach(suggestions){suggestion in Button {submitSuggestion(suggestion.query)} label:{HStack{Image(systemName:suggestion.kind == .history ? "clock":"magnifyingglass");Text(DisplayFormat.westernDigits(suggestion.label)).lineLimit(2).multilineTextAlignment(.leading);Spacer();Image(systemName:"arrow.up.left").font(.caption)}}.buttonStyle(.plain).disabled(choosingFood)}}.luqmaCard()}
-                if !term.isEmpty {Text(diary.t("البحث في الأطعمة المحفوظة • اضغط بحث لعرض المزيد من المنتجات","Searching saved foods • Tap Search for more products")).font(LTypography.caption).foregroundStyle(Theme.muted)}
+                if !suggestions.isEmpty {VStack(alignment:.leading,spacing:10){Text(diary.t(term.isEmpty ? "ابدأ البحث":"اقتراحات البحث",term.isEmpty ? "Start searching":"Suggested searches")).luqmaFont(size:15,weight:.bold,relativeTo:.subheadline);ForEach(suggestions){suggestion in Button {submitSuggestion(suggestion.query)} label:{HStack{Image(systemName:suggestion.kind == .history ? "clock":"magnifyingglass");Text(DisplayFormat.westernDigits(suggestion.label)).lineLimit(2).multilineTextAlignment(.leading);Spacer();Image(systemName:"arrow.up.left").font(.caption)}}.buttonStyle(.plain).disabled(choosingFood)}}.luqmaCard()}
+                if !term.isEmpty {Text(diary.t("البحث في الأطعمة المحفوظة • اضغط بحث لعرض المزيد من المنتجات","Searching saved foods • Tap Search for more products")).luqmaFont(.caption).foregroundStyle(Theme.muted)}
             }
         }
     }
     private var barcodeContent:some View {
         VStack(alignment:.leading,spacing:16) {
-            Button{Task{let token=queryToken;let allowed=await CameraAccess.request();guard tab==1,token==queryToken,!Task.isCancelled else{return};if allowed{scanning=true}else{notice=diary.t("اسمح للُقمة باستخدام الكاميرا من إعدادات الآيفون.","Allow Luqma camera access in iPhone Settings.")}}}label:{Label(diary.t("مسح الباركود","Scan barcode"),systemImage:"barcode.viewfinder").frame(maxWidth:.infinity).padding(20)}.buttonStyle(.borderedProminent)
+            Button{Task{let token=queryToken;let allowed=await CameraAccess.request();guard tab==1,token==queryToken,!Task.isCancelled else{return};if allowed{scanning=true}else{notice=diary.t("اسمح للُقمة باستخدام الكاميرا من إعدادات الآيفون.","Allow Luqma camera access in iPhone Settings.")}}}label:{Label(diary.t("مسح الباركود","Scan barcode"),systemImage:"barcode.viewfinder")}.buttonStyle(LuqmaPrimaryButtonStyle())
             PhotosPicker(selection:$photo,matching:.images){Label(diary.t("قراءة باركود من صورة","Read a barcode photo"),systemImage:"photo")}
             DisclosureGroup(diary.t("كتابة رقم الباركود","Enter barcode number")) {
                 HStack{TextField(diary.t("رقم الباركود","Barcode number"),text:$code).keyboardType(.numberPad).environment(\.layoutDirection,.leftToRight);Button(diary.t("بحث","Look up")){startLookup()}.disabled(busy || code.isEmpty)}.padding(.vertical,12)
@@ -166,7 +166,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
             }
         }
     }
-    private func recent(_ title:String,_ foods:[Food],reverse:Bool=true) -> some View {let available=foods.filter{FoodSearch.availableForAdding($0) && (!productSelection || FoodSearch.isCatalogFood($0))};return VStack(alignment:.leading,spacing:10){Text(title).font(LTypography.headline);ForEach(Array((reverse ? Array(available.reversed()):available).prefix(8))){food in FoodRow(food:food){select(food)}.disabled(choosingFood)}}}
+    private func recent(_ title:String,_ foods:[Food],reverse:Bool=true) -> some View {let available=foods.filter{FoodSearch.availableForAdding($0) && (!productSelection || FoodSearch.isCatalogFood($0))};return VStack(alignment:.leading,spacing:10){Text(title).luqmaFont(.headline);ForEach(Array((reverse ? Array(available.reversed()):available).prefix(8))){food in FoodRow(food:food){select(food)}.disabled(choosingFood)}}}
     private func resetSearch() {
         searchTask?.cancel();selectionTask?.cancel();queryToken=UUID();busy=false;pageLoading=false;choosingFood=false;nextPage=nil;reachedSourceWindow=false
         localResults=[];remoteResults=[];publishResults([]);nearbyResults=[];suggestions=[];notice=nil
@@ -305,9 +305,9 @@ struct FoodPortionView:View {
     var body:some View {
         NavigationStack{Form{
             Section{
-                if manual {TextField(diary.t("اسم الطعام","Food name"),text:$name)}else{Text(name).font(LTypography.headline);if let brand=food.brand{Text(DisplayFormat.westernDigits(brand)).font(LTypography.caption).foregroundStyle(Theme.muted)}}
+                if manual {TextField(diary.t("اسم الطعام","Food name"),text:$name)}else{Text(name).luqmaFont(.headline);if let brand=food.brand{Text(DisplayFormat.westernDigits(brand)).luqmaFont(.caption).foregroundStyle(Theme.muted)}}
                 Picker(diary.t("الوجبة","Meal"),selection:$meal){ForEach(Meal.allCases){Text($0.label(diary.language)).tag($0)}}
-            }
+            }.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
             Section(diary.t("الكمية","Amount")) {
                 Picker(diary.t("الوحدة","Unit"),selection:$unit){ForEach(manual ? [.serving,.g,.ml]:food.additionUnits,id:\.self){Text($0.label(diary.language)).tag($0)}}.pickerStyle(.segmented)
                 if unit == .serving && !food.servingChoices.isEmpty {
@@ -321,18 +321,18 @@ struct FoodPortionView:View {
                 }
                 if unit == .serving && needsServingSize {
                     input(diary.t(food.unit == .ml ? "حجم الحصة (مل)":"وزن الحصة (جم)",food.unit == .ml ? "Serving volume (ml)":"Serving weight (g)"),$servingWeight)
-                    Text(diary.t("لا يحدد المصدر حجم الحصة. أدخله من الملصق أو اختر وحدة المنتج.","The source has no serving size. Enter it from the label, or choose the product's unit.")).font(LTypography.caption).foregroundStyle(Theme.muted)
+                    Text(diary.t("لا يحدد المصدر حجم الحصة. أدخله من الملصق أو اختر وحدة المنتج.","The source has no serving size. Enter it from the label, or choose the product's unit.")).luqmaFont(.caption).foregroundStyle(Theme.muted)
                 }
-                if let serving=portionFood.serving,unit == .serving{Text(DisplayFormat.westernDigits(serving)).font(LTypography.footnote).foregroundStyle(.secondary)}
+                if let serving=portionFood.serving,unit == .serving{Text(DisplayFormat.westernDigits(serving)).luqmaFont(.footnote).foregroundStyle(.secondary)}
                 input(diary.t(unit == .serving ? "عدد الحصص":"الكمية المستهلكة",unit == .serving ? "Number of servings":"Consumed amount"),$amount)
-                if base != nil {NutritionView(value:total,large:true)}else{Text(diary.t("حدد الحصة لعرض مجموع التغذية","Set the serving to see nutrition totals")).font(LTypography.subheadline).foregroundStyle(Theme.muted)}
-            }
+                if base != nil {NutritionView(value:total,large:true)}else{Text(diary.t("حدد الحصة لعرض مجموع التغذية","Set the serving to see nutrition totals")).luqmaFont(.subheadline).foregroundStyle(Theme.muted)}
+            }.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
             Section{
-                if manual {Text(referenceTitle).font(LTypography.headline);referenceInputs}
+                if manual {Text(referenceTitle).luqmaFont(.headline);referenceInputs}
                 else {DisclosureGroup(referenceTitle,isExpanded:$editingNutrition){referenceInputs}}
-            }
-            Section{Button(diary.t("إضافة الطعام","Add food")){save()}.disabled(base==nil || name.trimmingCharacters(in:.whitespaces).isEmpty || (quantity ?? 0)<=0 || (quantity ?? 0)>10000)}
-        }.appBackground().navigationTitle(diary.t("كمية الطعام","Food portion"))
+            }.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
+            Section{Button(diary.t("إضافة الطعام","Add food")){save()}.buttonStyle(LuqmaPrimaryButtonStyle()).disabled(base==nil || name.trimmingCharacters(in:.whitespaces).isEmpty || (quantity ?? 0)<=0 || (quantity ?? 0)>10000)}.listRowBackground(Color.clear).listRowInsets(EdgeInsets(top:0,leading:0,bottom:0,trailing:0))
+        }.sandowForm().navigationTitle(diary.t("كمية الطعام","Food portion")).navigationBarTitleDisplayMode(.inline)
             .toolbar{ToolbarItem(placement:.cancellationAction){Button(diary.t("إلغاء","Cancel")){dismiss()}}}
         }.onAppear{if let initialMeal{meal=initialMeal};unit=food.defaultAdditionUnit;name=food.label(diary.language);amount="1";portionID=food.selectedPortionID ?? food.portionChoices.first?.id ?? "";if food.servingNutrition==nil{servingID=food.servingChoices.first?.id ?? ""};loadBase();editingNutrition=manual || (portionFood.per100==nil && portionFood.servingNutrition==nil)}
             .onChange(of:unit){_,_ in amount=unit == .serving ? "1":"100";if !manual{loadBase();if portionFood.values(for:unit)==nil && !needsServingSize{editingNutrition=true}}}

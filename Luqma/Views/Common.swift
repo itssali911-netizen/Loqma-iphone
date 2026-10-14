@@ -1,20 +1,25 @@
 import SwiftUI
 
 enum Theme {
-    // Actual Fitness Tracker Community dark frame (1:2), inspected in Figma.
-    static let background=Color(red:11.0/255,green:11.0/255,blue:18.0/255)
-    static let card=Color(red:22.0/255,green:22.0/255,blue:38.0/255)
-    static let surface=Color(red:33.0/255,green:33.0/255,blue:52.0/255)
-    static let accent=Color(red:47.0/255,green:128.0/255,blue:237.0/255)
-    static let secondaryAccent=Color(red:181.0/255,green:181.0/255,blue:187.0/255)
-    static let muted=Color(red:151.0/255,green:151.0/255,blue:162.0/255)
+    // Sandow Community dark file: Sandow Gray/100 and Pulse Orange/50.
+    static let background=Color(red:17.0/255,green:18.0/255,blue:20.0/255)
+    static let card=Color(red:36.0/255,green:38.0/255,blue:43.0/255)
+    static let surface=Color(red:57.0/255,green:60.0/255,blue:67.0/255)
+    static let input=background
+    static let accent=Color(red:249.0/255,green:115.0/255,blue:22.0/255)
+    static let secondaryAccent=Color(red:37.0/255,green:99.0/255,blue:235.0/255)
+    static let muted=Color(red:158.0/255,green:160.0/255,blue:165.0/255)
     static let text=Color.white
-    static let stroke=Color.white.opacity(0.04)
-    static let cardRadius:CGFloat=20
+    static let stroke=Color.white.opacity(0.08)
+    static let cardRadius:CGFloat=24
 }
 extension View {
     func luqmaCard() -> some View {padding(18).frame(maxWidth:.infinity,alignment:.leading).background(Theme.card,in:RoundedRectangle(cornerRadius:Theme.cardRadius))}
-    func appBackground() -> some View {background(Theme.background.ignoresSafeArea()).scrollContentBackground(.hidden).font(LTypography.body)}
+    func appBackground() -> some View {background(Theme.background.ignoresSafeArea()).scrollContentBackground(.hidden).luqmaFont(.body)}
+    func sandowForm() -> some View {
+        appBackground().listStyle(.insetGrouped).listSectionSpacing(16)
+            .listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
+    }
 }
 
 struct LuqmaPageHeader:View {
@@ -25,10 +30,10 @@ struct LuqmaPageHeader:View {
         HStack(spacing:12){
             Image(systemName:symbol).font(.system(size:21,weight:.semibold))
                 .foregroundStyle(Theme.text).frame(width:44,height:44)
-                .background(Theme.card,in:Circle()).accessibilityHidden(true)
+                .background(Theme.card,in:RoundedRectangle(cornerRadius:16)).accessibilityHidden(true)
             VStack(alignment:.leading,spacing:3){
-                Text(subtitle).font(LTypography.font(size:14,weight:.light,relativeTo:.caption)).foregroundStyle(Theme.muted)
-                Text(title).font(LTypography.font(size:22,weight:.bold,relativeTo:.title2)).foregroundStyle(Theme.text).accessibilityAddTraits(.isHeader)
+                Text(subtitle).luqmaFont(size:14,weight:.light,relativeTo:.caption).foregroundStyle(Theme.muted)
+                Text(title).luqmaFont(size:22,weight:.bold,relativeTo:.title2).foregroundStyle(Theme.text).accessibilityAddTraits(.isHeader)
             }
             Spacer(minLength:0)
         }.padding(.top,4)
@@ -40,19 +45,28 @@ struct LuqmaSectionHeader:View {
     var detail:String?=nil
     var body:some View {
         HStack(alignment:.firstTextBaseline){
-            Text(title).font(LTypography.font(size:17,weight:.bold,relativeTo:.headline)).foregroundStyle(Theme.text).accessibilityAddTraits(.isHeader)
+            Text(title).luqmaFont(size:17,weight:.bold,relativeTo:.headline).foregroundStyle(Theme.text).accessibilityAddTraits(.isHeader)
             Spacer(minLength:8)
-            if let detail{Text(detail).font(LTypography.caption).foregroundStyle(Theme.muted)}
+            if let detail{Text(detail).luqmaFont(.caption).foregroundStyle(Theme.muted)}
         }
     }
 }
 
 struct LuqmaPrimaryButtonStyle:ButtonStyle {
     func makeBody(configuration:Configuration)->some View {
-        configuration.label.font(LTypography.headline).foregroundStyle(Theme.text)
+        configuration.label.luqmaFont(.headline).foregroundStyle(Theme.background)
             .frame(maxWidth:.infinity,minHeight:52)
-            .background(Theme.accent,in:RoundedRectangle(cornerRadius:15,style:.continuous))
+            .background(Theme.accent,in:RoundedRectangle(cornerRadius:16,style:.continuous))
             .opacity(configuration.isPressed ? 0.8:1)
+    }
+}
+
+struct LuqmaSecondaryButtonStyle:ButtonStyle {
+    func makeBody(configuration:Configuration)->some View {
+        configuration.label.luqmaFont(.headline).foregroundStyle(Theme.text)
+            .frame(maxWidth:.infinity,minHeight:48)
+            .background(Theme.surface,in:RoundedRectangle(cornerRadius:16,style:.continuous))
+            .opacity(configuration.isPressed ? 0.75:1)
     }
 }
 
@@ -95,10 +109,10 @@ struct LuqmaPill:View {
     var selected:Bool
     var action:()->Void
     var body:some View {
-        Button(action:action){Text(title).font(LTypography.font(size:15,weight:.medium,relativeTo:.subheadline))
+        Button(action:action){Text(title).luqmaFont(size:15,weight:.medium,relativeTo:.subheadline)
             .padding(.horizontal,16).frame(minHeight:42)
-            .foregroundStyle(selected ? Theme.text:Theme.muted)
-            .background(selected ? Theme.accent:Theme.card,in:RoundedRectangle(cornerRadius:13,style:.continuous))}
+            .foregroundStyle(selected ? Theme.background:Theme.muted)
+            .background(selected ? Theme.text:Theme.card,in:Capsule())}
             .buttonStyle(.plain).accessibilityAddTraits(selected ? .isSelected:[])
     }
 }
@@ -125,11 +139,11 @@ struct NutritionView:View {
     @EnvironmentObject var diary:DiaryStore
     var body:some View {
         VStack(alignment:.leading,spacing:16){
-            HStack(alignment:.firstTextBaseline){Text(decimal(value.kcal,0)).font(large ? LTypography.font(size:38,weight:.heavy,relativeTo:.largeTitle):LTypography.title).monospacedDigit().foregroundStyle(Theme.accent);Text(diary.t("سعرة","kcal")).foregroundStyle(Theme.muted)}
+            HStack(alignment:.firstTextBaseline){Text(decimal(value.kcal,0)).luqmaFont(large ? LTypography.Descriptor(size:38,weight:.heavy,relativeTo:.largeTitle):.title).monospacedDigit().foregroundStyle(Theme.accent);Text(diary.t("سعرة","kcal")).foregroundStyle(Theme.muted)}
             HStack(spacing:8){macro("البروتين","Protein",value.protein);macro("الكارب","Carbs",value.carbs);macro("الدهون","Fat",value.fat)}
         }
     }
-    private func macro(_ ar:String,_ en:String,_ n:Double) -> some View {VStack(alignment:.leading,spacing:6){Text(diary.t(ar,en)).font(LTypography.caption).foregroundStyle(Theme.muted);Text(decimal(n)+" "+diary.t("جم","g")).font(LTypography.font(size:15,weight:.bold,relativeTo:.subheadline)).monospacedDigit()}.frame(maxWidth:.infinity,alignment:.leading)}
+    private func macro(_ ar:String,_ en:String,_ n:Double) -> some View {VStack(alignment:.leading,spacing:6){Text(diary.t(ar,en)).luqmaFont(.caption).foregroundStyle(Theme.muted);Text(decimal(n)+" "+diary.t("جم","g")).luqmaFont(size:15,weight:.bold,relativeTo:.subheadline).monospacedDigit()}.frame(maxWidth:.infinity,alignment:.leading)}
 }
 struct FoodRow:View {
     var food:Food;var action:()->Void
@@ -149,10 +163,10 @@ struct FoodRow:View {
     var body:some View {
         Button(action:action){HStack(spacing:12){
             Image(systemName:"fork.knife").font(.system(size:16,weight:.medium)).foregroundStyle(Theme.accent).frame(width:38,height:38).background(Theme.accent.opacity(0.1),in:RoundedRectangle(cornerRadius:12)).accessibilityHidden(true)
-            VStack(alignment:.leading,spacing:4){Text(food.label(diary.language)).font(LTypography.font(size:15,weight:.bold,relativeTo:.subheadline)).foregroundStyle(Theme.text).multilineTextAlignment(.leading).fixedSize(horizontal:false,vertical:true);if let brand=food.brand{Text(DisplayFormat.westernDigits(brand)).font(LTypography.caption).foregroundStyle(Theme.muted)}
-                if let sourceTitle{Text(sourceTitle).font(LTypography.caption2).foregroundStyle(Theme.muted)}
-                if let n=food.values(for:food.unit){Text("\(decimal(n.kcal,0)) \(diary.t("سعرة","kcal")) · \(reference)").font(LTypography.font(size:12,weight:.medium,relativeTo:.caption)).foregroundStyle(Theme.accent)}
-                else{Text(diary.t("بيانات غذائية غير مكتملة","Incomplete nutrition data")).font(LTypography.caption).foregroundStyle(.orange)}
+            VStack(alignment:.leading,spacing:4){Text(food.label(diary.language)).luqmaFont(size:15,weight:.bold,relativeTo:.subheadline).foregroundStyle(Theme.text).multilineTextAlignment(.leading).fixedSize(horizontal:false,vertical:true);if let brand=food.brand{Text(DisplayFormat.westernDigits(brand)).luqmaFont(.caption).foregroundStyle(Theme.muted)}
+                if let sourceTitle{Text(sourceTitle).luqmaFont(.caption2).foregroundStyle(Theme.muted)}
+                if let n=food.values(for:food.unit){Text("\(decimal(n.kcal,0)) \(diary.t("سعرة","kcal")) · \(reference)").luqmaFont(size:12,weight:.medium,relativeTo:.caption).foregroundStyle(Theme.accent)}
+                else{Text(diary.t("بيانات غذائية غير مكتملة","Incomplete nutrition data")).luqmaFont(.caption).foregroundStyle(.orange)}
             };Spacer(minLength:0)
             Image(systemName:"plus").font(.system(size:16,weight:.semibold)).foregroundStyle(Theme.accent).frame(width:32,height:32).background(Theme.surface,in:Circle()).accessibilityHidden(true)
         }.padding(14).frame(maxWidth:.infinity,alignment:.leading)
@@ -160,4 +174,4 @@ struct FoodRow:View {
             .contentShape(RoundedRectangle(cornerRadius:Theme.cardRadius,style:.continuous))}.buttonStyle(.plain)
     }
 }
-struct Notice:View {var text:String;var body:some View {Text(DisplayFormat.westernDigits(text)).font(LTypography.footnote).foregroundStyle(Theme.muted).frame(maxWidth:.infinity,alignment:.leading).fixedSize(horizontal:false,vertical:true)}}
+struct Notice:View {var text:String;var body:some View {Text(DisplayFormat.westernDigits(text)).luqmaFont(.footnote).foregroundStyle(Theme.muted).frame(maxWidth:.infinity,alignment:.leading).fixedSize(horizontal:false,vertical:true)}}
