@@ -15,6 +15,7 @@ on:
       - 'Scripts/build_project.py'
       - 'Scripts/build_ios.py'
       - 'Scripts/ui_preview.py'
+      - 'Scripts/simulator_support.py'
       - 'Scripts/model_smoke.py'
       - 'Scripts/vision_compat.py'
       - 'Scripts/qwen3vl-compat.json'

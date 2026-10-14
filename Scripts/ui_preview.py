@@ -34,6 +34,7 @@ import uuid
 import zlib
 
 from build_ios import BuildError, public_environment, require_mac
+from simulator_support import SimulatorSetupError, prepare_created_simulator
 from vision_compat import apply_vision_compat
 
 
@@ -300,6 +301,26 @@ def capture_screenshot(output: Path, device: str, screen: str, pid: int, screens
     raise BuildError("Native screenshot capture exhausted its retry bound.")
 
 
+def collect_failure_diagnostics(output: Path, device: str, report: dict) -> None:
+    # A failed first launch can precede Luqma's process entirely. Retain the
+    # own-device launch services and the host Simulator bootstrap log as well.
+    diagnostics = (
+        ("preview-app-diagnostic", ["xcrun", "simctl", "spawn", device, "log", "show", "--last", "10m",
+                                    "--style", "compact", "--predicate",
+                                    'process == "Luqma" OR process == "SpringBoard" OR process == "launchd_sim" '
+                                    'OR process == "backboardd" OR eventMessage CONTAINS[c] "dyld"']),
+        ("preview-host-diagnostic", ["/usr/bin/log", "show", "--last", "10m", "--style", "compact", "--predicate",
+                                     f'eventMessage CONTAINS[c] "{device}" OR process == "CoreSimulatorService" '
+                                     'OR process == "simctl" OR process == "Simulator"']),
+    )
+    for label, arguments in diagnostics:
+        try:
+            command(arguments, output, label, 90, allow_failure=True)
+            report.setdefault("diagnostic_logs", []).append(label + ".log")
+        except (BuildError, OSError) as diagnostic_error:
+            report.setdefault("diagnostic_errors", []).append({"log": label + ".log", "error": str(diagnostic_error)})
+
+
 def capture(output: Path, packages: Path, prebuilt: Path | None,
             bundle: str, settle_seconds: float) -> None:
     if output.exists():
@@ -353,9 +374,11 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
         report["simulator"] = {"udid": device, "device": "iPhone 16 Pro Max",
                                "runtime": runtime["name"], "runtime_id": runtime["identifier"]}
         report["fresh_simulator"] = True
-        command(["xcrun", "simctl", "boot", device], output, "preview-boot", 120)
-        command(["xcrun", "simctl", "bootstatus", device, "-b"],
-                output, "preview-boot-ready", 240)
+        try:
+            report["simulator_preparation"] = prepare_created_simulator(
+                device, lambda arguments, label, timeout: command(arguments, output, "preview-" + label, timeout))
+        except SimulatorSetupError as error:
+            raise BuildError(str(error)) from error
         command(["xcrun", "simctl", "ui", device, "appearance", "dark"],
                 output, "preview-appearance")
         command(["xcrun", "simctl", "status_bar", device, "override",
@@ -394,12 +417,7 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
         report["status"] = "cancelled" if isinstance(error, (SystemExit, KeyboardInterrupt)) else "failed"
         report["error"] = str(error)
         if device:
-            try:
-                command(["xcrun", "simctl", "spawn", device, "log", "show", "--last", "2m",
-                         "--style", "compact", "--predicate", 'process == "Luqma"'],
-                        output, "preview-app-diagnostic", 90, allow_failure=True)
-            except (BuildError, OSError) as diagnostic_error:
-                report["diagnostic_error"] = str(diagnostic_error)
+            collect_failure_diagnostics(output, device, report)
         raise
     finally:
         if device:

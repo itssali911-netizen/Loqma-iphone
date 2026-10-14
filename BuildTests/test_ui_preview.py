@@ -4,6 +4,7 @@ The fixtures contain pixels, not fabricated app screenshots. Simulator and
 process boundaries are mocked only when testing orchestration.
 """
 import hashlib
+import json
 from pathlib import Path
 import struct
 import sys
@@ -13,9 +14,9 @@ from unittest.mock import patch
 import zlib
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "Scripts"))
-from ui_preview import (BuildError, EXPECTED_SCREEN_COUNT, EXTRA_ROUTES,
+from ui_preview import (BuildError, DEVICE_TYPE, EXPECTED_SCREEN_COUNT, EXTRA_ROUTES, SimulatorSetupError,
                         SCREENS, TEMPLATE_ROUTES, VARIANT_ROUTES,
-                        capture_screenshot, decode_png, framebuffer_content, png_details, preview_cases)
+                        capture, capture_screenshot, decode_png, framebuffer_content, png_details, preview_cases)
 
 
 def chunk(kind, content):
@@ -183,6 +184,77 @@ class CaptureRetryTests(unittest.TestCase):
         self.assertEqual(case["arguments"], ["-loqma-preview-overview", "-loqma-preview-accessibility"])
         self.assertEqual(case["dynamic_type_override"], "accessibility3")
         self.assertTrue(case["synthetic_fixture"])
+
+
+class SimulatorIntegrationTests(unittest.TestCase):
+    def run_until_launch(self, directory, warmup_failure=False):
+        device = "A1234567-1234-1234-1234-123456789ABC"
+        events = []
+        output = Path(directory) / "native-preview"
+        inventory = {"devicetypes": [{"identifier": DEVICE_TYPE}],
+                     "runtimes": [{"isAvailable": True, "identifier": "com.apple.CoreSimulator.SimRuntime.iOS-26-0",
+                                   "version": "26.0", "name": "iOS 26.0"}]}
+
+        def command(arguments, _output, label, timeout=120, allow_failure=False):
+            events.append((label, arguments, timeout))
+            if label == "preview-inventory":
+                return json.dumps(inventory)
+            if label == "preview-create":
+                return device
+            if label.startswith("preview-launch-"):
+                raise BuildError("Stop after the first actual app launch boundary")
+            return ""
+
+        def prepare(actual_device, callback):
+            self.assertEqual(actual_device, device)
+            events.append(("warm-up", [], 0))
+            callback(["xcrun", "simctl", "bootstatus", actual_device, "-b"], "simulator-bootstrap-ready", 240)
+            if warmup_failure:
+                raise SimulatorSetupError("The own-device readiness probe failed")
+            return {"attempts": 1, "reboot_performed": False, "probe_bundle": "com.apple.Preferences", "probe_pid": 123}
+
+        with patch("ui_preview.require_mac"), patch("ui_preview.platform.machine", return_value="arm64"), \
+                patch("ui_preview.validate_app", return_value={"bundle_id": "app.luqma.diary"}), \
+                patch("ui_preview.command", side_effect=command), \
+                patch("ui_preview.prepare_created_simulator", side_effect=prepare):
+            expected = "readiness probe failed" if warmup_failure else "first actual app launch boundary"
+            with self.assertRaisesRegex(BuildError, expected):
+                capture(output, Path(directory) / "packages", Path(directory) / "Debug.app", "app.luqma.diary", 1)
+        return device, events, json.loads((output / "ui-preview.json").read_text(encoding="utf-8"))
+
+    def test_selected_simulator_warms_before_appearance_install_and_first_app_launch(self):
+        with tempfile.TemporaryDirectory() as directory:
+            device, events, report = self.run_until_launch(directory)
+        labels = [event[0] for event in events]
+        self.assertLess(labels.index("preview-create"), labels.index("warm-up"))
+        self.assertLess(labels.index("preview-simulator-bootstrap-ready"), labels.index("preview-appearance"))
+        self.assertLess(labels.index("preview-appearance"), labels.index("preview-install"))
+        self.assertLess(labels.index("preview-install"), labels.index("preview-launch-today"))
+        self.assertEqual(next(event[2] for event in events if event[0] == "preview-install"), 180)
+        self.assertEqual(next(event[2] for event in events if event[0] == "preview-launch-today"), 300)
+        self.assertEqual(report["simulator_preparation"]["probe_bundle"], "com.apple.Preferences")
+        self.assertEqual(report["status"], "failed")
+        self.assertEqual(report["expected_screenshot_count"], EXPECTED_SCREEN_COUNT)
+        self.assertEqual(report["screenshot_count"], 0)
+        device_diagnostic = next(event[1] for event in events if event[0] == "preview-app-diagnostic")
+        self.assertEqual(device_diagnostic[:4], ["xcrun", "simctl", "spawn", device])
+        self.assertEqual(device_diagnostic[device_diagnostic.index("--last") + 1], "10m")
+        self.assertIn("SpringBoard", device_diagnostic[-1])
+        self.assertIn("dyld", device_diagnostic[-1])
+        self.assertIn("preview-host-diagnostic", labels)
+
+    def test_failed_warmup_prevents_install_and_cleans_only_the_created_device(self):
+        with tempfile.TemporaryDirectory() as directory:
+            device, events, report = self.run_until_launch(directory, warmup_failure=True)
+        labels = [event[0] for event in events]
+        self.assertNotIn("preview-appearance", labels)
+        self.assertNotIn("preview-install", labels)
+        self.assertFalse(any(label.startswith("preview-launch-") for label in labels))
+        cleanup = [event[1] for event in events if event[0].startswith("preview-cleanup-")]
+        self.assertEqual(cleanup, [["xcrun", "simctl", "shutdown", device], ["xcrun", "simctl", "delete", device]])
+        self.assertEqual(report["status"], "failed")
+        self.assertEqual(report["screenshot_count"], 0)
+        self.assertNotIn("simulator_preparation", report)
 
 
 if __name__ == "__main__":

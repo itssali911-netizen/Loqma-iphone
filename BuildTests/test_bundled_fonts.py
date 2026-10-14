@@ -19,6 +19,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 RESOURCES = ROOT / "Luqma/Resources"
+sys.path.insert(0, str(ROOT / "Scripts"))
+from simulator_support import collect_startup_diagnostics, prepare_created_simulator
+
 FONT_SHA256 = {
     "Tajawal-Light.ttf": "ab26ed3e0c5af2c71b469b5780decff8088d290ab91aa29b07321580136e813a",
     "Tajawal-Regular.ttf": "6882892da3e03527d5db2bbab3b48bde6ef2e878a43f522d1a4eebda90010a19",
@@ -432,6 +435,10 @@ class NativeBundledFontTests(unittest.TestCase):
         cls.directory = tempfile.TemporaryDirectory(prefix="luqma-font-probe-")
         try:
             cls.report = cls.run_probe(Path(cls.directory.name))
+        except BaseException:
+            if cls.device:
+                collect_startup_diagnostics(cls.device, cls.startup_command, "simulator-font-failure-diagnostic")
+            raise
         finally:
             if cls.device:
                 for operation in ("shutdown", "delete"):
@@ -440,12 +447,32 @@ class NativeBundledFontTests(unittest.TestCase):
             cls.directory.cleanup()
 
     @classmethod
-    def command(cls, arguments, timeout=90):
-        result = subprocess.run(arguments, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                timeout=timeout, check=False, text=True, encoding="utf-8", errors="replace")
+    def command(cls, arguments, timeout=90, *, label=None):
+        log = None
+        if label is not None:
+            if not re.fullmatch(r"[a-z0-9-]+", label):
+                raise ValueError("Native font probe log label is invalid")
+            logs = ROOT / "BuildOutput"
+            logs.mkdir(exist_ok=True)
+            log = logs / ("font-probe-" + label + ".log")
+        try:
+            result = subprocess.run(arguments, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                    timeout=timeout, check=False, text=True, encoding="utf-8", errors="replace")
+        except subprocess.TimeoutExpired as error:
+            if log is not None:
+                output = error.stdout or b""
+                log.write_bytes(output.encode("utf-8") if isinstance(output, str) else output)
+                raise RuntimeError(f"Native font probe {label} exceeded {timeout} seconds; see {log.name}.") from error
+            raise
+        if log is not None:
+            log.write_text(result.stdout, encoding="utf-8", newline="\n")
         if result.returncode:
             raise RuntimeError("Native font probe command failed: " + " ".join(arguments[:3]) + "\n" + result.stdout[-12000:])
         return result.stdout.strip()
+
+    @classmethod
+    def startup_command(cls, arguments, label, timeout):
+        return cls.command(arguments, timeout=timeout, label=label)
 
     @classmethod
     def run_probe(cls, directory):
@@ -479,12 +506,13 @@ class NativeBundledFontTests(unittest.TestCase):
         runtime = max(runtimes, key=lambda item: tuple(int(value) for value in re.findall(r"\d+", item.get("version", ""))))
         cls.device = cls.command(["xcrun", "simctl", "create", "Luqma Font Probe " + uuid.uuid4().hex[:8],
                                   "com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro-Max", runtime["identifier"]])
-        if not re.fullmatch(r"[0-9A-Fa-f-]{36}", cls.device):
+        if not re.fullmatch(r"[0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}", cls.device):
             cls.device = None
             raise RuntimeError("Native font probe Simulator creation returned no valid identifier")
-        cls.command(["xcrun", "simctl", "boot", cls.device])
-        cls.command(["xcrun", "simctl", "bootstatus", cls.device, "-b"], timeout=240)
-        cls.command(["xcrun", "simctl", "install", cls.device, str(bundle)])
+        preparation = prepare_created_simulator(cls.device, cls.startup_command)
+        print("Native font Simulator preparation: " + json.dumps(preparation, sort_keys=True), flush=True)
+        cls.command(["xcrun", "simctl", "install", cls.device, str(bundle)],
+                    timeout=180, label="simulator-font-install")
         cls.command(["xcrun", "simctl", "launch", cls.device, bundle_id], timeout=90)
         data = Path(cls.command(["xcrun", "simctl", "get_app_container", cls.device, bundle_id, "data"]))
         report = data / "Documents/font-probe.json"
