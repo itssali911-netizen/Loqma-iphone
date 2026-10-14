@@ -50,7 +50,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 75
     defaults:
       run:
@@ -63,7 +63,7 @@ jobs:
 
       - name: Select Xcode
         env:
-          DEVELOPER_DIR: ${{ vars.XCODE_DEVELOPER_DIR || '/Applications/Xcode_26.3.app/Contents/Developer' }}
+          DEVELOPER_DIR: ${{ vars.XCODE_DEVELOPER_DIR || '/Applications/Xcode_26.6.app/Contents/Developer' }}
         run: |
           test -d "$DEVELOPER_DIR"
           xcodebuild -version
