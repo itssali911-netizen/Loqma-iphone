@@ -43,7 +43,7 @@ struct PlanView:View {
                 Link("NIDDK Body Weight Planner",destination:URL(string:"https://www.niddk.nih.gov/bwp")!)
                 Link("Hall et al. • Lancet 2011",destination:URL(string:"https://pmc.ncbi.nlm.nih.gov/articles/PMC3880593/")!)
             }.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
-        }.sandowForm().navigationTitle(diary.t("خطة الوزن","Weight plan"))
+        }.sandowForm().navigationTitle(diary.t("خطة الوزن","Weight plan")).navigationBarTitleDisplayMode(.inline)
             .onAppear{if let saved=diary.state.weightPlan{plan=saved}else{plan.weight=diary.state.weights.last?.kg ?? 0};bodyFat=plan.bodyFat != nil;resting=plan.restingCalories != nil}
             .onChange(of:plan){_,_ in result=nil;applied=false}
     }

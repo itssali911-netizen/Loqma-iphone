@@ -182,7 +182,7 @@ private struct PhotoEstimateEditor:View {
     var body:some View {NavigationStack{Form{
         Section(diary.t("الكمية","Amount")){NumericInput(title:diary.t("الوزن","Weight"),value:$grams,suffix:diary.t("جم","g"))}.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
         Section{if let updated{NutritionView(value:updated.nutrition)};Notice(text:diary.t("تتغير السعرات مع الوزن. إذا كانت طريقة الطبخ أو كمية الزيت مختلفة، أضف وصفها وأعد التحليل.","Calories scale with weight. If preparation or oil differs, describe it and analyze again."))}.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
-    }.sandowForm().navigationTitle(diary.t("تعديل الكمية","Adjust amount")).toolbar{
+    }.sandowForm().navigationTitle(diary.t("تعديل الكمية","Adjust amount")).navigationBarTitleDisplayMode(.inline).toolbar{
         ToolbarItem(placement:.cancellationAction){Button(diary.t("إلغاء","Cancel")){dismiss()}}
         ToolbarItem(placement:.confirmationAction){Button(diary.t("حفظ","Save")){if let updated,apply(updated){dismiss()}}.disabled(updated==nil)}
     }}}
