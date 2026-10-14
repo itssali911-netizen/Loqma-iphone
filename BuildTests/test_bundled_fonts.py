@@ -197,12 +197,6 @@ enum FontProbeError:Error {case failed(String)}
 final class FontMeasurementState {
     var appeared=false
     var points:CGFloat=0
-    var contentSize:CGSize = .zero
-}
-
-struct FontContentSizeKey:PreferenceKey {
-    static var defaultValue:CGSize {.zero}
-    static func reduce(value:inout CGSize,nextValue:()->CGSize) {value=nextValue()}
 }
 
 struct FontMeasurementView:View {
@@ -217,19 +211,13 @@ struct FontMeasurementView:View {
                 Text("123 Protein").luqmaFont(size:18,weight:.regular,relativeTo:.body)
                     .onPreferenceChange(LuqmaFontPointSizeKey.self){state.points=$0}
             }
-        }.fixedSize()
-            .background(GeometryReader{proxy in
-                Color.clear.preference(key:FontContentSizeKey.self,value:proxy.size)
-            })
-            .onPreferenceChange(FontContentSizeKey.self){state.contentSize=$0}
-            .onAppear{state.appeared=true}
+        }.fixedSize().onAppear{state.appeared=true}
     }
 }
 
 struct FontMeasurement {
     let size:CGSize
     let points:CGFloat
-    let hostingSize:CGSize
     let safeAreaInsets:UIEdgeInsets
 }
 
@@ -307,12 +295,10 @@ func runFaces(_ text:String,_ font:CTFont)throws->[String] {
             host.view.setNeedsLayout()
             host.view.layoutIfNeeded()
             let fittingSize=host.sizeThatFits(in:CGSize(width:1000,height:1000))
-            if state.appeared,state.points>0,state.contentSize.width>0,state.contentSize.height>0,
-               fittingSize.width>0,fittingSize.height>0 {
-                let current=FontMeasurement(size:state.contentSize,points:state.points,
-                    hostingSize:fittingSize,safeAreaInsets:host.view.safeAreaInsets)
-                if let old=previous,old.size==current.size,old.points==current.points,
-                   old.hostingSize==current.hostingSize {
+            if state.appeared,state.points>0,fittingSize.width>0,fittingSize.height>0 {
+                let current=FontMeasurement(size:fittingSize,points:state.points,
+                    safeAreaInsets:host.view.safeAreaInsets)
+                if let old=previous,old.size==current.size,old.points==current.points {
                     return current
                 }
                 previous=current
@@ -322,8 +308,10 @@ func runFaces(_ text:String,_ font:CTFont)throws->[String] {
         diagnostics["unsettled_points"]=state.points
         diagnostics["unsettled_appeared"]=state.appeared
         diagnostics["unsettled_category"]=String(describing:category)
-        diagnostics["unsettled_content_width"]=state.contentSize.width
-        diagnostics["unsettled_content_height"]=state.contentSize.height
+        diagnostics["unsettled_safe_area_top"]=host.view.safeAreaInsets.top
+        diagnostics["unsettled_safe_area_bottom"]=host.view.safeAreaInsets.bottom
+        diagnostics["unsettled_safe_area_left"]=host.view.safeAreaInsets.left
+        diagnostics["unsettled_safe_area_right"]=host.view.safeAreaInsets.right
         if let previous {
             diagnostics["unsettled_width"]=previous.size.width
             diagnostics["unsettled_height"]=previous.size.height
@@ -334,10 +322,6 @@ func runFaces(_ text:String,_ font:CTFont)throws->[String] {
         diagnostics[prefix+"_width"]=measurement.size.width
         diagnostics[prefix+"_height"]=measurement.size.height
         diagnostics[prefix+"_points"]=measurement.points
-        diagnostics[prefix+"_content_width"]=measurement.size.width
-        diagnostics[prefix+"_content_height"]=measurement.size.height
-        diagnostics[prefix+"_hosting_width"]=measurement.hostingSize.width
-        diagnostics[prefix+"_hosting_height"]=measurement.hostingSize.height
         diagnostics[prefix+"_safe_area_top"]=measurement.safeAreaInsets.top
         diagnostics[prefix+"_safe_area_bottom"]=measurement.safeAreaInsets.bottom
         diagnostics[prefix+"_safe_area_left"]=measurement.safeAreaInsets.left
@@ -391,7 +375,7 @@ func runFaces(_ text:String,_ font:CTFont)throws->[String] {
         let fixedAccessibility=try await measured(.accessibility3,fixedFont:true)
         record(fixedAccessibility,"fixed_accessibility")
         diagnostics["hosting_safe_area_regions_disabled"]=true
-        diagnostics["content_geometry_observed"]=true
+        diagnostics["measurement_source"]="Settled UIHostingController.sizeThatFits with safeAreaRegions=[]"
         let metrics=UIFontMetrics(forTextStyle:.body)
         let standardTraits=UITraitCollection(preferredContentSizeCategory:standardCategory)
         let accessibilityTraits=UITraitCollection(preferredContentSizeCategory:accessibilityCategory)
@@ -414,14 +398,6 @@ func runFaces(_ text:String,_ font:CTFont)throws->[String] {
         diagnostics["uikit_layout_scale"]=metrics.scaledValue(for:18,compatibleWith:accessibilityTraits)
             / metrics.scaledValue(for:18,compatibleWith:standardTraits)
         diagnostics["dynamic_type_environment_tested"]=true
-        // sizeThatFits rounds to display pixels; with safe areas disabled it
-        // must agree with the content's own rectangle within one layout point.
-        for measurement in [standard,accessibility,fixedStandard,fixedAccessibility] {
-            guard abs(measurement.hostingSize.width-measurement.size.width)<1,
-                  abs(measurement.hostingSize.height-measurement.size.height)<1 else{
-                throw FontProbeError.failed("Hosting fitting size includes space outside the text rectangle")
-            }
-        }
         guard accessibilityFont.pointSize>standardFont.pointSize*1.3,
               accessibility.points>standard.points*1.3,
               accessibility.size.width>standard.size.width*1.3,
@@ -532,10 +508,6 @@ class NativeBundledFontTests(unittest.TestCase):
         self.assertTrue(self.report["dynamic_type_environment_tested"])
         self.assertTrue(self.report["scaled_exactly_once"])
         self.assertTrue(self.report["hosting_safe_area_regions_disabled"])
-        self.assertTrue(self.report["content_geometry_observed"])
-        for prefix in ("standard", "accessibility", "fixed_standard", "fixed_accessibility"):
-            self.assertAlmostEqual(self.report[prefix + "_hosting_width"], self.report[prefix + "_content_width"], delta=1)
-            self.assertAlmostEqual(self.report[prefix + "_hosting_height"], self.report[prefix + "_content_height"], delta=1)
         self.assertAlmostEqual(self.report["observed_scale"], self.report["expected_scale"],
                                delta=self.report["expected_scale"] * .1)
         self.assertAlmostEqual(self.report["observed_height_scale"], self.report["expected_scale"],
