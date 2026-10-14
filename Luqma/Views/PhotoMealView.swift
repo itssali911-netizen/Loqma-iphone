@@ -55,14 +55,14 @@ import UIKit
                 Button{Task{if UIImagePickerController.isSourceTypeAvailable(.camera),await CameraAccess.request(){camera=true}else{error=diary.t("الكاميرا غير متاحة أو تحتاج إذنًا من الإعدادات.","Camera is unavailable or needs access in Settings.")}}}label:{Label(diary.t("الكاميرا","Camera"),systemImage:"camera")}.buttonStyle(.bordered)
             }.disabled(busy)
             VStack(alignment:.leading,spacing:8){
-                Text(diary.t("وصف الوجبة (اختياري)","Meal description (optional)")).font(.subheadline.bold())
+                Text(diary.t("وصف الوجبة (اختياري)","Meal description (optional)")).font(LTypography.font(size:15,weight:.bold,relativeTo:.subheadline))
                 TextField(diary.t("مثلاً: الوزن، طريقة الطبخ وكمية الزيت","For example: weight, cooking method and oil amount"),text:$description,axis:.vertical).focused($descriptionFocused).lineLimit(2...4).padding(12).background(Theme.card,in:RoundedRectangle(cornerRadius:12)).accessibilityLabel(diary.t("وصف الوجبة الاختياري","Optional meal description")).disabled(busy)
                 Notice(text:diary.t("تُرسل الصورة والوصف لخدمة التحليل. الوزن والزيت والصلصات تؤثر في التقدير؛ أضف ما تعرفه لتحسينه.","The photo and description are sent to the analysis service. Weight, oil and sauces affect the estimate; add what you know to improve it."))
             }
             if loadingPhoto{ProgressView(diary.t("تجهيز الصورة…","Preparing photo…"))}
             Button{if ready{analyze()}else{showingSetup=true}}label:{Label(diary.t("تحليل الوجبة","Meal analysis"),systemImage:"sparkles")}.buttonStyle(LuqmaPrimaryButtonStyle()).disabled(imageData==nil || busy || loadingPhoto)
-            if busy{HStack{ProgressView();Text(diary.t("تقدير المكونات والسعرات…","Estimating components and calories…")).font(.footnote);Spacer();Button(diary.t("إلغاء","Cancel")){analysisTask?.cancel()}}}
-            if let error{Text(error).foregroundStyle(.orange).font(.footnote)}
+            if busy{HStack{ProgressView();Text(diary.t("تقدير المكونات والسعرات…","Estimating components and calories…")).font(LTypography.footnote);Spacer();Button(diary.t("إلغاء","Cancel")){analysisTask?.cancel()}}}
+            if let error{Text(error).foregroundStyle(.orange).font(LTypography.footnote)}
             if !parts.isEmpty{review}
         }
         .sheet(isPresented:$camera){CameraPhoto{data in camera=false;if let data{photoGeneration=UUID();photoLoadTask?.cancel();loadingPhoto=false;imageData=data;parts=[];error=nil}}.ignoresSafeArea()}
@@ -96,9 +96,9 @@ import UIKit
     private var review:some View {
         VStack(alignment:.leading,spacing:16){
             VStack(alignment:.leading,spacing:10){
-                Text(diary.t("تقدير الوجبة","Meal estimate")).font(.title3.bold())
+                Text(diary.t("تقدير الوجبة","Meal estimate")).font(LTypography.font(size:18,weight:.bold,relativeTo:.title3))
                 if let total{NutritionView(value:total,large:true)}
-                if let range=calorieRange{Text(diary.t("النطاق التقريبي: ","Estimated range: ")+decimal(range.0,0)+"–"+decimal(range.1,0)+diary.t(" سعرة"," kcal")).font(.caption).foregroundStyle(Theme.muted)}
+                if let range=calorieRange{Text(diary.t("النطاق التقريبي: ","Estimated range: ")+decimal(range.0,0)+"–"+decimal(range.1,0)+diary.t(" سعرة"," kcal")).font(LTypography.caption).foregroundStyle(Theme.muted)}
                 Notice(text:diary.t("راجع الكمية قبل الإضافة. التقدير من الصورة قد يتغير حسب الزيت والصلصات وطريقة التحضير.","Review the amount before logging. Photo estimates vary with oil, sauces and preparation."))
             }.luqmaCard()
             ForEach(parts){part in component(part)}
@@ -112,16 +112,16 @@ import UIKit
     }
     private func component(_ part:PhotoPart)->some View {
         VStack(alignment:.leading,spacing:10){
-            HStack{Text(products[part.id]?.0.label(diary.language) ?? part.food.food.label(diary.language)).font(.headline);Spacer();Button(role:.destructive){parts.removeAll{$0.id==part.id};products.removeValue(forKey:part.id)}label:{Image(systemName:"minus.circle")}.accessibilityLabel(diary.t("إزالة المكوّن","Remove component"))}
+            HStack{Text(products[part.id]?.0.label(diary.language) ?? part.food.food.label(diary.language)).font(LTypography.headline);Spacer();Button(role:.destructive){parts.removeAll{$0.id==part.id};products.removeValue(forKey:part.id)}label:{Image(systemName:"minus.circle")}.accessibilityLabel(diary.t("إزالة المكوّن","Remove component"))}
             if let product=products[part.id],let n=try? product.0.total(product.1,unit:product.2){
-                Text(MealPhotoEstimate.isValidPhotoEstimate(product.0) ? diary.t("حصة تقديرية · ","Estimated portion · ")+decimal(part.grams,0)+diary.t(" جم"," g") : decimal(product.1)+" "+product.2.label(diary.language)).font(.caption).foregroundStyle(Theme.muted)
+                Text(MealPhotoEstimate.isValidPhotoEstimate(product.0) ? diary.t("حصة تقديرية · ","Estimated portion · ")+decimal(part.grams,0)+diary.t(" جم"," g") : decimal(product.1)+" "+product.2.label(diary.language)).font(LTypography.caption).foregroundStyle(Theme.muted)
                 NutritionView(value:n)
                 if MealPhotoEstimate.isValidPhotoEstimate(product.0),let e=part.mealEstimate{
                     Notice(text:diary.language == .ar ? e.assumptions:e.assumptionsEn)
                     Button{editing=EstimateSelection(id:part.id,estimate:e)}label:{Label(diary.t("تعديل الكمية","Adjust amount"),systemImage:"slider.horizontal.3")}.buttonStyle(.bordered)
                 }
             }else{Notice(text:diary.t("أكمل بيانات هذا المكوّن قبل الحفظ.","Complete this component before logging."))}
-            Button{selection=ProductSelection(id:part.id,name:part.food.food.label(diary.language))}label:{Label(diary.t("اختيار منتج من قاعدة الطعام","Choose a catalog product"),systemImage:"magnifyingglass")}.font(.subheadline).buttonStyle(.borderless)
+            Button{selection=ProductSelection(id:part.id,name:part.food.food.label(diary.language))}label:{Label(diary.t("اختيار منتج من قاعدة الطعام","Choose a catalog product"),systemImage:"magnifyingglass")}.font(LTypography.subheadline).buttonStyle(.borderless)
         }.luqmaCard()
     }
     private func loadPhoto(_ value:PhotosPickerItem?){

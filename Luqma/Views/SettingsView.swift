@@ -81,9 +81,10 @@ private struct AboutLuqmaView:View {
                 Link("Open Food Facts",destination:URL(string:"https://world.openfoodfacts.org")!)
             }
             Section(diary.t("التصميم","Design")){
-                Link("Sandow · strangehelix.bio",destination:URL(string:"https://www.figma.com/community/file/1334779038193346013/sandow-ui-kit-ai-fitness-nutrition-app")!)
-                Text(diary.t("مقتبس من نسخة Community الداكنة، بتعديلات لواجهة لقمة العربية.","Adapted from the dark Community edition for Luqma's Arabic interface.")).font(.footnote).foregroundStyle(Theme.muted)
-                Link("CC BY 4.0",destination:URL(string:"https://creativecommons.org/licenses/by/4.0/")!)
+                Link("Fitness Tracker · Figma Community",destination:URL(string:"https://www.figma.com/design/XOt5BP0l5jx5hyyshyAgw1/Fitness-Tracker-Mobile-app--Community-?node-id=1-2")!)
+                Text(diary.t("مقتبس من القالب الداكن، بترتيب مخصص لسجل الطعام العربي.","Adapted from the dark template for the Arabic food diary.")).font(LTypography.footnote).foregroundStyle(Theme.muted)
+                Link("Tajawal · SIL Open Font License",destination:URL(string:"https://github.com/google/fonts/tree/main/ofl/tajawal")!)
+                Link(diary.t("مرجع التصميم السابق · Sandow","Previous design reference · Sandow"),destination:URL(string:"https://www.figma.com/community/file/1334779038193346013/sandow-ui-kit-ai-fitness-nutrition-app")!)
             }
         }.appBackground().navigationTitle(diary.t("حول لُقمة","About Luqma"))
     }

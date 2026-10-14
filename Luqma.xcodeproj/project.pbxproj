@@ -420,6 +420,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = 3E31BDA889FB25A6C7913241;
 		};
+		"1B5A45297F07D1DE0EA2A17A" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "LuqmaTypography.swift";
+			"sourceTree" = "<group>";
+		};
+		"68B5EBAE280D4A4DE50CCC4E" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 1B5A45297F07D1DE0EA2A17A;
+		};
 		"69C4B1C7AA72B29F8292B817" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -479,6 +489,7 @@
 				29048C922B421BBD73B1A875,
 				BFE17ACE05D898E290332E40,
 				3E31BDA889FB25A6C7913241,
+				1B5A45297F07D1DE0EA2A17A,
 				69C4B1C7AA72B29F8292B817,
 				C8ADF73E9B38238D03760F45,
 				440B250874D86CEECDBA87F1,
@@ -578,6 +589,66 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = 143D7BFFDB66553FB03578E2;
 		};
+		"AEED1FA3A8FB6F1744C29DE9" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "file";
+			"path" = "Tajawal-Bold.ttf";
+			"sourceTree" = "<group>";
+		};
+		"7988176ACD1780001FF63B2A" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = AEED1FA3A8FB6F1744C29DE9;
+		};
+		"78D52F95D4330FFC6D044447" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "file";
+			"path" = "Tajawal-ExtraBold.ttf";
+			"sourceTree" = "<group>";
+		};
+		"D136E66C00E80585571262A8" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 78D52F95D4330FFC6D044447;
+		};
+		"AA5AAE81718B3617773303A3" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "file";
+			"path" = "Tajawal-Light.ttf";
+			"sourceTree" = "<group>";
+		};
+		"E9A0747CB851A1A3CE595149" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = AA5AAE81718B3617773303A3;
+		};
+		"930147FCF182BBC474776136" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "file";
+			"path" = "Tajawal-Medium.ttf";
+			"sourceTree" = "<group>";
+		};
+		"3827DA5711A8F801DC928734" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 930147FCF182BBC474776136;
+		};
+		"486BF8AAEDDCFFA7DF684491" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "text";
+			"path" = "Tajawal-OFL.txt";
+			"sourceTree" = "<group>";
+		};
+		"7531EA939F97316AFA92776D" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 486BF8AAEDDCFFA7DF684491;
+		};
+		"DC1F5D8706FF0532CB115DA8" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "file";
+			"path" = "Tajawal-Regular.ttf";
+			"sourceTree" = "<group>";
+		};
+		"C927260DCFF8EFA985F1F6B6" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = DC1F5D8706FF0532CB115DA8;
+		};
 		"9969C7BC3A1B2EF15AD2E4AE" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "text";
@@ -657,6 +728,12 @@
 				BA6538021878DCF9D37C537F,
 				D247B60688D68529AFA78738,
 				143D7BFFDB66553FB03578E2,
+				AEED1FA3A8FB6F1744C29DE9,
+				78D52F95D4330FFC6D044447,
+				AA5AAE81718B3617773303A3,
+				930147FCF182BBC474776136,
+				486BF8AAEDDCFFA7DF684491,
+				DC1F5D8706FF0532CB115DA8,
 				9969C7BC3A1B2EF15AD2E4AE,
 				EDA65B4D24B32C0FA7CDB1C5,
 				56BA6AEC0C3BED80CF76CBE3,
@@ -834,6 +911,7 @@
 				531B4A74ADCF42F28BF17735,
 				0B2634EBC8B3FF8510852636,
 				B9FCD0B7DEB5015571206492,
+				68B5EBAE280D4A4DE50CCC4E,
 				B7953420073CFA82ED6F7D0D,
 				AEE8BD9FC54BA9E2B3082726,
 				C97CAF7A95D4BDBFD294D148,
@@ -867,6 +945,12 @@
 				EE03F44154F9839F5BCEBF5A,
 				8514D5B613BF7C410DA4A25C,
 				E5329B64DF8043101EC0CCFF,
+				7988176ACD1780001FF63B2A,
+				D136E66C00E80585571262A8,
+				E9A0747CB851A1A3CE595149,
+				3827DA5711A8F801DC928734,
+				7531EA939F97316AFA92776D,
+				C927260DCFF8EFA985F1F6B6,
 				32BF30BDE4C6BF727FBF7351,
 				0DDB06225CC44BC673292414,
 				BFE363997595FFAF9F2056A7,
@@ -914,7 +998,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				"MARKETING_VERSION" = "1.9";
+				"MARKETING_VERSION" = "2.0";
 				"PRODUCT_BUNDLE_IDENTIFIER" = "app.luqma.diary";
 				"PRODUCT_NAME" = "$(TARGET_NAME)";
 				"SDKROOT" = "iphoneos";
@@ -962,7 +1046,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				"MARKETING_VERSION" = "1.9";
+				"MARKETING_VERSION" = "2.0";
 				"PRODUCT_BUNDLE_IDENTIFIER" = "app.luqma.diary";
 				"PRODUCT_NAME" = "$(TARGET_NAME)";
 				"SDKROOT" = "iphoneos";

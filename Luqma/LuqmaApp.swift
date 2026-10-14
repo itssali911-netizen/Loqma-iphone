@@ -21,17 +21,17 @@ import UIKit
         let navigation=UINavigationBarAppearance()
         navigation.configureWithOpaqueBackground()
         navigation.backgroundColor=UIColor(Theme.background)
-        navigation.titleTextAttributes=[.foregroundColor:UIColor(Theme.text)]
-        navigation.largeTitleTextAttributes=[.foregroundColor:UIColor(Theme.text)]
+        navigation.titleTextAttributes=[.foregroundColor:UIColor(Theme.text),.font:LTypography.uiFont(size:18,weight:.bold,relativeTo:.headline)]
+        navigation.largeTitleTextAttributes=[.foregroundColor:UIColor(Theme.text),.font:LTypography.uiFont(size:22,weight:.heavy,relativeTo:.title1)]
         UINavigationBar.appearance().standardAppearance=navigation
         UINavigationBar.appearance().scrollEdgeAppearance=navigation
-        UISegmentedControl.appearance().selectedSegmentTintColor=UIColor(Theme.text)
-        UISegmentedControl.appearance().setTitleTextAttributes([.foregroundColor:UIColor(Theme.card)],for:.selected)
-        UISegmentedControl.appearance().setTitleTextAttributes([.foregroundColor:UIColor(Theme.muted)],for:.normal)
+        UISegmentedControl.appearance().selectedSegmentTintColor=UIColor(Theme.accent)
+        UISegmentedControl.appearance().setTitleTextAttributes([.foregroundColor:UIColor(Theme.text),.font:LTypography.uiFont(size:14,weight:.bold,relativeTo:.subheadline)],for:.selected)
+        UISegmentedControl.appearance().setTitleTextAttributes([.foregroundColor:UIColor(Theme.muted),.font:LTypography.uiFont(size:14,relativeTo:.subheadline)],for:.normal)
     }
     var body:some Scene {
         WindowGroup {
-            RootView().foregroundStyle(Theme.text).environmentObject(diary)
+            RootView().font(LTypography.body).foregroundStyle(Theme.text).environmentObject(diary)
                 .environment(\.layoutDirection,diary.language == .ar ? .rightToLeft:.leftToRight)
                 .environment(\.locale,DisplayFormat.locale(diary.language))
                 .environment(\.calendar,DisplayFormat.calendar(diary.language))
@@ -101,21 +101,16 @@ struct RootView:View {
         HStack(alignment:.center,spacing:4){
             navigationButton(0,title:diary.t("اليوم","Today"),symbol:"house")
             navigationButton(1,title:diary.t("مطبخي","Kitchen"),symbol:"fork.knife")
-            Button{adding=true}label:{Image(systemName:"plus").font(.system(size:27,weight:.medium)).foregroundStyle(Theme.text).frame(width:56,height:56).background(Theme.accent,in:RoundedRectangle(cornerRadius:20,style:.continuous)).shadow(color:Theme.accent.opacity(0.22),radius:12,y:6)}.buttonStyle(.plain).frame(maxWidth:.infinity).offset(y:-17).accessibilityLabel(diary.t("إضافة طعام إلى اليوم","Add food to today"))
+            Button{adding=true}label:{Image(systemName:"plus").font(.system(size:27,weight:.regular)).foregroundStyle(Theme.text).frame(width:52,height:52).background(Theme.accent,in:Circle())}.buttonStyle(.plain).frame(maxWidth:.infinity,minHeight:60).accessibilityLabel(diary.t("إضافة طعام إلى اليوم","Add food to today"))
             navigationButton(2,title:diary.t("تقدّمي","Progress"),symbol:"chart.bar")
             navigationButton(3,title:diary.t("الإعدادات","Settings"),symbol:"gearshape")
-        }.padding(.horizontal,10).padding(.top,8).padding(.bottom,7)
-            .background(Theme.surface,in:RoundedRectangle(cornerRadius:30,style:.continuous))
-            .overlay{RoundedRectangle(cornerRadius:30,style:.continuous).stroke(Theme.stroke,lineWidth:0.5)}
-            .padding(.horizontal,18).padding(.top,18).padding(.bottom,8)
+        }.padding(.horizontal,22).padding(.top,10).padding(.bottom,4)
             .background(Theme.background)
     }
     private func navigationButton(_ value:Int,title:String,symbol:String)->some View {
         Button{tab=value}label:{VStack(spacing:4){
-            Image(systemName:tab == value && value == 0 ? "house.fill":symbol).font(.system(size:20,weight:.regular)).frame(width:42,height:36)
-                .background(tab == value ? Theme.background:Color.clear,in:RoundedRectangle(cornerRadius:13,style:.continuous))
-            Text(title).font(.system(size:10,weight:tab == value ? .semibold:.regular)).lineLimit(1).minimumScaleFactor(0.75)
-            Capsule().fill(tab == value ? Theme.accent:Color.clear).frame(width:18,height:3)
-        }.foregroundStyle(tab == value ? Theme.text:Theme.muted).frame(maxWidth:.infinity,minHeight:54).contentShape(Rectangle())}.buttonStyle(.plain).accessibilityLabel(title).accessibilityAddTraits(tab == value ? .isSelected:[])
+            Image(systemName:tab == value && value == 0 ? "house.fill":symbol).font(.system(size:21,weight:.regular)).frame(width:42,height:30)
+            Text(title).font(LTypography.font(size:10,weight:tab == value ? .bold:.regular,relativeTo:.caption2)).lineLimit(1).minimumScaleFactor(0.75)
+        }.foregroundStyle(tab == value ? Theme.accent:Theme.muted).frame(maxWidth:.infinity,minHeight:54).contentShape(Rectangle())}.buttonStyle(.plain).accessibilityLabel(title).accessibilityAddTraits(tab == value ? .isSelected:[])
     }
 }

@@ -81,11 +81,11 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                     if tab==0 && !displayedResults.isEmpty {
                         if let bestMatch {
                             VStack(alignment:.leading,spacing:8){
-                                Label(diary.t("أفضل تطابق","Best match"),systemImage:"star.fill").font(.subheadline.bold()).foregroundStyle(Theme.accent)
+                                Label(diary.t("أفضل تطابق","Best match"),systemImage:"star.fill").font(LTypography.font(size:15,weight:.bold,relativeTo:.subheadline)).foregroundStyle(Theme.accent)
                                 FoodRow(food:bestMatch){select(bestMatch)}.disabled(choosingFood)
                             }
                         }
-                        if !otherResults.isEmpty {Text(diary.t(bestMatch == nil ? "الأطعمة":"نتائج أخرى",bestMatch == nil ? "Foods":"Other results")+" (\(otherResults.count))").font(.headline)}
+                        if !otherResults.isEmpty {Text(diary.t(bestMatch == nil ? "الأطعمة":"نتائج أخرى",bestMatch == nil ? "Foods":"Other results")+" (\(otherResults.count))").font(LTypography.headline)}
                         LazyVStack(alignment:.leading,spacing:10) {
                             ForEach(otherResults) {food in FoodRow(food:food){select(food)}.disabled(choosingFood).contextMenu{if filter==3{Button(role:.destructive){diary.removePersonal(food.id)}label:{Label(diary.t("حذف من أطعمتي","Remove from My foods"),systemImage:"trash")}}}}
                         }
@@ -99,8 +99,8 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                     }
                     if tab==0 && filter==0 && !nearbyResults.isEmpty {
                         VStack(alignment:.leading,spacing:10) {
-                            Label(diary.t("منتجات قريبة من بحثك","Nearby products"),systemImage:"text.magnifyingglass").font(.headline)
-                            Text(diary.t("تشابه في الاسم فقط؛ قد تختلف العلامة التجارية أو نوع المنتج.","Similar names; the brand or product type may differ.")).font(.caption).foregroundStyle(Theme.muted)
+                            Label(diary.t("منتجات قريبة من بحثك","Nearby products"),systemImage:"text.magnifyingglass").font(LTypography.headline)
+                            Text(diary.t("تشابه في الاسم فقط؛ قد تختلف العلامة التجارية أو نوع المنتج.","Similar names; the brand or product type may differ.")).font(LTypography.caption).foregroundStyle(Theme.muted)
                             LazyVStack(alignment:.leading,spacing:10){ForEach(nearbyResults){food in FoodRow(food:food){select(food)}.disabled(choosingFood)}}
                         }
                     }
@@ -128,8 +128,8 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
             }.buttonStyle(.bordered)
             if filter==0 && term.isEmpty && !recentFoods.isEmpty {recent(diary.t("الأخيرة","Recent foods"),Array(recentFoods.prefix(8)),reverse:false)}
             if filter==0 {
-                if !suggestions.isEmpty {VStack(alignment:.leading,spacing:10){Text(diary.t(term.isEmpty ? "ابدأ البحث":"اقتراحات البحث",term.isEmpty ? "Start searching":"Suggested searches")).font(.subheadline.bold());ForEach(suggestions){suggestion in Button {submitSuggestion(suggestion.query)} label:{HStack{Image(systemName:suggestion.kind == .history ? "clock":"magnifyingglass");Text(DisplayFormat.westernDigits(suggestion.label)).lineLimit(2).multilineTextAlignment(.leading);Spacer();Image(systemName:"arrow.up.left").font(.caption)}}.buttonStyle(.plain).disabled(choosingFood)}}.luqmaCard()}
-                if !term.isEmpty {Text(diary.t("البحث في الأطعمة المحفوظة • اضغط بحث لعرض المزيد من المنتجات","Searching saved foods • Tap Search for more products")).font(.caption).foregroundStyle(Theme.muted)}
+                if !suggestions.isEmpty {VStack(alignment:.leading,spacing:10){Text(diary.t(term.isEmpty ? "ابدأ البحث":"اقتراحات البحث",term.isEmpty ? "Start searching":"Suggested searches")).font(LTypography.font(size:15,weight:.bold,relativeTo:.subheadline));ForEach(suggestions){suggestion in Button {submitSuggestion(suggestion.query)} label:{HStack{Image(systemName:suggestion.kind == .history ? "clock":"magnifyingglass");Text(DisplayFormat.westernDigits(suggestion.label)).lineLimit(2).multilineTextAlignment(.leading);Spacer();Image(systemName:"arrow.up.left").font(.caption)}}.buttonStyle(.plain).disabled(choosingFood)}}.luqmaCard()}
+                if !term.isEmpty {Text(diary.t("البحث في الأطعمة المحفوظة • اضغط بحث لعرض المزيد من المنتجات","Searching saved foods • Tap Search for more products")).font(LTypography.caption).foregroundStyle(Theme.muted)}
             }
         }
     }
@@ -166,7 +166,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
             }
         }
     }
-    private func recent(_ title:String,_ foods:[Food],reverse:Bool=true) -> some View {let available=foods.filter{FoodSearch.availableForAdding($0) && (!productSelection || FoodSearch.isCatalogFood($0))};return VStack(alignment:.leading,spacing:10){Text(title).font(.headline);ForEach(Array((reverse ? Array(available.reversed()):available).prefix(8))){food in FoodRow(food:food){select(food)}.disabled(choosingFood)}}}
+    private func recent(_ title:String,_ foods:[Food],reverse:Bool=true) -> some View {let available=foods.filter{FoodSearch.availableForAdding($0) && (!productSelection || FoodSearch.isCatalogFood($0))};return VStack(alignment:.leading,spacing:10){Text(title).font(LTypography.headline);ForEach(Array((reverse ? Array(available.reversed()):available).prefix(8))){food in FoodRow(food:food){select(food)}.disabled(choosingFood)}}}
     private func resetSearch() {
         searchTask?.cancel();selectionTask?.cancel();queryToken=UUID();busy=false;pageLoading=false;choosingFood=false;nextPage=nil;reachedSourceWindow=false
         localResults=[];remoteResults=[];publishResults([]);nearbyResults=[];suggestions=[];notice=nil
@@ -305,7 +305,7 @@ struct FoodPortionView:View {
     var body:some View {
         NavigationStack{Form{
             Section{
-                if manual {TextField(diary.t("اسم الطعام","Food name"),text:$name)}else{Text(name).font(.headline);if let brand=food.brand{Text(DisplayFormat.westernDigits(brand)).font(.caption).foregroundStyle(Theme.muted)}}
+                if manual {TextField(diary.t("اسم الطعام","Food name"),text:$name)}else{Text(name).font(LTypography.headline);if let brand=food.brand{Text(DisplayFormat.westernDigits(brand)).font(LTypography.caption).foregroundStyle(Theme.muted)}}
                 Picker(diary.t("الوجبة","Meal"),selection:$meal){ForEach(Meal.allCases){Text($0.label(diary.language)).tag($0)}}
             }
             Section(diary.t("الكمية","Amount")) {
@@ -321,14 +321,14 @@ struct FoodPortionView:View {
                 }
                 if unit == .serving && needsServingSize {
                     input(diary.t(food.unit == .ml ? "حجم الحصة (مل)":"وزن الحصة (جم)",food.unit == .ml ? "Serving volume (ml)":"Serving weight (g)"),$servingWeight)
-                    Text(diary.t("لا يحدد المصدر حجم الحصة. أدخله من الملصق أو اختر وحدة المنتج.","The source has no serving size. Enter it from the label, or choose the product's unit.")).font(.caption).foregroundStyle(Theme.muted)
+                    Text(diary.t("لا يحدد المصدر حجم الحصة. أدخله من الملصق أو اختر وحدة المنتج.","The source has no serving size. Enter it from the label, or choose the product's unit.")).font(LTypography.caption).foregroundStyle(Theme.muted)
                 }
-                if let serving=portionFood.serving,unit == .serving{Text(DisplayFormat.westernDigits(serving)).font(.footnote).foregroundStyle(.secondary)}
+                if let serving=portionFood.serving,unit == .serving{Text(DisplayFormat.westernDigits(serving)).font(LTypography.footnote).foregroundStyle(.secondary)}
                 input(diary.t(unit == .serving ? "عدد الحصص":"الكمية المستهلكة",unit == .serving ? "Number of servings":"Consumed amount"),$amount)
-                if base != nil {NutritionView(value:total,large:true)}else{Text(diary.t("حدد الحصة لعرض مجموع التغذية","Set the serving to see nutrition totals")).font(.subheadline).foregroundStyle(Theme.muted)}
+                if base != nil {NutritionView(value:total,large:true)}else{Text(diary.t("حدد الحصة لعرض مجموع التغذية","Set the serving to see nutrition totals")).font(LTypography.subheadline).foregroundStyle(Theme.muted)}
             }
             Section{
-                if manual {Text(referenceTitle).font(.headline);referenceInputs}
+                if manual {Text(referenceTitle).font(LTypography.headline);referenceInputs}
                 else {DisclosureGroup(referenceTitle,isExpanded:$editingNutrition){referenceInputs}}
             }
             Section{Button(diary.t("إضافة الطعام","Add food")){save()}.disabled(base==nil || name.trimmingCharacters(in:.whitespaces).isEmpty || (quantity ?? 0)<=0 || (quantity ?? 0)>10000)}

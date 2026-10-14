@@ -1,6 +1,6 @@
-# Luqma iPhone — version 1.9
+# Luqma iPhone —2.0 local source
 
-167 Swift tests, 31 Python tests, iPhone Release compilation, independent IPA validation and eight native Simulator screenshots passed. [Build](https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/38452505784)
+2.0 UI changes are saved locally at the user’s request.14 new portable font/framebuffer tests pass. Xcode compilation and native2.0 screenshot review are pending. Last verified IPA:1.9 build44.
 
 Meal analysis estimates calories, protein, carbs and fat for every visible component and the whole meal, with editable weights and estimated servings. An existing iPhone Keychain connection is reused automatically; no model or setup file import is needed. A fresh device needs its own connection under advanced settings. The app uses the simple label “Meal analysis”; no service credential is embedded in the source or IPA. Photos and recipe inputs are sent to Google for analysis when the user starts the feature. Estimates require review and are not measured calorie accuracy.
 
@@ -14,7 +14,7 @@ Numbers use 123 in both languages. A compact selected-day row sits at the top. C
 
 Food catalog: 744 supplied MFP regional foods and 6 OFF starter products, plus live OFF search. All 3,830 declared MFP portions retain source nutrition multipliers; 31 incomplete food records and 94 unknown portions remain unknown. The supplied sample does not contain MFP's complete server database or ranking algorithm. See [food sources and search](FOOD-DATA-AR.md).
 
-SwiftUI styling adapts the Sandow v1.2 dark Community preview by strangehelix.bio, with in-app CC BY 4.0 attribution. Its free nutrition sections are flattened previews; the functional views were rebuilt with real diary data. See `Luqma/Resources/UI-SOURCES.txt` for attribution.
+Native SwiftUI reconstruction uses the inspected editable dark Fitness Tracker Community frame: #0B0B12 background, #161626 cards, #2F80ED accent, 20pt corners, a circular calorie goal and2×2 meal grid. A consumed/target macro panel sits below the goal; meal macros use readable compact rows. Five SIL-OFL Tajawal weights are the user-approved free Arabic/Latin substitute. Gilroy is not bundled. This is a native reconstruction from the template, not automatic Figma code import.
 
 Before updating, export a diary backup and keep the same Apple account and installed identifier, such as `app.luqma.diary.2AV9NV468K`. Personally re-sign the IPA and install over the existing app. See [Arabic instructions](README-AR.md), [analysis and recipes](GEMINI-SETUP-AR.md) and [Health removal](HEALTH-SETUP-AR.md).
 
@@ -28,3 +28,5 @@ python3 Scripts/build_ios.py sideload
 ```
 
 Results and their limits are recorded in [VALIDATION.md](VALIDATION.md). Food-resource rebuild commands are in [FOOD-DATA-AR.md](FOOD-DATA-AR.md).
+
+Previous1.9 verified build evidence: 167 Swift tests, 31 Python tests, iPhone Release compilation, independent IPA validation and eight native Simulator screenshots passed. [Build](https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/38452505784)

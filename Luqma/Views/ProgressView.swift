@@ -25,15 +25,15 @@ struct ProgressViewScreen:View {
         if let latest=diary.state.weights.last {
             HStack(alignment:.center,spacing:18){
                 VStack(alignment:.leading,spacing:10){
-                    Text(diary.t("آخر وزن","Latest weight")).font(.subheadline).foregroundStyle(Theme.muted)
-                    HStack(alignment:.firstTextBaseline,spacing:8){Text(decimal(latest.kg)).font(.system(size:42,weight:.bold)).monospacedDigit();Text(diary.t("كجم","kg")).foregroundStyle(Theme.muted)}
-                    Text(latest.day).font(.caption).monospacedDigit().foregroundStyle(Theme.muted)
+                    Text(diary.t("آخر وزن","Latest weight")).font(LTypography.subheadline).foregroundStyle(Theme.muted)
+                    HStack(alignment:.firstTextBaseline,spacing:8){Text(decimal(latest.kg)).font(LTypography.font(size:42,weight:.bold,relativeTo:.largeTitle)).monospacedDigit();Text(diary.t("كجم","kg")).foregroundStyle(Theme.muted)}
+                    Text(latest.day).font(LTypography.caption).monospacedDigit().foregroundStyle(Theme.muted)
                 }
                 Spacer(minLength:0)
                 Image(systemName:"scalemass").font(.system(size:29,weight:.regular)).foregroundStyle(Theme.accent).frame(width:66,height:66).background(Theme.surface,in:RoundedRectangle(cornerRadius:22,style:.continuous)).accessibilityHidden(true)
             }
         } else {
-            Text(diary.t("ابدأ بتسجيل وزنك","Start with your weight")).font(.headline)
+            Text(diary.t("ابدأ بتسجيل وزنك","Start with your weight")).font(LTypography.headline)
             Notice(text:diary.t("تابع تغيّر وزنك ومتوسط الأسبوع هنا.","Track your weight trend and weekly average here."))
         }
         Button{adding=true}label:{Label(diary.t("تسجيل وزن","Log weight"),systemImage:"plus")}.buttonStyle(LuqmaPrimaryButtonStyle())
@@ -42,9 +42,9 @@ struct ProgressViewScreen:View {
         NavigationLink{PlanView().toolbar(.visible,for:.navigationBar)}label:{HStack(spacing:12){
             Image(systemName:"target").font(.system(size:24)).foregroundStyle(Theme.accent).frame(width:46,height:46).background(Theme.surface,in:RoundedRectangle(cornerRadius:15))
             VStack(alignment:.leading,spacing:4){
-                Text(diary.t("خطة الوزن","Weight plan")).font(.headline).foregroundStyle(.primary)
-                if let plan=diary.state.weightPlan{Text("\(diary.t("الهدف","Goal")): \(decimal(plan.targetWeight)) \(diary.t("كجم","kg"))").font(.subheadline).foregroundStyle(Theme.muted)}
-                else{Text(diary.t("حدد هدفك والسعرات المناسبة","Set your goal and calorie target")).font(.subheadline).foregroundStyle(Theme.muted)}
+                Text(diary.t("خطة الوزن","Weight plan")).font(LTypography.headline).foregroundStyle(.primary)
+                if let plan=diary.state.weightPlan{Text("\(diary.t("الهدف","Goal")): \(decimal(plan.targetWeight)) \(diary.t("كجم","kg"))").font(LTypography.subheadline).foregroundStyle(Theme.muted)}
+                else{Text(diary.t("حدد هدفك والسعرات المناسبة","Set your goal and calorie target")).font(LTypography.subheadline).foregroundStyle(Theme.muted)}
             }
             Spacer(minLength:0)
             Image(systemName:"chevron.forward").font(.caption).foregroundStyle(Theme.muted)
@@ -53,18 +53,18 @@ struct ProgressViewScreen:View {
             Divider()
             Toggle(diary.t("تحديث السعرات مع الوزن","Update calories with weight"),isOn:Binding(get:{diary.state.adaptive},set:{value in diary.change{$0.adaptive=value};diary.adapt()}))
             let average=DiaryValidation.average(diary.state.weights,ending:DayKey.today)
-            if let kg=average.kg{Text("\(diary.t("متوسط الأسبوع","Weekly average")): \(decimal(kg)) \(diary.t("كجم","kg"))").font(.footnote).foregroundStyle(Theme.muted)}
+            if let kg=average.kg{Text("\(diary.t("متوسط الأسبوع","Weekly average")): \(decimal(kg)) \(diary.t("كجم","kg"))").font(LTypography.footnote).foregroundStyle(Theme.muted)}
             DisclosureGroup(diary.t("كيف يعمل التحديث؟","How does it work?"),isExpanded:$adaptiveDetails){
                 Notice(text:diary.adaptiveMessage ?? diary.t("يتطلب ٣ قراءات خلال أسبوع. يستخدم متوسط الوزن لتحديث السعرات حتى موعد الهدف.","Requires three readings this week. Uses your average weight to update calories through your target date.")).padding(.top,8)
-            }.font(.footnote)
+            }.font(LTypography.footnote)
         }
     }.luqmaCard()}
     @ViewBuilder private var weightHistory:some View {
         if !readings.isEmpty{VStack(alignment:.leading,spacing:14){
-            Text(diary.t("سجل الوزن","Weight history")).font(.headline).accessibilityAddTraits(.isHeader)
-            if readings.count>30{Text(diary.t("آخر ٣٠ قراءة في المدة المختارة","Latest 30 readings in the selected range")).font(.caption).foregroundStyle(Theme.muted)}
+            Text(diary.t("سجل الوزن","Weight history")).font(LTypography.headline).accessibilityAddTraits(.isHeader)
+            if readings.count>30{Text(diary.t("آخر ٣٠ قراءة في المدة المختارة","Latest 30 readings in the selected range")).font(LTypography.caption).foregroundStyle(Theme.muted)}
             ForEach(Array(readings.reversed().prefix(30))){w in HStack(spacing:12){
-                VStack(alignment:.leading,spacing:4){Text(w.day).font(.subheadline).monospacedDigit();if let source=w.source{Text(source=="Manual" ? diary.t("إدخال يدوي","Manual entry"):source).font(.caption).foregroundStyle(Theme.muted)}}
+                VStack(alignment:.leading,spacing:4){Text(w.day).font(LTypography.subheadline).monospacedDigit();if let source=w.source{Text(source=="Manual" ? diary.t("إدخال يدوي","Manual entry"):source).font(LTypography.caption).foregroundStyle(Theme.muted)}}
                 Spacer(minLength:0)
                 Text(decimal(w.kg)+" "+diary.t("كجم","kg")).monospacedDigit()
                 Button(role:.destructive){deleting=w}label:{Image(systemName:"trash").frame(minWidth:44,minHeight:44)}.accessibilityLabel(diary.t("حذف قراءة الوزن","Delete weight reading"))
@@ -73,7 +73,7 @@ struct ProgressViewScreen:View {
     }
     private var weightChart:some View {VStack(alignment:.leading,spacing:18){
         HStack(spacing:4){ForEach([7,30,90,0],id:\.self){value in
-            Button{range=value}label:{Text(rangeTitle(value)).font(.caption.weight(.semibold)).frame(maxWidth:.infinity,minHeight:40).foregroundStyle(range == value ? Theme.card:Theme.muted).background(range == value ? Theme.text:Theme.surface,in:RoundedRectangle(cornerRadius:12))}.buttonStyle(.plain).accessibilityAddTraits(range == value ? .isSelected:[])
+            Button{range=value}label:{Text(rangeTitle(value)).font(LTypography.font(size:12,weight:.semibold,relativeTo:.caption)).frame(maxWidth:.infinity,minHeight:40).foregroundStyle(range == value ? Theme.card:Theme.muted).background(range == value ? Theme.text:Theme.surface,in:RoundedRectangle(cornerRadius:12))}.buttonStyle(.plain).accessibilityAddTraits(range == value ? .isSelected:[])
         }}.padding(4).background(Theme.surface,in:RoundedRectangle(cornerRadius:16)).accessibilityLabel(diary.t("مدة الرسم","Chart range"))
         if readings.isEmpty{Notice(text:diary.t("لا توجد قراءات في هذه المدة.","No readings in this range."))}
         else{Chart{

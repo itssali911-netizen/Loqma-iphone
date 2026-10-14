@@ -12,16 +12,16 @@ struct GeminiSettingsView: View {
         NavigationStack {
             Form {
                 Section {
-                    Label(diary.t("تحليل الوجبة", "Meal analysis"), systemImage: "sparkles").font(.headline)
+                    Label(diary.t("تحليل الوجبة", "Meal analysis"), systemImage: "sparkles").font(LTypography.headline)
                     Label(diary.t(configured ? "جاهز على هذا الجهاز" : "يحتاج تفعيلًا على هذا الجهاز",
                                   configured ? "Ready on this device" : "Activation needed on this device"),
                           systemImage: configured ? "checkmark.circle.fill" : "circle.dashed")
                         .foregroundStyle(configured ? Theme.accent : Theme.muted)
                     Text(diary.t("تظهر السعرات والماكروز بعد تحليل الصورة. يمكنك تعديل الكمية قبل حفظ الوجبة.",
                                  "Calories and macros appear after photo analysis. You can adjust the amount before saving the meal."))
-                        .font(.footnote).foregroundStyle(Theme.muted)
+                        .font(LTypography.footnote).foregroundStyle(Theme.muted)
                 }
-                if let message { Section { Text(message).font(.footnote) } }
+                if let message { Section { Text(message).font(LTypography.footnote) } }
                 Section {
                     DisclosureGroup(diary.t("إعدادات متقدمة", "Advanced settings")) {
                         if !configured {
@@ -38,7 +38,7 @@ struct GeminiSettingsView: View {
                 Section {
                     Text(diary.t("تُرسل صورة الوجبة والوصف فقط إلى خدمة التحليل. يبقى سجلك على جهازك.",
                                  "Only the meal photo and description are sent to the analysis service. Your diary stays on your device."))
-                        .font(.footnote).foregroundStyle(Theme.muted)
+                        .font(LTypography.footnote).foregroundStyle(Theme.muted)
                     Link(diary.t("سياسة خدمة التحليل", "Analysis service policy"), destination: URL(string: "https://ai.google.dev/gemini-api/terms")!)
                 }
             }.appBackground().navigationTitle(diary.t("تحليل الوجبة", "Meal analysis"))

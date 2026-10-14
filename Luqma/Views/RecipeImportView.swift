@@ -35,23 +35,23 @@ import SwiftUI
                             draft = nil; error = nil; pendingIngredientEdits.removeAll()
                         } label: {
                             Label(diary.t("تغيير الرابط أو النص", "Change link or text"), systemImage: "link")
-                        }.font(.subheadline).foregroundStyle(Theme.accent)
+                        }.font(LTypography.subheadline).foregroundStyle(Theme.accent)
                     }
                     if busy {
                         HStack(spacing: 12) {
                             ProgressView()
                             Text(stage == .readingSource ? diary.t("نقرأ المقادير من الرابط…", "Reading ingredients from the link…") :
-                                diary.t("نحسب السعرات ونرتب الوصفة…", "Calculating nutrition and organizing the recipe…")).font(.subheadline)
+                                diary.t("نحسب السعرات ونرتب الوصفة…", "Calculating nutrition and organizing the recipe…")).font(LTypography.subheadline)
                             Spacer(minLength: 8)
                             Button(diary.t("إيقاف", "Stop")) { cancel() }
                         }.luqmaCard()
                     }
                     if let error {
                         VStack(alignment: .leading, spacing: 12) {
-                            Text(error).font(.footnote).foregroundStyle(.orange).accessibilityLabel(error)
+                            Text(error).font(LTypography.footnote).foregroundStyle(.orange).accessibilityLabel(error)
                             if let url = try? RecipeImport.canonicalURL(link) {
                                 Link(destination: url) { Label(diary.t("فتح المصدر ونسخ الوصفة", "Open source and copy recipe"), systemImage: "arrow.up.right.square") }
-                                    .font(.subheadline).foregroundStyle(Theme.accent)
+                                    .font(LTypography.subheadline).foregroundStyle(Theme.accent)
                             }
                         }
                     }
@@ -70,7 +70,7 @@ import SwiftUI
 
     private var sourceInput: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text(diary.t("رابط الوصفة", "Recipe link")).font(.headline)
+            Text(diary.t("رابط الوصفة", "Recipe link")).font(LTypography.headline)
             TextField(diary.t("الصق رابط الموقع أو المنشور", "Paste the page or post link"), text: $link)
                 .keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
                 .focused($inputFocus, equals: .link)
@@ -82,7 +82,7 @@ import SwiftUI
                 VStack(alignment: .leading, spacing: 10) {
                     Text(diary.t("المنشورات الخاصة أو المحجوبة تحتاج نص الوصفة. انسخ الوصف والمقادير والخطوات والصقها هنا.",
                         "Private or blocked posts need the recipe text. Copy the description, quantities and steps and paste them here."))
-                        .font(.caption).foregroundStyle(Theme.muted)
+                        .font(LTypography.caption).foregroundStyle(Theme.muted)
                     TextEditor(text: $pastedText).frame(minHeight: 150)
                         .focused($inputFocus, equals: .paste)
                         .scrollContentBackground(.hidden).padding(10)
@@ -90,13 +90,13 @@ import SwiftUI
                         .accessibilityLabel(diary.t("نص الوصفة", "Recipe text"))
                         .onChange(of: pastedText) { _, _ in if !busy { draft = nil; error = nil } }
                 }.padding(.top, 12)
-            }.font(.subheadline)
+            }.font(LTypography.subheadline)
             Text(diary.t("مواقع الوصفات، يوتيوب، تيك توك وإنستقرام. يجب أن تكون المقادير متاحة للعامة في الصفحة أو وصف المنشور.",
                 "Recipe websites, YouTube, TikTok and Instagram. Ingredients must be publicly available in the page or post description."))
-                .font(.caption).foregroundStyle(Theme.muted)
+                .font(LTypography.caption).foregroundStyle(Theme.muted)
             Text(diary.t("يُرسل محتوى الوصفة العام أو النص الذي تلصقه إلى خدمة التحليل. راجع المقادير والتقديرات قبل الحفظ.",
                 "Public recipe content or your pasted text is sent to the analysis service. Review quantities and estimates before saving."))
-                .font(.caption).foregroundStyle(Theme.muted)
+                .font(LTypography.caption).foregroundStyle(Theme.muted)
             Button(action: extract) {
                 Label(diary.t("استخراج الوصفة", "Extract recipe"), systemImage: "sparkles")
             }.buttonStyle(LuqmaPrimaryButtonStyle()).disabled(!hasInput)
@@ -107,31 +107,31 @@ import SwiftUI
         VStack(alignment: .leading, spacing: 24) {
             VStack(alignment: .leading, spacing: 16) {
                 HStack {
-                    Text(diary.t("راجع وصفتك", "Review your recipe")).font(.title3.bold())
+                    Text(diary.t("راجع وصفتك", "Review your recipe")).font(LTypography.font(size:18,weight:.bold,relativeTo:.title3))
                     Spacer()
                     Text(result.sourceKind.isPastedText ? diary.t("من نصك", "From your text") : diary.t("من الرابط", "From the link"))
-                        .font(.caption).foregroundStyle(Theme.muted)
+                        .font(LTypography.caption).foregroundStyle(Theme.muted)
                 }
                 TextField(diary.t("اسم الوصفة", "Recipe name"), text: Binding(
                     get: { draft?.title ?? "" }, set: { draft?.title = $0 }))
-                    .font(.headline).accessibilityLabel(diary.t("اسم الوصفة", "Recipe name"))
+                    .font(LTypography.headline).accessibilityLabel(diary.t("اسم الوصفة", "Recipe name"))
                 NumericInput(title: diary.t("عدد الحصص", "Number of servings"), value: Binding(
                     get: { draft?.servings ?? 0 }, set: { draft?.servings = $0 }))
                 if result.servings == nil || !(result.servings.map { $0.isFinite && $0 > 0 && $0 <= 1000 } ?? false) {
                     Text(diary.t("أدخل عدد الحصص لإكمال الوصفة.", "Enter the serving count to complete the recipe."))
-                        .font(.caption).foregroundStyle(.orange)
+                        .font(LTypography.caption).foregroundStyle(.orange)
                 }
             }.luqmaCard()
 
             VStack(alignment: .leading, spacing: 18) {
-                Text(diary.t("تقدير الوصفة كاملة", "Estimated whole recipe")).font(.headline)
+                Text(diary.t("تقدير الوصفة كاملة", "Estimated whole recipe")).font(LTypography.headline)
                 if let total = result.total { NutritionView(value: total, large: true) }
                 else { Text(diary.t("بعض المقادير أو القيم ناقصة؛ أكملها في المكونات لعرض الإجمالي.",
                     "Some quantities or values are missing. Complete the ingredients to see the total."))
-                    .font(.subheadline).foregroundStyle(Theme.muted) }
+                    .font(LTypography.subheadline).foregroundStyle(Theme.muted) }
                 if let perServing = result.perServing {
                     Divider().overlay(Theme.stroke)
-                    Text(diary.t("لكل حصة", "Per serving")).font(.headline)
+                    Text(diary.t("لكل حصة", "Per serving")).font(LTypography.headline)
                     NutritionView(value: perServing)
                 }
             }.luqmaCard()
@@ -141,7 +141,7 @@ import SwiftUI
             }.buttonStyle(LuqmaPrimaryButtonStyle()).disabled(!result.canRecalculate || busy || saved || !pendingIngredientEdits.isEmpty)
             if !result.canRecalculate {
                 Text(diary.t("حدّد الحصص ومقادير المكونات، ثم اضغط حساب السعرات.", "Set servings and ingredient amounts, then calculate nutrition."))
-                    .font(.caption).foregroundStyle(Theme.muted)
+                    .font(LTypography.caption).foregroundStyle(Theme.muted)
             }
 
             VStack(alignment: .leading, spacing: 14) {
@@ -160,13 +160,13 @@ import SwiftUI
                 if result.steps.isEmpty {
                     Text(diary.t("الخطوات غير متاحة. الصق نص الوصفة الكامل وأعد استخراجها.",
                         "The steps are unavailable. Paste the full recipe text and extract it again."))
-                        .font(.subheadline).foregroundStyle(Theme.muted)
+                        .font(LTypography.subheadline).foregroundStyle(Theme.muted)
                 }
                 ForEach(Array(result.steps.enumerated()), id: \.offset) { number, step in
                     HStack(alignment: .top, spacing: 12) {
-                        Text(String(number + 1)).font(.caption.bold()).foregroundStyle(Theme.accent)
+                        Text(String(number + 1)).font(LTypography.font(size:12,weight:.bold,relativeTo:.caption)).foregroundStyle(Theme.accent)
                             .frame(width: 30, height: 30).background(Theme.surface, in: Circle()).accessibilityHidden(true)
-                        Text(DisplayFormat.westernDigits(step)).font(.subheadline).frame(maxWidth: .infinity, alignment: .leading)
+                        Text(DisplayFormat.westernDigits(step)).font(LTypography.subheadline).frame(maxWidth: .infinity, alignment: .leading)
                     }.accessibilityElement(children: .combine)
                 }
             }.luqmaCard()
@@ -180,7 +180,7 @@ import SwiftUI
                         DisclosureGroup(diary.t("ملاحظات التقدير", "Estimate notes")) {
                             VStack(alignment: .leading, spacing: 8) {
                                 ForEach(Array(result.assumptions.enumerated()), id: \.offset) { _, note in
-                                    Text(DisplayFormat.westernDigits(note)).font(.caption).foregroundStyle(Theme.muted)
+                                    Text(DisplayFormat.westernDigits(note)).font(LTypography.caption).foregroundStyle(Theme.muted)
                                 }
                             }.padding(.top, 10)
                         }
@@ -192,7 +192,7 @@ import SwiftUI
             }.buttonStyle(LuqmaPrimaryButtonStyle()).disabled(!result.readyToSave || busy || saved || !pendingIngredientEdits.isEmpty)
             if !pendingIngredientEdits.isEmpty {
                 Text(diary.t("طبّق تعديلات القيم في المكونات قبل حفظ الوصفة.", "Apply your ingredient value edits before saving the recipe."))
-                    .font(.caption).foregroundStyle(Theme.muted)
+                    .font(LTypography.caption).foregroundStyle(Theme.muted)
             }
         }
     }
@@ -303,22 +303,22 @@ import SwiftUI
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text(DisplayFormat.westernDigits(ingredient.name)).font(.headline)
+                Text(DisplayFormat.westernDigits(ingredient.name)).font(LTypography.headline)
                 Spacer()
                 Button(role: .destructive) { onRemove(ingredient.id) } label: { Image(systemName: "minus.circle") }
                     .accessibilityLabel(diary.t("إزالة ", "Remove ") + ingredient.name)
             }
             if let quantity = ingredient.quantity {
-                Text("\(decimal(quantity)) \(unitLabel)").font(.subheadline).foregroundStyle(Theme.muted)
-            } else { Text(diary.t("المقدار غير محدد", "Quantity unspecified")).font(.caption).foregroundStyle(.orange) }
+                Text("\(decimal(quantity)) \(unitLabel)").font(LTypography.subheadline).foregroundStyle(Theme.muted)
+            } else { Text(diary.t("المقدار غير محدد", "Quantity unspecified")).font(LTypography.caption).foregroundStyle(.orange) }
             if let nutrition = ingredient.nutrition {
                 HStack {
                     Text("\(decimal(nutrition.kcal, 0)) " + diary.t("سعرة", "kcal")).foregroundStyle(Theme.accent)
                     Spacer()
                     Text(diary.t("بروتين ", "P ")+decimal(nutrition.protein)+diary.t(" · كارب ", " · C ")+decimal(nutrition.carbs)+diary.t(" · دهون ", " · F ")+decimal(nutrition.fat)).foregroundStyle(Theme.muted)
-                }.font(.caption)
-            } else { Text(diary.t("القيم الغذائية غير مكتملة", "Nutrition is incomplete")).font(.caption).foregroundStyle(.orange) }
-            if !ingredient.assumption.isEmpty { Text(DisplayFormat.westernDigits(ingredient.assumption)).font(.caption).foregroundStyle(Theme.muted) }
+                }.font(LTypography.caption)
+            } else { Text(diary.t("القيم الغذائية غير مكتملة", "Nutrition is incomplete")).font(LTypography.caption).foregroundStyle(.orange) }
+            if !ingredient.assumption.isEmpty { Text(DisplayFormat.westernDigits(ingredient.assumption)).font(LTypography.caption).foregroundStyle(Theme.muted) }
             DisclosureGroup(diary.t("تعديل المكوّن", "Edit ingredient"), isExpanded: $editing) {
                 VStack(alignment: .leading, spacing: 12) {
                     TextField(diary.t("اسم المكوّن", "Ingredient name"), text: $ingredient.name)
@@ -331,20 +331,20 @@ import SwiftUI
                     NumericInput(title: diary.t("المقدار", "Quantity"), value: Binding(
                         get: { ingredient.quantity ?? 0 }, set: changeQuantity), suffix: unitLabel)
                     Text(diary.t("القيم لهذه الكمية كاملة، وليست لكل ١٠٠ جم.", "These values describe this whole quantity, not 100 g."))
-                        .font(.caption).foregroundStyle(Theme.muted)
+                        .font(LTypography.caption).foregroundStyle(Theme.muted)
                     nutrientInput(diary.t("السعرات", "Calories (kcal)"), value: $kcal)
                     nutrientInput(diary.t("البروتين (جم)", "Protein (g)"), value: $protein)
                     nutrientInput(diary.t("الكارب (جم)", "Carbs (g)"), value: $carbs)
                     nutrientInput(diary.t("الدهون (جم)", "Fat (g)"), value: $fat)
-                    if let error { Text(error).font(.caption).foregroundStyle(.orange) }
+                    if let error { Text(error).font(LTypography.caption).foregroundStyle(.orange) }
                     Button(diary.t("تطبيق القيم", "Apply values"), action: applyNutrition).buttonStyle(.bordered)
                     if nutritionPending {
                         Button(diary.t("إلغاء تعديلات القيم", "Discard value edits")) {
                             loadNutrition(); nutritionPending = false; error = nil; onPendingEdit(ingredient.id, false)
-                        }.font(.caption)
+                        }.font(LTypography.caption)
                     }
                 }.padding(.top, 12)
-            }.font(.subheadline)
+            }.font(LTypography.subheadline)
         }.luqmaCard().onAppear(perform: loadNutrition)
             .onChange(of: ingredient.nutrition) { _, _ in loadNutrition() }
     }

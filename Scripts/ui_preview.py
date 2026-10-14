@@ -41,8 +41,12 @@ DEVICE_TYPE = "com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro-Max"
 SCREENS = ((0, "today"), (1, "kitchen"), (2, "progress"), (3, "settings"))
 PHOTO_SCREEN = "photo-estimate"
 RECIPE_SCREEN = "recipe-import"
-EXTRA_ROUTES = (("search", "-loqma-preview-search"), ("meal-macros", "-loqma-preview-meals"))
+EXTRA_ROUTES = (("search", "-loqma-preview-search"),
+                ("meal-macros", "-loqma-preview-meals"),
+                ("daily-overview", "-loqma-preview-overview"))
 EXPECTED_SCREEN_COUNT = len(SCREENS) + 2 + len(EXTRA_ROUTES)
+MAX_EMPTY_FRAME_RETRIES = 2
+EMPTY_FRAME_RETRY_SECONDS = 5.0
 
 
 def command(arguments: list[str], output: Path, label: str, timeout: int = 120,
@@ -115,30 +119,124 @@ def validate_app(app: Path, bundle: str, output: Path) -> dict:
             "build": info.get("CFBundleVersion"), "architectures": architectures}
 
 
-def png_details(path: Path) -> dict:
-    data = path.read_bytes()
-    if len(data) < 24 or data[:8] != b"\x89PNG\r\n\x1a\n" or data[12:16] != b"IHDR":
-        raise BuildError(f"{path.name} is not a valid PNG screenshot.")
-    width, height = struct.unpack(">II", data[16:24])
-    if width < 700 or height < 1400:
-        raise BuildError(f"{path.name} has unexpected phone screenshot dimensions.")
-    # Compare framebuffer data rather than PNG metadata or compression bytes.
+def decode_png(data: bytes, name: str) -> tuple[int, int, int, bytearray, bytes]:
+    """Decode non-interlaced 8-bit Simulator PNGs without third-party packages.
+
+    The final byte string retains the original filtered scanlines for the
+    existing framebuffer hash. The separate pixel buffer is only inspected;
+    neither buffer is written back into the captured screenshot.
+    """
+    if len(data) < 33 or data[:8] != b"\x89PNG\r\n\x1a\n" or data[12:16] != b"IHDR":
+        raise BuildError(f"{name} is not a valid PNG screenshot.")
     compressed = bytearray()
+    header = None
+    ended = False
     offset = 8
     while offset + 12 <= len(data):
-        length = struct.unpack(">I", data[offset:offset + 4])[0]
+        length = struct.unpack_from(">I", data, offset)[0]
         if offset + 12 + length > len(data):
-            raise BuildError(f"{path.name} contains an incomplete PNG chunk.")
-        if data[offset + 4:offset + 8] == b"IDAT":
-            compressed.extend(data[offset + 8:offset + 8 + length])
+            raise BuildError(f"{name} contains an incomplete PNG chunk.")
+        kind = data[offset + 4:offset + 8]
+        content = data[offset + 8:offset + 8 + length]
+        expected_crc = struct.unpack_from(">I", data, offset + 8 + length)[0]
+        if zlib.crc32(kind + content) & 0xffffffff != expected_crc:
+            raise BuildError(f"{name} contains a damaged PNG chunk.")
+        if kind == b"IHDR":
+            if header is not None or offset != 8 or length != 13:
+                raise BuildError(f"{name} has an invalid PNG header.")
+            header = struct.unpack(">IIBBBBB", content)
+        elif kind == b"IDAT":
+            compressed.extend(content)
+        elif kind == b"IEND":
+            if length:
+                raise BuildError(f"{name} has an invalid PNG end chunk.")
+            ended = True
+            offset += length + 12
+            break
         offset += length + 12
+    if not ended or offset != len(data) or header is None or not compressed:
+        raise BuildError(f"{name} has an incomplete PNG framebuffer.")
+    width, height, depth, color, compression, filtering, interlace = header
+    channels = {0: 1, 2: 3, 4: 2, 6: 4}.get(color)
+    if depth != 8 or channels is None or compression or filtering or interlace:
+        raise BuildError(f"{name} is not a supported 8-bit Simulator PNG.")
+    if not width or not height or width * height > 32_000_000:
+        raise BuildError(f"{name} has invalid or excessive PNG dimensions.")
+    row_bytes = width * channels
+    expected_bytes = height * (row_bytes + 1)
     try:
-        frame = zlib.decompress(compressed)
+        inflater = zlib.decompressobj()
+        frame = inflater.decompress(compressed, expected_bytes + 1)
+        if len(frame) != expected_bytes or not inflater.eof or inflater.unused_data or inflater.unconsumed_tail:
+            raise BuildError(f"{name} has a PNG framebuffer size mismatch.")
     except zlib.error as error:
-        raise BuildError(f"{path.name} has no readable PNG framebuffer.") from error
+        raise BuildError(f"{name} has no readable PNG framebuffer.") from error
+    pixels = bytearray(width * height * channels)
+    previous = bytearray(row_bytes)
+    for y in range(height):
+        start = y * (row_bytes + 1)
+        mode = frame[start]
+        row = bytearray(frame[start + 1:start + 1 + row_bytes])
+        if mode == 1:  # Sub
+            for x in range(channels, row_bytes):
+                row[x] = (row[x] + row[x - channels]) & 255
+        elif mode == 2:  # Up
+            row = bytearray((value + up) & 255 for value, up in zip(row, previous))
+        elif mode in (3, 4):  # Average / Paeth
+            for x in range(row_bytes):
+                left = row[x - channels] if x >= channels else 0
+                up = previous[x]
+                upper_left = previous[x - channels] if x >= channels else 0
+                if mode == 3:
+                    predictor = (left + up) // 2
+                else:
+                    prediction = left + up - upper_left
+                    distances = (abs(prediction - left), abs(prediction - up), abs(prediction - upper_left))
+                    predictor = left if distances[0] <= distances[1] and distances[0] <= distances[2] else (
+                        up if distances[1] <= distances[2] else upper_left)
+                row[x] = (row[x] + predictor) & 255
+        elif mode != 0:
+            raise BuildError(f"{name} contains an invalid PNG scanline filter.")
+        pixels[y * row_bytes:(y + 1) * row_bytes] = row
+        previous = row
+    return width, height, channels, pixels, frame
+
+
+def framebuffer_content(width: int, height: int, channels: int, pixels: bytearray) -> dict:
+    # Ignore the system status bar and home indicator: these can appear over an
+    # otherwise black launch frame. Inspect real pixels in the central body.
+    left, right = int(width * .04), int(width * .96)
+    top, bottom = int(height * .10), int(height * .88)
+    stride = max(1, int(((right - left) * (bottom - top) / 80_000) ** .5))
+    sampled = near_black = 0
+    for y in range(top, bottom, stride):
+        for x in range(left, right, stride):
+            offset = (y * width + x) * channels
+            if channels in (1, 2):
+                brightness = pixels[offset]
+            else:
+                brightness = max(pixels[offset], pixels[offset + 1], pixels[offset + 2])
+            if channels in (2, 4):
+                brightness = (brightness * pixels[offset + channels - 1]) // 255
+            near_black += brightness <= 8
+            sampled += 1
+    if not sampled:
+        raise BuildError("PNG framebuffer has no inspectable body pixels.")
+    fraction = near_black / sampled
+    return {"body_pixel_samples": sampled, "body_sample_stride": stride,
+            "near_black_body_fraction": round(fraction, 6),
+            "near_empty_black_frame": fraction >= .98}
+
+
+def png_details(path: Path) -> dict:
+    data = path.read_bytes()
+    width, height, channels, pixels, frame = decode_png(data, path.name)
+    if width < 700 or height < 1400:
+        raise BuildError(f"{path.name} has unexpected phone screenshot dimensions.")
     return {"file": path.name, "width": width, "height": height,
             "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest(),
-            "frame_sha256": hashlib.sha256(frame).hexdigest()}
+            "frame_sha256": hashlib.sha256(frame).hexdigest(),
+            **framebuffer_content(width, height, channels, pixels)}
 
 
 def confirm_process(pid: int, seconds: float) -> None:
@@ -149,6 +247,29 @@ def confirm_process(pid: int, seconds: float) -> None:
         except OSError as error:
             raise BuildError("Luqma exited before the screenshot; inspect the Simulator log.") from error
         time.sleep(min(0.5, max(0, deadline - time.monotonic())))
+
+
+def capture_screenshot(output: Path, device: str, screen: str, pid: int, screenshot: Path) -> dict:
+    rejected = []
+    for attempt in range(1, MAX_EMPTY_FRAME_RETRIES + 2):
+        if attempt > 1:
+            confirm_process(pid, EMPTY_FRAME_RETRY_SECONDS)
+        command(["xcrun", "simctl", "io", device, "screenshot", "--type=png", str(screenshot)],
+                output, f"preview-capture-{screen}-attempt-{attempt}", 90)
+        confirm_process(pid, .25)
+        details = png_details(screenshot)
+        if not details["near_empty_black_frame"]:
+            return {**details, "capture_attempts": attempt, "rejected_empty_frames": rejected}
+        if attempt > MAX_EMPTY_FRAME_RETRIES:
+            raise BuildError(f"Native {screen} remained near-empty black after {attempt} framebuffer captures.")
+        rejected_directory = output / "rejected-framebuffers"
+        rejected_directory.mkdir(exist_ok=True)
+        rejected_path = rejected_directory / f"{screen}-attempt-{attempt}.png"
+        screenshot.rename(rejected_path)
+        rejected.append({"file": rejected_path.relative_to(output).as_posix(),
+                         "sha256": details["sha256"], "near_black_body_fraction": details["near_black_body_fraction"]})
+        print(f"Native {screen} was near-empty black; waiting for the same process before recapture.", flush=True)
+    raise BuildError("Native screenshot capture exhausted its retry bound.")
 
 
 def capture(output: Path, packages: Path, prebuilt: Path | None,
@@ -167,9 +288,14 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
         "synthetic_photo_fixture": True,
         "synthetic_recipe_fixture": True,
         "synthetic_meal_fixture": True,
+        "synthetic_overview_fixture": True,
         "search_uses_actual_catalog": True,
         "health_data_fixture_used": False,
         "layout_review": "Pending visual inspection of the native screenshots",
+        "empty_frame_guard": {"body_crop": [0.04, 0.10, 0.96, 0.88],
+                              "near_black_rgb_maximum": 8, "near_black_fraction_threshold": .98,
+                              "maximum_recaptures": MAX_EMPTY_FRAME_RETRIES,
+                              "pixel_check_proves_layout_correct": False},
         "screenshots": [],
     }
     device = None
@@ -220,17 +346,15 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
             pid = int(match.group(1))
             confirm_process(pid, settle_seconds)
             screenshot = output / f"{number:02d}-{screen}.png"
-            command(["xcrun", "simctl", "io", device, "screenshot", "--type=png",
-                     str(screenshot)], output, "preview-capture-" + screen, 90)
-            confirm_process(pid, 0.25)
+            details = capture_screenshot(output, device, screen, pid, screenshot)
             report["screenshots"].append({"tab": tab, "screen": screen,
                                           "kind": "tab" if tab is not None else screen,
-                                          "synthetic_fixture": screen in {PHOTO_SCREEN, RECIPE_SCREEN, "meal-macros"},
+                                          "synthetic_fixture": screen in {PHOTO_SCREEN, RECIPE_SCREEN, "meal-macros", "daily-overview"},
                                           "process_still_running": True,
-                                          **png_details(screenshot)})
+                                          **details})
             print(f"Captured native {screen}: {screenshot.name}", flush=True)
         if len(report["screenshots"]) != EXPECTED_SCREEN_COUNT:
-            raise BuildError("The native preview did not capture all nine required screens.")
+            raise BuildError(f"The native preview did not capture all {EXPECTED_SCREEN_COUNT} required screens.")
         if len({item["frame_sha256"] for item in report["screenshots"]}) != EXPECTED_SCREEN_COUNT:
             raise BuildError("Screenshots are identical; verify the DEBUG preview routes are installed.")
         report["status"] = "captured"

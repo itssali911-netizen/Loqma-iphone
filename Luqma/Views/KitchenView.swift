@@ -29,7 +29,7 @@ struct KitchenView:View {
             Button{creating=true}label:{Label(diary.t("حفظ وصفة أو وجبة","Save a recipe or meal"),systemImage:"plus")}.buttonStyle(LuqmaPrimaryButtonStyle())
             Button{importingRecipe=true}label:{Label(diary.t("استيراد وصفة من رابط","Import a recipe from a link"),systemImage:"link")}.buttonStyle(.bordered).frame(maxWidth:.infinity)
             LuqmaSectionHeader(title:diary.t("محفوظاتك","Your saved items"),detail:"\(recipes.count)")
-            if diary.state.recipes.isEmpty{VStack(spacing:18){Image(systemName:"book.closed").font(.system(size:44,weight:.light)).foregroundStyle(Theme.accent);Text(diary.t("مطبخك يبدأ هنا","Your kitchen starts here")).font(.title3.bold());Text(diary.t("اجمع المكونات واحسب الحصص، ثم أضف وجبتك بلمسة.","Combine ingredients, calculate servings, and log your meal in a tap.")).font(.subheadline).foregroundStyle(Theme.muted).multilineTextAlignment(.center)}.frame(maxWidth:.infinity).padding(.vertical,22).luqmaCard()}
+            if diary.state.recipes.isEmpty{VStack(spacing:18){Image(systemName:"book.closed").font(.system(size:44,weight:.light)).foregroundStyle(Theme.accent);Text(diary.t("مطبخك يبدأ هنا","Your kitchen starts here")).font(LTypography.font(size:18,weight:.bold,relativeTo:.title3));Text(diary.t("اجمع المكونات واحسب الحصص، ثم أضف وجبتك بلمسة.","Combine ingredients, calculate servings, and log your meal in a tap.")).font(LTypography.subheadline).foregroundStyle(Theme.muted).multilineTextAlignment(.center)}.frame(maxWidth:.infinity).padding(.vertical,22).luqmaCard()}
             else if recipes.isEmpty{ContentUnavailableView(diary.t("لا توجد نتائج","No results"),systemImage:"magnifyingglass",description:Text(diary.t("جرّب اسمًا آخر أو غيّر نوع المحفوظات.","Try another name or change the saved-item type.")))}
             ForEach(recipes){r in recipeCard(r)}
         }.padding(20).padding(.bottom,10)}.scrollDismissesKeyboard(.interactively).appBackground().navigationTitle(diary.t("مطبخي","My kitchen"))
@@ -44,17 +44,17 @@ struct KitchenView:View {
         VStack(alignment:.leading,spacing:18){
             HStack(alignment:.top,spacing:13){
                 Image(systemName:recipe.type == "prep" ? "takeoutbag.and.cup.and.straw":recipe.type == "meal" ? "fork.knife":"book.closed").font(.system(size:24)).foregroundStyle(Theme.accent).frame(width:54,height:54).background(Theme.surface,in:RoundedRectangle(cornerRadius:17)).accessibilityHidden(true)
-                VStack(alignment:.leading,spacing:7){Text(DisplayFormat.westernDigits(recipe.name)).font(.title3.bold());Text(recipeKind(recipe.type)).font(.caption).foregroundStyle(Theme.muted)}
+                VStack(alignment:.leading,spacing:7){Text(DisplayFormat.westernDigits(recipe.name)).font(LTypography.font(size:18,weight:.bold,relativeTo:.title3));Text(recipeKind(recipe.type)).font(LTypography.caption).foregroundStyle(Theme.muted)}
                 Spacer(minLength:0)
                 Menu{Button(diary.t("تعديل","Edit")){editing=recipe};Button(diary.t("حذف","Delete"),role:.destructive){deleting=recipe}}label:{Image(systemName:"ellipsis").font(.system(size:20)).foregroundStyle(Theme.muted).frame(minWidth:44,minHeight:44)}.accessibilityLabel(diary.t("خيارات ","Options for ")+recipe.name)
             }
             HStack(spacing:20){
                 Label("\(decimal(recipe.total.kcal/max(recipe.portions,0.001),0)) "+diary.t("سعرة","kcal"),systemImage:"flame").foregroundStyle(Theme.accent)
                 Label("\(decimal(recipe.portions)) "+diary.t("حصص","servings"),systemImage:"square.stack").foregroundStyle(Theme.muted)
-            }.font(.caption)
+            }.font(LTypography.caption)
             HStack(spacing:10){
-                Button{select(recipe,false)}label:{Label(diary.t("إضافة حصة","Log serving"),systemImage:"plus").font(.subheadline.weight(.semibold)).frame(maxWidth:.infinity,minHeight:44).foregroundStyle(Theme.text).background(Theme.surface,in:RoundedRectangle(cornerRadius:13))}.buttonStyle(.plain)
-                if recipe.cookedWeight != nil{Button{select(recipe,true)}label:{Text(diary.t("بالجرام","By weight")).font(.subheadline.weight(.semibold)).frame(minWidth:82,minHeight:44).foregroundStyle(Theme.accent).background(Theme.accent.opacity(0.1),in:RoundedRectangle(cornerRadius:13))}.buttonStyle(.plain)}
+                Button{select(recipe,false)}label:{Label(diary.t("إضافة حصة","Log serving"),systemImage:"plus").font(LTypography.font(size:15,weight:.semibold,relativeTo:.subheadline)).frame(maxWidth:.infinity,minHeight:44).foregroundStyle(Theme.text).background(Theme.surface,in:RoundedRectangle(cornerRadius:13))}.buttonStyle(.plain)
+                if recipe.cookedWeight != nil{Button{select(recipe,true)}label:{Text(diary.t("بالجرام","By weight")).font(LTypography.font(size:15,weight:.semibold,relativeTo:.subheadline)).frame(minWidth:82,minHeight:44).foregroundStyle(Theme.accent).background(Theme.accent.opacity(0.1),in:RoundedRectangle(cornerRadius:13))}.buttonStyle(.plain)}
             }
         }.luqmaCard()
     }
@@ -72,7 +72,7 @@ struct RecipeEditor:View {
         NavigationStack{Form{
             Section{TextField(diary.t("اسم الوصفة أو الوجبة","Recipe or meal name"),text:$recipe.name);Picker(diary.t("النوع","Type"),selection:$recipe.type){Text(diary.t("وصفة","Recipe")).tag("recipe");Text(diary.t("وجبة محفوظة","Saved meal")).tag("meal");Text(diary.t("تحضير وجبات","Meal prep")).tag("prep")}}
             Section(diary.t("المكونات","Ingredients")){
-                ForEach(recipe.ingredients){i in VStack(alignment:.leading){Text(DisplayFormat.westernDigits(i.name));Text("\(decimal(i.amount)) \(DisplayFormat.westernDigits(recipe.importInfo?.ingredientUnitLabels[i.id.uuidString] ?? i.unit.label(diary.language))) · \(decimal(i.kcal,0)) \(diary.t("سعرة","kcal"))").font(.caption).foregroundStyle(.secondary)}}.onDelete{indices in
+                ForEach(recipe.ingredients){i in VStack(alignment:.leading){Text(DisplayFormat.westernDigits(i.name));Text("\(decimal(i.amount)) \(DisplayFormat.westernDigits(recipe.importInfo?.ingredientUnitLabels[i.id.uuidString] ?? i.unit.label(diary.language))) · \(decimal(i.kcal,0)) \(diary.t("سعرة","kcal"))").font(LTypography.caption).foregroundStyle(.secondary)}}.onDelete{indices in
                     recipe.ingredients.remove(atOffsets:indices)
                     let remaining=Set(recipe.ingredients.map{$0.id.uuidString})
                     recipe.importInfo?.ingredientUnitLabels=recipe.importInfo?.ingredientUnitLabels.filter{remaining.contains($0.key)} ?? [:]

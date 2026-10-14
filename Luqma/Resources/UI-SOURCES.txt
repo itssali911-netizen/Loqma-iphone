@@ -1,3 +1,16 @@
+Luqma 2.0 current reference: Fitness Tracker Mobile app (Community), user-provided duplicate.
+https://www.figma.com/design/XOt5BP0l5jx5hyyshyAgw1/Fitness-Tracker-Mobile-app--Community-?node-id=1-2
+Inspected editable dark Home frame 1:2: 414 x 896, background #0B0B12, cards #161626,
+Blue 1 #2F80ED, card radius 20, activity-card 165 x 225, Gilroy ExtraBold title 22,
+Gilroy Light subtitle 16. Rebuilt as native SwiftUI for the food diary, with an adapted
+calendar, calorie goal, macro panel, 2 x 2 meal grid and circular add action.
+No reference photographs, maps, avatar images or fake activity metrics are redistributed.
+Font shipped: Tajawal (Light, Regular, Medium, Bold, ExtraBold), Arabic and Latin.
+https://github.com/google/fonts/tree/main/ofl/tajawal
+SIL Open Font License 1.1; full licence included in Tajawal-OFL.txt.
+Gilroy is not bundled: embedding/distribution permission has not been supplied.
+
+Historical design reference (Luqma 1.7-1.9):
 Sandow UI Kit: AI Fitness & Nutrition App — Community v1.2 dark preview.
 Creator: strangehelix.bio
 Source: https://www.figma.com/community/file/1334779038193346013/sandow-ui-kit-ai-fitness-nutrition-app

@@ -1,3 +1,19 @@
+# Validation —2.0 local source, not yet compiled
+
+The user explicitly chose to keep these changes local. No2.0 source commit is published to GitHub and no new remote build is started. The existing1.9 IPA/build44 and its evidence below remain the latest compiled release.
+
+The current source reconstructs the editable Fitness Tracker Community dark Home frame1:2 supplied by the user, after inspecting actual414×896 bounds, #0B0B12 background, #161626 cards, #2F80ED Blue1,20pt card corners,165×225 activity cards, Gilroy ExtraBold22 and Gilroy Light16 typography. Native food-diary controls and Arabic spacing are adaptations; no reference map/avatar/photographs or fake health metrics are distributed. Tajawal Light/Regular/Medium/Bold/ExtraBold is the user-approved free Arabic/Latin substitute, not an exact Gilroy match. Full SIL OFL is bundled.
+
+Four new portable font tests passed after project generation: pinned files/license, actual PostScript names, Arabic/Latin/123 glyph coverage and resource-copy registration. Ten new framebuffer tests passed: PNG filters/CRC, near-empty launch detection, same-process retry limits and the ninth overview route. The known black build43 kitchen image is rejected; all15 rendered images from43/44 pass the pixel guard. These are tests of the harness and historical frames, not visual evidence of2.0 UI.
+
+The modified SwiftUI source was inspected for bindings, previews, date/meal callbacks, edit/delete preservation and helper signatures. Source whitespace check passes. No Swift compiler or Xcode is available in this Windows environment; no2.0 compilation or native layout claim is made. Nine real native screenshots (including DEBUG-only overview fixtures) are still required on Mac after compilation. The harness preserves original screenshots and does not claim that black-frame checks prove layout correctness.
+
+Only UI/resources/project registration, native screenshot capture and its tests changed. Existing Core/service/data behavior,750 foods/3830 portions,31 incomplete foods/94 unknown portions, Serving1,123 formatting, search and photo/recipe safeguards remain. Historical network/accuracy limits below still apply. HealthKit remains removed as requested. No API key/private setup/Gilroy binary is included in the source archive.
+
+To finish locally on a Mac with the configured Xcode/SDK, follow README.md and Scripts/build_ios.py, then run Scripts/ui_preview.py and visually review all9 native captures. Personal re-signing and physical iPhone verification remain separate steps. Do not upload current changes unless the user later explicitly authorizes it.
+
+## Historical1.9 and earlier validation
+
 # Validation — version 1.9 build 44
 
 Source abc61f48ce1d7343bfd34f6170fbf2550c97743a. [Build 44](https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/38452505784). 167 Swift tests, 31 Python tests, iPhone Release compilation, independent IPA validation and eight native Simulator screenshots passed.
