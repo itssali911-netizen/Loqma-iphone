@@ -53,20 +53,22 @@ struct LuqmaSectionHeader:View {
 }
 
 struct LuqmaPrimaryButtonStyle:ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
     func makeBody(configuration:Configuration)->some View {
         configuration.label.luqmaFont(.headline).foregroundStyle(Theme.background)
             .frame(maxWidth:.infinity,minHeight:52)
             .background(Theme.accent,in:RoundedRectangle(cornerRadius:16,style:.continuous))
-            .opacity(configuration.isPressed ? 0.8:1)
+            .opacity(!isEnabled ? 0.4:configuration.isPressed ? 0.8:1)
     }
 }
 
 struct LuqmaSecondaryButtonStyle:ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
     func makeBody(configuration:Configuration)->some View {
         configuration.label.luqmaFont(.headline).foregroundStyle(Theme.text)
             .frame(maxWidth:.infinity,minHeight:48)
             .background(Theme.surface,in:RoundedRectangle(cornerRadius:16,style:.continuous))
-            .opacity(configuration.isPressed ? 0.75:1)
+            .opacity(!isEnabled ? 0.4:configuration.isPressed ? 0.75:1)
     }
 }
 

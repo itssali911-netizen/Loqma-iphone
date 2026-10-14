@@ -212,9 +212,9 @@ struct DiaryView:View {
                 PointMark(x:.value("Day",point.date),y:.value("Logged calories",point.kcal)).symbolSize(20).foregroundStyle(Theme.accent)
             }.chartLegend(.hidden).chartYAxis{AxisMarks(values:.automatic(desiredCount:3)){axis in
                 AxisGridLine().foregroundStyle(Theme.stroke)
-                AxisValueLabel{if let value=axis.as(Double.self){Text(decimal(value,0))}}.foregroundStyle(Theme.muted)
+                AxisValueLabel{if let value=axis.as(Double.self){Text(decimal(value,0)).luqmaFont(.caption2)}}.foregroundStyle(Theme.muted)
             }}.chartXAxis{AxisMarks(values:.automatic(desiredCount:4)){axis in
-                AxisValueLabel{if let value=axis.as(Date.self){Text(localizedDate(value,"d MMM"))}}.foregroundStyle(Theme.muted)
+                AxisValueLabel{if let value=axis.as(Date.self){Text(localizedDate(value,"d MMM")).luqmaFont(.caption2)}}.foregroundStyle(Theme.muted)
             }}.frame(height:135).accessibilityLabel(diary.t("السعرات المسجلة خلال آخر سبعة أيام","Calories logged over the last seven days"))
         }
     }

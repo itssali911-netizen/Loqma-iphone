@@ -48,14 +48,30 @@ enum LTypography {
         "Tajawal-Light","Tajawal-Regular","Tajawal-Medium","Tajawal-Bold","Tajawal-ExtraBold"
     ]
 
+    private final class FontCacheEntry:NSObject {
+        let font:CTFont
+        init(_ font:CTFont) {self.font=font}
+    }
+    // NSCache synchronizes access and bounds retained descriptors. Preserve the
+    // exact point size: rounding here would distort live Dynamic Type scaling.
+    private static let fontCache:NSCache<NSString,FontCacheEntry> = {
+        let cache=NSCache<NSString,FontCacheEntry>()
+        cache.countLimit=256
+        return cache
+    }()
+
     static func platformFont(size:CGFloat,weight:Font.Weight = .regular)->CTFont {
         let pair=faces(for:weight)
+        let key="\(pair.latin)|\(pair.arabic)|\(Double(size).bitPattern)" as NSString
+        if let cached=fontCache.object(forKey:key) {return cached.font}
         let primary=CTFontCreateWithName(pair.latin as CFString,size,nil)
         let arabic=CTFontCreateWithName(pair.arabic as CFString,size,nil)
         let cascade=[CTFontCopyFontDescriptor(arabic)]+defaultCascade(for:primary)
         let attributes=[kCTFontCascadeListAttribute as String:cascade] as CFDictionary
         let descriptor=CTFontDescriptorCreateCopyWithAttributes(CTFontCopyFontDescriptor(primary),attributes)
-        return CTFontCreateWithFontDescriptor(descriptor,size,nil)
+        let font=CTFontCreateWithFontDescriptor(descriptor,size,nil)
+        fontCache.setObject(FontCacheEntry(font),forKey:key)
+        return font
     }
 
     private static func defaultCascade(for primary:CTFont)->[CTFontDescriptor] {
@@ -100,9 +116,23 @@ private struct LuqmaFontModifier:ViewModifier {
     }
 
     func body(content:Content)->some View {
-        content.font(Font(LTypography.platformFont(size:scaledSize,weight:weight)))
+        #if LUQMA_FONT_PROBE
+        // The native probe reads the actual modifier's resolved metric after
+        // SwiftUI installs its environment. This hook is absent from the app.
+        return content.font(Font(LTypography.platformFont(size:scaledSize,weight:weight)))
+            .preference(key:LuqmaFontPointSizeKey.self,value:scaledSize)
+        #else
+        return content.font(Font(LTypography.platformFont(size:scaledSize,weight:weight)))
+        #endif
     }
 }
+
+#if LUQMA_FONT_PROBE
+struct LuqmaFontPointSizeKey:PreferenceKey {
+    static var defaultValue:CGFloat {0}
+    static func reduce(value:inout CGFloat,nextValue:()->CGFloat) {value=nextValue()}
+}
+#endif
 
 extension View {
     func luqmaFont(_ descriptor:LTypography.Descriptor)->some View {

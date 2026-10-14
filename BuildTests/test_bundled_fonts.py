@@ -194,6 +194,32 @@ import CoreText
 
 enum FontProbeError:Error {case failed(String)}
 
+final class FontMeasurementState {
+    var appeared=false
+    var points:CGFloat=0
+}
+
+struct FontMeasurementView:View {
+    let state:FontMeasurementState
+    let fixedFont:Bool
+    var body:some View {
+        Group {
+            if fixedFont {
+                Text("123 Protein").font(Font(LTypography.platformFont(size:18)))
+                    .onAppear{state.points=18}
+            } else {
+                Text("123 Protein").luqmaFont(size:18,weight:.regular,relativeTo:.body)
+                    .onPreferenceChange(LuqmaFontPointSizeKey.self){state.points=$0}
+            }
+        }.fixedSize().onAppear{state.appeared=true}
+    }
+}
+
+struct FontMeasurement {
+    let size:CGSize
+    let points:CGFloat
+}
+
 func runFaces(_ text:String,_ font:CTFont)throws->[String] {
     let key=NSAttributedString.Key(kCTFontAttributeName as String)
     let line=CTLineCreateWithAttributedString(NSAttributedString(string:text,attributes:[key:font]) as CFAttributedString)
@@ -217,12 +243,20 @@ func runFaces(_ text:String,_ font:CTFont)throws->[String] {
 
 @MainActor final class FontProbeDelegate:NSObject,UIApplicationDelegate {
     var window:UIWindow?
+    var diagnostics:[String:Any]=["passed":false,
+        "test_source":"Actual LuqmaTypography.swift in a fresh Simulator font probe"]
     func application(_ application:UIApplication,didFinishLaunchingWithOptions options:[UIApplication.LaunchOptionsKey:Any]?)->Bool {
         window=UIWindow(frame:UIScreen.main.bounds)
         window?.rootViewController=UIViewController()
         window?.makeKeyAndVisible()
-        DispatchQueue.main.asyncAfter(deadline:.now()+0.5){
-            do{try self.probe()}catch{self.save(["passed":false,"error":String(describing:error)])}
+        Task { @MainActor in
+            do {
+                try await Task.sleep(nanoseconds:500_000_000)
+                try await self.probe()
+            } catch {
+                self.diagnostics["error"]=String(describing:error)
+                self.save(self.diagnostics)
+            }
         }
         return true
     }
@@ -233,27 +267,60 @@ func runFaces(_ text:String,_ font:CTFont)throws->[String] {
             try data.write(to:directory.appendingPathComponent("font-probe.json"),options:.atomic)
         }catch{NSLog("Font probe report could not be written")}
     }
-    private func measured(_ category:DynamicTypeSize)->CGSize {
-        let content=Text("123 Protein").luqmaFont(size:18,weight:.regular,relativeTo:.body)
-            .dynamicTypeSize(category).fixedSize()
+    private func measured(_ category:DynamicTypeSize,fixedFont:Bool=false)async throws->FontMeasurement {
+        let state=FontMeasurementState()
+        let content=FontMeasurementView(state:state,fixedFont:fixedFont).dynamicTypeSize(category)
         let host=UIHostingController(rootView:content)
         let parent=window!.rootViewController!
         parent.addChild(host)
+        host.beginAppearanceTransition(true,animated:false)
         host.view.frame=CGRect(x:0,y:0,width:1000,height:1000)
         parent.view.addSubview(host.view)
         host.didMove(toParent:parent)
-        let result=host.sizeThatFits(in:CGSize(width:1000,height:1000))
-        host.willMove(toParent:nil)
-        host.view.removeFromSuperview()
-        host.removeFromParent()
-        return result
+        host.endAppearanceTransition()
+        defer {
+            host.willMove(toParent:nil)
+            host.view.removeFromSuperview()
+            host.removeFromParent()
+        }
+        // A newly attached hosting view may not have installed its environment
+        // or delivered preferences yet. Yield the main actor until appearance,
+        // the actual modifier metric, and two layout passes agree.
+        var previous:FontMeasurement?
+        for _ in 0..<200 {
+            host.view.setNeedsLayout()
+            host.view.layoutIfNeeded()
+            let size=host.sizeThatFits(in:CGSize(width:1000,height:1000))
+            if state.appeared,state.points>0,size.width>0,size.height>0 {
+                let current=FontMeasurement(size:size,points:state.points)
+                if let old=previous,old.size==current.size,old.points==current.points {
+                    return current
+                }
+                previous=current
+            }
+            try await Task.sleep(nanoseconds:10_000_000)
+        }
+        diagnostics["unsettled_points"]=state.points
+        diagnostics["unsettled_appeared"]=state.appeared
+        diagnostics["unsettled_category"]=String(describing:category)
+        if let previous {
+            diagnostics["unsettled_width"]=previous.size.width
+            diagnostics["unsettled_height"]=previous.size.height
+        }
+        throw FontProbeError.failed("Hosting view did not finish its font environment and layout")
     }
-    private func probe()throws {
+    private func record(_ measurement:FontMeasurement,_ prefix:String) {
+        diagnostics[prefix+"_width"]=measurement.size.width
+        diagnostics[prefix+"_height"]=measurement.size.height
+        diagnostics[prefix+"_points"]=measurement.points
+    }
+    private func probe()async throws {
         for name in LTypography.bundledFontNames {
             guard let font=UIFont(name:name,size:18),font.fontName==name else{
                 throw FontProbeError.failed("Bundled face did not register: "+name)
             }
         }
+        diagnostics["font_count"]=LTypography.bundledFontNames.count
         let weights:[(Font.Weight,String,String)]=[
             (.light,"WorkSans-Light","Tajawal-Light"),
             (.regular,"WorkSans-Regular","Tajawal-Regular"),
@@ -274,26 +341,63 @@ func runFaces(_ text:String,_ font:CTFont)throws->[String] {
             }
             results.append(["latin":latin,"arabic":arabic,"mixed":mixed,"point_size":CTFontGetSize(font)])
         }
+        diagnostics["weights"]=results
         let emoji=try runFaces("🥙",LTypography.platformFont(size:18))
         guard emoji.contains(where:{$0.lowercased().contains("emoji")}) else{
             throw FontProbeError.failed("System emoji fallback was lost")
         }
-        let standard=measured(.large),accessibility=measured(.accessibility3)
+        diagnostics["emoji_faces"]=emoji
+        let standardCategory=UIContentSizeCategory.large
+        let accessibilityCategory=UIContentSizeCategory.accessibilityExtraLarge
+        guard DynamicTypeSize(standardCategory) == .large,
+              DynamicTypeSize(accessibilityCategory) == .accessibility3 else{
+            throw FontProbeError.failed("UIKit and SwiftUI content-size categories disagree")
+        }
+        let standard=try await measured(.large)
+        record(standard,"standard")
+        let accessibility=try await measured(.accessibility3)
+        record(accessibility,"accessibility")
+        let fixedStandard=try await measured(.large,fixedFont:true)
+        record(fixedStandard,"fixed_standard")
+        let fixedAccessibility=try await measured(.accessibility3,fixedFont:true)
+        record(fixedAccessibility,"fixed_accessibility")
         let metrics=UIFontMetrics(forTextStyle:.body)
-        let standardPoints=metrics.scaledValue(for:18,compatibleWith:UITraitCollection(preferredContentSizeCategory:.large))
-        let accessibilityPoints=metrics.scaledValue(for:18,compatibleWith:UITraitCollection(preferredContentSizeCategory:.accessibilityExtraLarge))
-        let expectedScale=accessibilityPoints/standardPoints
-        let observedScale=accessibility.width/standard.width
-        guard standard.width>0,standard.height>0,
-              accessibility.width>standard.width*1.3,accessibility.height>standard.height*1.3,
-              abs(observedScale-expectedScale)<expectedScale*0.1 else{
+        let standardTraits=UITraitCollection(preferredContentSizeCategory:standardCategory)
+        let accessibilityTraits=UITraitCollection(preferredContentSizeCategory:accessibilityCategory)
+        guard let base=UIFont(name:"WorkSans-Regular",size:18) else{
+            throw FontProbeError.failed("Missing UIKit base font")
+        }
+        let standardFont=metrics.scaledFont(for:base,compatibleWith:standardTraits)
+        let accessibilityFont=metrics.scaledFont(for:base,compatibleWith:accessibilityTraits)
+        let expectedScale=accessibility.points/standard.points
+        let observedScale=accessibility.size.width/standard.size.width
+        let heightScale=accessibility.size.height/standard.size.height
+        diagnostics["expected_scale"]=expectedScale
+        diagnostics["observed_scale"]=observedScale
+        diagnostics["observed_height_scale"]=heightScale
+        diagnostics["uikit_standard_font_points"]=standardFont.pointSize
+        diagnostics["uikit_accessibility_font_points"]=accessibilityFont.pointSize
+        diagnostics["uikit_font_scale"]=accessibilityFont.pointSize/standardFont.pointSize
+        // Layout values and font points have distinct APIs. Record both for
+        // diagnosis; the rendering oracle is the actual modifier's metric.
+        diagnostics["uikit_layout_scale"]=metrics.scaledValue(for:18,compatibleWith:accessibilityTraits)
+            / metrics.scaledValue(for:18,compatibleWith:standardTraits)
+        diagnostics["dynamic_type_environment_tested"]=true
+        guard accessibilityFont.pointSize>standardFont.pointSize*1.3,
+              accessibility.points>standard.points*1.3,
+              accessibility.size.width>standard.size.width*1.3,
+              accessibility.size.height>standard.size.height*1.3,
+              abs(observedScale-expectedScale)<expectedScale*0.1,
+              abs(heightScale-expectedScale)<expectedScale*0.1 else{
             throw FontProbeError.failed("SwiftUI cascaded font did not scale with Dynamic Type")
         }
-        save(["passed":true,"font_count":LTypography.bundledFontNames.count,"weights":results,
-              "emoji_faces":emoji,"standard_width":standard.width,"standard_height":standard.height,
-              "accessibility_width":accessibility.width,"accessibility_height":accessibility.height,
-              "expected_scale":expectedScale,"observed_scale":observedScale,"scaled_exactly_once":true,
-              "dynamic_type_environment_tested":true,"test_source":"Actual LuqmaTypography.swift in a fresh Simulator font probe"])
+        guard abs(fixedAccessibility.size.width-fixedStandard.size.width)<0.5,
+              abs(fixedAccessibility.size.height-fixedStandard.size.height)<0.5 else{
+            throw FontProbeError.failed("Concrete CTFont bridge applied a second Dynamic Type scale")
+        }
+        diagnostics["scaled_exactly_once"]=true
+        diagnostics["passed"]=true
+        save(diagnostics)
     }
 }
 
@@ -348,6 +452,7 @@ class NativeBundledFontTests(unittest.TestCase):
             shutil.copyfile(RESOURCES / filename, bundle / filename)
         architecture = "arm64" if __import__("platform").machine().lower() in ("arm64", "aarch64") else "x86_64"
         cls.command(["xcrun", "swiftc", "-swift-version", "5", "-strict-concurrency=minimal", "-parse-as-library",
+                     "-D", "LUQMA_FONT_PROBE",
                      "-sdk", sdk, "-target", architecture + "-apple-ios17.0-simulator",
                      str(ROOT / "Luqma/Views/LuqmaTypography.swift"), str(probe), "-o", str(bundle / "FontProbe")], timeout=180)
         cls.command(["codesign", "--force", "--sign", "-", str(bundle)])
@@ -374,8 +479,9 @@ class NativeBundledFontTests(unittest.TestCase):
         if not report.is_file():
             raise RuntimeError("Native iPhone font probe produced no result")
         result = json.loads(report.read_text(encoding="utf-8"))
+        print("Native iPhone font measurements: " + json.dumps(result, sort_keys=True), flush=True)
         if result.get("passed") is not True:
-            raise RuntimeError("Native iPhone font probe failed: " + result.get("error", "unknown failure"))
+            raise RuntimeError("Native iPhone font probe failed: " + json.dumps(result, sort_keys=True))
         return result
 
     def test_actual_native_mixed_script_runs_use_declared_faces_and_emoji_fallback(self):
@@ -388,6 +494,12 @@ class NativeBundledFontTests(unittest.TestCase):
         self.assertTrue(self.report["scaled_exactly_once"])
         self.assertAlmostEqual(self.report["observed_scale"], self.report["expected_scale"],
                                delta=self.report["expected_scale"] * .1)
+        self.assertAlmostEqual(self.report["observed_height_scale"], self.report["expected_scale"],
+                               delta=self.report["expected_scale"] * .1)
+        self.assertGreater(self.report["accessibility_points"], self.report["standard_points"] * 1.3)
+        self.assertGreater(self.report["uikit_accessibility_font_points"], self.report["uikit_standard_font_points"] * 1.3)
+        self.assertAlmostEqual(self.report["fixed_accessibility_width"], self.report["fixed_standard_width"], delta=.5)
+        self.assertAlmostEqual(self.report["fixed_accessibility_height"], self.report["fixed_standard_height"], delta=.5)
         self.assertGreater(self.report["accessibility_width"], self.report["standard_width"] * 1.3)
         self.assertGreater(self.report["accessibility_height"], self.report["standard_height"] * 1.3)
 
