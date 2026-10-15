@@ -14,6 +14,7 @@ from typing import Callable
 
 Command = Callable[[list[str], str, int], str]
 PROBE_BUNDLE = "com.apple.Preferences"
+BOOT_TIMEOUT_SECONDS = 300
 STARTUP_FAILURES = (OSError, RuntimeError, subprocess.SubprocessError)
 DEVICE_PATTERN = re.compile(r"[0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}")
 
@@ -89,7 +90,10 @@ def prepare_created_simulator(device: str, command: Command, *,
                      "-CurrentDeviceUDID", device], prefix + "-open", 30)
             # -b boots if needed and waits when Simulator.app already initiated
             # this exact device's boot; a separate boot would race with open.
-            command(["xcrun", "simctl", "bootstatus", device, "-b"], prefix + "-boot-ready", 180)
+            # A fresh iOS 26.5 device can still be running CoreLocation data
+            # migration at three minutes. Let that existing migration finish
+            # before using the single reboot; readiness must still succeed.
+            command(["xcrun", "simctl", "bootstatus", device, "-b"], prefix + "-boot-ready", BOOT_TIMEOUT_SECONDS)
             launched = command(["xcrun", "simctl", "launch", device, PROBE_BUNDLE],
                                prefix + "-settings", 90)
             process = re.search(r"(?m)^com\.apple\.Preferences:\s*([1-9][0-9]*)\s*$", launched)

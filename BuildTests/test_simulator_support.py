@@ -92,11 +92,11 @@ class SimulatorSupportTests(unittest.TestCase):
         result = prepare_created_simulator(DEVICE, commands)
         self.assertEqual(result["attempts"], 2)
         self.assertIn("bootstatus nonzero", result["failures"][0])
-        self.assertLessEqual(max(timeout for _, _, timeout in commands.calls), 180)
+        self.assertLessEqual(max(timeout for _, _, timeout in commands.calls), 300)
         for attempt in (1, 2):
             budgets = [timeout for _, label, timeout in commands.calls
                        if label.startswith(f"simulator-bootstrap-{attempt}-") and not label.endswith("-diagnostic")]
-            self.assertLessEqual(sum(budgets), 300)
+            self.assertLessEqual(sum(budgets), 420)
         self.assert_only_owned_device_is_mutated(commands)
 
     def test_second_readiness_failure_is_fatal_and_does_not_make_a_third_attempt(self):

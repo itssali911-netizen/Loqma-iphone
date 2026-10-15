@@ -53,7 +53,8 @@ TEMPLATE_ROUTES = (("macro-goals", "goals"),
                    ("weight-editor", "weight"),
                    ("analysis-connection", "connection"),
                    ("backup", "backup"),
-                   ("about", "about"))
+                   ("about", "about"),
+                   ("barcode-guide", "barcode"))
 VARIANT_ROUTES = (("accessibility-today", ("-loqma-preview-overview", "-loqma-preview-accessibility")),)
 EXPECTED_SCREEN_COUNT = len(SCREENS) + 2 + len(EXTRA_ROUTES) + len(TEMPLATE_ROUTES) + len(VARIANT_ROUTES)
 MAX_EMPTY_FRAME_RETRIES = 2
@@ -344,6 +345,8 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
         "accessibility_preview_dynamic_type": "accessibility3",
         "english_preview_skipped_reason": "DiaryStore exposes no temporary language override; preview does not write language settings",
         "search_uses_actual_catalog": True,
+        "barcode_preview_uses_live_guide_component": True,
+        "barcode_camera_session_started": False,
         "health_data_fixture_used": False,
         "layout_review": "Pending visual inspection of the native screenshots",
         "empty_frame_guard": {"body_crop": [0.04, 0.10, 0.96, 0.88],

@@ -54,7 +54,7 @@ struct RootView:View {
     #if DEBUG
     @Environment(\.dynamicTypeSize) private var typeSize
     private enum TemplatePreviewRoute:String,Identifiable {
-        case goals,portion,recipe,plan,weight,connection,backup,about
+        case goals,portion,recipe,plan,weight,connection,backup,about,barcode
         var id:String{rawValue}
     }
     @State private var templatePreview:TemplatePreviewRoute?
@@ -124,6 +124,11 @@ struct RootView:View {
             case .connection:GeminiSettingsView()
             case .backup:NavigationStack{BackupSettingsView().navigationBarTitleDisplayMode(.inline)}
             case .about:NavigationStack{AboutLuqmaView().navigationBarTitleDisplayMode(.inline)}
+            case .barcode:NavigationStack{
+                BarcodeScanGuide(language:diary.language).background(Theme.surface).ignoresSafeArea()
+                    .navigationTitle(diary.t("مسح الباركود","Scan barcode")).navigationBarTitleDisplayMode(.inline)
+                    .safeAreaInset(edge:.bottom){Text(diary.t("معاينة للمؤشر فقط؛ الكاميرا غير مشغّلة","Guide preview only; camera is inactive")).luqmaFont(.caption).foregroundStyle(Theme.text).multilineTextAlignment(.center).padding(16).frame(maxWidth:.infinity).background(Theme.background)}
+            }
             }
         }.allowsHitTesting(false)
     }

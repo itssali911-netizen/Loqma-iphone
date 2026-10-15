@@ -126,12 +126,13 @@ struct DiaryView:View {
         dailySummary(diary.total(day),diary.dailyGoals(day))
     }
     private func dailySummary(_ consumed:Nutrition,_ goals:Nutrition,showHistory:Bool=true)->some View {
+        let history=showHistory ? intakeHistory:[]
         return VStack(alignment:.leading,spacing:12){
             calorieGoal(consumed:consumed.kcal,goal:goals.kcal)
             macroSummary(consumed,goals).padding(16).background(Theme.card,in:RoundedRectangle(cornerRadius:20,style:.continuous))
-            if showHistory && intakeHistory.count>=2{
+            if history.count>=2{
                 DisclosureGroup(diary.t("السعرات خلال آخر 7 أيام","Calories over the last 7 days")){
-                    intakeChart.padding(.top,12)
+                    intakeChart(history).padding(.top,12)
                 }.luqmaFont(.caption).foregroundStyle(Theme.muted).padding(16).background(Theme.card,in:RoundedRectangle(cornerRadius:20,style:.continuous))
             }
         }
@@ -196,15 +197,17 @@ struct DiaryView:View {
     private struct IntakePoint:Identifiable{var day:String;var date:Date;var kcal:Double;var id:String{day}}
     private var intakeHistory:[IntakePoint]{
         let calendar=DisplayFormat.calendar(diary.language),end=calendar.startOfDay(for:min(date,Date()))
-        return (0..<7).compactMap{offset in
+        let dates=(0..<7).compactMap{offset -> (String,Date)? in
             guard let value=calendar.date(byAdding:.day,value:offset-6,to:end) else{return nil}
-            let key=DayKey.string(value)
-            guard diary.state.entries.contains(where:{$0.day==key}) else{return nil}
-            return IntakePoint(day:key,date:value,kcal:diary.total(key).kcal)
+            return (DayKey.string(value),value)
         }
+        let days=Set(dates.map{$0.0})
+        var calories:[String:Double]=[:]
+        // One pass over the diary, retaining each day's original addition order.
+        for entry in diary.state.entries where days.contains(entry.day){calories[entry.day,default:0]+=entry.kcal}
+        return dates.compactMap{key,value in calories[key].map{IntakePoint(day:key,date:value,kcal:$0)}}
     }
-    @ViewBuilder private var intakeChart:some View {
-        let points=intakeHistory
+    @ViewBuilder private func intakeChart(_ points:[IntakePoint])->some View {
         if points.count>=2{
             Chart(points){point in
                 AreaMark(x:.value("Day",point.date),y:.value("Logged calories",point.kcal)).foregroundStyle(LinearGradient(colors:[Theme.accent.opacity(0.35),Theme.accent.opacity(0.025)],startPoint:.top,endPoint:.bottom))

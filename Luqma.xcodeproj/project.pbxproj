@@ -235,6 +235,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = B051277896438AB6FF8F5F11;
 		};
+		"CA7DBB3F7948B1F48BC67D43" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "WeightProgressSnapshot.swift";
+			"sourceTree" = "<group>";
+		};
+		"765B745DE8348FC82E9DA4A8" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = CA7DBB3F7948B1F48BC67D43;
+		};
 		"2BA340BF271E1A0E2D6B10FC" = {
 			"isa" = "PBXGroup";
 			"children" = (
@@ -261,6 +271,7 @@
 				F866668F7C766A3FE269DA0B,
 				1F0D75ECCB677A0C7DCB66DA,
 				B051277896438AB6FF8F5F11,
+				CA7DBB3F7948B1F48BC67D43,
 			);
 			"path" = "Core";
 			"sourceTree" = "<group>";
@@ -974,6 +985,7 @@
 				7156749514081042D0DEDDA9,
 				7F8C55211A3045987A30FBB4,
 				D7764BDF2E8F543F56223B46,
+				765B745DE8348FC82E9DA4A8,
 				31DB4AF06768137E0E95C19B,
 				403A3A19D829E31AE030433B,
 				E9DF33C90C95BE46CC7B5561,

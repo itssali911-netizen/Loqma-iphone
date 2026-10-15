@@ -7,15 +7,15 @@ struct ProgressViewScreen:View {
     @State private var adding=false
     @State private var adaptiveDetails=false
     @State private var deleting:WeightReading?
-    private var readings:[WeightReading] {diary.state.weights.filter{let days=WeightModel.days($0.day,DayKey.today);return days>=0 && (range==0 || days<range)}}
     var body:some View {
-        ScrollView{VStack(alignment:.leading,spacing:24){
+        let snapshot=WeightProgressSnapshot.make(diary.state.weights,ending:DayKey.today,range:range)
+        return ScrollView{VStack(alignment:.leading,spacing:24){
             LuqmaPageHeader(title:diary.t("تقدّمي","My progress"),subtitle:diary.t("خطوات صغيرة، أثر واضح","Small steps, visible progress"),symbol:"chart.xyaxis.line")
             weightSummary
             LuqmaSectionHeader(title:diary.t("اتجاه الوزن","Weight trend"))
-            weightChart
+            weightChart(snapshot)
             weightPlan
-            weightHistory
+            weightHistory(snapshot.readings)
         }.padding(24).padding(.bottom,10)}.appBackground().navigationTitle(diary.t("تقدّمي","My progress"))
             .toolbar(.hidden,for:.navigationBar)
             .sheet(isPresented:$adding){WeightEditor()}
@@ -59,7 +59,7 @@ struct ProgressViewScreen:View {
             }.luqmaFont(.footnote)
         }
     }.luqmaCard()}
-    @ViewBuilder private var weightHistory:some View {
+    @ViewBuilder private func weightHistory(_ readings:[WeightReading])->some View {
         if !readings.isEmpty{VStack(alignment:.leading,spacing:14){
             Text(diary.t("سجل الوزن","Weight history")).luqmaFont(.headline).accessibilityAddTraits(.isHeader)
             if readings.count>30{Text(diary.t("آخر ٣٠ قراءة في المدة المختارة","Latest 30 readings in the selected range")).luqmaFont(.caption).foregroundStyle(Theme.muted)}
@@ -71,17 +71,17 @@ struct ProgressViewScreen:View {
             }.padding(.leading,12).padding(.trailing,4).padding(.vertical,8).background(Theme.surface,in:RoundedRectangle(cornerRadius:14))}
         }.luqmaCard()}
     }
-    private var weightChart:some View {VStack(alignment:.leading,spacing:18){
+    private func weightChart(_ snapshot:WeightProgressSnapshot)->some View {VStack(alignment:.leading,spacing:18){
         HStack(spacing:4){ForEach([7,30,90,0],id:\.self){value in
             Button{range=value}label:{Text(rangeTitle(value)).luqmaFont(size:12,weight:.semibold,relativeTo:.caption).frame(maxWidth:.infinity,minHeight:40).foregroundStyle(range == value ? Theme.background:Theme.muted).background(range == value ? Theme.text:Theme.surface,in:Capsule())}.buttonStyle(.plain).accessibilityAddTraits(range == value ? .isSelected:[])
         }}.padding(4).background(Theme.surface,in:Capsule()).accessibilityLabel(diary.t("مدة الرسم","Chart range"))
-        if readings.isEmpty{Notice(text:diary.t("لا توجد قراءات في هذه المدة.","No readings in this range."))}
+        if snapshot.points.isEmpty{Notice(text:diary.t("لا توجد قراءات في هذه المدة.","No readings in this range."))}
         else{Chart{
-            ForEach(readings){w in if let date=DayKey.localDate(w.day){
-                AreaMark(x:.value("Date",date),yStart:.value("Lower bound",(readings.map{$0.kg}.min() ?? w.kg)-1),yEnd:.value("Weight",w.kg)).foregroundStyle(LinearGradient(colors:[Theme.accent.opacity(0.28),Theme.accent.opacity(0.015)],startPoint:.top,endPoint:.bottom))
-                LineMark(x:.value("Date",date),y:.value("Weight",w.kg)).lineStyle(StrokeStyle(lineWidth:2.5)).foregroundStyle(Theme.accent)
-                PointMark(x:.value("Date",date),y:.value("Weight",w.kg)).symbolSize(25).foregroundStyle(Theme.accent)
-            }}
+            ForEach(snapshot.points){point in
+                AreaMark(x:.value("Date",point.date),yStart:.value("Lower bound",snapshot.lowerBound),yEnd:.value("Weight",point.reading.kg)).foregroundStyle(LinearGradient(colors:[Theme.accent.opacity(0.28),Theme.accent.opacity(0.015)],startPoint:.top,endPoint:.bottom))
+                LineMark(x:.value("Date",point.date),y:.value("Weight",point.reading.kg)).lineStyle(StrokeStyle(lineWidth:2.5)).foregroundStyle(Theme.accent)
+                PointMark(x:.value("Date",point.date),y:.value("Weight",point.reading.kg)).symbolSize(25).foregroundStyle(Theme.accent)
+            }
             if let target=diary.state.weightPlan?.targetWeight{RuleMark(y:.value("Goal",target)).lineStyle(StrokeStyle(lineWidth:1,dash:[5])).foregroundStyle(Theme.secondaryAccent)}
         }.chartYScale(domain:.automatic(includesZero:false)).chartLegend(.hidden).frame(height:225).accessibilityLabel(diary.t("رسم تغيّر الوزن بالكيلوجرام","Weight trend in kilograms"))}
     }.luqmaCard()}

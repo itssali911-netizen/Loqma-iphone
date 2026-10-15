@@ -17,7 +17,8 @@ struct KitchenView:View {
         }
     }
     var body:some View {
-        ScrollView{VStack(alignment:.leading,spacing:24){
+        let filteredRecipes=recipes
+        return ScrollView{LazyVStack(alignment:.leading,spacing:24){
             LuqmaPageHeader(title:diary.t("مطبخي","My kitchen"),subtitle:diary.t("وجبات تحبها، في مكان واحد","Meals you love, in one place"),symbol:"fork.knife")
             HStack(spacing:12){Image(systemName:"magnifyingglass").font(.system(size:20)).foregroundStyle(Theme.muted);TextField(diary.t("ابحث في محفوظاتك","Search your saved items"),text:$query).submitLabel(.search);if !query.isEmpty{Button{query=""}label:{Image(systemName:"xmark.circle.fill").foregroundStyle(Theme.muted).frame(minWidth:32,minHeight:32)}.accessibilityLabel(diary.t("مسح البحث","Clear search"))}}.padding(.horizontal,16).frame(minHeight:56).background(Theme.card,in:RoundedRectangle(cornerRadius:16))
             ScrollView(.horizontal,showsIndicators:false){HStack(spacing:8){
@@ -28,10 +29,10 @@ struct KitchenView:View {
             }}
             Button{creating=true}label:{Label(diary.t("حفظ وصفة أو وجبة","Save a recipe or meal"),systemImage:"plus")}.buttonStyle(LuqmaPrimaryButtonStyle())
             Button{importingRecipe=true}label:{Label(diary.t("استيراد وصفة من رابط","Import a recipe from a link"),systemImage:"link")}.buttonStyle(LuqmaSecondaryButtonStyle())
-            LuqmaSectionHeader(title:diary.t("محفوظاتك","Your saved items"),detail:"\(recipes.count)")
+            LuqmaSectionHeader(title:diary.t("محفوظاتك","Your saved items"),detail:"\(filteredRecipes.count)")
             if diary.state.recipes.isEmpty{VStack(spacing:18){Image(systemName:"book.closed").font(.system(size:44,weight:.light)).foregroundStyle(Theme.accent);Text(diary.t("مطبخك يبدأ هنا","Your kitchen starts here")).luqmaFont(size:18,weight:.bold,relativeTo:.title3);Text(diary.t("اجمع المكونات واحسب الحصص، ثم أضف وجبتك بلمسة.","Combine ingredients, calculate servings, and log your meal in a tap.")).luqmaFont(.subheadline).foregroundStyle(Theme.muted).multilineTextAlignment(.center)}.frame(maxWidth:.infinity).padding(.vertical,22).luqmaCard()}
-            else if recipes.isEmpty{ContentUnavailableView(diary.t("لا توجد نتائج","No results"),systemImage:"magnifyingglass",description:Text(diary.t("جرّب اسمًا آخر أو غيّر نوع المحفوظات.","Try another name or change the saved-item type.")))}
-            ForEach(recipes){r in recipeCard(r)}
+            else if filteredRecipes.isEmpty{ContentUnavailableView(diary.t("لا توجد نتائج","No results"),systemImage:"magnifyingglass",description:Text(diary.t("جرّب اسمًا آخر أو غيّر نوع المحفوظات.","Try another name or change the saved-item type.")))}
+            ForEach(filteredRecipes){r in recipeCard(r)}
         }.padding(24).padding(.bottom,10)}.scrollDismissesKeyboard(.interactively).appBackground().navigationTitle(diary.t("مطبخي","My kitchen"))
             .toolbar(.hidden,for:.navigationBar)
             .sheet(isPresented:$creating){RecipeEditor(recipe:Recipe(id:UUID(),name:"",type:"recipe",ingredients:[],portions:1,cookedWeight:nil,notes:""))}
