@@ -159,21 +159,72 @@ struct FoodRow:View {
         case MealPhotoEstimate.source:return diary.t("تقديري","Estimated")
         case "Your food":return diary.t("طعامك الخاص","Your private food")
         case "MyFitnessPal supplied IPA":return diary.t("MyFitnessPal · ملفك","MyFitnessPal · your file")
+        case "OpenFoodFacts","Open Food Facts":return "Open Food Facts"
         default:return nil
         }
     }
+    private var metadata:String{
+        [food.brand.map(DisplayFormat.westernDigits),sourceTitle]
+            .compactMap{$0}.filter{!$0.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty}.joined(separator:" · ")
+    }
     var body:some View {
-        Button(action:action){HStack(spacing:12){
-            Image(systemName:"fork.knife").font(.system(size:16,weight:.medium)).foregroundStyle(Theme.accent).frame(width:38,height:38).background(Theme.accent.opacity(0.1),in:RoundedRectangle(cornerRadius:12)).accessibilityHidden(true)
-            VStack(alignment:.leading,spacing:4){Text(food.label(diary.language)).luqmaFont(size:15,weight:.bold,relativeTo:.subheadline).foregroundStyle(Theme.text).multilineTextAlignment(.leading).fixedSize(horizontal:false,vertical:true);if let brand=food.brand{Text(DisplayFormat.westernDigits(brand)).luqmaFont(.caption).foregroundStyle(Theme.muted)}
-                if let sourceTitle{Text(sourceTitle).luqmaFont(.caption2).foregroundStyle(Theme.muted)}
-                if let n=food.values(for:food.unit){Text("\(decimal(n.kcal,0)) \(diary.t("سعرة","kcal")) · \(reference)").luqmaFont(size:12,weight:.medium,relativeTo:.caption).foregroundStyle(Theme.accent)}
-                else{Text(diary.t("بيانات غذائية غير مكتملة","Incomplete nutrition data")).luqmaFont(.caption).foregroundStyle(.orange)}
+        Button(action:action){HStack(spacing:10){
+            Image(systemName:"fork.knife").font(.system(size:16,weight:.regular)).foregroundStyle(Theme.muted)
+                .frame(width:38,height:42).background(Theme.surface,in:RoundedRectangle(cornerRadius:10,style:.continuous)).accessibilityHidden(true)
+            VStack(alignment:.leading,spacing:3){
+                Text(food.label(diary.language)).luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline)
+                    .foregroundStyle(Theme.text).multilineTextAlignment(.leading).lineLimit(2).fixedSize(horizontal:false,vertical:true)
+                if let n=food.values(for:food.unit){Text("\(decimal(n.kcal,0)) \(diary.t("سعرة","kcal")) · \(reference)").luqmaFont(size:11,relativeTo:.caption).foregroundStyle(Theme.muted)}
+                else{Text(diary.t("بيانات غذائية غير مكتملة","Incomplete nutrition data")).luqmaFont(size:11,relativeTo:.caption).foregroundStyle(.orange)}
+                if !metadata.isEmpty{Text(metadata).luqmaFont(size:10,relativeTo:.caption2).foregroundStyle(Theme.muted).lineLimit(2)}
             };Spacer(minLength:0)
-            Image(systemName:"plus").font(.system(size:16,weight:.semibold)).foregroundStyle(Theme.accent).frame(width:32,height:32).background(Theme.surface,in:Circle()).accessibilityHidden(true)
-        }.padding(14).frame(maxWidth:.infinity,alignment:.leading)
-            .background(Theme.card,in:RoundedRectangle(cornerRadius:Theme.cardRadius,style:.continuous))
-            .contentShape(RoundedRectangle(cornerRadius:Theme.cardRadius,style:.continuous))}.buttonStyle(.plain)
+            Image(systemName:"plus").font(.system(size:17,weight:.medium)).foregroundStyle(Theme.accent).frame(width:28,height:32).accessibilityHidden(true)
+        }.padding(12).frame(maxWidth:.infinity,minHeight:70,alignment:.leading)
+            .background(Theme.card,in:RoundedRectangle(cornerRadius:14,style:.continuous))
+            .contentShape(RoundedRectangle(cornerRadius:14,style:.continuous))}.buttonStyle(.plain)
     }
 }
 struct Notice:View {var text:String;var body:some View {Text(DisplayFormat.westernDigits(text)).luqmaFont(.footnote).foregroundStyle(Theme.muted).frame(maxWidth:.infinity,alignment:.leading).fixedSize(horizontal:false,vertical:true)}}
+
+// Shared Sandow screen chrome keeps navigation independent of iOS toolbar glass.
+private struct SandowNavigationChrome:ViewModifier {
+    let title:String
+    let backLabel:String
+    var onBack:(()->Void)?
+    var actionLabel:String?
+    var actionEnabled:Bool
+    var onAction:(()->Void)?
+    @Environment(\.dismiss) private var dismiss
+    func body(content:Content)->some View {
+        content.navigationTitle(title).toolbar(.hidden,for:.navigationBar)
+            .safeAreaInset(edge:.top,spacing:0){
+                ZStack{
+                    Text(title).luqmaFont(size:14,weight:.semibold,relativeTo:.headline)
+                        .multilineTextAlignment(.center).padding(.horizontal,54)
+                        .frame(maxWidth:.infinity,minHeight:48).accessibilityAddTraits(.isHeader)
+                    HStack{
+                        Button{if let onBack{onBack()}else{dismiss()}}label:{
+                            Image(systemName:"chevron.backward").font(.system(size:12,weight:.semibold))
+                                .frame(width:30,height:30).foregroundStyle(Theme.text)
+                                .background(Theme.card,in:RoundedRectangle(cornerRadius:9))
+                                .frame(width:44,height:44).contentShape(Rectangle())
+                        }.buttonStyle(.plain).accessibilityLabel(backLabel)
+                        Spacer(minLength:0)
+                    }.padding(.horizontal,10)
+                }.foregroundStyle(Theme.text).padding(.bottom,6).background(Theme.background.ignoresSafeArea(edges:.top))
+            }
+            .safeAreaInset(edge:.bottom,spacing:0){
+                if let actionLabel,let onAction{
+                    Button(actionLabel,action:onAction).buttonStyle(LuqmaPrimaryButtonStyle()).disabled(!actionEnabled)
+                        .padding(.horizontal,16).padding(.top,10).padding(.bottom,8).background(Theme.background)
+                }
+            }
+    }
+}
+extension View {
+    func sandowNavigation(_ title:String,backLabel:String,onBack:(()->Void)?=nil,
+                          actionLabel:String?=nil,actionEnabled:Bool=true,onAction:(()->Void)?=nil)->some View {
+        modifier(SandowNavigationChrome(title:title,backLabel:backLabel,onBack:onBack,
+                                        actionLabel:actionLabel,actionEnabled:actionEnabled,onAction:onAction))
+    }
+}

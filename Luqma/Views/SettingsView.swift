@@ -13,35 +13,54 @@ struct SettingsView:View {
     @State private var goals=false
     @State private var gemini=false
     var body:some View {
-        ScrollView{VStack(alignment:.leading,spacing:18){
-            LuqmaPageHeader(title:diary.t("الإعدادات","Settings"),subtitle:diary.t("أهدافك وربطك وبياناتك","Your goals, connections and data"),symbol:"slider.horizontal.3")
-            HStack(spacing:16){Image("LuqmaMark").resizable().scaledToFit().frame(width:54,height:54).accessibilityHidden(true);VStack(alignment:.leading,spacing:4){Text(diary.t("لُقمة","Luqma")).luqmaFont(.title2);Text(diary.t("كل لقمة تقرّبك من هدفك","Every bite brings you closer")).luqmaFont(.footnote).foregroundStyle(Theme.muted)};Spacer(minLength:0)}.luqmaCard()
+        ScrollView{VStack(alignment:.leading,spacing:20){
+            Text(diary.t("الإعدادات","Settings")).luqmaFont(size:14,weight:.semibold,relativeTo:.headline)
+                .frame(maxWidth:.infinity,minHeight:44).accessibilityAddTraits(.isHeader)
+            settingsIdentity
             settingsGroup(diary.t("أهدافي","My goals")){
                 Button{goals=true}label:{settingsRow(diary.t("السعرات والماكروز","Calories and macros"),symbol:"target")}
                 Divider().overlay(Theme.stroke)
-                NavigationLink{PlanView().toolbar(.visible,for:.navigationBar)}label:{settingsRow(diary.t("خطة الوزن","Weight plan"),symbol:"chart.line.uptrend.xyaxis")}
+                NavigationLink{PlanView()}label:{settingsRow(diary.t("خطة الوزن","Weight plan"),symbol:"chart.line.uptrend.xyaxis")}
             }
             settingsGroup(diary.t("التفضيلات","Preferences")){
-                HStack(spacing:12){settingsIcon("globe");Text(diary.t("اللغة","Language"));Spacer(minLength:0);Picker(diary.t("اللغة","Language"),selection:Binding(get:{diary.language},set:{value in diary.change{$0.language=value}})){Text("العربية").tag(AppLanguage.ar);Text("English").tag(AppLanguage.en)}.pickerStyle(.menu).labelsHidden()}.frame(minHeight:52)
+                HStack(spacing:10){settingsIcon("globe");Text(diary.t("اللغة","Language"));Spacer(minLength:0);Picker(diary.t("اللغة","Language"),selection:Binding(get:{diary.language},set:{value in diary.change{$0.language=value}})){Text("العربية").tag(AppLanguage.ar);Text("English").tag(AppLanguage.en)}.pickerStyle(.menu).labelsHidden()}.luqmaFont(size:14,relativeTo:.body).frame(minHeight:48)
             }
             settingsGroup(diary.t("الربط والبيانات","Connections and data")){
                 Button{gemini=true}label:{settingsRow(diary.t("تحليل الوجبة","Meal analysis"),symbol:"sparkles")}
                 Divider().overlay(Theme.stroke)
-                NavigationLink{BackupSettingsView().toolbar(.visible,for:.navigationBar)}label:{settingsRow(diary.t("النسخ الاحتياطي والنقل","Backup and transfer"),symbol:"externaldrive")}
+                NavigationLink{BackupSettingsView()}label:{settingsRow(diary.t("النسخ الاحتياطي والنقل","Backup and transfer"),symbol:"externaldrive")}
             }
             settingsGroup(diary.t("لُقمة","Luqma")){
-                NavigationLink{AboutLuqmaView().toolbar(.visible,for:.navigationBar)}label:{settingsRow(diary.t("حول لُقمة والخصوصية","About Luqma and privacy"),symbol:"info.circle")}
+                NavigationLink{AboutLuqmaView()}label:{settingsRow(diary.t("حول لُقمة والخصوصية","About Luqma and privacy"),symbol:"info.circle")}
             }
         }.buttonStyle(.plain).padding(16)}.appBackground().navigationTitle(diary.t("الإعدادات","Settings"))
             .toolbar(.hidden,for:.navigationBar)
             .sheet(isPresented:$goals){GoalEditor()}
             .sheet(isPresented:$gemini){GeminiSettingsView()}
     }
-    private func settingsGroup<Content:View>(_ title:String,@ViewBuilder content:()->Content)->some View {
-        VStack(alignment:.leading,spacing:12){LuqmaSectionHeader(title:title);VStack(spacing:6,content:content).luqmaCard()}
+    private var settingsIdentity:some View {
+        HStack(spacing:12){
+            Image("LuqmaMark").resizable().scaledToFit().frame(width:44,height:44)
+                .padding(4).background(Theme.background,in:RoundedRectangle(cornerRadius:13)).accessibilityHidden(true)
+            VStack(alignment:.leading,spacing:5){
+                Text(diary.t("لُقمة","Luqma")).luqmaFont(size:18,weight:.bold,relativeTo:.headline)
+                Text(diary.t("كل لقمة تقرّبك من هدفك","Every bite brings you closer"))
+                    .luqmaFont(size:11,relativeTo:.caption).foregroundStyle(Theme.muted)
+            }
+            Spacer(minLength:0)
+        }.padding(14).frame(maxWidth:.infinity,alignment:.leading)
+            .background(Theme.card,in:RoundedRectangle(cornerRadius:16,style:.continuous))
     }
-    private func settingsIcon(_ symbol:String)->some View {Image(systemName:symbol).font(.system(size:19,weight:.medium)).foregroundStyle(Theme.accent).frame(width:36,height:36).accessibilityHidden(true)}
-    private func settingsRow(_ title:String,symbol:String)->some View {HStack(spacing:12){settingsIcon(symbol);Text(title).luqmaFont(.body).foregroundStyle(Theme.text);Spacer(minLength:0);Image(systemName:"chevron.forward").font(.system(size:12,weight:.semibold)).foregroundStyle(Theme.muted)}.frame(minHeight:52).contentShape(Rectangle())}
+    private func settingsGroup<Content:View>(_ title:String,@ViewBuilder content:()->Content)->some View {
+        VStack(alignment:.leading,spacing:9){
+            Text(title).luqmaFont(size:12,weight:.semibold,relativeTo:.caption)
+                .foregroundStyle(Theme.muted).accessibilityAddTraits(.isHeader)
+            VStack(spacing:0,content:content).padding(.horizontal,14).padding(.vertical,4)
+                .background(Theme.card,in:RoundedRectangle(cornerRadius:16,style:.continuous))
+        }
+    }
+    private func settingsIcon(_ symbol:String)->some View {Image(systemName:symbol).font(.system(size:17,weight:.regular)).foregroundStyle(Theme.text).frame(width:28,height:32).accessibilityHidden(true)}
+    private func settingsRow(_ title:String,symbol:String)->some View {HStack(spacing:10){settingsIcon(symbol);Text(title).luqmaFont(size:14,relativeTo:.body).foregroundStyle(Theme.text);Spacer(minLength:0);Image(systemName:"chevron.forward").font(.system(size:11,weight:.medium)).foregroundStyle(Theme.muted)}.frame(minHeight:48).contentShape(Rectangle())}
 }
 struct BackupSettingsView:View {
     @EnvironmentObject var diary:DiaryStore
@@ -60,7 +79,7 @@ struct BackupSettingsView:View {
             Section{
                 Notice(text:diary.t("صدّر نسخة لحفظ بياناتك أو نقلها إلى جهاز آخر. عند الاستيراد تُدمج البيانات، وتُحدَّث السجلات المطابقة دون حذف باقي سجلك.","Export a backup to save your data or move it to another device. Import merges the data and updates matching records without deleting the rest of your diary."))
             }.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
-        }.sandowForm().navigationTitle(diary.t("النسخ الاحتياطي","Backup")).navigationBarTitleDisplayMode(.inline)
+        }.sandowForm().sandowNavigation(diary.t("النسخ الاحتياطي","Backup"),backLabel:diary.t("رجوع","Back"))
             .fileExporter(isPresented:$exporting,document:document,contentType:.json,defaultFilename:"luqma-backup-"+DayKey.today){if case let .failure(error)=$0{diary.report(error)}}
             .fileImporter(isPresented:$importing,allowedContentTypes:[.json],allowsMultipleSelection:false){result in
                 switch result{case .success(let urls):if let url=urls.first{read(url)};case .failure(let error):diary.report(error)}
@@ -92,7 +111,7 @@ struct AboutLuqmaView:View {
                 Link("Work Sans · SIL Open Font License",destination:URL(string:"https://github.com/weiweihuanghuang/Work-Sans")!)
                 Link("Tajawal · SIL Open Font License",destination:URL(string:"https://github.com/google/fonts/tree/main/ofl/tajawal")!)
             }.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
-        }.sandowForm().navigationTitle(diary.t("حول لُقمة","About Luqma")).navigationBarTitleDisplayMode(.inline)
+        }.sandowForm().sandowNavigation(diary.t("حول لُقمة","About Luqma"),backLabel:diary.t("رجوع","Back"))
     }
 }
 struct ImportPreview:View {
@@ -108,9 +127,8 @@ struct ImportPreview:View {
                 row(diary.t("المنتجات المحفوظة","Saved products"),snapshot.products.count)
             }.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
             Section{Notice(text:diary.t("ستُعتمد أهداف السعرات من النسخة. السجل الحالي يبقى محفوظًا، والمطابق يُحدَّث. إعداد اللغة الحالية لا يتغير.","Calorie goals will use the backup values. Existing records remain, matching records update. The current language stays as it is."))}.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
-            Section{Button(diary.t("تأكيد الاستيراد","Confirm import")){if apply(){dismiss()}}.buttonStyle(LuqmaPrimaryButtonStyle())}.listRowBackground(Color.clear).listRowInsets(EdgeInsets(top:0,leading:0,bottom:0,trailing:0))
-        }.sandowForm().navigationTitle(diary.t("استيراد النسخة","Import backup")).navigationBarTitleDisplayMode(.inline)
-            .toolbar{ToolbarItem(placement:.cancellationAction){Button(diary.t("إلغاء","Cancel")){dismiss()}}}
+        }.sandowForm().sandowNavigation(diary.t("استيراد النسخة","Import backup"),backLabel:diary.t("إلغاء","Cancel"),onBack:{dismiss()},
+            actionLabel:diary.t("تأكيد الاستيراد","Confirm import"),onAction:{if apply(){dismiss()}})
         }
     }
     private func row(_ title:String,_ n:Int) -> some View {HStack{Text(title);Spacer();Text(String(n)).foregroundStyle(.secondary)}}

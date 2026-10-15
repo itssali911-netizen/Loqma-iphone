@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct KitchenView:View {
     @EnvironmentObject var diary:DiaryStore
@@ -27,7 +28,7 @@ struct KitchenView:View {
                 kitchenAction(diary.t("استيراد رابط","Import link"),symbol:"link",primary:false){importingRecipe=true}
             }
             LuqmaSectionHeader(title:diary.t("محفوظاتك","Your saved items"),detail:decimal(Double(filteredRecipes.count),0))
-            if diary.state.recipes.isEmpty{VStack(spacing:12){Image(systemName:"book.closed").font(.system(size:32,weight:.light)).foregroundStyle(Theme.accent);Text(diary.t("مطبخك يبدأ هنا","Your kitchen starts here")).luqmaFont(size:17,weight:.bold,relativeTo:.headline);Text(diary.t("احفظ وصفاتك أو استورد وصفة من رابط، ثم احسب حصصها وأضفها ليومك.","Save your recipes or import one from a link, then calculate servings and log them to your day.")).luqmaFont(.subheadline).foregroundStyle(Theme.muted).multilineTextAlignment(.center)}.frame(maxWidth:.infinity).padding(.vertical,16).luqmaCard()}
+            if diary.state.recipes.isEmpty{kitchenEmptyState}
             else if filteredRecipes.isEmpty{ContentUnavailableView(diary.t("لا توجد نتائج","No results"),systemImage:"magnifyingglass",description:Text(diary.t("جرّب اسمًا آخر أو غيّر نوع المحفوظات.","Try another name or change the saved-item type.")))}
             ForEach(filteredRecipes){r in recipeCard(r)}
         }.padding(.horizontal,16).padding(.bottom,24)}.scrollDismissesKeyboard(.interactively).appBackground().navigationTitle(diary.t("مطبخي","My kitchen"))
@@ -82,25 +83,81 @@ struct KitchenView:View {
         let total=recipe.total
         let perServing=total.scaled(1/max(recipe.portions,0.001))
         return VStack(alignment:.leading,spacing:12){
-            HStack(alignment:.top,spacing:12){
-                Image(systemName:recipe.type == "prep" ? "takeoutbag.and.cup.and.straw":recipe.type == "meal" ? "fork.knife":"book.closed").font(.system(size:20)).foregroundStyle(Theme.accent).frame(width:44,height:44).background(Theme.surface,in:RoundedRectangle(cornerRadius:12)).accessibilityHidden(true)
-                VStack(alignment:.leading,spacing:4){Text(DisplayFormat.westernDigits(recipe.name)).luqmaFont(size:16,weight:.bold,relativeTo:.headline).fixedSize(horizontal:false,vertical:true);Text(recipeKind(recipe.type)).luqmaFont(.caption2).foregroundStyle(Theme.muted)}
+            HStack(alignment:.top,spacing:10){
+                VStack(alignment:.leading,spacing:6){
+                    Text(DisplayFormat.westernDigits(recipe.name))
+                        .luqmaFont(size:18,weight:.bold,relativeTo:.headline)
+                        .fixedSize(horizontal:false,vertical:true)
+                    Text(recipeKind(recipe.type)).luqmaFont(size:10,weight:.medium,relativeTo:.caption2)
+                        .padding(.horizontal,8).padding(.vertical,4)
+                        .background(Theme.background.opacity(0.7),in:Capsule())
+                }
                 Spacer(minLength:0)
-                Menu{Button(diary.t("تعديل","Edit")){editing=recipe};Button(diary.t("حذف","Delete"),role:.destructive){deleting=recipe}}label:{Image(systemName:"ellipsis").font(.system(size:20)).foregroundStyle(Theme.muted).frame(minWidth:44,minHeight:44)}.accessibilityLabel(diary.t("خيارات ","Options for ")+recipe.name)
+                recipeMenu(recipe)
             }
-            HStack(spacing:12){
-                Label("\(decimal(total.kcal/max(recipe.portions,0.001),0)) "+diary.t("سعرة للحصة","kcal per serving"),systemImage:"flame").foregroundStyle(Theme.accent)
-                Spacer(minLength:0)
-                Label("\(decimal(recipe.portions)) "+diary.t("حصص","servings"),systemImage:"square.stack").foregroundStyle(Theme.muted)
-            }.luqmaFont(size:11,weight:.medium,relativeTo:.caption)
+            recipeServingLine(recipe,kcal:perServing.kcal)
+            Spacer(minLength:40)
             if typeSize.isAccessibilitySize{
                 VStack(spacing:10){recipeMacros(perServing)}
             }else{HStack(spacing:12){recipeMacros(perServing)}}
+            if UIImage(named:"SandowKitchen") != nil{
+                Text(diary.t("صورة توضيحية","Illustrative image"))
+                    .luqmaFont(size:9,relativeTo:.caption2).foregroundStyle(Theme.text.opacity(0.65))
+            }
             HStack(spacing:10){
                 kitchenAction(diary.t("إضافة حصة","Log serving"),symbol:"plus",primary:true){select(recipe,false)}
                 if recipe.cookedWeight != nil{kitchenAction(diary.t("بالجرام","By weight"),symbol:"scalemass",primary:false){select(recipe,true)}}
             }
-        }.padding(14).frame(maxWidth:.infinity,alignment:.leading).background(Theme.card,in:RoundedRectangle(cornerRadius:20,style:.continuous))
+        }.padding(16).frame(maxWidth:.infinity,minHeight:252,alignment:.leading)
+            .foregroundStyle(Theme.text).background{kitchenArtwork}
+            .clipShape(RoundedRectangle(cornerRadius:20,style:.continuous))
+    }
+    private func recipeMenu(_ recipe:Recipe)->some View {
+        Menu{
+            Button(diary.t("تعديل","Edit")){editing=recipe}
+            Button(diary.t("حذف","Delete"),role:.destructive){deleting=recipe}
+        }label:{
+            Image(systemName:"ellipsis").font(.system(size:18,weight:.semibold))
+                .foregroundStyle(Theme.text).frame(width:40,height:40)
+                .background(Theme.background.opacity(0.6),in:RoundedRectangle(cornerRadius:12))
+        }.accessibilityLabel(diary.t("خيارات ","Options for ")+recipe.name)
+    }
+    private func recipeServingLine(_ recipe:Recipe,kcal:Double)->some View {
+        ViewThatFits(in:.horizontal){
+            HStack(spacing:12){recipeServingLabels(recipe,kcal:kcal)}
+            VStack(alignment:.leading,spacing:6){recipeServingLabels(recipe,kcal:kcal)}
+        }.luqmaFont(size:11,weight:.medium,relativeTo:.caption).foregroundStyle(Theme.text.opacity(0.85))
+    }
+    @ViewBuilder private func recipeServingLabels(_ recipe:Recipe,kcal:Double)->some View {
+        Label(decimal(kcal,0)+" "+diary.t("سعرة للحصة","kcal per serving"),systemImage:"flame.fill")
+        Label(decimal(recipe.portions)+" "+diary.t("حصص","servings"),systemImage:"square.stack")
+    }
+    private var kitchenEmptyState:some View {
+        VStack(alignment:.leading,spacing:12){
+            Image(systemName:"book.closed").font(.system(size:18,weight:.medium))
+                .foregroundStyle(Theme.text).frame(width:38,height:38)
+                .background(Theme.accent,in:RoundedRectangle(cornerRadius:12))
+            Spacer(minLength:50)
+            Text(diary.t("مطبخك يبدأ هنا","Your kitchen starts here"))
+                .luqmaFont(size:20,weight:.bold,relativeTo:.title3)
+            Text(diary.t("احفظ وصفتك الأولى أو استوردها من رابط، ثم احسب حصصها وأضفها ليومك.","Save your first recipe or import a link, then calculate servings and log them to your day."))
+                .luqmaFont(size:13,relativeTo:.footnote).foregroundStyle(Theme.text.opacity(0.8))
+                .fixedSize(horizontal:false,vertical:true)
+        }.padding(20).frame(maxWidth:.infinity,minHeight:232,alignment:.leading)
+            .foregroundStyle(Theme.text).background{kitchenArtwork}
+            .clipShape(RoundedRectangle(cornerRadius:20,style:.continuous))
+    }
+    private var kitchenArtwork:some View {
+        ZStack{
+            if let artwork=UIImage(named:"SandowKitchen"){
+                Image(uiImage:artwork).resizable().scaledToFill()
+            }else{
+                Theme.card
+                Image(systemName:"leaf").font(.system(size:180,weight:.ultraLight))
+                    .foregroundStyle(Theme.accent.opacity(0.13)).rotationEffect(.degrees(-25)).offset(x:100,y:0)
+            }
+            LinearGradient(colors:[Theme.background.opacity(0.08),Theme.background.opacity(0.8),Theme.background.opacity(0.96)],startPoint:.topTrailing,endPoint:.bottomLeading)
+        }.accessibilityHidden(true)
     }
     @ViewBuilder private func recipeMacros(_ nutrition:Nutrition)->some View {
         recipeMacro(diary.t("بروتين","Protein"),nutrition.protein)
@@ -146,8 +203,9 @@ struct RecipeEditor:View {
                     ForEach(info.assumptions,id:\.self){Notice(text:$0)}
                 }.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
             }
-        }.sandowForm().navigationTitle(diary.t("حفظ في مطبخي","Save to kitchen")).navigationBarTitleDisplayMode(.inline)
-            .toolbar{ToolbarItem(placement:.cancellationAction){Button(diary.t("إلغاء","Cancel")){dismiss()}};ToolbarItem(placement:.confirmationAction){Button(diary.t("حفظ","Save")){if !byWeight{recipe.cookedWeight=nil};if diary.saveRecipe(recipe){dismiss()}}.disabled(recipe.name.isEmpty || recipe.ingredients.isEmpty)}}
+        }.sandowForm().sandowNavigation(diary.t("حفظ في مطبخي","Save to kitchen"),backLabel:diary.t("إلغاء","Cancel"),onBack:{dismiss()},
+            actionLabel:diary.t("حفظ","Save"),actionEnabled:!recipe.name.isEmpty && !recipe.ingredients.isEmpty,
+            onAction:{if !byWeight{recipe.cookedWeight=nil};if diary.saveRecipe(recipe){dismiss()}})
             .sheet(isPresented:$adding){FoodAddView{f,a,u,_ in do{let n=try f.total(a,unit:u);recipe.ingredients.append(Ingredient(id:UUID(),name:f.label(diary.language),amount:a,unit:u,kcal:n.kcal,protein:n.protein,carbs:n.carbs,fat:n.fat))
                 if MealPhotoEstimate.isValidPhotoEstimate(f) || f.sourceDescription=="luqma:estimated-components"{let note=diary.t("تحتوي الوصفة على قيم مقدّرة من صورة؛ راجعها قبل الاستخدام.","This recipe includes photo estimates; review them before use.");if !recipe.notes.contains(note){recipe.notes=String((recipe.notes+"\n"+note).trimmingCharacters(in:.whitespacesAndNewlines).prefix(2000))}}
                 return true}catch{diary.report(error);return false}}}

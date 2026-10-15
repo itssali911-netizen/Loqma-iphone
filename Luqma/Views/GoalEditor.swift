@@ -14,8 +14,9 @@ struct GoalEditor:View {
                 Notice(text:diary.t("تعديل أي ماكرو يوزّع السعرات المتبقية على الاثنين الآخرين مع الحفاظ على إجمالي السعرات. التعديل اليدوي يوقف تحديث الهدف من الوزن.", "Editing a macro distributes the remaining calories between the other two. Manual edits pause weight-based goal updates."))
             }.disabled(!(500...10000).contains(goals.kcal)).listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
             Section{NutritionView(value:goals);Text("4P + 4C + 9F = \(decimal(goals.macroCalories,0)) kcal").luqmaFont(.caption).foregroundStyle(Theme.muted).environment(\.layoutDirection,.leftToRight)}.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
-        }.sandowForm().navigationTitle(diary.t("أهداف الماكروز","Macro goals")).navigationBarTitleDisplayMode(.inline)
-            .toolbar{ToolbarItem(placement:.cancellationAction){Button(diary.t("إلغاء","Cancel")){dismiss()}};ToolbarItem(placement:.confirmationAction){Button(diary.t("حفظ","Save")){if diary.setGoals(goals){dismiss()}}.disabled(!goals.valid || !(500...10000).contains(goals.kcal))}}
+        }.sandowForm().sandowNavigation(diary.t("أهداف الماكروز","Macro goals"),backLabel:diary.t("إلغاء","Cancel"),onBack:{dismiss()},
+            actionLabel:diary.t("حفظ","Save"),actionEnabled:goals.valid && (500...10000).contains(goals.kcal),
+            onAction:{if diary.setGoals(goals){dismiss()}})
         }.onAppear{goals=diary.state.goals.balanced()}
     }
 }

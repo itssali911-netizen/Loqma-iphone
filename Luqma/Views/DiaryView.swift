@@ -1,5 +1,6 @@
 import SwiftUI
 import Charts
+import UIKit
 
 struct DiaryView:View {
     @EnvironmentObject var diary:DiaryStore
@@ -27,9 +28,7 @@ struct DiaryView:View {
                     DatePicker(diary.t("اختيار التاريخ","Choose date"),selection:$date,displayedComponents:.date)
                         .datePickerStyle(.graphical).tint(Theme.accent).padding(20).appBackground()
                     }
-                        .navigationTitle(diary.t("اختيار التاريخ","Choose date"))
-                        .navigationBarTitleDisplayMode(.inline)
-                        .toolbar{ToolbarItem(placement:.confirmationAction){Button(diary.t("تم","Done")){selectingDate=false}}}
+                        .sandowNavigation(diary.t("اختيار التاريخ","Choose date"),backLabel:diary.t("تم","Done"),onBack:{selectingDate=false})
             }.presentationDetents([.medium,.large])
             }
     }
@@ -121,25 +120,70 @@ struct DiaryView:View {
                     VStack(spacing:10){ForEach(summaries){routineCard($0)}}.padding(.top,10)
                 }.luqmaFont(.subheadline).tint(Theme.accent)
             }else{
-                ScrollView(.horizontal,showsIndicators:false){HStack(spacing:12){ForEach(summaries){routineCard($0).frame(width:206)}}}
+                ScrollView(.horizontal,showsIndicators:false){
+                    HStack(spacing:12){
+                        ForEach(summaries){summary in
+                            routineCard(summary)
+                                .containerRelativeFrame(.horizontal){width,_ in width*0.72}
+                        }
+                    }.scrollTargetLayout()
+                }.scrollTargetBehavior(.viewAligned)
             }
         }
     }
     private func routineCard(_ summary:MealDiarySummary)->some View {
         Button{openSearch(meal:summary.meal)}label:{
             VStack(alignment:.leading,spacing:9){
-                HStack{Image(systemName:"fork.knife").font(.system(size:13,weight:.semibold)).foregroundStyle(.white).frame(width:30,height:30).background(Theme.accent,in:RoundedRectangle(cornerRadius:9));Spacer();Image(systemName:summary.meal == .snack ? "carrot":summary.meal.symbol).font(.system(size:27,weight:.light)).foregroundStyle(Theme.text.opacity(0.25))}
-                Text(summary.meal.label(diary.language)).luqmaFont(size:15,weight:.bold,relativeTo:.subheadline).foregroundStyle(Theme.text)
-                HStack(spacing:5){Image(systemName:"flame.fill").font(.system(size:10));Text(decimal(summary.nutrition.kcal,0)+" "+diary.t("سعرة","kcal")).luqmaFont(size:11,weight:.medium,relativeTo:.caption);Spacer(minLength:0);Image(systemName:"plus").font(.system(size:13,weight:.medium))}.foregroundStyle(Theme.muted)
-                Text(routineMacroLabel(summary.nutrition)).luqmaFont(size:10,relativeTo:.caption2).foregroundStyle(Theme.muted).fixedSize(horizontal:false,vertical:true)
-            }.padding(14).frame(maxWidth:.infinity,alignment:.leading).background(Theme.card,in:RoundedRectangle(cornerRadius:18,style:.continuous))
+                    HStack{
+                        Image(systemName:"fork.knife").font(.system(size:13,weight:.semibold))
+                            .foregroundStyle(.white).frame(width:30,height:30)
+                            .background(Theme.accent,in:RoundedRectangle(cornerRadius:9))
+                        Spacer(minLength:0)
+                        Image(systemName:"plus").font(.system(size:12,weight:.semibold))
+                            .frame(width:28,height:28).background(Theme.background.opacity(0.55),in:Circle())
+                    }
+                    Spacer(minLength:12)
+                    Text(summary.meal.label(diary.language))
+                        .luqmaFont(size:17,weight:.bold,relativeTo:.headline)
+                    if let first=summary.entries.first{
+                        Text(DisplayFormat.westernDigits(first.name))
+                            .luqmaFont(size:11,relativeTo:.caption).lineLimit(1)
+                            .foregroundStyle(Theme.text.opacity(0.8))
+                    }
+                    Label(decimal(summary.nutrition.kcal,0)+" "+diary.t("سعرة","kcal"),systemImage:"flame.fill")
+                        .luqmaFont(size:11,weight:.medium,relativeTo:.caption)
+                        .foregroundStyle(Theme.text.opacity(0.8))
+            }.padding(14).frame(maxWidth:.infinity,minHeight:164,alignment:.leading)
+                .frame(height:typeSize.isAccessibilitySize ? nil:164)
+                .foregroundStyle(Theme.text)
+                .background{
+                    ZStack{
+                        routineArtwork(summary.meal)
+                        LinearGradient(colors:[Theme.card,Theme.card.opacity(0.86),Theme.card.opacity(0.05)],startPoint:.leading,endPoint:.trailing)
+                    }
+                }.clipShape(RoundedRectangle(cornerRadius:18,style:.continuous))
         }.buttonStyle(.plain).accessibilityLabel(diary.t("إضافة إلى ","Add to ")+summary.meal.label(diary.language)).accessibilityValue(decimal(summary.nutrition.kcal,0)+" "+diary.t("سعرة","kcal"))
     }
-    private func routineMacroLabel(_ nutrition:Nutrition)->String {
-        let protein=diary.t("بروتين","P")+" "+mealGrams(nutrition.protein)
-        let carbs=diary.t("كارب","C")+" "+mealGrams(nutrition.carbs)
-        let fat=diary.t("دهون","F")+" "+mealGrams(nutrition.fat)
-        return [protein,carbs,fat].joined(separator:" · ")
+    @ViewBuilder private func routineArtwork(_ meal:Meal)->some View {
+        if let artwork=UIImage(named:routineImageName(meal)){
+            Image(uiImage:artwork).resizable().scaledToFill().accessibilityHidden(true)
+        }else{
+            ZStack(alignment:.trailing){
+                Theme.card
+                Circle().fill(Theme.accent.opacity(0.08)).frame(width:170,height:170).offset(x:40,y:20)
+                Image(systemName:meal == .snack ? "carrot":meal.symbol)
+                    .font(.system(size:100,weight:.ultraLight)).foregroundStyle(Theme.text.opacity(0.12))
+                    .rotationEffect(.degrees(-16)).offset(x:20,y:8)
+            }.accessibilityHidden(true)
+        }
+    }
+    private func routineImageName(_ meal:Meal)->String {
+        switch meal{
+        case .breakfast:return "SandowBreakfast"
+        case .lunch:return "SandowLunch"
+        case .dinner:return "SandowDinner"
+        case .snack:return "SandowSnack"
+        }
     }
     private var weekDates:[Date] {
         let calendar=DisplayFormat.calendar(diary.language)
@@ -363,9 +407,10 @@ struct EntryEditor:View {
         NavigationStack{Form{
             Section{Text(DisplayFormat.westernDigits(entry.name)).luqmaFont(.headline);TextField(diary.t("الكمية","Amount"),text:$amount).keyboardType(.decimalPad);Text(entry.unitLabel(diary.language)).foregroundStyle(Theme.muted)}.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
             Section(diary.t("إجمالي هذه الكمية","Nutrition for this amount")){NutritionView(value:total)}.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
-            Section{Button(diary.t("حفظ التعديل","Save changes")){if let value,diary.resize(entry.id,value){dismiss()}}.buttonStyle(LuqmaPrimaryButtonStyle()).disabled(value == nil || (value ?? 0)<=0 || (value ?? 0)>10000);Button(diary.t("حذف الطعام","Delete food"),role:.destructive){deleting=true}}.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
-        }.sandowForm().navigationTitle(diary.t("تعديل الطعام","Edit food")).navigationBarTitleDisplayMode(.inline)
-            .toolbar{ToolbarItem(placement:.cancellationAction){Button(diary.t("إلغاء","Cancel")){dismiss()}}}
+            Section{Button(diary.t("حذف الطعام","Delete food"),role:.destructive){deleting=true}}.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
+        }.sandowForm().sandowNavigation(diary.t("تعديل الطعام","Edit food"),backLabel:diary.t("إلغاء","Cancel"),onBack:{dismiss()},
+            actionLabel:diary.t("حفظ التعديل","Save changes"),actionEnabled:!(value == nil || (value ?? 0)<=0 || (value ?? 0)>10000),
+            onAction:{if let value,diary.resize(entry.id,value){dismiss()}})
             .confirmationDialog(diary.t("حذف الطعام من اليوم؟","Delete this diary entry?"),isPresented:$deleting,titleVisibility:.visible){Button(diary.t("حذف","Delete"),role:.destructive){diary.remove(entry.id);dismiss()}}
         }.onAppear{amount=decimal(entry.amount,entry.amount.rounded()==entry.amount ? 0:2)}
     }

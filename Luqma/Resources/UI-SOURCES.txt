@@ -1,4 +1,4 @@
-Luqma 2.1 current reference: Sandow UI Kit: AI Fitness & Nutrition App (Community).
+Luqma 2.3 current reference: Sandow UI Kit: AI Fitness & Nutrition App (Community).
 User-provided Figma duplicate, dark page 2:606:
 https://www.figma.com/design/IfMCdTI3FcvXpNFy79PRUA?node-id=2-606
 Inspected actual editable free Welcome/Assessment frames and visible color styles:
@@ -22,6 +22,17 @@ the small date in the header. Real diary metrics replace the reference's sample
 metrics; no placeholder food photos or fabricated recipes are added.
 Meal analysis now shows each estimated component's weight and calories, optional
 macro/weight-range detail, quantity editing and its share of the daily goal.
+Version 2.3 reopens the same live Figma document and changes screen composition:
+the photo result begins with the actual meal image followed by the centered
+result title and vertical gray/orange/blue macro columns. The earlier calorie
+ring is removed. Meal cards use 72-percent horizontal width, search results
+appear before optional query suggestions, and camera/barcode tools are compact
+header icons. Main navigation uses icons with an active tile and orange marker.
+Settings and weight progress use compact centered headings and grouped rows.
+Twelve secondary forms share a small rectangular back button, centered title
+and bottom save/add action with existing validation and cancellation preserved.
+Ordinary export and Copy as PNG actions did not yield an image artifact; the
+original food photographs remain unavailable and are not replaced by fake meals.
 The available flattened previews do not supply all component-level sizes or
 original photographs. A 100-percent pixel, content, font-binary or motion match
 has not been established. All paid screens, original photography and reference

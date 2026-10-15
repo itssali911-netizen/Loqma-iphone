@@ -91,7 +91,7 @@ import UIKit
     }
     private var photoInput:some View {
         VStack(alignment:.leading,spacing:16){
-            if let preview{
+            if parts.isEmpty,let preview{
                 Image(uiImage:preview).resizable().scaledToFit().frame(maxWidth:.infinity,maxHeight:240)
                     .background(Theme.card,in:RoundedRectangle(cornerRadius:20)).clipShape(RoundedRectangle(cornerRadius:20))
             }else if parts.isEmpty{
@@ -116,13 +116,16 @@ import UIKit
     private var review:some View {
         let summary=total
         return VStack(alignment:.leading,spacing:16){
+            resultHero
+            if let summary{estimateSummary(summary)}
+            else{
+                VStack(alignment:.leading,spacing:14){
+                    resultTitle
+                    Notice(text:diary.t("أكمل بيانات جميع المكونات لعرض إجمالي الوجبة وحفظها.","Complete every component to see and log the meal total."))
+                }.luqmaCard()
+            }
             Label(diary.t("تقديرات تقريبية تتأثر بالكمية وطريقة التحضير","Estimates vary with amount and preparation"),systemImage:"sparkles")
                 .luqmaFont(.caption).foregroundStyle(Theme.muted).fixedSize(horizontal:false,vertical:true)
-                .padding(12).frame(maxWidth:.infinity,alignment:.leading)
-                .background(Theme.accent.opacity(0.08),in:RoundedRectangle(cornerRadius:14))
-            resultHeader
-            if let summary{estimateSummary(summary)}
-            else{Notice(text:diary.t("أكمل بيانات جميع المكونات لعرض إجمالي الوجبة وحفظها.","Complete every component to see and log the meal total.")).luqmaCard()}
             VStack(alignment:.leading,spacing:10){
                 LuqmaSectionHeader(title:diary.t("المكونات","Components"),detail:typeSize.isAccessibilitySize ? nil:diary.t("الوزن والسعرات لكل مكوّن","Weight and calories per component"))
                 HStack(spacing:8){componentMode(diary.t("مختصر","Compact"),detailed:false);componentMode(diary.t("تفصيلي","Detailed"),detailed:true)}
@@ -136,58 +139,65 @@ import UIKit
             }.buttonStyle(LuqmaPrimaryButtonStyle()).disabled(summary==nil || busy || loadingPhoto)
         }
     }
-    private var resultHeader:some View {
-        HStack(spacing:14){
-            Image(systemName:"fork.knife").font(.system(size:24,weight:.medium))
-                .foregroundStyle(Theme.accent).frame(width:56,height:56)
-                .background(Theme.surface,in:RoundedRectangle(cornerRadius:16)).accessibilityHidden(true)
-            VStack(alignment:.leading,spacing:8){
-                Text(parts.count == 1 ? componentName(parts[0].id):diary.t("وجبتك من الصورة","Your meal from the photo"))
-                    .luqmaFont(size:21,weight:.bold,relativeTo:.title2).fixedSize(horizontal:false,vertical:true)
-                Text(diary.t("المكوّنات: ","Components: ")+decimal(Double(parts.count),0))
-                    .luqmaFont(.caption).foregroundStyle(Theme.accent)
-                    .padding(.horizontal,10).padding(.vertical,4)
-                    .background(Theme.accent.opacity(0.1),in:Capsule())
+    private var resultHero:some View {
+        GeometryReader{geometry in
+            ZStack{
+                if let preview{
+                    Image(uiImage:preview).resizable().scaledToFill()
+                }else{
+                    Theme.card
+                    Image(systemName:"viewfinder").font(.system(size:72,weight:.ultraLight))
+                        .foregroundStyle(Theme.surface)
+                    Image(systemName:"fork.knife").font(.system(size:30,weight:.light))
+                        .foregroundStyle(Theme.muted)
+                }
             }
-            Spacer(minLength:0)
-        }.luqmaCard()
+            .frame(width:geometry.size.width,height:geometry.size.height).clipped()
+        }
+        .aspectRatio(1/0.85,contentMode:.fit)
+        .clipShape(RoundedRectangle(cornerRadius:20,style:.continuous))
+        .accessibilityElement(children:.ignore)
+        .accessibilityLabel(diary.t(preview == nil ? "لا توجد صورة في هذه المعاينة":"صورة الوجبة",preview == nil ? "No photo in this preview":"Meal photo"))
+        .accessibilityAddTraits(.isImage)
+    }
+    private var resultTitle:some View {
+        VStack(alignment:.center,spacing:6){
+            Text(parts.count == 1 ? componentName(parts[0].id):diary.t("وجبتك من الصورة","Your meal from the photo"))
+                .luqmaFont(size:24,weight:.bold,relativeTo:.title2).multilineTextAlignment(.center).fixedSize(horizontal:false,vertical:true)
+            Text(diary.t("المكوّنات: ","Components: ")+decimal(Double(parts.count),0))
+                .luqmaFont(.caption).foregroundStyle(Theme.muted)
+        }.frame(maxWidth:.infinity)
     }
     private func estimateSummary(_ nutrition:Nutrition)->some View {
-        VStack(alignment:.leading,spacing:18){
+        VStack(alignment:.leading,spacing:20){
+            resultTitle
             if typeSize.isAccessibilitySize{
                 calorieValue(nutrition.kcal)
                 calorieContribution(nutrition.kcal)
             }else{
-                HStack(spacing:20){
-                    ZStack{
-                        LuqmaProgressRing(progress:goalProgress(nutrition.kcal,goal:diary.state.goals.kcal) ?? 0,color:Theme.accent,lineWidth:8)
-                        calorieValue(nutrition.kcal)
-                    }.frame(width:124,height:124)
+                HStack(alignment:.top,spacing:20){
+                    calorieValue(nutrition.kcal)
                     calorieContribution(nutrition.kcal).frame(maxWidth:.infinity,alignment:.leading)
                 }
             }
-            Rectangle().fill(Theme.stroke).frame(height:1)
             if typeSize.isAccessibilitySize{
                 VStack(spacing:16){ForEach(MacroKey.allCases){key in macroGoal(key,nutrition:nutrition)}}
             }else{
-                HStack(alignment:.top,spacing:16){ForEach(MacroKey.allCases){key in macroGoal(key,nutrition:nutrition)}}
+                HStack(alignment:.bottom,spacing:20){ForEach(MacroKey.allCases){key in macroColumn(key,nutrition:nutrition)}}
             }
         }.luqmaCard()
     }
     private func calorieValue(_ kcal:Double)->some View {
-        VStack(spacing:2){
-            Text(decimal(kcal,0)).luqmaFont(size:32,weight:.bold,relativeTo:.largeTitle).monospacedDigit().foregroundStyle(Theme.text)
-            Text(diary.t("سعرة تقريبًا","estimated kcal")).luqmaFont(.caption).foregroundStyle(Theme.muted)
+        HStack(alignment:.firstTextBaseline,spacing:5){
+            Image(systemName:"flame.fill").font(.system(size:19,weight:.semibold)).foregroundStyle(Theme.accent).accessibilityHidden(true)
+            Text(decimal(kcal,0)).luqmaFont(size:34,weight:.bold,relativeTo:.largeTitle).monospacedDigit().foregroundStyle(Theme.text)
+            Text(diary.t("سعرة","kcal")).luqmaFont(.caption).foregroundStyle(Theme.muted)
         }.accessibilityElement(children:.combine)
     }
     private func calorieContribution(_ kcal:Double)->some View {
         VStack(alignment:.leading,spacing:8){
-            Text(diary.t("مساهمة الوجبة في هدفك اليومي","This meal's share of your daily goal"))
-                .luqmaFont(.caption).foregroundStyle(Theme.muted).fixedSize(horizontal:false,vertical:true)
             if let progress=goalProgress(kcal,goal:diary.state.goals.kcal){
-                Text(decimal(progress*100)+"%")
-                    .luqmaFont(size:27,weight:.bold,relativeTo:.title).monospacedDigit().foregroundStyle(Theme.accent)
-                Text(diary.t("من ","of ")+decimal(diary.state.goals.kcal,0)+diary.t(" سعرة"," kcal"))
+                Text(decimal(progress*100)+"% "+diary.t("من هدفك اليومي","of your daily goal"))
                     .luqmaFont(.caption).foregroundStyle(Theme.muted)
             }
             if let range=calorieRange{
@@ -196,9 +206,29 @@ import UIKit
             }
         }.accessibilityElement(children:.combine)
     }
+    private func macroColor(_ key:MacroKey)->Color {
+        key == .protein ? Theme.muted:key == .carbs ? Theme.accent:Theme.secondaryAccent
+    }
+    private func macroColumn(_ key:MacroKey,nutrition:Nutrition)->some View {
+        let amount=nutrition[key]
+        let largest=max(nutrition.protein,max(nutrition.carbs,nutrition.fat))
+        let fraction=largest>0 && amount>0 ? max(0.08,min(1,amount/largest)):0
+        return VStack(alignment:.center,spacing:10){
+            GeometryReader{geometry in
+                ZStack(alignment:.bottom){
+                    RoundedRectangle(cornerRadius:12,style:.continuous).fill(Theme.surface)
+                    RoundedRectangle(cornerRadius:12,style:.continuous).fill(macroColor(key))
+                        .frame(height:geometry.size.height*CGFloat(fraction))
+                }
+            }.frame(width:56,height:116).accessibilityHidden(true)
+            Text(decimal(amount)+" "+diary.t("جم","g"))
+                .luqmaFont(size:18,weight:.bold,relativeTo:.headline).monospacedDigit()
+            Text(key.label(diary.language)).luqmaFont(.caption).foregroundStyle(Theme.muted)
+        }.frame(maxWidth:.infinity).accessibilityElement(children:.combine)
+    }
     private func macroGoal(_ key:MacroKey,nutrition:Nutrition)->some View {
         let goal=diary.state.goals[key]
-        let color=key == .protein ? Theme.secondaryAccent:key == .carbs ? Theme.accent:Theme.text
+        let color=macroColor(key)
         return VStack(alignment:.leading,spacing:6){
             HStack(spacing:5){Circle().fill(color).frame(width:6,height:6).accessibilityHidden(true);Text(key.label(diary.language)).luqmaFont(.caption).foregroundStyle(Theme.muted)}
             HStack(alignment:.firstTextBaseline,spacing:3){
@@ -383,8 +413,6 @@ private struct PhotoEstimateEditor:View {
             }
             Notice(text:diary.t("تتغير السعرات مع الوزن. إذا كانت طريقة الطبخ أو كمية الزيت مختلفة، أضف وصفها وأعد التحليل.","Calories scale with weight. If preparation or oil differs, describe it and analyze again."))
         }.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
-    }.sandowForm().navigationTitle(diary.t("تعديل الكمية","Adjust amount")).navigationBarTitleDisplayMode(.inline).toolbar{
-        ToolbarItem(placement:.cancellationAction){Button(diary.t("إلغاء","Cancel")){dismiss()}}
-        ToolbarItem(placement:.confirmationAction){Button(diary.t("حفظ","Save")){if let updated,apply(updated){dismiss()}}.disabled(updated==nil)}
-    }}}
+    }.sandowForm().sandowNavigation(diary.t("تعديل الكمية","Adjust amount"),backLabel:diary.t("إلغاء","Cancel"),onBack:{dismiss()},
+        actionLabel:diary.t("حفظ","Save"),actionEnabled:updated != nil,onAction:{if let updated,apply(updated){dismiss()}})}}
 }

@@ -58,13 +58,7 @@ import SwiftUI
                     if let draft { review(draft) }
                 }.padding(24)
             }.scrollDismissesKeyboard(.interactively).appBackground()
-                .navigationTitle(diary.t("استيراد وصفة", "Import recipe"))
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button(diary.t("إغلاق", "Close")) { cancel(); dismiss() }
-                    }
-                }
+                .sandowNavigation(diary.t("استيراد وصفة", "Import recipe"),backLabel:diary.t("إغلاق", "Close"),onBack:{cancel();dismiss()})
         }.onAppear { loadPreviewFixture() }.onDisappear { cancel() }
     }
 

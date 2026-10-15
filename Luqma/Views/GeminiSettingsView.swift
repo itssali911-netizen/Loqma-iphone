@@ -42,8 +42,7 @@ struct GeminiSettingsView: View {
                         .luqmaFont(.footnote).foregroundStyle(Theme.muted)
                     Link(diary.t("سياسة خدمة التحليل", "Analysis service policy"), destination: URL(string: "https://ai.google.dev/gemini-api/terms")!)
                 }.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
-            }.sandowForm().navigationTitle(diary.t("تحليل الوجبة", "Meal analysis")).navigationBarTitleDisplayMode(.inline)
-                .toolbar { ToolbarItem(placement: .confirmationAction) { Button(diary.t("تم", "Done")) { dismiss() } } }
+            }.sandowForm().sandowNavigation(diary.t("تحليل الوجبة", "Meal analysis"),backLabel:diary.t("تم", "Done"),onBack:{dismiss()})
         }
         .confirmationDialog(diary.t("إعادة ضبط اتصال التحليل؟", "Reset the analysis connection?"), isPresented: $resetting, titleVisibility: .visible) {
             Button(diary.t("إعادة ضبط", "Reset"), role: .destructive) {
