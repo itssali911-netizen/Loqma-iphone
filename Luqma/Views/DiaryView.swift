@@ -107,7 +107,11 @@ struct DiaryView:View {
                     .accessibilityValue(localizedDate(date,"EEEE, d MMMM yyyy"))
             }
             if typeSize.isAccessibilitySize{
-                ScrollView(.horizontal,showsIndicators:false){HStack(spacing:8){ForEach(weekDates,id:\.self){dayPill($0).frame(width:76)}}}
+                ScrollViewReader{proxy in
+                    ScrollView(.horizontal,showsIndicators:false){HStack(spacing:8){ForEach(weekDates,id:\.self){value in dayPill(value).frame(width:76).id(DayKey.string(value))}}}
+                        .onAppear{proxy.scrollTo(day,anchor:.center)}
+                        .onChange(of:day){_,value in proxy.scrollTo(value,anchor:.center)}
+                }
             }else{
                 HStack(spacing:6){ForEach(weekDates,id:\.self){dayPill($0)}}
             }
