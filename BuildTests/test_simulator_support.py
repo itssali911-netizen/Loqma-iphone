@@ -64,6 +64,8 @@ class SimulatorSupportTests(unittest.TestCase):
         self.assertEqual(commands.calls[1][0], ["/usr/bin/open", "-g", "-a",
                          DEVELOPER + "/Applications/Simulator.app", "--args", "-CurrentDeviceUDID", DEVICE])
         self.assertEqual(commands.calls[2][0], ["xcrun", "simctl", "bootstatus", DEVICE, "-b"])
+        self.assertEqual(commands.calls[2][2], 300)
+        self.assertEqual(commands.calls[3][2], 150)
         self.assertEqual(result["attempts"], 1)
         self.assertFalse(result["reboot_performed"])
         self.assertEqual((result["probe_bundle"], result["probe_pid"]), (PROBE_BUNDLE, 901))
@@ -73,7 +75,7 @@ class SimulatorSupportTests(unittest.TestCase):
         self.assert_only_owned_device_is_mutated(commands)
 
     def test_readiness_timeout_reboots_only_owned_device_once_and_preserves_diagnostics(self):
-        timeout = subprocess.TimeoutExpired(["xcrun", "simctl", "launch", DEVICE, PROBE_BUNDLE], 90)
+        timeout = subprocess.TimeoutExpired(["xcrun", "simctl", "launch", DEVICE, PROBE_BUNDLE], 150)
         commands = FakeCommands({"simulator-bootstrap-1-settings": timeout})
         result = prepare_created_simulator(DEVICE, commands)
         self.assertEqual(result["attempts"], 2)
@@ -96,7 +98,7 @@ class SimulatorSupportTests(unittest.TestCase):
         for attempt in (1, 2):
             budgets = [timeout for _, label, timeout in commands.calls
                        if label.startswith(f"simulator-bootstrap-{attempt}-") and not label.endswith("-diagnostic")]
-            self.assertLessEqual(sum(budgets), 420)
+            self.assertLessEqual(sum(budgets), 480)
         self.assert_only_owned_device_is_mutated(commands)
 
     def test_second_readiness_failure_is_fatal_and_does_not_make_a_third_attempt(self):
@@ -110,6 +112,15 @@ class SimulatorSupportTests(unittest.TestCase):
         self.assertEqual(labels.count("simulator-recovery-shutdown"), 1)
         self.assertEqual(len([label for label in labels if label.endswith("-diagnostic")]), 2)
         self.assertFalse(any("bootstrap-3" in label for label in labels))
+        budgets = {label: timeout for _, label, timeout in commands.calls}
+        for attempt in (1, 2):
+            prefix = f"simulator-bootstrap-{attempt}"
+            self.assertEqual(budgets[prefix + "-open"], 30)
+            self.assertEqual(budgets[prefix + "-boot-ready"], 300)
+            self.assertEqual(budgets[prefix + "-settings"], 150)
+            self.assertEqual(budgets[prefix + "-diagnostic"], 60)
+            self.assertEqual(sum(budgets[prefix + suffix] for suffix in ("-open", "-boot-ready", "-settings")), 480)
+        self.assertEqual(budgets["simulator-recovery-shutdown"], 60)
         self.assert_only_owned_device_is_mutated(commands)
 
     def test_failed_shutdown_is_fatal_when_exact_device_is_still_booted(self):

@@ -131,9 +131,15 @@ struct DiaryView:View {
                 HStack{Image(systemName:"fork.knife").font(.system(size:13,weight:.semibold)).foregroundStyle(.white).frame(width:30,height:30).background(Theme.accent,in:RoundedRectangle(cornerRadius:9));Spacer();Image(systemName:summary.meal == .snack ? "carrot":summary.meal.symbol).font(.system(size:27,weight:.light)).foregroundStyle(Theme.text.opacity(0.25))}
                 Text(summary.meal.label(diary.language)).luqmaFont(size:15,weight:.bold,relativeTo:.subheadline).foregroundStyle(Theme.text)
                 HStack(spacing:5){Image(systemName:"flame.fill").font(.system(size:10));Text(decimal(summary.nutrition.kcal,0)+" "+diary.t("سعرة","kcal")).luqmaFont(size:11,weight:.medium,relativeTo:.caption);Spacer(minLength:0);Image(systemName:"plus").font(.system(size:13,weight:.medium))}.foregroundStyle(Theme.muted)
-                Text(diary.t("بروتين","P")+" "+mealGrams(summary.nutrition.protein)+" · "+diary.t("كارب","C")+" "+mealGrams(summary.nutrition.carbs)+" · "+diary.t("دهون","F")+" "+mealGrams(summary.nutrition.fat)).luqmaFont(size:10,relativeTo:.caption2).foregroundStyle(Theme.muted).fixedSize(horizontal:false,vertical:true)
+                Text(routineMacroLabel(summary.nutrition)).luqmaFont(size:10,relativeTo:.caption2).foregroundStyle(Theme.muted).fixedSize(horizontal:false,vertical:true)
             }.padding(14).frame(maxWidth:.infinity,alignment:.leading).background(Theme.card,in:RoundedRectangle(cornerRadius:18,style:.continuous))
         }.buttonStyle(.plain).accessibilityLabel(diary.t("إضافة إلى ","Add to ")+summary.meal.label(diary.language)).accessibilityValue(decimal(summary.nutrition.kcal,0)+" "+diary.t("سعرة","kcal"))
+    }
+    private func routineMacroLabel(_ nutrition:Nutrition)->String {
+        let protein=diary.t("بروتين","P")+" "+mealGrams(nutrition.protein)
+        let carbs=diary.t("كارب","C")+" "+mealGrams(nutrition.carbs)
+        let fat=diary.t("دهون","F")+" "+mealGrams(nutrition.fat)
+        return [protein,carbs,fat].joined(separator:" · ")
     }
     private var weekDates:[Date] {
         let calendar=DisplayFormat.calendar(diary.language)

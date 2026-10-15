@@ -15,6 +15,7 @@ from typing import Callable
 Command = Callable[[list[str], str, int], str]
 PROBE_BUNDLE = "com.apple.Preferences"
 BOOT_TIMEOUT_SECONDS = 300
+SETTINGS_TIMEOUT_SECONDS = 150
 STARTUP_FAILURES = (OSError, RuntimeError, subprocess.SubprocessError)
 DEVICE_PATTERN = re.compile(r"[0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}")
 
@@ -94,8 +95,12 @@ def prepare_created_simulator(device: str, command: Command, *,
             # migration at three minutes. Let that existing migration finish
             # before using the single reboot; readiness must still succeed.
             command(["xcrun", "simctl", "bootstatus", device, "-b"], prefix + "-boot-ready", BOOT_TIMEOUT_SECONDS)
+            # Build 57 attempts 1/2 reached a running Settings process about
+            # 96/101 seconds after bootstatus finished, with scene readiness
+            # around 102/109 seconds. Allow that observed system startup lag;
+            # the command must still return a real PID within this fixed limit.
             launched = command(["xcrun", "simctl", "launch", device, PROBE_BUNDLE],
-                               prefix + "-settings", 90)
+                               prefix + "-settings", SETTINGS_TIMEOUT_SECONDS)
             process = re.search(r"(?m)^com\.apple\.Preferences:\s*([1-9][0-9]*)\s*$", launched)
             if not process:
                 raise SimulatorSetupError("System Settings readiness probe returned no process ID.")
