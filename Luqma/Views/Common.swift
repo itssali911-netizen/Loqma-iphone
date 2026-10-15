@@ -11,10 +11,10 @@ enum Theme {
     static let muted=Color(red:158.0/255,green:160.0/255,blue:165.0/255)
     static let text=Color.white
     static let stroke=Color.white.opacity(0.08)
-    static let cardRadius:CGFloat=24
+    static let cardRadius:CGFloat=20
 }
 extension View {
-    func luqmaCard() -> some View {padding(18).frame(maxWidth:.infinity,alignment:.leading).background(Theme.card,in:RoundedRectangle(cornerRadius:Theme.cardRadius))}
+    func luqmaCard() -> some View {padding(16).frame(maxWidth:.infinity,alignment:.leading).background(Theme.card,in:RoundedRectangle(cornerRadius:Theme.cardRadius,style:.continuous))}
     func appBackground() -> some View {background(Theme.background.ignoresSafeArea()).scrollContentBackground(.hidden).luqmaFont(.body)}
     func sandowForm() -> some View {
         appBackground().listStyle(.insetGrouped).listSectionSpacing(16)
@@ -55,7 +55,7 @@ struct LuqmaSectionHeader:View {
 struct LuqmaPrimaryButtonStyle:ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
     func makeBody(configuration:Configuration)->some View {
-        configuration.label.luqmaFont(.headline).foregroundStyle(Theme.background)
+        configuration.label.luqmaFont(.headline).foregroundStyle(Theme.text)
             .frame(maxWidth:.infinity,minHeight:52)
             .background(Theme.accent,in:RoundedRectangle(cornerRadius:16,style:.continuous))
             .opacity(!isEnabled ? 0.4:configuration.isPressed ? 0.8:1)

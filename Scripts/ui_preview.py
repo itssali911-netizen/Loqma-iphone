@@ -55,7 +55,8 @@ TEMPLATE_ROUTES = (("macro-goals", "goals"),
                    ("backup", "backup"),
                    ("about", "about"),
                    ("barcode-guide", "barcode"))
-VARIANT_ROUTES = (("accessibility-today", ("-loqma-preview-overview", "-loqma-preview-accessibility")),)
+VARIANT_ROUTES = (("accessibility-today", ("-loqma-preview-overview", "-loqma-preview-accessibility")),
+                  ("photo-components", ("-loqma-preview-photo", "-loqma-preview-photo-detailed")))
 EXPECTED_SCREEN_COUNT = len(SCREENS) + 2 + len(EXTRA_ROUTES) + len(TEMPLATE_ROUTES) + len(VARIANT_ROUTES)
 MAX_EMPTY_FRAME_RETRIES = 2
 EMPTY_FRAME_RETRY_SECONDS = 5.0
@@ -74,7 +75,9 @@ def preview_cases() -> list[dict]:
                "synthetic_fixture": route in {"portion", "recipe"}}
               for screen, route in TEMPLATE_ROUTES]
     cases += [{"tab": None, "screen": screen, "arguments": list(arguments),
-               "synthetic_fixture": True, "dynamic_type_override": "accessibility3"}
+               "synthetic_fixture": True,
+               **({"dynamic_type_override": "accessibility3"}
+                  if "-loqma-preview-accessibility" in arguments else {"component_detail_preview": True})}
               for screen, arguments in VARIANT_ROUTES]
     return cases
 

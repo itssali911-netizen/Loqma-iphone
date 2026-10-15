@@ -2,6 +2,7 @@ import SwiftUI
 
 struct KitchenView:View {
     @EnvironmentObject var diary:DiaryStore
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var filter="all"
     @State private var query=""
     @State private var creating=false
@@ -18,22 +19,18 @@ struct KitchenView:View {
     }
     var body:some View {
         let filteredRecipes=recipes
-        return ScrollView{LazyVStack(alignment:.leading,spacing:24){
-            LuqmaPageHeader(title:diary.t("مطبخي","My kitchen"),subtitle:diary.t("وجبات تحبها، في مكان واحد","Meals you love, in one place"),symbol:"fork.knife")
-            HStack(spacing:12){Image(systemName:"magnifyingglass").font(.system(size:20)).foregroundStyle(Theme.muted);TextField(diary.t("ابحث في محفوظاتك","Search your saved items"),text:$query).submitLabel(.search);if !query.isEmpty{Button{query=""}label:{Image(systemName:"xmark.circle.fill").foregroundStyle(Theme.muted).frame(minWidth:32,minHeight:32)}.accessibilityLabel(diary.t("مسح البحث","Clear search"))}}.padding(.horizontal,16).frame(minHeight:56).background(Theme.card,in:RoundedRectangle(cornerRadius:16))
-            ScrollView(.horizontal,showsIndicators:false){HStack(spacing:8){
-                LuqmaPill(title:diary.t("الكل","All"),selected:filter=="all"){filter="all"}
-                LuqmaPill(title:diary.t("الوصفات","Recipes"),selected:filter=="recipe"){filter="recipe"}
-                LuqmaPill(title:diary.t("الوجبات","Meals"),selected:filter=="meal"){filter="meal"}
-                LuqmaPill(title:diary.t("التحضير","Meal prep"),selected:filter=="prep"){filter="prep"}
-            }}
-            Button{creating=true}label:{Label(diary.t("حفظ وصفة أو وجبة","Save a recipe or meal"),systemImage:"plus")}.buttonStyle(LuqmaPrimaryButtonStyle())
-            Button{importingRecipe=true}label:{Label(diary.t("استيراد وصفة من رابط","Import a recipe from a link"),systemImage:"link")}.buttonStyle(LuqmaSecondaryButtonStyle())
-            LuqmaSectionHeader(title:diary.t("محفوظاتك","Your saved items"),detail:"\(filteredRecipes.count)")
-            if diary.state.recipes.isEmpty{VStack(spacing:18){Image(systemName:"book.closed").font(.system(size:44,weight:.light)).foregroundStyle(Theme.accent);Text(diary.t("مطبخك يبدأ هنا","Your kitchen starts here")).luqmaFont(size:18,weight:.bold,relativeTo:.title3);Text(diary.t("اجمع المكونات واحسب الحصص، ثم أضف وجبتك بلمسة.","Combine ingredients, calculate servings, and log your meal in a tap.")).luqmaFont(.subheadline).foregroundStyle(Theme.muted).multilineTextAlignment(.center)}.frame(maxWidth:.infinity).padding(.vertical,22).luqmaCard()}
+        return ScrollView{LazyVStack(alignment:.leading,spacing:16){
+            kitchenHeader
+            categoryBar
+            HStack(spacing:10){
+                kitchenAction(diary.t("وصفة جديدة","New recipe"),symbol:"plus",primary:true){creating=true}
+                kitchenAction(diary.t("استيراد رابط","Import link"),symbol:"link",primary:false){importingRecipe=true}
+            }
+            LuqmaSectionHeader(title:diary.t("محفوظاتك","Your saved items"),detail:decimal(Double(filteredRecipes.count),0))
+            if diary.state.recipes.isEmpty{VStack(spacing:12){Image(systemName:"book.closed").font(.system(size:32,weight:.light)).foregroundStyle(Theme.accent);Text(diary.t("مطبخك يبدأ هنا","Your kitchen starts here")).luqmaFont(size:17,weight:.bold,relativeTo:.headline);Text(diary.t("احفظ وصفاتك أو استورد وصفة من رابط، ثم احسب حصصها وأضفها ليومك.","Save your recipes or import one from a link, then calculate servings and log them to your day.")).luqmaFont(.subheadline).foregroundStyle(Theme.muted).multilineTextAlignment(.center)}.frame(maxWidth:.infinity).padding(.vertical,16).luqmaCard()}
             else if filteredRecipes.isEmpty{ContentUnavailableView(diary.t("لا توجد نتائج","No results"),systemImage:"magnifyingglass",description:Text(diary.t("جرّب اسمًا آخر أو غيّر نوع المحفوظات.","Try another name or change the saved-item type.")))}
             ForEach(filteredRecipes){r in recipeCard(r)}
-        }.padding(24).padding(.bottom,10)}.scrollDismissesKeyboard(.interactively).appBackground().navigationTitle(diary.t("مطبخي","My kitchen"))
+        }.padding(.horizontal,16).padding(.bottom,24)}.scrollDismissesKeyboard(.interactively).appBackground().navigationTitle(diary.t("مطبخي","My kitchen"))
             .toolbar(.hidden,for:.navigationBar)
             .sheet(isPresented:$creating){RecipeEditor(recipe:Recipe(id:UUID(),name:"",type:"recipe",ingredients:[],portions:1,cookedWeight:nil,notes:""))}
             .sheet(isPresented:$importingRecipe){RecipeImportView()}
@@ -41,32 +38,77 @@ struct KitchenView:View {
             .sheet(item:$selected){f in FoodPortionView(food:f){food,amount,unit,meal in do{return diary.add([try DiaryEntry(food:food,amount:amount,unit:unit,meal:meal,day:DayKey.today,language:diary.language)],foods:[food])}catch{diary.report(error);return false}}}
             .confirmationDialog(diary.t("حذف الوصفة؟","Delete recipe?"),isPresented:Binding(get:{deleting != nil},set:{if !$0{deleting=nil}}),titleVisibility:.visible){Button(diary.t("حذف","Delete"),role:.destructive){if let r=deleting{diary.removeRecipe(r.id)};deleting=nil}}
     }
+    private var kitchenHeader:some View {
+        VStack(spacing:16){
+            Text(diary.t("مطبخي","My kitchen")).luqmaFont(size:18,weight:.bold,relativeTo:.headline)
+                .foregroundStyle(Theme.text).frame(maxWidth:.infinity).accessibilityAddTraits(.isHeader)
+            HStack(spacing:10){
+                TextField(diary.t("ابحث في محفوظاتك","Search your saved items"),text:$query)
+                    .luqmaFont(size:13,relativeTo:.subheadline).submitLabel(.search)
+                    .accessibilityLabel(diary.t("البحث في وصفاتك ووجباتك","Search your recipes and meals"))
+                if !query.isEmpty{Button{query=""}label:{Image(systemName:"xmark.circle.fill").foregroundStyle(Theme.muted).frame(minWidth:32,minHeight:44)}.buttonStyle(.plain).accessibilityLabel(diary.t("مسح البحث","Clear search"))}
+                Image(systemName:"magnifyingglass").font(.system(size:16)).foregroundStyle(Theme.text.opacity(0.85)).accessibilityHidden(true)
+            }.padding(.horizontal,14).frame(minHeight:44)
+                .background(Theme.background,in:RoundedRectangle(cornerRadius:12,style:.continuous))
+        }.padding(16).background(Theme.surface,in:UnevenRoundedRectangle(bottomLeadingRadius:24,bottomTrailingRadius:24,style:.continuous)).padding(.horizontal,-16)
+    }
+    private var categoryBar:some View {
+        Group{
+            if typeSize.isAccessibilitySize{
+                LazyVGrid(columns:Array(repeating:GridItem(.flexible(),spacing:4),count:2),spacing:4){categoryItems}
+            }else{HStack(spacing:4){categoryItems}}
+        }.padding(4).background(Theme.surface,in:RoundedRectangle(cornerRadius:14,style:.continuous))
+    }
+    @ViewBuilder private var categoryItems:some View {
+        category(diary.t("الكل","All"),id:"all")
+        category(diary.t("الوصفات","Recipes"),id:"recipe")
+        category(diary.t("الوجبات","Meals"),id:"meal")
+        category(diary.t("التحضير","Meal prep"),id:"prep")
+    }
+    private func category(_ title:String,id:String)->some View {
+        Button{filter=id}label:{Text(title).luqmaFont(size:12,weight:.semibold,relativeTo:.caption)
+            .foregroundStyle(filter == id ? Theme.background:Theme.text.opacity(0.8))
+            .padding(.horizontal,6).frame(maxWidth:.infinity,minHeight:36)
+            .background(filter == id ? Theme.text:Color.clear,in:RoundedRectangle(cornerRadius:10,style:.continuous))
+        }.buttonStyle(.plain).accessibilityAddTraits(filter == id ? .isSelected:[])
+    }
+    private func kitchenAction(_ title:String,symbol:String,primary:Bool,action:@escaping()->Void)->some View {
+        Button(action:action){Label(title,systemImage:symbol).luqmaFont(size:13,weight:.semibold,relativeTo:.subheadline)
+            .foregroundStyle(Theme.text).padding(.horizontal,10).frame(maxWidth:.infinity,minHeight:44)
+            .background(primary ? Theme.accent:Theme.card,in:RoundedRectangle(cornerRadius:12,style:.continuous))
+        }.buttonStyle(.plain)
+    }
     private func recipeCard(_ recipe:Recipe)->some View {
-        VStack(alignment:.leading,spacing:16){
-            HStack(alignment:.top,spacing:13){
-                Image(systemName:recipe.type == "prep" ? "takeoutbag.and.cup.and.straw":recipe.type == "meal" ? "fork.knife":"book.closed").font(.system(size:24)).foregroundStyle(Theme.accent).frame(width:56,height:56).background(Theme.surface,in:RoundedRectangle(cornerRadius:16)).accessibilityHidden(true)
-                VStack(alignment:.leading,spacing:5){Text(DisplayFormat.westernDigits(recipe.name)).luqmaFont(size:17,weight:.bold,relativeTo:.headline).fixedSize(horizontal:false,vertical:true);Text(recipeKind(recipe.type)).luqmaFont(.caption).foregroundStyle(Theme.muted)}
+        let total=recipe.total
+        let perServing=total.scaled(1/max(recipe.portions,0.001))
+        return VStack(alignment:.leading,spacing:12){
+            HStack(alignment:.top,spacing:12){
+                Image(systemName:recipe.type == "prep" ? "takeoutbag.and.cup.and.straw":recipe.type == "meal" ? "fork.knife":"book.closed").font(.system(size:20)).foregroundStyle(Theme.accent).frame(width:44,height:44).background(Theme.surface,in:RoundedRectangle(cornerRadius:12)).accessibilityHidden(true)
+                VStack(alignment:.leading,spacing:4){Text(DisplayFormat.westernDigits(recipe.name)).luqmaFont(size:16,weight:.bold,relativeTo:.headline).fixedSize(horizontal:false,vertical:true);Text(recipeKind(recipe.type)).luqmaFont(.caption2).foregroundStyle(Theme.muted)}
                 Spacer(minLength:0)
                 Menu{Button(diary.t("تعديل","Edit")){editing=recipe};Button(diary.t("حذف","Delete"),role:.destructive){deleting=recipe}}label:{Image(systemName:"ellipsis").font(.system(size:20)).foregroundStyle(Theme.muted).frame(minWidth:44,minHeight:44)}.accessibilityLabel(diary.t("خيارات ","Options for ")+recipe.name)
             }
-            HStack(spacing:16){
-                Label("\(decimal(recipe.total.kcal/max(recipe.portions,0.001),0)) "+diary.t("سعرة","kcal"),systemImage:"flame").foregroundStyle(Theme.accent)
-                Label("\(decimal(recipe.portions)) "+diary.t("حصص","servings"),systemImage:"square.stack").foregroundStyle(Theme.muted)
-            }.luqmaFont(size:13,weight:.medium,relativeTo:.caption)
-            let perServing=recipe.total.scaled(1/max(recipe.portions,0.001))
             HStack(spacing:12){
-                recipeMacro(diary.t("بروتين","Protein"),perServing.protein)
-                recipeMacro(diary.t("كارب","Carbs"),perServing.carbs)
-                recipeMacro(diary.t("دهون","Fat"),perServing.fat)
-            }.padding(12).background(Theme.surface,in:RoundedRectangle(cornerRadius:12))
+                Label("\(decimal(total.kcal/max(recipe.portions,0.001),0)) "+diary.t("سعرة للحصة","kcal per serving"),systemImage:"flame").foregroundStyle(Theme.accent)
+                Spacer(minLength:0)
+                Label("\(decimal(recipe.portions)) "+diary.t("حصص","servings"),systemImage:"square.stack").foregroundStyle(Theme.muted)
+            }.luqmaFont(size:11,weight:.medium,relativeTo:.caption)
+            if typeSize.isAccessibilitySize{
+                VStack(spacing:10){recipeMacros(perServing)}
+            }else{HStack(spacing:12){recipeMacros(perServing)}}
             HStack(spacing:10){
-                Button{select(recipe,false)}label:{Label(diary.t("إضافة حصة","Log serving"),systemImage:"plus")}.buttonStyle(LuqmaPrimaryButtonStyle())
-                if recipe.cookedWeight != nil{Button{select(recipe,true)}label:{Text(diary.t("بالجرام","By weight"))}.buttonStyle(LuqmaSecondaryButtonStyle())}
+                kitchenAction(diary.t("إضافة حصة","Log serving"),symbol:"plus",primary:true){select(recipe,false)}
+                if recipe.cookedWeight != nil{kitchenAction(diary.t("بالجرام","By weight"),symbol:"scalemass",primary:false){select(recipe,true)}}
             }
-        }.luqmaCard()
+        }.padding(14).frame(maxWidth:.infinity,alignment:.leading).background(Theme.card,in:RoundedRectangle(cornerRadius:20,style:.continuous))
+    }
+    @ViewBuilder private func recipeMacros(_ nutrition:Nutrition)->some View {
+        recipeMacro(diary.t("بروتين","Protein"),nutrition.protein)
+        recipeMacro(diary.t("كارب","Carbs"),nutrition.carbs)
+        recipeMacro(diary.t("دهون","Fat"),nutrition.fat)
     }
     private func recipeMacro(_ title:String,_ value:Double)->some View {
-        VStack(alignment:.leading,spacing:4){Text(title).luqmaFont(.caption).foregroundStyle(Theme.muted);Text(decimal(value)+" "+diary.t("جم","g")).luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline).monospacedDigit()}.frame(maxWidth:.infinity,alignment:.leading)
+        HStack(alignment:.firstTextBaseline,spacing:4){Text(title).luqmaFont(size:10,relativeTo:.caption2).foregroundStyle(Theme.muted);Text(decimal(value)+" "+diary.t("جم","g")).luqmaFont(size:12,weight:.semibold,relativeTo:.caption).monospacedDigit().foregroundStyle(Theme.text)}.frame(maxWidth:.infinity,alignment:.leading)
     }
     private func recipeKind(_ type:String)->String {switch type{case "meal":return diary.t("وجبة محفوظة","Saved meal");case "prep":return diary.t("تحضير وجبات","Meal prep");default:return diary.t("وصفة","Recipe")}}
     private func select(_ r:Recipe,_ weighted:Bool){do{selected=try r.food(byWeight:weighted)}catch{diary.report(error)}}

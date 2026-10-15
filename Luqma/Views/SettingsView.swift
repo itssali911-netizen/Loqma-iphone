@@ -13,7 +13,7 @@ struct SettingsView:View {
     @State private var goals=false
     @State private var gemini=false
     var body:some View {
-        ScrollView{VStack(alignment:.leading,spacing:24){
+        ScrollView{VStack(alignment:.leading,spacing:18){
             LuqmaPageHeader(title:diary.t("الإعدادات","Settings"),subtitle:diary.t("أهدافك وربطك وبياناتك","Your goals, connections and data"),symbol:"slider.horizontal.3")
             HStack(spacing:16){Image("LuqmaMark").resizable().scaledToFit().frame(width:54,height:54).accessibilityHidden(true);VStack(alignment:.leading,spacing:4){Text(diary.t("لُقمة","Luqma")).luqmaFont(.title2);Text(diary.t("كل لقمة تقرّبك من هدفك","Every bite brings you closer")).luqmaFont(.footnote).foregroundStyle(Theme.muted)};Spacer(minLength:0)}.luqmaCard()
             settingsGroup(diary.t("أهدافي","My goals")){
@@ -32,7 +32,7 @@ struct SettingsView:View {
             settingsGroup(diary.t("لُقمة","Luqma")){
                 NavigationLink{AboutLuqmaView().toolbar(.visible,for:.navigationBar)}label:{settingsRow(diary.t("حول لُقمة والخصوصية","About Luqma and privacy"),symbol:"info.circle")}
             }
-        }.buttonStyle(.plain).padding(24)}.appBackground().navigationTitle(diary.t("الإعدادات","Settings"))
+        }.buttonStyle(.plain).padding(16)}.appBackground().navigationTitle(diary.t("الإعدادات","Settings"))
             .toolbar(.hidden,for:.navigationBar)
             .sheet(isPresented:$goals){GoalEditor()}
             .sheet(isPresented:$gemini){GeminiSettingsView()}

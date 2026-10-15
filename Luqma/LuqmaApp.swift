@@ -89,7 +89,13 @@ struct RootView:View {
             }}
             .sheet(isPresented:$photoPreview){
                 #if DEBUG
-                NavigationStack{ScrollView{PhotoMealView{_,_ in false}.padding(20)}.appBackground().navigationTitle(diary.t("تحليل الوجبة","Meal analysis")).navigationBarTitleDisplayMode(.inline).toolbar{ToolbarItem(placement:.cancellationAction){Button(diary.t("إغلاق","Close")){photoPreview=false}}}}
+                NavigationStack{ScrollViewReader{proxy in
+                    ScrollView{PhotoMealView{_,_ in false}.padding(16)}.appBackground()
+                        .task{if ProcessInfo.processInfo.arguments.contains("-loqma-preview-photo-detailed"){
+                            try? await Task.sleep(for:.milliseconds(400))
+                            proxy.scrollTo("photo-components",anchor:.top)
+                        }}
+                }.navigationTitle(diary.t("تحليل الوجبة","Meal analysis")).navigationBarTitleDisplayMode(.inline).toolbar{ToolbarItem(placement:.cancellationAction){Button(diary.t("إغلاق","Close")){photoPreview=false}}}}
                 #endif
             }
             .sheet(isPresented:$recipePreview){
@@ -151,18 +157,20 @@ struct RootView:View {
         HStack(alignment:.center,spacing:4){
             navigationButton(0,title:diary.t("اليوم","Today"),symbol:"house")
             navigationButton(1,title:diary.t("مطبخي","Kitchen"),symbol:"fork.knife")
-            Button{adding=true}label:{Image(systemName:"plus").font(.system(size:27,weight:.medium)).foregroundStyle(Theme.background).frame(width:54,height:54).background(Theme.accent,in:RoundedRectangle(cornerRadius:17,style:.continuous))}.buttonStyle(.plain).frame(maxWidth:.infinity,minHeight:60).accessibilityLabel(diary.t("إضافة طعام إلى اليوم","Add food to today"))
+            Button{adding=true}label:{Image(systemName:"plus").font(.system(size:27,weight:.medium)).foregroundStyle(Theme.text).frame(width:54,height:54).background(Theme.accent,in:RoundedRectangle(cornerRadius:17,style:.continuous))}.buttonStyle(.plain).frame(maxWidth:.infinity,minHeight:60).accessibilityLabel(diary.t("إضافة طعام إلى اليوم","Add food to today"))
             navigationButton(2,title:diary.t("تقدّمي","Progress"),symbol:"chart.bar")
             navigationButton(3,title:diary.t("الإعدادات","Settings"),symbol:"gearshape")
         }.padding(.horizontal,12).padding(.vertical,8)
-            .background(Theme.card,in:RoundedRectangle(cornerRadius:28,style:.continuous))
-            .padding(.horizontal,20).padding(.top,8).padding(.bottom,4).background(Theme.background)
+            .background(Theme.surface,in:RoundedRectangle(cornerRadius:28,style:.continuous))
+            .padding(.horizontal,16).padding(.top,8).padding(.bottom,4).background(Theme.background)
     }
     private func navigationButton(_ value:Int,title:String,symbol:String)->some View {
-        Button{tab=value}label:{VStack(spacing:4){
-            Image(systemName:tab == value && value == 0 ? "house.fill":symbol).font(.system(size:21,weight:.regular)).frame(width:42,height:30)
-            Text(title).luqmaFont(size:10,weight:tab == value ? .bold:.regular,relativeTo:.caption2).lineLimit(1).minimumScaleFactor(0.75)
+        Button{tab=value}label:{VStack(spacing:3){
+            Image(systemName:tab == value && value == 0 ? "house.fill":symbol).font(.system(size:21,weight:.regular))
+                .foregroundStyle(tab == value ? Theme.text:Theme.muted).frame(width:44,height:34)
+                .background(tab == value ? Theme.background:Color.clear,in:RoundedRectangle(cornerRadius:12,style:.continuous))
+            Text(title).luqmaFont(size:10,weight:tab == value ? .medium:.regular,relativeTo:.caption2).foregroundStyle(Theme.muted).lineLimit(1).minimumScaleFactor(0.75)
             Capsule().fill(tab == value ? Theme.accent:Color.clear).frame(width:18,height:3)
-        }.foregroundStyle(tab == value ? Theme.accent:Theme.muted).frame(maxWidth:.infinity,minHeight:54).contentShape(Rectangle())}.buttonStyle(.plain).accessibilityLabel(title).accessibilityAddTraits(tab == value ? .isSelected:[])
+        }.frame(maxWidth:.infinity,minHeight:54).contentShape(Rectangle())}.buttonStyle(.plain).accessibilityLabel(title).accessibilityAddTraits(tab == value ? .isSelected:[])
     }
 }

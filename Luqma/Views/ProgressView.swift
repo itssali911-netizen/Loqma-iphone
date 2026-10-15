@@ -16,7 +16,7 @@ struct ProgressViewScreen:View {
             weightChart(snapshot)
             weightPlan
             weightHistory(snapshot.readings)
-        }.padding(24).padding(.bottom,10)}.appBackground().navigationTitle(diary.t("تقدّمي","My progress"))
+        }.padding(16).padding(.bottom,10)}.appBackground().navigationTitle(diary.t("تقدّمي","My progress"))
             .toolbar(.hidden,for:.navigationBar)
             .sheet(isPresented:$adding){WeightEditor()}
             .confirmationDialog(diary.t("حذف قراءة الوزن؟","Delete weight reading?"),isPresented:Binding(get:{deleting != nil},set:{if !$0{deleting=nil}}),titleVisibility:.visible){Button(diary.t("حذف","Delete"),role:.destructive){if let w=deleting{diary.removeWeight(w.day)};deleting=nil}}

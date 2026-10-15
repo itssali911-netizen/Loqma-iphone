@@ -13,8 +13,18 @@ Nutrition group 2:10108 contains a flattened preview image 2:10109,
 not editable individual nutrition screens. Several design-system and advanced
 groups are also previews and link to the full version. Luqma reconstructs the dark
 layout for actual diary/search/photo/recipe/weight/settings screens, with native
-Arabic layouts, controls, macro progress and large-text behavior. Dark labels on
-orange improve readability. All paid screens, original photography and reference
+Arabic layouts, controls, macro progress and large-text behavior. Version 2.2
+rechecks the nutrition/search/settings previews in the live Brave Figma canvas:
+unified charcoal greeting/search panel, compact quick-search chips, horizontal
+daily routine cards, white goal text/gear/progress on orange, orange search header,
+dark active-navigation tile and white add button. The date/week control opens from
+the small date in the header. Real diary metrics replace the reference's sample
+metrics; no placeholder food photos or fabricated recipes are added.
+Meal analysis now shows each estimated component's weight and calories, optional
+macro/weight-range detail, quantity editing and its share of the daily goal.
+The available flattened previews do not supply all component-level sizes or
+original photographs. A 100-percent pixel, content, font-binary or motion match
+has not been established. All paid screens, original photography and reference
 authentication are not claimed to be imported. No paid kit is redistributed.
 Luqma's own plate/fork/bite logo was updated with the built-in image generation tool.
 No Sandow logo, reference photographs or fake fitness metrics are bundled.

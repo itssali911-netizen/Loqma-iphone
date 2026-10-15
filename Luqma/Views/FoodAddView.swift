@@ -48,20 +48,20 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
     private var displayedResults:[Food] {results}
     var body:some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment:.leading,spacing:20) {
-                    if tab != 0 {
-                        Button {tab=0} label: {Label(diary.t("العودة للبحث","Back to search"),systemImage:"magnifyingglass")}
-                    }
-                    if tab==0 {searchContent}
-                    if tab==1 {barcodeContent}
-                    if tab==2 && !productSelection {AnyView(PhotoMealView(initialMeal:initialMeal){foods,meal in onPhoto(foods,meal)})}
-                    if let notice,tab != 2 {Notice(text:notice)}
-                    if busy || choosingFood {ProgressView(choosingFood ? diary.t("جلب تفاصيل المنتج…","Loading product details…"):"").frame(maxWidth:.infinity)}
-                    resultsContent
-                }.padding(20)
-            }.appBackground().navigationBarTitleDisplayMode(.inline).navigationTitle(diary.t(tab==1 ? "باركود":tab==2 ? "تحليل الوجبة":"إضافة طعام",tab==1 ? "Barcode":tab==2 ? "Meal analysis":"Add food"))
-                .toolbar {ToolbarItem(placement:.cancellationAction){Button(diary.t("إغلاق","Close")){searchTask?.cancel();selectionTask?.cancel();barcodePhotoTask?.cancel();queryToken=UUID();photoToken=UUID();dismiss()}}}
+            VStack(spacing:0){
+                searchHeader
+                ScrollView {
+                    VStack(alignment:.leading,spacing:16) {
+                        if tab==0 {searchContent}
+                        if tab==1 {barcodeContent}
+                        if tab==2 && !productSelection {AnyView(PhotoMealView(initialMeal:initialMeal){foods,meal in onPhoto(foods,meal)})}
+                        if let notice,tab != 2 {Notice(text:notice)}
+                        if busy || choosingFood {ProgressView(choosingFood ? diary.t("جلب تفاصيل المنتج…","Loading product details…"):"").frame(maxWidth:.infinity)}
+                        resultsContent
+                    }.padding(16)
+                }.scrollDismissesKeyboard(.interactively)
+            }.appBackground()
+                .toolbar(.hidden,for:.navigationBar)
                 .sheet(item:$selected){food in FoodPortionView(food:food,sourceBarcode:tab==1,initialMeal:initialMeal,onCommit:{f,a,u,m in if onCommit(f,a,u,m){dismiss();return true};return false})}
                 .sheet(isPresented:$manual){FoodPortionView(food:Food(name:""),manual:true,initialMeal:initialMeal,onCommit:{f,a,u,m in if onCommit(f,a,u,m){dismiss();return true};return false})}
                 .sheet(isPresented:$scanning){NavigationStack{BarcodeCamera(language:diary.language,completion:{value in scanning=false;code=value;startLookup()},failed:{message in scanning=false;notice=message}).ignoresSafeArea().navigationTitle(diary.t("مسح الباركود","Scan barcode")).navigationBarTitleDisplayMode(.inline).toolbar{ToolbarItem(placement:.cancellationAction){Button(diary.t("إغلاق","Close")){scanning=false}}}}}
@@ -75,6 +75,63 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
             .onChange(of:tab){_,value in resetSearch();barcodePhotoTask?.cancel();photoToken=UUID();photo=nil;if value==0 {searchTask=Task{await refreshLocal()}}}
             .onDisappear{searchTask?.cancel();selectionTask?.cancel();historyTask?.cancel();queryToken=UUID();busy=false;pageLoading=false;choosingFood=false;barcodePhotoTask?.cancel();photoToken=UUID()}
             .onChange(of:photo){_,item in readBarcodePhoto(item)}
+    }
+    private var searchHeader:some View {
+        VStack(alignment:.leading,spacing:12){
+            HStack(spacing:12){
+                Button{if tab==0{closeFoodAdd()}else{tab=0}}label:{
+                    Image(systemName:"chevron.backward").font(.system(size:15,weight:.semibold))
+                        .frame(width:44,height:44).background(Theme.text.opacity(0.14),in:RoundedRectangle(cornerRadius:13,style:.continuous))
+                }.buttonStyle(.plain).accessibilityLabel(diary.t(tab==0 ? "إغلاق":"العودة للبحث",tab==0 ? "Close":"Back to search"))
+                Spacer(minLength:0)
+                Text(diary.t(productSelection ? "اختيار المنتج":"إضافة طعام",productSelection ? "Select a product":"Add food"))
+                    .luqmaFont(size:13,weight:.medium,relativeTo:.subheadline)
+                Spacer(minLength:0)
+                if tab != 0{
+                    Button{closeFoodAdd()}label:{Image(systemName:"xmark").font(.system(size:14,weight:.medium)).frame(width:44,height:44)}
+                        .buttonStyle(.plain).accessibilityLabel(diary.t("إغلاق","Close"))
+                }else{Color.clear.frame(width:44,height:44).accessibilityHidden(true)}
+            }
+            Text(diary.t(tab==1 ? "باركود":tab==2 ? "تحليل الوجبة":"بحث",tab==1 ? "Barcode":tab==2 ? "Meal analysis":"Search"))
+                .luqmaFont(size:28,weight:.bold,relativeTo:.title).accessibilityAddTraits(.isHeader)
+            if tab==0{
+                HStack(spacing:10){
+                    Image(systemName:"magnifyingglass").font(.system(size:17)).foregroundStyle(Theme.text)
+                    TextField(diary.t("اسم الطعام أو المنتج","Food or product name"),text:$query,
+                        prompt:Text(diary.t("ابحث عن طعامك…","Search your food…")).foregroundColor(Theme.muted))
+                        .submitLabel(.search).autocorrectionDisabled().onSubmit{startSearch()}
+                    if !query.isEmpty{
+                        Button{query=""}label:{Image(systemName:"xmark.circle.fill").frame(minWidth:32,minHeight:32)}
+                            .buttonStyle(.plain).accessibilityLabel(diary.t("مسح البحث","Clear search"))
+                    }
+                    if filter==0{Button(diary.t("بحث","Search")){startSearch()}.luqmaFont(size:13,weight:.semibold,relativeTo:.subheadline).disabled(term.isEmpty || busy || pageLoading || choosingFood)}
+                }.luqmaFont(size:14,relativeTo:.subheadline).foregroundStyle(Theme.text)
+                    .padding(.horizontal,14).padding(.vertical,8).frame(minHeight:48)
+                    .background(Theme.background,in:RoundedRectangle(cornerRadius:14,style:.continuous))
+                ScrollView(.horizontal,showsIndicators:false){
+                    HStack(spacing:8){
+                        sourceFilter(0,title:diary.t("الكل","All"))
+                        sourceFilter(1,title:diary.t("الأخيرة","Recent"))
+                        sourceFilter(2,title:diary.t("المتكررة","Frequent"))
+                        if !productSelection{sourceFilter(3,title:diary.t("أطعمتي","My foods"))}
+                    }
+                }.accessibilityElement(children:.contain).accessibilityLabel(diary.t("قائمة الأطعمة","Food list"))
+            }
+        }.foregroundStyle(Theme.text).padding(.horizontal,16).padding(.top,4).padding(.bottom,12)
+            .frame(maxWidth:.infinity,alignment:.leading).background(Theme.accent.ignoresSafeArea(edges:.top))
+    }
+    private func sourceFilter(_ value:Int,title:String)->some View {
+        Button{filter=value}label:{
+            Text(title).luqmaFont(size:12,weight:.medium,relativeTo:.caption)
+                .foregroundStyle(filter==value ? Theme.accent:Theme.text)
+                .padding(.horizontal,13).frame(minHeight:30)
+                .background(filter==value ? Theme.text:Color.clear,in:Capsule())
+                .overlay{Capsule().strokeBorder(Theme.text.opacity(0.85),lineWidth:1)}
+                .frame(minHeight:44).contentShape(Rectangle())
+        }.buttonStyle(.plain).disabled(choosingFood).accessibilityAddTraits(filter==value ? .isSelected:[])
+    }
+    private func closeFoodAdd(){
+        searchTask?.cancel();selectionTask?.cancel();barcodePhotoTask?.cancel();queryToken=UUID();photoToken=UUID();dismiss()
     }
     private var resultsContent:some View {
         Group {
@@ -113,15 +170,6 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
     }
     private var searchContent:some View {
         VStack(alignment:.leading,spacing:16) {
-            HStack(spacing:10) {
-                Image(systemName:"magnifyingglass").foregroundStyle(Theme.muted)
-                TextField(diary.t("اسم الطعام أو المنتج","Food or product name"),text:$query).submitLabel(.search).autocorrectionDisabled().onSubmit{startSearch()}
-                if !query.isEmpty {Button {query=""} label:{Image(systemName:"xmark.circle.fill")}.accessibilityLabel(diary.t("مسح البحث","Clear search"))}
-                if filter==0 {Button(diary.t("بحث","Search")){startSearch()}.disabled(term.isEmpty || busy || pageLoading || choosingFood)}
-            }.padding(14).frame(minHeight:52).background(Theme.card,in:RoundedRectangle(cornerRadius:16))
-            Picker(diary.t("قائمة الأطعمة","Food list"),selection:$filter) {
-                Text(diary.t("الكل","All")).tag(0);Text(diary.t("الأخيرة","Recent")).tag(1);Text(diary.t("المتكررة","Frequent")).tag(2);if !productSelection {Text(diary.t("أطعمتي","My foods")).tag(3)}
-            }.pickerStyle(.segmented).disabled(choosingFood)
             HStack(spacing:12) {
                 Button {tab=1} label:{Label(diary.t("باركود","Barcode"),systemImage:"barcode.viewfinder").frame(maxWidth:.infinity).padding(.vertical,10)}
                 if !productSelection {Button {tab=2} label:{Label(diary.t("صورة الوجبة","Meal photo"),systemImage:"camera").frame(maxWidth:.infinity).padding(.vertical,10)}}
