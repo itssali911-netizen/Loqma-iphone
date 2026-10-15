@@ -99,7 +99,7 @@ jobs:
         if: success()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: Luqma-${{ inputs.mode || 'sideload' }}-${{ github.run_number }}
+          name: Luqma-${{ inputs.mode || 'sideload' }}-${{ github.run_number }}-attempt-${{ github.run_attempt }}
           path: |
             BuildOutput/Luqma.ipa
             BuildOutput/Luqma-Sideload.ipa
@@ -121,7 +121,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: Luqma-ui-preview-${{ github.run_number }}
+          name: Luqma-ui-preview-${{ github.run_number }}-attempt-${{ github.run_attempt }}
           path: |
             UIPreview/*.png
             UIPreview/*.json
@@ -139,7 +139,7 @@ jobs:
         if: always() && github.event_name == 'workflow_dispatch' && inputs.run_local_vision_audit
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: Luqma-model-runtime-${{ github.run_number }}
+          name: Luqma-model-runtime-${{ github.run_number }}-attempt-${{ github.run_attempt }}
           path: BuildOutput/model-runtime.json
           if-no-files-found: ignore
           retention-days: 7
@@ -148,7 +148,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: Luqma-diagnostics-${{ github.run_number }}
+          name: Luqma-diagnostics-${{ github.run_number }}-attempt-${{ github.run_attempt }}
           path: |
             BuildOutput/*.log
             BuildOutput/*.xcresult
