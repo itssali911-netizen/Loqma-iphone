@@ -107,10 +107,8 @@ struct DiaryView:View {
                     .accessibilityValue(localizedDate(date,"EEEE, d MMMM yyyy"))
             }
             if typeSize.isAccessibilitySize{
-                ScrollViewReader{proxy in
-                    ScrollView(.horizontal,showsIndicators:false){HStack(spacing:8){ForEach(weekDates,id:\.self){value in dayPill(value).frame(width:76).id(DayKey.string(value))}}}
-                        .onAppear{proxy.scrollTo(day,anchor:.center)}
-                        .onChange(of:day){_,value in proxy.scrollTo(value,anchor:.center)}
+                LazyVGrid(columns:Array(repeating:GridItem(.flexible(),spacing:8),count:4),spacing:8){
+                    ForEach(weekDates,id:\.self){dayPill($0)}
                 }
             }else{
                 HStack(spacing:6){ForEach(weekDates,id:\.self){dayPill($0)}}
