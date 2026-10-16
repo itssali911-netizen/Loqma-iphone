@@ -74,6 +74,27 @@ final class LuqmaInteractionTests:XCTestCase {
         XCTAssertFalse(app.buttons["UI Test Oats"].exists,"Deleted entry must remain absent after relaunch")
     }
 
+    func testRecipeDraftSurvivesIngredientSearch() throws {
+        app.buttons["nav.kitchen"].tap()
+        app.buttons["kitchen.create"].tap()
+        let weighted=app.switches["recipe.byWeight"]
+        XCTAssertTrue(weighted.waitForExistence(timeout:10))
+        reveal(weighted)
+        XCTAssertEqual(weighted.value as? String,"0")
+        weighted.tap()
+        XCTAssertEqual(weighted.value as? String,"1")
+        let ingredient=app.buttons["recipe.addIngredient"]
+        reveal(ingredient)
+        ingredient.tap()
+        let close=app.buttons["search.close"]
+        XCTAssertTrue(close.waitForExistence(timeout:10))
+        close.tap()
+        XCTAssertTrue(weighted.waitForExistence(timeout:10))
+        XCTAssertEqual(weighted.value as? String,"1","Returning from full-screen ingredient search must preserve the draft's cooked-weight choice")
+        app.buttons["navigation.back"].tap()
+        XCTAssertTrue(app.buttons["kitchen.create"].waitForExistence(timeout:10))
+    }
+
     func testLanguageSelectionPersistsAfterRelaunch() throws {
         app.buttons["nav.settings"].tap()
         app.buttons["settings.language"].tap()

@@ -98,6 +98,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                         .frame(width:36,height:36).background(Theme.text.opacity(0.15),in:RoundedRectangle(cornerRadius:12,style:.continuous))
                         .frame(width:44,height:44).contentShape(Rectangle())
                 }.buttonStyle(.plain).accessibilityLabel(diary.t(tab==0 ? "إغلاق":"العودة للبحث",tab==0 ? "Close":"Back to search"))
+                    .accessibilityIdentifier("search.close")
                 Text(diary.t(tab==1 ? "باركود":tab==2 ? "تحليل الوجبة":productSelection ? "اختيار المنتج":"بحث",tab==1 ? "Barcode":tab==2 ? "Meal analysis":productSelection ? "Select a product":"Search"))
                     .luqmaFont(size:tab==0 ? 18:14,weight:.semibold,relativeTo:.headline)
                     .multilineTextAlignment(.leading).accessibilityAddTraits(.isHeader)

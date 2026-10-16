@@ -26,6 +26,7 @@ import UIKit
     @State private var editing:EstimateSelection?
     @State private var products:[UUID:(Food,Double,FoodUnit)]=[:]
     @State private var meal:Meal = .lunch
+    @State private var initialized=false
     @State private var analysisTask:Task<Void,Never>?
     @State private var photoLoadTask:Task<Void,Never>?
     @State private var photoGeneration=UUID()
@@ -82,7 +83,9 @@ import UIKit
         .onChange(of:imageData){_,data in analysisGeneration=UUID();analysisTask?.cancel();analysisTask=nil;busy=false;parts=[];products.removeAll();detailedComponents=false;showingPhotoInput=false;preview=data.flatMap{try? PhotoAnalyzer.image($0,maxPixels:640)}.map{UIImage(cgImage:$0)}}
         .onChange(of:phase){_,value in if value != .active,busy{cancellationMessage=diary.t("توقف التحليل عند مغادرة الشاشة. افتح التطبيق وحاول مجددًا.","Analysis stopped when the app left the foreground. Reopen the app and retry.");analysisTask?.cancel()}}
         .onReceive(NotificationCenter.default.publisher(for:UIApplication.didReceiveMemoryWarningNotification)){_ in if busy{cancellationMessage=diary.t("توقف التحليل بسبب ضغط الذاكرة. حاول مجددًا.","Analysis stopped because of memory pressure. Retry.");analysisTask?.cancel()}}
-        .onAppear{if let initialMeal{meal=initialMeal};ready=GeminiCredentialStore.isConfigured
+        .onAppear{
+            if !initialized{initialized=true;if let initialMeal{meal=initialMeal}}
+            ready=GeminiCredentialStore.isConfigured
             #if DEBUG
             if ProcessInfo.processInfo.arguments.contains("-loqma-preview-photo"),parts.isEmpty{preparePreview()}
             #endif

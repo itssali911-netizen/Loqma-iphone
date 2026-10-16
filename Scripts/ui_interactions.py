@@ -22,7 +22,7 @@ from ui_preview import DEVICE_TYPE, command, select_runtime
 from vision_compat import apply_vision_compat
 
 TESTS = ('testFoodAddResizePersistenceAndDelete', 'testTabNavigationAndGoalsPersistAfterRelaunch',
-         'testLanguageSelectionPersistsAfterRelaunch')
+         'testLanguageSelectionPersistsAfterRelaunch', 'testRecipeDraftSurvivesIngredientSearch')
 
 
 def run_tests(output: Path, packages: Path, derived: Path) -> None:

@@ -23,7 +23,7 @@ struct KitchenView:View {
         return ScrollView{LazyVStack(alignment:.leading,spacing:16){
             categoryBar
             HStack(spacing:10){
-                kitchenAction(diary.t("وصفة جديدة","New recipe"),symbol:"plus",primary:true){creating=true}
+                kitchenAction(diary.t("وصفة جديدة","New recipe"),symbol:"plus",primary:true){creating=true}.accessibilityIdentifier("kitchen.create")
                 kitchenAction(diary.t("استيراد رابط","Import link"),symbol:"link",primary:false){importingRecipe=true}
             }
             LuqmaSectionHeader(title:diary.t("محفوظاتك","Your saved items"),detail:decimal(Double(filteredRecipes.count),0))
@@ -257,6 +257,7 @@ struct RecipeEditor:View {
     @State private var adding=false
     @State private var byWeight=false
     @State private var showingNotes=false
+    @State private var initialized=false
     var body:some View {
         NavigationStack{Form{
             Section{TextField(diary.t("اسم الوصفة أو الوجبة","Recipe or meal name"),text:$recipe.name);Picker(diary.t("النوع","Type"),selection:$recipe.type){Text(diary.t("وصفة","Recipe")).tag("recipe");Text(diary.t("وجبة محفوظة","Saved meal")).tag("meal");Text(diary.t("تحضير وجبات","Meal prep")).tag("prep")}}.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
@@ -266,11 +267,11 @@ struct RecipeEditor:View {
                     let remaining=Set(recipe.ingredients.map{$0.id.uuidString})
                     recipe.importInfo?.ingredientUnitLabels=recipe.importInfo?.ingredientUnitLabels.filter{remaining.contains($0.key)} ?? [:]
                 }
-                Button{adding=true}label:{Label(diary.t("إضافة مكوّن","Add ingredient"),systemImage:"plus")}.disabled(recipe.ingredients.count>=80)
+                Button{adding=true}label:{Label(diary.t("إضافة مكوّن","Add ingredient"),systemImage:"plus")}.disabled(recipe.ingredients.count>=80).accessibilityIdentifier("recipe.addIngredient")
             }.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
             Section(diary.t("الحصص والوزن","Servings and weight")){
                 NumericInput(title:diary.t("عدد الحصص","Number of servings"),value:$recipe.portions)
-                Toggle(diary.t("حساب بالوزن بعد الطبخ","Use final cooked weight"),isOn:$byWeight)
+                Toggle(diary.t("حساب بالوزن بعد الطبخ","Use final cooked weight"),isOn:$byWeight).accessibilityIdentifier("recipe.byWeight")
                 if byWeight{NumericInput(title:diary.t("الوزن بعد الطبخ","Cooked weight"),value:Binding(get:{recipe.cookedWeight ?? 0},set:{recipe.cookedWeight=$0}),suffix:diary.t("جم","g"));Notice(text:diary.t("أدخل الوزن النهائي لحساب أي كمية بالجرام. الماء يغيّر الوزن دون تغيير مجموع السعرات.","Enter the final weight to calculate any gram portion. Water changes weight without changing total calories."))}
             }.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
             if !recipe.ingredients.isEmpty{Section(diary.t("لكل حصة","Per serving")){NutritionView(value:recipe.total.scaled(1/max(recipe.portions,0.001)))}.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke);if byWeight,let w=recipe.cookedWeight,w>0{Section(diary.t("لكل ١٠٠ جم بعد الطبخ","Per 100 g cooked")){NutritionView(value:recipe.total.scaled(100/w))}.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)}}
@@ -289,6 +290,10 @@ struct RecipeEditor:View {
             .fullScreenCover(isPresented:$adding){FoodAddView{f,a,u,_ in do{let n=try f.total(a,unit:u);recipe.ingredients.append(Ingredient(id:UUID(),name:f.label(diary.language),amount:a,unit:u,kcal:n.kcal,protein:n.protein,carbs:n.carbs,fat:n.fat))
                 if MealPhotoEstimate.isValidPhotoEstimate(f) || f.sourceDescription=="luqma:estimated-components"{let note=diary.t("تحتوي الوصفة على قيم مقدّرة من صورة؛ راجعها قبل الاستخدام.","This recipe includes photo estimates; review them before use.");if !recipe.notes.contains(note){recipe.notes=String((recipe.notes+"\n"+note).trimmingCharacters(in:.whitespacesAndNewlines).prefix(2000))}}
                 return true}catch{diary.report(error);return false}}}
-        }.onAppear{byWeight=recipe.cookedWeight != nil;showingNotes = !recipe.notes.isEmpty}
+        }.onAppear{
+            guard !initialized else{return}
+            initialized=true
+            byWeight=recipe.cookedWeight != nil;showingNotes = !recipe.notes.isEmpty
+        }
     }
 }

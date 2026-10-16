@@ -48,7 +48,8 @@ permissions:
 
 concurrency:
   group: luqma-ios-${{ github.ref }}
-  cancel-in-progress: false
+  # Replace obsolete UI review builds; release/main runs still finish normally.
+  cancel-in-progress: ${{ github.ref == 'refs/heads/figma/original-design-fidelity' }}
 
 jobs:
   build:
