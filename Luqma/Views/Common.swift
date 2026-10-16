@@ -12,6 +12,10 @@ enum Theme {
     static let text=Color.white
     static let stroke=Color.white.opacity(0.08)
     static let cardRadius:CGFloat=20
+    // Directly read instance heights: Top Nav 2:10015; Button Primary Icon 2:10013.
+    // These values do not imply that the flattened target panels expose their child metrics.
+    static let navigationHeight:CGFloat=48
+    static let primaryButtonHeight:CGFloat=56
 }
 extension View {
     func luqmaCard() -> some View {padding(16).frame(maxWidth:.infinity,alignment:.leading).background(Theme.card,in:RoundedRectangle(cornerRadius:Theme.cardRadius,style:.continuous))}
@@ -56,7 +60,7 @@ struct LuqmaPrimaryButtonStyle:ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
     func makeBody(configuration:Configuration)->some View {
         configuration.label.luqmaFont(.headline).foregroundStyle(Theme.text)
-            .frame(maxWidth:.infinity,minHeight:52)
+            .frame(maxWidth:.infinity,minHeight:Theme.primaryButtonHeight)
             .background(Theme.accent,in:RoundedRectangle(cornerRadius:16,style:.continuous))
             .opacity(!isEnabled ? 0.4:configuration.isPressed ? 0.8:1)
     }
@@ -121,10 +125,11 @@ struct LuqmaPill:View {
 func decimal(_ value:Double,_ digits:Int=1) -> String {DisplayFormat.decimal(value,digits:digits)}
 struct NumericInput:View {
     var title:String;@Binding var value:Double;var suffix:String=""
+    var identifier:String?=nil
     @State private var text=""
     @FocusState private var focused:Bool
     var body:some View {
-        HStack{Text(title);Spacer();TextField(title,text:$text).keyboardType(.decimalPad).focused($focused).multilineTextAlignment(.trailing).frame(minWidth:65,maxWidth:120).accessibilityLabel(title);if !suffix.isEmpty{Text(DisplayFormat.westernDigits(suffix)).foregroundStyle(.secondary)}}
+        HStack{Text(title);Spacer();TextField(title,text:$text).keyboardType(.decimalPad).focused($focused).multilineTextAlignment(.trailing).frame(minWidth:65,maxWidth:120).accessibilityLabel(title).accessibilityIdentifier(identifier ?? title);if !suffix.isEmpty{Text(DisplayFormat.westernDigits(suffix)).foregroundStyle(.secondary)}}
             .onAppear{text=decimal(value,value.rounded()==value ? 0:1)}
             .onChange(of:text){_,s in
                 guard focused else{return} // Formatting another macro must not edit its value.
@@ -170,7 +175,7 @@ struct FoodRow:View {
     var body:some View {
         Button(action:action){HStack(spacing:10){
             Image(systemName:"fork.knife").font(.system(size:16,weight:.regular)).foregroundStyle(Theme.muted)
-                .frame(width:38,height:42).background(Theme.surface,in:RoundedRectangle(cornerRadius:10,style:.continuous)).accessibilityHidden(true)
+                .frame(width:40,height:40).background(Theme.surface,in:RoundedRectangle(cornerRadius:10,style:.continuous)).accessibilityHidden(true)
             VStack(alignment:.leading,spacing:3){
                 Text(food.label(diary.language)).luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline)
                     .foregroundStyle(Theme.text).multilineTextAlignment(.leading).lineLimit(2).fixedSize(horizontal:false,vertical:true)
@@ -178,10 +183,12 @@ struct FoodRow:View {
                 else{Text(diary.t("بيانات غذائية غير مكتملة","Incomplete nutrition data")).luqmaFont(size:11,relativeTo:.caption).foregroundStyle(.orange)}
                 if !metadata.isEmpty{Text(metadata).luqmaFont(size:10,relativeTo:.caption2).foregroundStyle(Theme.muted).lineLimit(2)}
             };Spacer(minLength:0)
-            Image(systemName:"plus").font(.system(size:17,weight:.medium)).foregroundStyle(Theme.accent).frame(width:28,height:32).accessibilityHidden(true)
-        }.padding(12).frame(maxWidth:.infinity,minHeight:70,alignment:.leading)
+            Image(systemName:"chevron.forward").font(.system(size:12,weight:.medium)).foregroundStyle(Theme.muted).frame(width:24,height:40).accessibilityHidden(true)
+        }.padding(12).frame(maxWidth:.infinity,minHeight:64,alignment:.leading)
             .background(Theme.card,in:RoundedRectangle(cornerRadius:14,style:.continuous))
             .contentShape(RoundedRectangle(cornerRadius:14,style:.continuous))}.buttonStyle(.plain)
+            .accessibilityHint(diary.t("اختيار الطعام والكمية","Choose food and quantity"))
+            .accessibilityIdentifier("food.result."+food.id)
     }
 }
 struct Notice:View {var text:String;var body:some View {Text(DisplayFormat.westernDigits(text)).luqmaFont(.footnote).foregroundStyle(Theme.muted).frame(maxWidth:.infinity,alignment:.leading).fixedSize(horizontal:false,vertical:true)}}
@@ -193,6 +200,7 @@ private struct SandowNavigationChrome:ViewModifier {
     var onBack:(()->Void)?
     var actionLabel:String?
     var actionEnabled:Bool
+    var actionIdentifier:String?
     var onAction:(()->Void)?
     @Environment(\.dismiss) private var dismiss
     func body(content:Content)->some View {
@@ -201,14 +209,14 @@ private struct SandowNavigationChrome:ViewModifier {
                 ZStack{
                     Text(title).luqmaFont(size:14,weight:.semibold,relativeTo:.headline)
                         .multilineTextAlignment(.center).padding(.horizontal,54)
-                        .frame(maxWidth:.infinity,minHeight:48).accessibilityAddTraits(.isHeader)
+                        .frame(maxWidth:.infinity,minHeight:Theme.navigationHeight).accessibilityAddTraits(.isHeader)
                     HStack{
                         Button{if let onBack{onBack()}else{dismiss()}}label:{
                             Image(systemName:"chevron.backward").font(.system(size:12,weight:.semibold))
                                 .frame(width:30,height:30).foregroundStyle(Theme.text)
                                 .background(Theme.card,in:RoundedRectangle(cornerRadius:9))
                                 .frame(width:44,height:44).contentShape(Rectangle())
-                        }.buttonStyle(.plain).accessibilityLabel(backLabel)
+                        }.buttonStyle(.plain).accessibilityLabel(backLabel).accessibilityIdentifier("navigation.back")
                         Spacer(minLength:0)
                     }.padding(.horizontal,10)
                 }.foregroundStyle(Theme.text).padding(.bottom,6).background(Theme.background.ignoresSafeArea(edges:.top))
@@ -216,6 +224,7 @@ private struct SandowNavigationChrome:ViewModifier {
             .safeAreaInset(edge:.bottom,spacing:0){
                 if let actionLabel,let onAction{
                     Button(actionLabel,action:onAction).buttonStyle(LuqmaPrimaryButtonStyle()).disabled(!actionEnabled)
+                        .accessibilityIdentifier(actionIdentifier ?? "navigation.primaryAction")
                         .padding(.horizontal,16).padding(.top,10).padding(.bottom,8).background(Theme.background)
                 }
             }
@@ -223,8 +232,8 @@ private struct SandowNavigationChrome:ViewModifier {
 }
 extension View {
     func sandowNavigation(_ title:String,backLabel:String,onBack:(()->Void)?=nil,
-                          actionLabel:String?=nil,actionEnabled:Bool=true,onAction:(()->Void)?=nil)->some View {
+                          actionLabel:String?=nil,actionEnabled:Bool=true,actionIdentifier:String?=nil,onAction:(()->Void)?=nil)->some View {
         modifier(SandowNavigationChrome(title:title,backLabel:backLabel,onBack:onBack,
-                                        actionLabel:actionLabel,actionEnabled:actionEnabled,onAction:onAction))
+                                        actionLabel:actionLabel,actionEnabled:actionEnabled,actionIdentifier:actionIdentifier,onAction:onAction))
     }
 }

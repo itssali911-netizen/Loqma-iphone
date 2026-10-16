@@ -874,10 +874,32 @@
 			"path" = "Luqma.app";
 			"sourceTree" = "BUILT_PRODUCTS_DIR";
 		};
+		"7A48F3158AFF64A956293DAE" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "LuqmaInteractionTests.swift";
+			"sourceTree" = "<group>";
+		};
+		"2676C1C3130EC43A71AB56D8" = {
+			"isa" = "PBXGroup";
+			"children" = (
+				7A48F3158AFF64A956293DAE,
+			);
+			"path" = "TestsUI";
+			"sourceTree" = "<group>";
+		};
+		"1E72342EF5FEED24ED965995" = {
+			"isa" = "PBXFileReference";
+			"explicitFileType" = "wrapper.cfbundle";
+			"includeInIndex" = 0;
+			"path" = "LuqmaUITests.xctest";
+			"sourceTree" = "BUILT_PRODUCTS_DIR";
+		};
 		"6F7199ED7B63CDA338A0FB82" = {
 			"isa" = "PBXGroup";
 			"children" = (
 				A8792157CB4F27FB949C035F,
+				1E72342EF5FEED24ED965995,
 			);
 			"name" = "Products";
 			"sourceTree" = "<group>";
@@ -886,6 +908,7 @@
 			"isa" = "PBXGroup";
 			"children" = (
 				085ED06E573690BA3A56BC1E,
+				2676C1C3130EC43A71AB56D8,
 				6F7199ED7B63CDA338A0FB82,
 			);
 			"sourceTree" = "<group>";
@@ -1094,7 +1117,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				"MARKETING_VERSION" = "2.3";
+				"MARKETING_VERSION" = "2.4";
 				"PRODUCT_BUNDLE_IDENTIFIER" = "app.luqma.diary";
 				"PRODUCT_NAME" = "$(TARGET_NAME)";
 				"SDKROOT" = "iphoneos";
@@ -1142,7 +1165,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				"MARKETING_VERSION" = "2.3";
+				"MARKETING_VERSION" = "2.4";
 				"PRODUCT_BUNDLE_IDENTIFIER" = "app.luqma.diary";
 				"PRODUCT_NAME" = "$(TARGET_NAME)";
 				"SDKROOT" = "iphoneos";
@@ -1198,6 +1221,115 @@
 			"productReference" = A8792157CB4F27FB949C035F;
 			"productType" = "com.apple.product-type.application";
 		};
+		"23FA874E24FFFEFDE74C709B" = {
+			"isa" = "XCBuildConfiguration";
+			"buildSettings" = {
+				"CODE_SIGN_STYLE" = "Automatic";
+				"GENERATE_INFOPLIST_FILE" = "YES";
+				"IPHONEOS_DEPLOYMENT_TARGET" = "17.0";
+				"PRODUCT_BUNDLE_IDENTIFIER" = "app.luqma.diary.uitests";
+				"PRODUCT_NAME" = "$(TARGET_NAME)";
+				"SDKROOT" = "iphoneos";
+				"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
+				"SWIFT_VERSION" = "5.0";
+				"TARGETED_DEVICE_FAMILY" = "1";
+				"TEST_TARGET_NAME" = "Luqma";
+				"LD_RUNPATH_SEARCH_PATHS" = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "DEBUG $(inherited)";
+				"SWIFT_OPTIMIZATION_LEVEL" = "-Onone";
+			};
+			"name" = "Debug";
+		};
+		"48330A47DEBAFA29DCBC86F2" = {
+			"isa" = "XCBuildConfiguration";
+			"buildSettings" = {
+				"CODE_SIGN_STYLE" = "Automatic";
+				"GENERATE_INFOPLIST_FILE" = "YES";
+				"IPHONEOS_DEPLOYMENT_TARGET" = "17.0";
+				"PRODUCT_BUNDLE_IDENTIFIER" = "app.luqma.diary.uitests";
+				"PRODUCT_NAME" = "$(TARGET_NAME)";
+				"SDKROOT" = "iphoneos";
+				"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
+				"SWIFT_VERSION" = "5.0";
+				"TARGETED_DEVICE_FAMILY" = "1";
+				"TEST_TARGET_NAME" = "Luqma";
+				"LD_RUNPATH_SEARCH_PATHS" = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+			};
+			"name" = "Release";
+		};
+		"FC8117D147693B7C06502BEC" = {
+			"isa" = "XCConfigurationList";
+			"buildConfigurations" = (
+				23FA874E24FFFEFDE74C709B,
+				48330A47DEBAFA29DCBC86F2,
+			);
+			"defaultConfigurationIsVisible" = 0;
+			"defaultConfigurationName" = "Debug";
+		};
+		"17528BBFAF5503BC7D0AEB4F" = {
+			"isa" = "PBXContainerItemProxy";
+			"containerPortal" = 244210E48437B6556980A702;
+			"proxyType" = 1;
+			"remoteGlobalIDString" = 34A04005BCAF206EEC990BD9;
+			"remoteInfo" = "Luqma";
+		};
+		"47433D56E6FA4F089F7524B2" = {
+			"isa" = "PBXTargetDependency";
+			"target" = 34A04005BCAF206EEC990BD9;
+			"targetProxy" = 17528BBFAF5503BC7D0AEB4F;
+		};
+		"A8D6053324CA00EEA7289AA0" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 7A48F3158AFF64A956293DAE;
+		};
+		"501187F5C557068270DFF535" = {
+			"isa" = "PBXSourcesBuildPhase";
+			"buildActionMask" = 2147483647;
+			"files" = (
+				A8D6053324CA00EEA7289AA0,
+			);
+			"runOnlyForDeploymentPostprocessing" = 0;
+		};
+		"53AB50C7A8985FC57936B7F4" = {
+			"isa" = "PBXFrameworksBuildPhase";
+			"buildActionMask" = 2147483647;
+			"files" = (
+			);
+			"runOnlyForDeploymentPostprocessing" = 0;
+		};
+		"E0A4B21A170272358DB970DD" = {
+			"isa" = "PBXResourcesBuildPhase";
+			"buildActionMask" = 2147483647;
+			"files" = (
+			);
+			"runOnlyForDeploymentPostprocessing" = 0;
+		};
+		"129964AA630C5970DF325D9E" = {
+			"isa" = "PBXNativeTarget";
+			"buildConfigurationList" = FC8117D147693B7C06502BEC;
+			"buildPhases" = (
+				501187F5C557068270DFF535,
+				53AB50C7A8985FC57936B7F4,
+				E0A4B21A170272358DB970DD,
+			);
+			"buildRules" = (
+			);
+			"dependencies" = (
+				47433D56E6FA4F089F7524B2,
+			);
+			"name" = "LuqmaUITests";
+			"productName" = "LuqmaUITests";
+			"productReference" = 1E72342EF5FEED24ED965995;
+			"productType" = "com.apple.product-type.bundle.ui-testing";
+		};
 		"244210E48437B6556980A702" = {
 			"isa" = "PBXProject";
 			"attributes" = {
@@ -1207,6 +1339,10 @@
 					"34A04005BCAF206EEC990BD9" = {
 						"CreatedOnToolsVersion" = "16.0";
 						"ProvisioningStyle" = "Automatic";
+					};
+					"129964AA630C5970DF325D9E" = {
+						"CreatedOnToolsVersion" = "16.0";
+						"TestTargetID" = 34A04005BCAF206EEC990BD9;
 					};
 				};
 			};
@@ -1231,6 +1367,7 @@
 			"projectRoot" = "";
 			"targets" = (
 				34A04005BCAF206EEC990BD9,
+				129964AA630C5970DF325D9E,
 			);
 		};
 	};

@@ -176,7 +176,7 @@ class CaptureRetryTests(unittest.TestCase):
                 case = cases[screen]
                 self.assertEqual(case["arguments"], ["-loqma-preview-template", route])
                 self.assertTrue(case["read_only_preview"])
-                self.assertEqual(case["synthetic_fixture"], route in {"portion", "recipe"})
+                self.assertEqual(case["synthetic_fixture"], route in {"portion", "recipe", "recipeDetail"})
 
     def test_accessibility_dashboard_composes_the_same_read_only_overview(self):
         cases = {case["screen"]: case for case in preview_cases()}
