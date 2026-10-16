@@ -81,7 +81,11 @@ final class LuqmaInteractionTests:XCTestCase {
         XCTAssertTrue(weighted.waitForExistence(timeout:10))
         reveal(weighted)
         XCTAssertEqual(weighted.value as? String,"0")
-        weighted.tap()
+        // SwiftUI exposes a full-row Switch containing the actual UISwitch.
+        // Its center is the label's empty space, not the toggle hit target.
+        let weightControl=weighted.switches.firstMatch
+        XCTAssertTrue(weightControl.exists && weightControl.isHittable,app.debugDescription)
+        weightControl.tap()
         XCTAssertEqual(weighted.value as? String,"1")
         let ingredient=app.buttons["recipe.addIngredient"]
         reveal(ingredient)
@@ -89,6 +93,8 @@ final class LuqmaInteractionTests:XCTestCase {
         let close=app.buttons["search.close"]
         XCTAssertTrue(close.waitForExistence(timeout:10))
         close.tap()
+        let dismissed=XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == false"),object:close)
+        XCTAssertEqual(XCTWaiter.wait(for:[dismissed],timeout:5),.completed,app.debugDescription)
         XCTAssertTrue(weighted.waitForExistence(timeout:10))
         XCTAssertEqual(weighted.value as? String,"1","Returning from full-screen ingredient search must preserve the draft's cooked-weight choice")
         app.buttons["navigation.back"].tap()
@@ -158,8 +164,13 @@ final class LuqmaInteractionTests:XCTestCase {
     private func openBreakfastEntry() {
         let details=app.descendants(matching:.any).matching(identifier:"diary.details.breakfast").firstMatch
         reveal(details)
-        details.tap()
+        // The real DisclosureGroup chevron is the hit target. The button's
+        // combined accessibility frame also includes the label's Spacer.
+        let disclosure=details.images["collapsed"]
+        XCTAssertTrue(disclosure.exists && disclosure.isHittable,app.debugDescription)
+        disclosure.tap()
         let entry=app.buttons["UI Test Oats"]
+        XCTAssertTrue(entry.waitForExistence(timeout:5),app.debugDescription)
         reveal(entry)
         entry.tap()
         XCTAssertTrue(app.textFields["entry.amount"].waitForExistence(timeout:5))
