@@ -56,7 +56,8 @@ TEMPLATE_ROUTES = (("macro-goals", "goals"),
                    ("analysis-connection", "connection"),
                    ("backup", "backup"),
                    ("about", "about"),
-                   ("barcode-guide", "barcode"))
+                   ("barcode-guide", "barcode"),
+                   ("language", "language"))
 VARIANT_ROUTES = (("accessibility-today", ("-loqma-preview-overview", "-loqma-preview-accessibility")),
                   ("photo-components", ("-loqma-preview-photo", "-loqma-preview-photo-detailed")))
 EXPECTED_SCREEN_COUNT = len(SCREENS) + 2 + len(EXTRA_ROUTES) + len(TEMPLATE_ROUTES) + len(VARIANT_ROUTES)

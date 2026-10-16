@@ -1,5 +1,7 @@
 # Phase 2 — current Luqma project audit
 
+> Historical project audit of build59. The later authorized continuation uses only saved Figma evidence; see `IMPLEMENTATION-AR.md` and `COVERAGE-AR.md` for current code coverage.
+
 Audited read-only on 2026-10-16. Repository: `work/Loqma-iphone`. HEAD: `e48897be8390c8118ea1a62125894d92d129c7de`. Working tree was clean at audit start. `git diff b9c0f7cfeb058472f33592ffbb61ed260bceecef e48897be8390c8118ea1a62125894d92d129c7de -- Luqma` is empty: current app source matches the delivered 2.3/build59 source; intervening commit content is documentation. No app edits, branch changes, commits, builds, external service requests or publishing were performed for this audit.
 
 The latest pasted user task requires direct Figma connection proof before new UI implementation, a new implementation branch and a pull request, and no merge to main. Older reconstruction evidence must not substitute for the new extraction requirement.

@@ -1,5 +1,7 @@
 # Phase 3 — evidenced screen mapping and unresolved scope
 
+> Historical mapping of build59 before changes. Current implemented coverage is in `COVERAGE-AR.md`; this original mapping is retained as evidence rather than rewritten as a claim of completion.
+
 Date: 2026-10-16. App baseline: `e48897be8390c8118ea1a62125894d92d129c7de`, whose app source matches built source `b9c0f7cfeb058472f33592ffbb61ed260bceecef` (2.3/build59). Mapping is read-only. No app, Figma canvas, branch, PR or published source was changed by this audit.
 
 ## Evidence and meaning of the mapping

@@ -1,5 +1,7 @@
 # Figma search/settings versus actual build59
 
+> Historical baseline before the 2.4 implementation. References below to an extraction-only PR describe its earlier state. Current implementation and remaining scope are in `IMPLEMENTATION-AR.md` and `COVERAGE-AR.md`.
+
 Read-only visual audit on 2026-10-16. This is a concrete difference log, not a new implementation, a pixel-match claim or a match-percentage estimate. Both original Figma PNGs were opened with `view_image`, followed by six original native screenshots. No app, source asset or screenshot pixels were edited.
 
 ## Source and capture identity

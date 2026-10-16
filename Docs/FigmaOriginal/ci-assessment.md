@@ -1,5 +1,7 @@
 # Branch build and visual-validation assessment
 
+> Historical assessment of the pre-implementation branch/workflow. See `IMPLEMENTATION-AR.md` for the subsequent workflow and actual UI changes; the conclusions below are not current run results.
+
 Read-only assessment of repository HEAD `e48897be8390c8118ea1a62125894d92d129c7de` after the user's new exact-Figma/branch/PR instruction. No repository, app, workflow, branch, output or remote resource was modified for this assessment. The user's pasted exact-Figma task was read in full.
 
 ## Branch-only build: no main merge is necessary

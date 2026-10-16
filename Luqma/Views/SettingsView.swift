@@ -53,15 +53,16 @@ struct SettingsView:View {
                 .fill(Theme.surface).ignoresSafeArea(edges:.top)}
     }
     private var languageRow:some View {
-        HStack(spacing:10){
-            settingsIcon("globe")
-            Text(diary.t("اللغة","Language")).luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline)
-            Spacer(minLength:0)
-            Picker(diary.t("اللغة","Language"),selection:Binding(get:{diary.language},set:{value in diary.change{$0.language=value}})){
-                Text("العربية").tag(AppLanguage.ar);Text("English").tag(AppLanguage.en)
-            }.pickerStyle(.menu).labelsHidden().luqmaFont(size:11,relativeTo:.caption)
-        }.foregroundStyle(Theme.text).padding(.horizontal,10).padding(.vertical,8).frame(minHeight:64)
-            .background(Theme.card,in:RoundedRectangle(cornerRadius:20,style:.continuous))
+        NavigationLink{LuqmaLanguageView()}label:{
+            HStack(spacing:10){
+                settingsIcon("globe")
+                Text(diary.t("اللغة","Language")).luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline)
+                Spacer(minLength:0)
+                Text(diary.language == .ar ? "العربية":"English").luqmaFont(size:11,relativeTo:.caption).foregroundStyle(Theme.muted)
+                Image(systemName:"chevron.forward").font(.system(size:13,weight:.medium)).foregroundStyle(Theme.muted)
+            }.foregroundStyle(Theme.text).padding(.horizontal,10).padding(.vertical,8).frame(minHeight:64)
+                .background(Theme.card,in:RoundedRectangle(cornerRadius:20,style:.continuous))
+        }.accessibilityIdentifier("settings.language")
     }
     private var settingsFooter:some View {
         VStack(spacing:6){
@@ -80,6 +81,43 @@ struct SettingsView:View {
     }
     private func settingsIcon(_ symbol:String)->some View {Image(systemName:symbol).font(.system(size:18,weight:.regular)).foregroundStyle(Theme.text).frame(width:42,height:42).background(Theme.surface,in:RoundedRectangle(cornerRadius:13)).accessibilityHidden(true)}
     private func settingsRow(_ title:String,symbol:String)->some View {HStack(spacing:10){settingsIcon(symbol);Text(title).luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline).foregroundStyle(Theme.text);Spacer(minLength:0);Image(systemName:"chevron.forward").font(.system(size:13,weight:.medium)).foregroundStyle(Theme.muted)}.padding(.horizontal,10).padding(.vertical,8).frame(maxWidth:.infinity,minHeight:64,alignment:.leading).background(Theme.card,in:RoundedRectangle(cornerRadius:20,style:.continuous)).contentShape(RoundedRectangle(cornerRadius:20))}
+}
+struct LuqmaLanguageView:View {
+    @EnvironmentObject var diary:DiaryStore
+    @Environment(\.dismiss) private var dismiss
+    var body:some View {
+        ScrollView{VStack(alignment:.leading,spacing:32){
+            VStack(alignment:.leading,spacing:12){
+                languageHeading(diary.t("اللغة المختارة","Selected language"))
+                languageOption(diary.language,selected:true)
+            }
+            VStack(alignment:.leading,spacing:12){
+                languageHeading(diary.t("اللغات المتاحة","Available languages"))
+                ForEach(AppLanguage.allCases.filter{$0 != diary.language},id:\.self){language in languageOption(language,selected:false)}
+            }
+        }.padding(16).padding(.top,20).padding(.bottom,24)}.appBackground()
+            .navigationTitle(diary.t("اللغة","Language")).toolbar(.hidden,for:.navigationBar)
+            .safeAreaInset(edge:.top,spacing:0){
+                HStack(spacing:12){
+                    Button{dismiss()}label:{Image(systemName:"chevron.backward").font(.system(size:14,weight:.medium)).foregroundStyle(Theme.text).frame(width:40,height:40).background(Theme.surface,in:RoundedRectangle(cornerRadius:12)).frame(width:44,height:44)}
+                        .buttonStyle(.plain).accessibilityLabel(diary.t("رجوع","Back")).accessibilityIdentifier("language.back")
+                    Text(diary.t("اللغة","Language")).luqmaFont(size:20,weight:.bold,relativeTo:.title3).accessibilityAddTraits(.isHeader)
+                    Spacer(minLength:0)
+                }.padding(.horizontal,16).frame(minHeight:Theme.navigationHeight).background(Theme.background)
+            }
+    }
+    private func languageHeading(_ text:String)->some View {Text(text).luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline).foregroundStyle(Theme.text).accessibilityAddTraits(.isHeader)}
+    private func languageOption(_ language:AppLanguage,selected:Bool)->some View {
+        Button{if language != diary.language{diary.change{$0.language=language}}}label:{
+            HStack(spacing:14){
+                Image(systemName:"flag").font(.system(size:20,weight:.regular)).foregroundStyle(selected ? Theme.accent:Theme.text)
+                    .frame(width:44,height:44).background(selected ? Theme.text:Theme.surface,in:RoundedRectangle(cornerRadius:13)).accessibilityHidden(true)
+                Text(language == .ar ? "العربية (AR)":"English (EN)").luqmaFont(size:14,weight:.medium,relativeTo:.subheadline).foregroundStyle(Theme.text)
+                Spacer(minLength:8)
+                Image(systemName:selected ? "checkmark.square.fill":"square").font(.system(size:18)).foregroundStyle(Theme.text).accessibilityHidden(true)
+            }.padding(12).frame(maxWidth:.infinity,minHeight:68).background(selected ? Theme.accent:Theme.card,in:RoundedRectangle(cornerRadius:22,style:.continuous)).contentShape(Rectangle())
+        }.buttonStyle(.plain).accessibilityAddTraits(selected ? .isSelected:[]).accessibilityIdentifier("language.option."+language.rawValue)
+    }
 }
 struct BackupSettingsView:View {
     @EnvironmentObject var diary:DiaryStore

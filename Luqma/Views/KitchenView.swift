@@ -21,7 +21,6 @@ struct KitchenView:View {
     var body:some View {
         let filteredRecipes=recipes
         return ScrollView{LazyVStack(alignment:.leading,spacing:16){
-            kitchenHeader
             categoryBar
             HStack(spacing:10){
                 kitchenAction(diary.t("وصفة جديدة","New recipe"),symbol:"plus",primary:true){creating=true}
@@ -31,9 +30,10 @@ struct KitchenView:View {
             if diary.state.recipes.isEmpty{kitchenEmptyState}
             else if filteredRecipes.isEmpty{ContentUnavailableView(diary.t("لا توجد نتائج","No results"),systemImage:"magnifyingglass",description:Text(diary.t("جرّب اسمًا آخر أو غيّر نوع المحفوظات.","Try another name or change the saved-item type.")))}
             ForEach(filteredRecipes){r in recipeCard(r)}
-        }.padding(.horizontal,16).padding(.bottom,24)}.scrollDismissesKeyboard(.interactively).appBackground()
-            .sandowStatusBackground(Theme.surface).navigationTitle(diary.t("مطبخي","My kitchen"))
+        }.padding(.horizontal,16).padding(.top,16).padding(.bottom,24)}.scrollDismissesKeyboard(.interactively).appBackground()
+            .navigationTitle(diary.t("مطبخي","My kitchen"))
             .toolbar(.hidden,for:.navigationBar)
+            .safeAreaInset(edge:.top,spacing:0){kitchenHeader}
             .sheet(isPresented:$creating){RecipeEditor(recipe:Recipe(id:UUID(),name:"",type:"recipe",ingredients:[],portions:1,cookedWeight:nil,notes:""))}
             .sheet(isPresented:$importingRecipe){RecipeImportView()}
             .sheet(item:$editing){RecipeEditor(recipe:$0)}
@@ -53,7 +53,7 @@ struct KitchenView:View {
                 Image(systemName:"magnifyingglass").font(.system(size:16)).foregroundStyle(Theme.text.opacity(0.85)).accessibilityHidden(true)
             }.padding(.horizontal,14).frame(minHeight:44)
                 .background(Theme.background,in:RoundedRectangle(cornerRadius:12,style:.continuous))
-        }.padding(16).background(Theme.surface,in:UnevenRoundedRectangle(bottomLeadingRadius:24,bottomTrailingRadius:24,style:.continuous)).padding(.horizontal,-16)
+        }.padding(16).background{UnevenRoundedRectangle(bottomLeadingRadius:24,bottomTrailingRadius:24,style:.continuous).fill(Theme.surface).ignoresSafeArea(edges:.top)}
     }
     private var categoryBar:some View {
         Group{
@@ -286,7 +286,7 @@ struct RecipeEditor:View {
         }.sandowForm().sandowNavigation(diary.t("حفظ في مطبخي","Save to kitchen"),backLabel:diary.t("إلغاء","Cancel"),onBack:{dismiss()},
             actionLabel:diary.t("حفظ","Save"),actionEnabled:!recipe.name.isEmpty && !recipe.ingredients.isEmpty,
             onAction:{if !byWeight{recipe.cookedWeight=nil};if diary.saveRecipe(recipe){dismiss()}})
-            .sheet(isPresented:$adding){FoodAddView{f,a,u,_ in do{let n=try f.total(a,unit:u);recipe.ingredients.append(Ingredient(id:UUID(),name:f.label(diary.language),amount:a,unit:u,kcal:n.kcal,protein:n.protein,carbs:n.carbs,fat:n.fat))
+            .fullScreenCover(isPresented:$adding){FoodAddView{f,a,u,_ in do{let n=try f.total(a,unit:u);recipe.ingredients.append(Ingredient(id:UUID(),name:f.label(diary.language),amount:a,unit:u,kcal:n.kcal,protein:n.protein,carbs:n.carbs,fat:n.fat))
                 if MealPhotoEstimate.isValidPhotoEstimate(f) || f.sourceDescription=="luqma:estimated-components"{let note=diary.t("تحتوي الوصفة على قيم مقدّرة من صورة؛ راجعها قبل الاستخدام.","This recipe includes photo estimates; review them before use.");if !recipe.notes.contains(note){recipe.notes=String((recipe.notes+"\n"+note).trimmingCharacters(in:.whitespacesAndNewlines).prefix(2000))}}
                 return true}catch{diary.report(error);return false}}}
         }.onAppear{byWeight=recipe.cookedWeight != nil;showingNotes = !recipe.notes.isEmpty}

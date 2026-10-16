@@ -17,8 +17,16 @@ struct DiaryView:View {
     private var day:String {DayKey.string(date)}
     var body:some View {
         ScrollView{diaryContent.padding(.horizontal,16).padding(.bottom,24)}.appBackground()
-            .sandowStatusBackground(Theme.surface).navigationTitle(diary.t("اليوم","Today"))
+            .navigationTitle(diary.t("اليوم","Today"))
             .toolbar(.hidden,for:.navigationBar)
+            .safeAreaInset(edge:.top,spacing:0){
+                // Keep the header outside ScrollView clipping, like Settings.
+                #if DEBUG
+                if !CommandLine.arguments.contains("-loqma-preview-meals"){header}
+                #else
+                header
+                #endif
+            }
             .fullScreenCover(isPresented:$adding){FoodAddView(initialQuery:searchQuery,initialMeal:chosenMeal,onPhotoCommit:{foods,meal in do{let entries=try foods.map{try DiaryEntry(food:$0.0,amount:$0.1,unit:$0.2,meal:meal,day:day,language:diary.language)};return diary.add(entries,foods:foods.map{$0.0})}catch{diary.report(error);return false}}){food,amount,unit,meal in do{let entry=try DiaryEntry(food:food,amount:amount,unit:unit,meal:meal,day:day,language:diary.language);return diary.add([entry],foods:[food])}catch{diary.report(error);return false}}}
             .sheet(item:$editing){EntryEditor(entry:$0)}
             .sheet(isPresented:$goals){GoalEditor()}
@@ -47,12 +55,11 @@ struct DiaryView:View {
     private var normalDiaryContent:some View {
         let meals=MealDiarySummary.forDay(day,entries:diary.state.entries)
         return VStack(alignment:.leading,spacing:20){
-            header
             foodCategories
             dailyRoutine(meals)
             summary
             mealList(meals)
-        }
+        }.padding(.top,16)
     }
     #if DEBUG
     private var mealPreviewContent:some View {
@@ -63,12 +70,11 @@ struct DiaryView:View {
     }
     private var overviewPreviewContent:some View {
         VStack(alignment:.leading,spacing:20){
-            header
             foodCategories
             dailyRoutine(MealDiarySummary.forDay(DayKey.today,entries:mealPreviewEntries))
             dailySummary(mealPreviewEntries.reduce(.zero){$0+$1.nutrition},diary.dailyGoals(day),showHistory:false)
             mealList(MealDiarySummary.forDay(DayKey.today,entries:mealPreviewEntries),showEntries:false)
-        }.allowsHitTesting(false)
+        }.padding(.top,16).allowsHitTesting(false)
     }
     private var mealPreviewEntries:[DiaryEntry] {
         let values:[Nutrition]=[
@@ -96,7 +102,7 @@ struct DiaryView:View {
                 Button{goals=true}label:{Image(systemName:"gearshape").font(.system(size:17,weight:.medium)).frame(width:40,height:40).foregroundStyle(Theme.text).background(Theme.text.opacity(0.06),in:RoundedRectangle(cornerRadius:12,style:.continuous))}.buttonStyle(.plain).accessibilityLabel(diary.t("أهداف السعرات والماكروز","Calorie and macro goals")).accessibilityIdentifier("diary.goals")
             }
             Button{openSearch()}label:{HStack(spacing:10){Text(diary.t("ابحث في قاعدة الطعام…","Search our food database…")).luqmaFont(size:13,relativeTo:.subheadline);Spacer(minLength:0);Image(systemName:"magnifyingglass").font(.system(size:16))}.foregroundStyle(Theme.text.opacity(0.85)).padding(.horizontal,14).frame(minHeight:44).background(Theme.background,in:RoundedRectangle(cornerRadius:12,style:.continuous))}.buttonStyle(.plain)
-        }.padding(16).background{Theme.surface.clipShape(UnevenRoundedRectangle(bottomLeadingRadius:24,bottomTrailingRadius:24,style:.continuous)).ignoresSafeArea(edges:.top)}.padding(.horizontal,-16)
+        }.padding(16).background{Theme.surface.clipShape(UnevenRoundedRectangle(bottomLeadingRadius:24,bottomTrailingRadius:24,style:.continuous)).ignoresSafeArea(edges:.top)}
     }
     private func openSearch(_ query:String="",meal:Meal?=nil){searchQuery=query;chosenMeal=meal;adding=true}
     private var foodCategories:some View {
@@ -333,7 +339,7 @@ struct DiaryView:View {
                 Image(systemName:meal == .snack ? "carrot":meal.symbol).font(.system(size:20,weight:.medium)).foregroundStyle(Theme.accent).frame(width:40,height:40).background(Theme.surface,in:RoundedRectangle(cornerRadius:12,style:.continuous)).accessibilityHidden(true)
                 VStack(alignment:.leading,spacing:4){
                     Text(meal.label(diary.language)).luqmaFont(size:16,weight:.semibold,relativeTo:.headline).foregroundStyle(Theme.text).fixedSize(horizontal:false,vertical:true)
-                    Text(mealCount(summary.entries.count)).luqmaFont(size:11,relativeTo:.caption).foregroundStyle(Theme.muted)
+                    Text(mealCount(summary.entries.count)).luqmaFont(size:11,relativeTo:.caption).foregroundStyle(Theme.muted).accessibilityIdentifier("diary.mealCount."+summary.meal.rawValue)
                 }
                 Spacer(minLength:0)
                 VStack(alignment:.trailing,spacing:3){

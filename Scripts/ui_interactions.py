@@ -21,7 +21,8 @@ from simulator_support import prepare_created_simulator
 from ui_preview import DEVICE_TYPE, command, select_runtime
 from vision_compat import apply_vision_compat
 
-TESTS = ('testFoodAddResizePersistenceAndDelete', 'testTabNavigationAndGoalsPersistAfterRelaunch')
+TESTS = ('testFoodAddResizePersistenceAndDelete', 'testTabNavigationAndGoalsPersistAfterRelaunch',
+         'testLanguageSelectionPersistsAfterRelaunch')
 
 
 def run_tests(output: Path, packages: Path, derived: Path) -> None:
@@ -58,7 +59,7 @@ def run_tests(output: Path, packages: Path, derived: Path) -> None:
         passed=[name for name in TESTS if re.search(r"Test Case '.*"+name+r".*' passed",log)]
         report['passed_cases']=passed
         if len(passed)!=len(TESTS):
-            raise BuildError('Native run did not report both required interaction cases as passed.')
+            raise BuildError('Native run did not report all required interaction cases as passed.')
         summary=command(['xcrun','xcresulttool','get','test-results','summary','--path',str(result)],output,'xcresult-summary')
         (output/'xcresult-summary.json').write_text(json.dumps(json.loads(summary),indent=2)+'\n',encoding='utf-8')
         apply_vision_compat(packages,verify_only=True)

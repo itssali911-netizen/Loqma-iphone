@@ -20,13 +20,6 @@ enum Theme {
 extension View {
     func luqmaCard() -> some View {padding(16).frame(maxWidth:.infinity,alignment:.leading).background(Theme.card,in:RoundedRectangle(cornerRadius:Theme.cardRadius,style:.continuous))}
     func appBackground() -> some View {background(Theme.background.ignoresSafeArea()).scrollContentBackground(.hidden).luqmaFont(.body)}
-    // A scrolling header cannot paint the enclosing NavigationStack's status area.
-    // Use the actual safe inset, rather than assuming the reference's44pt status bar.
-    func sandowStatusBackground(_ color:Color)->some View {
-        background(alignment:.top){GeometryReader{geometry in
-            color.frame(height:geometry.safeAreaInsets.top).offset(y:-geometry.safeAreaInsets.top)
-        }.allowsHitTesting(false).accessibilityHidden(true)}
-    }
     func sandowForm() -> some View {
         appBackground().listStyle(.insetGrouped).listSectionSpacing(16)
             .listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)

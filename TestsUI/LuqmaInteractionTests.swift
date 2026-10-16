@@ -50,7 +50,28 @@ final class LuqmaInteractionTests:XCTestCase {
         app.terminate()
         app.launch()
         XCTAssertTrue(app.buttons["nav.today"].waitForExistence(timeout:15))
+        let breakfastCount=app.staticTexts["diary.mealCount.breakfast"]
+        reveal(breakfastCount)
+        XCTAssertEqual(breakfastCount.label,"Add your first food","The actual persisted meal count must be empty after deletion")
         XCTAssertFalse(app.buttons["UI Test Oats"].exists,"Deleted entry must remain absent after relaunch")
+    }
+
+    func testLanguageSelectionPersistsAfterRelaunch() throws {
+        app.buttons["nav.settings"].tap()
+        app.buttons["settings.language"].tap()
+        app.buttons["language.option.ar"].tap()
+        XCTAssertTrue(app.buttons["language.option.ar"].isSelected)
+        app.terminate()
+        // Remove the test-only English initialization; persistence must supply Arabic.
+        app.launchArguments=["-AppleLanguages","(en)","-AppleLocale","en_US"]
+        app.launch()
+        XCTAssertTrue(app.buttons["nav.settings"].waitForExistence(timeout:15))
+        app.buttons["nav.settings"].tap()
+        app.buttons["settings.language"].tap()
+        XCTAssertTrue(app.buttons["language.option.ar"].isSelected)
+        app.buttons["language.option.en"].tap()
+        XCTAssertTrue(app.buttons["language.option.en"].isSelected)
+        app.buttons["language.back"].tap()
     }
 
     func testTabNavigationAndGoalsPersistAfterRelaunch() throws {

@@ -70,7 +70,7 @@ import UIKit
                 products[request.id]=(food,1,.serving);editing=nil;return true
             }catch{diary.report(error);return false}
         }}
-        .sheet(item:$selection){request in AnyView(FoodAddView(initial:products[request.id].flatMap{FoodSearch.isCatalogFood($0.0) ? $0.0:nil},initialQuery:request.name,productSelection:true){food,amount,unit,_ in
+        .fullScreenCover(item:$selection){request in AnyView(FoodAddView(initial:products[request.id].flatMap{FoodSearch.isCatalogFood($0.0) ? $0.0:nil},initialQuery:request.name,productSelection:true){food,amount,unit,_ in
             guard FoodSearch.isCatalogFood(food),(try? food.total(amount,unit:unit)) != nil else{return false}
             if !parts.contains(where:{$0.id==request.id}){
                 guard let n=food.values(for:food.unit) else{return false}
