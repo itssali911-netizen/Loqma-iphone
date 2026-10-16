@@ -12,11 +12,29 @@ final class LuqmaInteractionTests:XCTestCase {
         XCTAssertTrue(app.buttons["nav.today"].waitForExistence(timeout:20))
     }
 
+    override func tearDownWithError() throws {
+        if let testRun, testRun.failureCount>0 {
+            // Keep the actual failed screen and hierarchy, including field values.
+            print("LUQMA_FAILED_HIERARCHY\n"+app.debugDescription)
+            let attachment=XCTAttachment(screenshot:app.screenshot())
+            attachment.name="Actual failed application screen"
+            attachment.lifetime = .keepAlways
+            add(attachment)
+        }
+    }
+
     func testFoodAddResizePersistenceAndDelete() throws {
         app.buttons["nav.add"].tap()
+        // The initial catalog load can move rows. Use the real empty personal list
+        // before opening manual entry rather than tapping a moving results footer.
+        let personal=app.buttons["search.filter.3"]
+        XCTAssertTrue(personal.waitForExistence(timeout:10))
+        personal.tap()
+        XCTAssertTrue(personal.isSelected)
         let manual=app.buttons["search.manual"]
         reveal(manual)
         manual.tap()
+        XCTAssertTrue(app.textFields["portion.name"].waitForExistence(timeout:10),app.debugDescription)
         replace(app.textFields["portion.name"],with:"UI Test Oats")
         XCTAssertTrue(app.segmentedControls.buttons["serving"].isSelected)
         XCTAssertEqual(app.textFields["portion.amount"].value as? String,"1")
@@ -85,7 +103,8 @@ final class LuqmaInteractionTests:XCTestCase {
         replace(calorieField,with:"2100")
         finishCalorieEditing()
         let save=app.buttons["goals.save"]
-        XCTAssertTrue(save.isEnabled)
+        XCTAssertTrue(save.waitForExistence(timeout:5))
+        XCTAssertTrue(save.isEnabled,app.debugDescription)
         save.tap()
         app.terminate()
         app.launch()
@@ -111,6 +130,8 @@ final class LuqmaInteractionTests:XCTestCase {
             .matching(NSPredicate(format:"label == %@","Done")).firstMatch
         XCTAssertTrue(done.waitForExistence(timeout:5))
         done.tap()
+        let dismissed=XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == false"),object:done)
+        XCTAssertEqual(XCTWaiter.wait(for:[dismissed],timeout:5),.completed,app.debugDescription)
     }
 
     private func openBreakfastEntry() {
@@ -128,7 +149,7 @@ final class LuqmaInteractionTests:XCTestCase {
             if element.exists && element.isHittable {return}
             scrollVisibleContentUp()
         }
-        XCTAssertTrue(element.exists && element.isHittable,"Required real control is unreachable: \(element.identifier)\n\(app.debugDescription)",file:file,line:line)
+        XCTAssertTrue(element.exists && element.isHittable,"Required real control is unreachable\n\(app.debugDescription)",file:file,line:line)
     }
 
     private func scrollVisibleContentUp() {
@@ -150,9 +171,17 @@ final class LuqmaInteractionTests:XCTestCase {
     }
 
     private func replace(_ field:XCUIElement,with text:String) {
+        XCTAssertTrue(field.waitForExistence(timeout:5),app.debugDescription)
         reveal(field)
         field.tap()
         let previous=field.value as? String ?? ""
-        field.typeText(String(repeating:XCUIKeyboardKey.delete.rawValue,count:previous.count)+text)
+        if !previous.isEmpty {
+            // These numeric fields are trailing aligned. A center tap may leave
+            // the caret inside 2000, so backspacing alone can produce 21002000.
+            field.coordinate(withNormalizedOffset:CGVector(dx:0.98,dy:0.5)).tap()
+            field.typeText(String(repeating:XCUIKeyboardKey.delete.rawValue,count:previous.count))
+        }
+        field.typeText(text)
+        XCTAssertEqual(field.value as? String,text,"The real field must contain the requested replacement before continuing.\n"+app.debugDescription)
     }
 }

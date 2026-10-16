@@ -159,6 +159,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                 .overlay{RoundedRectangle(cornerRadius:SearchLayout.chipRadius,style:.continuous).strokeBorder(Theme.text.opacity(filter==value ? 1:0.85),lineWidth:1)}
                 .frame(minHeight:44).contentShape(Rectangle())
         }.buttonStyle(.plain).disabled(choosingFood).accessibilityAddTraits(filter==value ? .isSelected:[])
+            .accessibilityIdentifier("search.filter."+String(value))
     }
     private func closeFoodAdd(){
         searchTask?.cancel();selectionTask?.cancel();barcodePhotoTask?.cancel();queryToken=UUID();photoToken=UUID();dismiss()
