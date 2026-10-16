@@ -84,7 +84,7 @@ final class LuqmaInteractionTests:XCTestCase {
         // SwiftUI exposes a full-row Switch containing the actual UISwitch.
         // Its center is the label's empty space, not the toggle hit target.
         let weightControl=weighted.switches.firstMatch
-        XCTAssertTrue(weightControl.exists && weightControl.isHittable,app.debugDescription)
+        reveal(weightControl)
         weightControl.tap()
         XCTAssertEqual(weighted.value as? String,"1")
         let ingredient=app.buttons["recipe.addIngredient"]
@@ -167,7 +167,7 @@ final class LuqmaInteractionTests:XCTestCase {
         // The real DisclosureGroup chevron is the hit target. The button's
         // combined accessibility frame also includes the label's Spacer.
         let disclosure=details.images["collapsed"]
-        XCTAssertTrue(disclosure.exists && disclosure.isHittable,app.debugDescription)
+        reveal(disclosure)
         disclosure.tap()
         let entry=app.buttons["UI Test Oats"]
         XCTAssertTrue(entry.waitForExistence(timeout:5),app.debugDescription)
