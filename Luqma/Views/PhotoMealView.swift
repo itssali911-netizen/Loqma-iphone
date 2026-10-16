@@ -234,8 +234,10 @@ import UIKit
         return GeometryReader{geometry in
                 ZStack(alignment:.bottom){
                     RoundedRectangle(cornerRadius:18,style:.continuous).fill(Theme.surface)
-                    RoundedRectangle(cornerRadius:18,style:.continuous).fill(macroColor(key))
-                        .frame(height:geometry.size.height*CGFloat(fraction))
+                    if key != .protein{
+                        RoundedRectangle(cornerRadius:18,style:.continuous).fill(macroColor(key))
+                            .frame(height:geometry.size.height*CGFloat(fraction))
+                    }
                     VStack(spacing:6){
                         Text(key.label(diary.language)).luqmaFont(size:12,weight:.medium,relativeTo:.caption)
                         Text(decimal(amount)+" "+diary.t("جم","g")).luqmaFont(size:15,weight:.bold,relativeTo:.subheadline).monospacedDigit()

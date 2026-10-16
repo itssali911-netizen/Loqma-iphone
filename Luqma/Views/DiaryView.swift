@@ -16,7 +16,8 @@ struct DiaryView:View {
     @State private var expandedMeals:Set<Meal>=[]
     private var day:String {DayKey.string(date)}
     var body:some View {
-        ScrollView{diaryContent.padding(.horizontal,16).padding(.bottom,24)}.appBackground().navigationTitle(diary.t("اليوم","Today"))
+        ScrollView{diaryContent.padding(.horizontal,16).padding(.bottom,24)}.appBackground()
+            .sandowStatusBackground(Theme.surface).navigationTitle(diary.t("اليوم","Today"))
             .toolbar(.hidden,for:.navigationBar)
             .fullScreenCover(isPresented:$adding){FoodAddView(initialQuery:searchQuery,initialMeal:chosenMeal,onPhotoCommit:{foods,meal in do{let entries=try foods.map{try DiaryEntry(food:$0.0,amount:$0.1,unit:$0.2,meal:meal,day:day,language:diary.language)};return diary.add(entries,foods:foods.map{$0.0})}catch{diary.report(error);return false}}){food,amount,unit,meal in do{let entry=try DiaryEntry(food:food,amount:amount,unit:unit,meal:meal,day:day,language:diary.language);return diary.add([entry],foods:[food])}catch{diary.report(error);return false}}}
             .sheet(item:$editing){EntryEditor(entry:$0)}

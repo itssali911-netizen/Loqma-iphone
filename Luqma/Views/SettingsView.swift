@@ -49,8 +49,8 @@ struct SettingsView:View {
                 .foregroundStyle(Theme.text).accessibilityAddTraits(.isHeader)
         }.padding(.horizontal,16).padding(.top,8).padding(.bottom,20)
             .frame(maxWidth:.infinity,minHeight:112,alignment:.bottomLeading)
-            .background(Theme.surface,in:UnevenRoundedRectangle(bottomLeadingRadius:28,bottomTrailingRadius:28,style:.continuous))
-            .background(alignment:.top){Theme.surface.frame(height:44).ignoresSafeArea(edges:.top)}
+            .background{UnevenRoundedRectangle(bottomLeadingRadius:28,bottomTrailingRadius:28,style:.continuous)
+                .fill(Theme.surface).ignoresSafeArea(edges:.top)}
     }
     private var languageRow:some View {
         HStack(spacing:10){

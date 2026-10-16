@@ -31,7 +31,8 @@ struct KitchenView:View {
             if diary.state.recipes.isEmpty{kitchenEmptyState}
             else if filteredRecipes.isEmpty{ContentUnavailableView(diary.t("لا توجد نتائج","No results"),systemImage:"magnifyingglass",description:Text(diary.t("جرّب اسمًا آخر أو غيّر نوع المحفوظات.","Try another name or change the saved-item type.")))}
             ForEach(filteredRecipes){r in recipeCard(r)}
-        }.padding(.horizontal,16).padding(.bottom,24)}.scrollDismissesKeyboard(.interactively).appBackground().navigationTitle(diary.t("مطبخي","My kitchen"))
+        }.padding(.horizontal,16).padding(.bottom,24)}.scrollDismissesKeyboard(.interactively).appBackground()
+            .sandowStatusBackground(Theme.surface).navigationTitle(diary.t("مطبخي","My kitchen"))
             .toolbar(.hidden,for:.navigationBar)
             .sheet(isPresented:$creating){RecipeEditor(recipe:Recipe(id:UUID(),name:"",type:"recipe",ingredients:[],portions:1,cookedWeight:nil,notes:""))}
             .sheet(isPresented:$importingRecipe){RecipeImportView()}
