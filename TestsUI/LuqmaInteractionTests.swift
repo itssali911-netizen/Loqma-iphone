@@ -83,7 +83,7 @@ final class LuqmaInteractionTests:XCTestCase {
         app.buttons["goals.editCalories"].tap()
         let calorieField=goalCalories()
         replace(calorieField,with:"2100")
-        app.buttons["navigation.back"].tap()
+        finishCalorieEditing()
         let save=app.buttons["goals.save"]
         XCTAssertTrue(save.isEnabled)
         save.tap()
@@ -94,7 +94,7 @@ final class LuqmaInteractionTests:XCTestCase {
         app.buttons["goals.editCalories"].tap()
         XCTAssertEqual(goalCalories().value as? String,"2100")
         replace(goalCalories(),with:"2000")
-        app.buttons["navigation.back"].tap()
+        finishCalorieEditing()
         app.buttons["goals.save"].tap()
     }
 
@@ -102,6 +102,15 @@ final class LuqmaInteractionTests:XCTestCase {
         let direct=app.textFields["goals.calories"]
         if direct.waitForExistence(timeout:3) {return direct}
         return app.descendants(matching:.any).matching(identifier:"goals.calories").firstMatch.descendants(matching:.textField).firstMatch
+    }
+
+    private func finishCalorieEditing() {
+        // The underlying goal sheet still exposes its Cancel control.
+        // Scope to the actual Done action of the presented calorie form.
+        let done=app.buttons.matching(identifier:"navigation.back")
+            .matching(NSPredicate(format:"label == %@","Done")).firstMatch
+        XCTAssertTrue(done.waitForExistence(timeout:5))
+        done.tap()
     }
 
     private func openBreakfastEntry() {
@@ -117,9 +126,27 @@ final class LuqmaInteractionTests:XCTestCase {
     private func reveal(_ element:XCUIElement,file:StaticString=#filePath,line:UInt=#line) {
         for _ in 0..<8 {
             if element.exists && element.isHittable {return}
-            app.swipeUp()
+            scrollVisibleContentUp()
         }
-        XCTAssertTrue(element.exists && element.isHittable,"Required real control is unreachable",file:file,line:line)
+        XCTAssertTrue(element.exists && element.isHittable,"Required real control is unreachable: \(element.identifier)\n\(app.debugDescription)",file:file,line:line)
+    }
+
+    private func scrollVisibleContentUp() {
+        // An app-wide swipe starts over the keyboard while editing a field.
+        // Drag inside the actual visible form/scroll frame above that keyboard.
+        let collection=app.collectionViews.firstMatch
+        let content=collection.exists ? collection:app.scrollViews.firstMatch
+        guard content.exists else{app.swipeUp();return}
+        let frame=content.frame
+        let keyboard=app.keyboards.firstMatch
+        let top=max(frame.minY,app.frame.minY)
+        let bottom=min(frame.maxY,keyboard.exists ? keyboard.frame.minY:app.frame.maxY)
+        guard bottom-top>60 else{app.swipeUp();return}
+        let origin=app.coordinate(withNormalizedOffset:CGVector(dx:0,dy:0))
+        let x=frame.midX-app.frame.minX
+        let start=origin.withOffset(CGVector(dx:x,dy:top+(bottom-top)*0.8-app.frame.minY))
+        let end=origin.withOffset(CGVector(dx:x,dy:top+(bottom-top)*0.2-app.frame.minY))
+        start.press(forDuration:0.05,thenDragTo:end)
     }
 
     private func replace(_ field:XCUIElement,with text:String) {
