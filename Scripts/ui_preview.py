@@ -40,6 +40,7 @@ from vision_compat import apply_vision_compat
 
 ROOT = Path(__file__).resolve().parent.parent
 DEVICE_TYPE = "com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro-Max"
+REFERENCE_DEVICE_TYPE = "com.apple.CoreSimulator.SimDeviceType.iPhone-13-mini"
 SCREENS = ((0, "today"), (1, "kitchen"), (2, "progress"), (3, "settings"))
 PHOTO_SCREEN = "photo-estimate"
 RECIPE_SCREEN = "recipe-import"
@@ -49,12 +50,14 @@ EXTRA_ROUTES = (("search", "-loqma-preview-search"),
 TEMPLATE_ROUTES = (("macro-goals", "goals"),
                    ("food-portion", "portion"),
                    ("recipe-editor", "recipe"),
+                   ("recipe-details", "recipeDetail"),
                    ("weight-plan", "plan"),
                    ("weight-editor", "weight"),
                    ("analysis-connection", "connection"),
                    ("backup", "backup"),
                    ("about", "about"),
-                   ("barcode-guide", "barcode"))
+                   ("barcode-guide", "barcode"),
+                   ("language", "language"))
 VARIANT_ROUTES = (("accessibility-today", ("-loqma-preview-overview", "-loqma-preview-accessibility")),
                   ("photo-components", ("-loqma-preview-photo", "-loqma-preview-photo-detailed")))
 EXPECTED_SCREEN_COUNT = len(SCREENS) + 2 + len(EXTRA_ROUTES) + len(TEMPLATE_ROUTES) + len(VARIANT_ROUTES)
@@ -72,7 +75,7 @@ def preview_cases() -> list[dict]:
               for screen, argument in routes]
     cases += [{"tab": None, "screen": screen, "arguments": ["-loqma-preview-template", route],
                "template_route": route, "read_only_preview": True,
-               "synthetic_fixture": route in {"portion", "recipe"}}
+               "synthetic_fixture": route in {"portion", "recipe", "recipeDetail"}}
               for screen, route in TEMPLATE_ROUTES]
     cases += [{"tab": None, "screen": screen, "arguments": list(arguments),
                "synthetic_fixture": True,
@@ -326,7 +329,8 @@ def collect_failure_diagnostics(output: Path, device: str, report: dict) -> None
 
 
 def capture(output: Path, packages: Path, prebuilt: Path | None,
-            bundle: str, settle_seconds: float) -> None:
+            bundle: str, settle_seconds: float, device_type: str=DEVICE_TYPE,
+            language: str='ar', screens: list[str] | None=None) -> None:
     if output.exists():
         raise BuildError("Choose a new UI preview output directory to avoid mixing screenshots.")
     output.mkdir(parents=True)
@@ -337,7 +341,8 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
         "capture_method": "Native Debug SwiftUI app and simctl framebuffer screenshot",
         "fresh_simulator": False, "existing_device_data_modified": False,
         "api_key_used": False, "physical_device_verified": False,
-        "expected_screenshot_count": EXPECTED_SCREEN_COUNT,
+        "expected_screenshot_count": len(screens) if screens else EXPECTED_SCREEN_COUNT,
+        "language": language,
         "synthetic_photo_fixture": True,
         "synthetic_recipe_fixture": True,
         "synthetic_meal_fixture": True,
@@ -346,7 +351,7 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
         "synthetic_recipe_editor_fixture": True,
         "secondary_form_previews_read_only": True,
         "accessibility_preview_dynamic_type": "accessibility3",
-        "english_preview_skipped_reason": "DiaryStore exposes no temporary language override; preview does not write language settings",
+        "preview_language_override": "DEBUG English flag on this newly created Simulator" if language=='en' else "Default Arabic diary language",
         "search_uses_actual_catalog": True,
         "barcode_preview_uses_live_guide_component": True,
         "barcode_camera_session_started": False,
@@ -368,16 +373,16 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
         inventory = json.loads(command(["xcrun", "simctl", "list", "--json"],
                                        output, "preview-inventory"))
         types = inventory.get("devicetypes", inventory.get("deviceTypes", []))
-        if not any(item.get("identifier") == DEVICE_TYPE for item in types):
-            raise BuildError("The selected Xcode has no iPhone 16 Pro Max Simulator device type.")
+        if not any(item.get("identifier") == device_type for item in types):
+            raise BuildError("The selected Xcode lacks the requested Simulator device type: "+device_type)
         runtime = select_runtime(inventory)
         name = "Luqma UI Preview " + uuid.uuid4().hex[:8]
-        device = command(["xcrun", "simctl", "create", name, DEVICE_TYPE,
+        device = command(["xcrun", "simctl", "create", name, device_type,
                           runtime["identifier"]], output, "preview-create").strip()
         if not re.fullmatch(r"[0-9A-Fa-f-]{36}", device):
             device = None
             raise BuildError("Simulator creation did not return a valid device identifier.")
-        report["simulator"] = {"udid": device, "device": "iPhone 16 Pro Max",
+        report["simulator"] = {"udid": device, "device": "iPhone 13 mini" if device_type==REFERENCE_DEVICE_TYPE else "iPhone 16 Pro Max",
                                "runtime": runtime["name"], "runtime_id": runtime["identifier"]}
         report["fresh_simulator"] = True
         try:
@@ -394,11 +399,15 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
                 output, "preview-status-bar")
         command(["xcrun", "simctl", "install", device, str(app)],
                 output, "preview-install", 180)
-        for number, case in enumerate(preview_cases(), 1):
+        cases=[case for case in preview_cases() if not screens or case['screen'] in screens]
+        if screens and len(cases)!=len(screens):
+            raise BuildError('One or more requested screen names are unknown or duplicated.')
+        for number, case in enumerate(cases, 1):
             tab, screen, arguments = case["tab"], case["screen"], case["arguments"]
             launched = command(["xcrun", "simctl", "launch", "--terminate-running-process",
                                 device, bundle, *arguments,
-                                "-AppleLanguages", "(ar)", "-AppleLocale", "ar_SA"],
+                                *(["-loqma-ui-test-en"] if language=='en' else []),
+                                "-AppleLanguages", "("+language+")", "-AppleLocale", "en_US" if language=='en' else "ar_SA"],
                                output, "preview-launch-" + screen, 300 if number == 1 else 120)
             match = re.search(r":\s*(\d+)\s*$", launched)
             if not match:
@@ -414,9 +423,9 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
                                           "process_still_running": True,
                                           **details})
             print(f"Captured native {screen}: {screenshot.name}", flush=True)
-        if len(report["screenshots"]) != EXPECTED_SCREEN_COUNT:
-            raise BuildError(f"The native preview did not capture all {EXPECTED_SCREEN_COUNT} required screens.")
-        if len({item["frame_sha256"] for item in report["screenshots"]}) != EXPECTED_SCREEN_COUNT:
+        if len(report["screenshots"]) != report['expected_screenshot_count']:
+            raise BuildError("The native preview did not capture all required screens.")
+        if len({item["frame_sha256"] for item in report["screenshots"]}) != report['expected_screenshot_count']:
             raise BuildError("Screenshots are identical; verify the DEBUG preview routes are installed.")
         report["status"] = "captured"
     except BaseException as error:
@@ -446,6 +455,9 @@ def main() -> int:
     parser.add_argument("--app", type=Path, help="Reuse an existing Debug arm64 Simulator .app")
     parser.add_argument("--bundle-id", default=os.environ.get("BUNDLE_ID", "") or "app.luqma.diary")
     parser.add_argument("--settle-seconds", type=float, default=6.0)
+    parser.add_argument("--device-type",choices=[DEVICE_TYPE,REFERENCE_DEVICE_TYPE],default=DEVICE_TYPE)
+    parser.add_argument("--language",choices=['ar','en'],default='ar')
+    parser.add_argument("--screens",nargs='+',help='Optional subset of named native routes')
     args = parser.parse_args()
     if not re.fullmatch(r"[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+", args.bundle_id):
         parser.error("Bundle identifier is invalid.")
@@ -455,7 +467,8 @@ def main() -> int:
         parser.error("BUILD_NUMBER must be a positive integer with at most nine digits.")
     try:
         capture(args.output.resolve(), args.packages.resolve(),
-                args.app.resolve() if args.app else None, args.bundle_id, args.settle_seconds)
+                args.app.resolve() if args.app else None, args.bundle_id, args.settle_seconds,
+                args.device_type,args.language,args.screens)
     except (BuildError, OSError, ValueError) as error:
         print("Luqma native UI preview:", str(error), file=sys.stderr)
         return 1

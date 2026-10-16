@@ -1,4 +1,11 @@
 Luqma 2.3 current reference: Sandow UI Kit: AI Fitness & Nutrition App (Community).
+Luqma 2.4 continues from the same saved original panels without further MCP reads.
+Search presentation/rows, Settings/About, Calorie Goal, photo-result composition
+and actual saved-recipe details were rebuilt from the documented visible evidence.
+Child metrics remain raster-guided reconstruction where no editable data exists.
+Original standalone SVG icons and food photos are still unavailable; no montage
+or extracted reference photograph is used as a production screen or food asset.
+Native build/capture/interaction results must be read from this branch's own run.
 User-provided Figma duplicate, dark page 2:606:
 https://www.figma.com/design/IfMCdTI3FcvXpNFy79PRUA?node-id=2-606
 Inspected actual editable free Welcome/Assessment frames and visible color styles:

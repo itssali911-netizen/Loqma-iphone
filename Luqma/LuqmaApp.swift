@@ -4,6 +4,12 @@ import UIKit
 @MainActor final class AppServices {
     static let shared = AppServices()
     let diary = DiaryStore()
+    init(){
+        #if DEBUG
+        // Only the isolated UI-test Simulator uses this flag; it is absent from Release.
+        if CommandLine.arguments.contains("-loqma-ui-test-en") {diary.change{$0.language = .en}}
+        #endif
+    }
 }
 
 @MainActor final class DiaryAppDelegate: NSObject, UIApplicationDelegate {
@@ -54,7 +60,7 @@ struct RootView:View {
     #if DEBUG
     @Environment(\.dynamicTypeSize) private var typeSize
     private enum TemplatePreviewRoute:String,Identifiable {
-        case goals,portion,recipe,plan,weight,connection,backup,about,barcode
+        case goals,portion,recipe,recipeDetail,plan,weight,connection,backup,about,barcode,language
         var id:String{rawValue}
     }
     @State private var templatePreview:TemplatePreviewRoute?
@@ -79,10 +85,10 @@ struct RootView:View {
             NavigationStack{DiaryView().toolbar(.hidden,for:.tabBar)}.tabItem{Label(diary.t("اليوم","Today"),systemImage:"house")}.tag(0)
             NavigationStack{KitchenView().toolbar(.hidden,for:.tabBar)}.tabItem{Label(diary.t("مطبخي","Kitchen"),systemImage:"fork.knife")}.tag(1)
             NavigationStack{ProgressViewScreen().toolbar(.hidden,for:.tabBar)}.tabItem{Label(diary.t("تقدّمي","Progress"),systemImage:"chart.bar")}.tag(2)
-            NavigationStack{SettingsView().toolbar(.hidden,for:.tabBar)}.tabItem{Label(diary.t("الإعدادات","Settings"),systemImage:"gearshape")}.tag(3)
+            NavigationStack{SettingsView(onBack:{tab=0}).toolbar(.hidden,for:.tabBar)}.tabItem{Label(diary.t("الإعدادات","Settings"),systemImage:"gearshape")}.tag(3)
         }.toolbar(.hidden,for:.tabBar)
             .safeAreaInset(edge:.bottom,spacing:0){bottomNavigation}
-            .sheet(isPresented:$adding){FoodAddView(onPhotoCommit:{foods,meal in
+            .fullScreenCover(isPresented:$adding){FoodAddView(onPhotoCommit:{foods,meal in
                 do{let entries=try foods.map{try DiaryEntry(food:$0.0,amount:$0.1,unit:$0.2,meal:meal,day:DayKey.today,language:diary.language)};return diary.add(entries,foods:foods.map{$0.0})}catch{diary.report(error);return false}
             }){food,amount,unit,meal in
                 do{return diary.add([try DiaryEntry(food:food,amount:amount,unit:unit,meal:meal,day:DayKey.today,language:diary.language)],foods:[food])}catch{diary.report(error);return false}
@@ -103,7 +109,7 @@ struct RootView:View {
                 RecipeImportView()
                 #endif
             }
-            .sheet(isPresented:$searchPreview){
+            .fullScreenCover(isPresented:$searchPreview){
                 #if DEBUG
                 FoodAddView(initialQuery:"التنمية صدر دجاج"){_,_,_,_ in false}
                 #endif
@@ -125,11 +131,13 @@ struct RootView:View {
             case .goals:GoalEditor()
             case .portion:FoodPortionView(food:previewPortionFood){_,_,_,_ in false}
             case .recipe:RecipeEditor(recipe:previewRecipe)
+            case .recipeDetail:RecipeDetailView(recipeID:previewRecipe.id,previewRecipe:previewRecipe)
             case .plan:NavigationStack{PlanView().navigationBarTitleDisplayMode(.inline)}
             case .weight:WeightEditor()
             case .connection:GeminiSettingsView()
             case .backup:NavigationStack{BackupSettingsView().navigationBarTitleDisplayMode(.inline)}
             case .about:NavigationStack{AboutLuqmaView().navigationBarTitleDisplayMode(.inline)}
+            case .language:NavigationStack{LuqmaLanguageView()}
             case .barcode:NavigationStack{
                 BarcodeScanGuide(language:diary.language).background(Theme.surface).ignoresSafeArea()
                     .sandowNavigation(diary.t("مسح الباركود","Scan barcode"),backLabel:diary.t("إغلاق","Close"))
@@ -157,7 +165,7 @@ struct RootView:View {
         HStack(alignment:.center,spacing:4){
             navigationButton(0,title:diary.t("اليوم","Today"),symbol:"house")
             navigationButton(1,title:diary.t("مطبخي","Kitchen"),symbol:"fork.knife")
-            Button{adding=true}label:{Image(systemName:"plus").font(.system(size:27,weight:.medium)).foregroundStyle(Theme.text).frame(width:54,height:54).background(Theme.accent,in:RoundedRectangle(cornerRadius:17,style:.continuous))}.buttonStyle(.plain).frame(maxWidth:.infinity,minHeight:54).accessibilityLabel(diary.t("إضافة طعام إلى اليوم","Add food to today"))
+            Button{adding=true}label:{Image(systemName:"plus").font(.system(size:27,weight:.medium)).foregroundStyle(Theme.text).frame(width:54,height:54).background(Theme.accent,in:RoundedRectangle(cornerRadius:17,style:.continuous))}.buttonStyle(.plain).frame(maxWidth:.infinity,minHeight:54).accessibilityLabel(diary.t("إضافة طعام إلى اليوم","Add food to today")).accessibilityIdentifier("nav.add")
             navigationButton(2,title:diary.t("تقدّمي","Progress"),symbol:"chart.bar")
             navigationButton(3,title:diary.t("الإعدادات","Settings"),symbol:"gearshape")
         }.padding(.horizontal,10).padding(.vertical,6)
@@ -171,5 +179,6 @@ struct RootView:View {
                 .background(tab == value ? Theme.background:Color.clear,in:RoundedRectangle(cornerRadius:12,style:.continuous))
             Capsule().fill(tab == value ? Theme.accent:Color.clear).frame(width:18,height:3)
         }.frame(maxWidth:.infinity,minHeight:54).contentShape(Rectangle())}.buttonStyle(.plain).accessibilityLabel(title).accessibilityAddTraits(tab == value ? .isSelected:[])
+            .accessibilityIdentifier(["nav.today","nav.kitchen","nav.progress","nav.settings"][value])
     }
 }

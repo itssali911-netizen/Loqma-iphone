@@ -1,0 +1,96 @@
+{
+  "purpose": "Exploratory baseline only; no new UI implementation has been made",
+  "reference_node": "2:10113",
+  "source_file": "reference/search-original.png",
+  "source_sha256": "db85d32a2ce7774cab5bc6d8566153dfc35daa9303a79c1a18ce5df5add29427",
+  "source_dimensions": [
+    2387,
+    1292
+  ],
+  "raster_roi": [
+    1445,
+    352,
+    1820,
+    1164
+  ],
+  "roi_is_original_node_geometry": false,
+  "native_build": "2.3 build59",
+  "native_commit": "b9c0f7cfeb058472f33592ffbb61ed260bceecef",
+  "native_sha256": "e1174ac2e9e31eb2bd601065df4809c264ab72d3828dae5348d9e1ca54d449ae",
+  "native_original_dimensions": [
+    1320,
+    2868
+  ],
+  "width_normalization_scale": 0.2840909090909091,
+  "native_scaled_height": 815,
+  "native_bottom_pixels_trimmed": 3,
+  "target_dimensions": [
+    375,
+    812
+  ],
+  "color_space": "sRGB; embedded ICC converted when present",
+  "overlay_alpha": 0.5,
+  "difference": "Absolute RGB difference, contrast x3 for inspection",
+  "production_assets_modified": false,
+  "original_capture_modified": false,
+  "matched_language": false,
+  "matched_data": false,
+  "matched_safe_areas": false,
+  "matched_viewport": false,
+  "comparable_for_acceptance": false,
+  "ssim_not_computed_reason": "Different language, content, OS chrome and functional scope; a score would not measure implementation fidelity",
+  "findings": [
+    "Reference is a generic fitness search with category chips and match dropdown; Luqma is real food search.",
+    "Reference orange extends behind status bar; native sheet retains a black status area and rounded sheet top.",
+    "Reference result cards have compact leading icons, labels/tags and trailing chevrons; native uses food/source/unit metadata and orange plus.",
+    "Native header title placement, result density, icon shapes and chip geometry remain visually different.",
+    "RTL adaptation, real catalog data and different viewport mean the overlay is diagnostic, not a pixel-perfect acceptance test."
+  ],
+  "artifacts": [
+    {
+      "file": "search-difference-exploratory.png",
+      "bytes": 81766,
+      "dimensions": [
+        375,
+        812
+      ],
+      "sha256": "db819be158282485c43711856adc94318f1a9562f631f0375030f2f944dc5fac"
+    },
+    {
+      "file": "search-native-width-normalized.png",
+      "bytes": 100838,
+      "dimensions": [
+        375,
+        812
+      ],
+      "sha256": "f1abb5a80677acceb5a9705c1492c45c35a146541dacab4f8f381a3d5fd43134"
+    },
+    {
+      "file": "search-overlay-exploratory.png",
+      "bytes": 157061,
+      "dimensions": [
+        375,
+        812
+      ],
+      "sha256": "b764ae63487c7e06a8e488342f08a30b0494ea9077d400ee88e11437ed000732"
+    },
+    {
+      "file": "search-reference-raster-roi.png",
+      "bytes": 97931,
+      "dimensions": [
+        375,
+        812
+      ],
+      "sha256": "0c29ba01f73bcd0956201977a23206f884c8ced23368c85f537a3c1d8c237238"
+    },
+    {
+      "file": "search-side-by-side.png",
+      "bytes": 205946,
+      "dimensions": [
+        762,
+        812
+      ],
+      "sha256": "91a8a17c1f1e0e8c941812713b518d0f5062bcc1063a143256e876d72e69cff1"
+    }
+  ]
+}

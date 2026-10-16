@@ -26,6 +26,7 @@ import UIKit
     @State private var editing:EstimateSelection?
     @State private var products:[UUID:(Food,Double,FoodUnit)]=[:]
     @State private var meal:Meal = .lunch
+    @State private var initialized=false
     @State private var analysisTask:Task<Void,Never>?
     @State private var photoLoadTask:Task<Void,Never>?
     @State private var photoGeneration=UUID()
@@ -70,7 +71,7 @@ import UIKit
                 products[request.id]=(food,1,.serving);editing=nil;return true
             }catch{diary.report(error);return false}
         }}
-        .sheet(item:$selection){request in AnyView(FoodAddView(initial:products[request.id].flatMap{FoodSearch.isCatalogFood($0.0) ? $0.0:nil},initialQuery:request.name,productSelection:true){food,amount,unit,_ in
+        .fullScreenCover(item:$selection){request in AnyView(FoodAddView(initial:products[request.id].flatMap{FoodSearch.isCatalogFood($0.0) ? $0.0:nil},initialQuery:request.name,productSelection:true){food,amount,unit,_ in
             guard FoodSearch.isCatalogFood(food),(try? food.total(amount,unit:unit)) != nil else{return false}
             if !parts.contains(where:{$0.id==request.id}){
                 guard let n=food.values(for:food.unit) else{return false}
@@ -82,7 +83,9 @@ import UIKit
         .onChange(of:imageData){_,data in analysisGeneration=UUID();analysisTask?.cancel();analysisTask=nil;busy=false;parts=[];products.removeAll();detailedComponents=false;showingPhotoInput=false;preview=data.flatMap{try? PhotoAnalyzer.image($0,maxPixels:640)}.map{UIImage(cgImage:$0)}}
         .onChange(of:phase){_,value in if value != .active,busy{cancellationMessage=diary.t("توقف التحليل عند مغادرة الشاشة. افتح التطبيق وحاول مجددًا.","Analysis stopped when the app left the foreground. Reopen the app and retry.");analysisTask?.cancel()}}
         .onReceive(NotificationCenter.default.publisher(for:UIApplication.didReceiveMemoryWarningNotification)){_ in if busy{cancellationMessage=diary.t("توقف التحليل بسبب ضغط الذاكرة. حاول مجددًا.","Analysis stopped because of memory pressure. Retry.");analysisTask?.cancel()}}
-        .onAppear{if let initialMeal{meal=initialMeal};ready=GeminiCredentialStore.isConfigured
+        .onAppear{
+            if !initialized{initialized=true;if let initialMeal{meal=initialMeal}}
+            ready=GeminiCredentialStore.isConfigured
             #if DEBUG
             if ProcessInfo.processInfo.arguments.contains("-loqma-preview-photo"),parts.isEmpty{preparePreview()}
             #endif
@@ -116,14 +119,11 @@ import UIKit
     private var review:some View {
         let summary=total
         return VStack(alignment:.leading,spacing:16){
-            resultHero
-            if let summary{estimateSummary(summary)}
-            else{
-                VStack(alignment:.leading,spacing:14){
-                    resultTitle
-                    Notice(text:diary.t("أكمل بيانات جميع المكونات لعرض إجمالي الوجبة وحفظها.","Complete every component to see and log the meal total."))
-                }.luqmaCard()
-            }
+            VStack(spacing:0){
+                resultHero.padding(.bottom,-24)
+                resultPanel(summary)
+            }.padding(.horizontal,-16)
+            if let summary{calorieContribution(summary.kcal)}
             Label(diary.t("تقديرات تقريبية تتأثر بالكمية وطريقة التحضير","Estimates vary with amount and preparation"),systemImage:"sparkles")
                 .luqmaFont(.caption).foregroundStyle(Theme.muted).fixedSize(horizontal:false,vertical:true)
             VStack(alignment:.leading,spacing:10){
@@ -132,11 +132,6 @@ import UIKit
             }.id("photo-components")
             ForEach(parts){part in component(part)}
             Button{selection=ProductSelection(id:UUID(),name:"")}label:{Label(diary.t("إضافة مكوّن","Add component"),systemImage:"plus.circle")}.buttonStyle(LuqmaSecondaryButtonStyle())
-            mealChoice
-            Button(diary.t("إضافة الوجبة","Log meal")){
-                guard total != nil else{return};let values=parts.compactMap{products[$0.id]};guard values.count==parts.count else{return}
-                if onCommit(values,meal){parts=[];products=[:]}
-            }.buttonStyle(LuqmaPrimaryButtonStyle()).disabled(summary==nil || busy || loadingPhoto)
         }
     }
     private var resultHero:some View {
@@ -148,51 +143,77 @@ import UIKit
                     Theme.card
                     Image(systemName:"viewfinder").font(.system(size:72,weight:.ultraLight))
                         .foregroundStyle(Theme.surface)
-                    Image(systemName:"fork.knife").font(.system(size:30,weight:.light))
-                        .foregroundStyle(Theme.muted)
+                    VStack(spacing:8){
+                        Image(systemName:"fork.knife").font(.system(size:24,weight:.light))
+                        Text(diary.t("لا توجد صورة مرفقة","No attached photo")).luqmaFont(.caption)
+                    }.foregroundStyle(Theme.muted)
                 }
             }
             .frame(width:geometry.size.width,height:geometry.size.height).clipped()
         }
-        .aspectRatio(1/0.85,contentMode:.fit)
+        .aspectRatio(preview == nil ? 2.6:1/0.85,contentMode:.fit)
         .clipShape(RoundedRectangle(cornerRadius:20,style:.continuous))
         .accessibilityElement(children:.ignore)
         .accessibilityLabel(diary.t(preview == nil ? "لا توجد صورة في هذه المعاينة":"صورة الوجبة",preview == nil ? "No photo in this preview":"Meal photo"))
         .accessibilityAddTraits(.isImage)
     }
     private var resultTitle:some View {
-        VStack(alignment:.center,spacing:6){
+        VStack(alignment:.center,spacing:12){
+            HStack(spacing:8){
+                resultChip(decimal(Double(parts.count),0)+" "+diary.t("مكوّنات","components"))
+                if let grams=knownMealWeight{resultChip(decimal(grams,0)+" "+diary.t("جم","g"))}
+            }
             Text(parts.count == 1 ? componentName(parts[0].id):diary.t("وجبتك من الصورة","Your meal from the photo"))
-                .luqmaFont(size:24,weight:.bold,relativeTo:.title2).multilineTextAlignment(.center).fixedSize(horizontal:false,vertical:true)
-            Text(diary.t("المكوّنات: ","Components: ")+decimal(Double(parts.count),0))
-                .luqmaFont(.caption).foregroundStyle(Theme.muted)
+                .luqmaFont(size:22,weight:.bold,relativeTo:.title2).multilineTextAlignment(.center).fixedSize(horizontal:false,vertical:true)
         }.frame(maxWidth:.infinity)
     }
-    private func estimateSummary(_ nutrition:Nutrition)->some View {
-        VStack(alignment:.leading,spacing:20){
+    private func resultChip(_ title:String)->some View {
+        Text(title).luqmaFont(size:11,weight:.medium,relativeTo:.caption)
+            .padding(.horizontal,9).padding(.vertical,5)
+            .overlay{RoundedRectangle(cornerRadius:8).stroke(Theme.muted.opacity(0.65),lineWidth:0.75)}
+    }
+    private var knownMealWeight:Double? {
+        var grams=0.0
+        for part in parts{
+            guard let product=products[part.id],product.1.isFinite,product.1>0 else{return nil}
+            if MealPhotoEstimate.isValidPhotoEstimate(product.0){grams+=part.grams*product.1}
+            else if product.2 == .g{grams+=product.1}
+            else if product.2 == .serving,product.0.servingUnit == "g",let quantity=product.0.servingQuantity,quantity.isFinite,quantity>0{grams+=quantity*product.1}
+            else{return nil}
+        }
+        return grams.isFinite && grams>0 ? grams:nil
+    }
+    private func resultPanel(_ nutrition:Nutrition?)->some View {
+        VStack(alignment:.center,spacing:16){
+            Capsule().fill(Theme.surface).frame(width:48,height:4).accessibilityHidden(true)
             resultTitle
-            if typeSize.isAccessibilitySize{
+            if let nutrition{
                 calorieValue(nutrition.kcal)
-                calorieContribution(nutrition.kcal)
-            }else{
-                HStack(alignment:.top,spacing:20){
-                    calorieValue(nutrition.kcal)
-                    calorieContribution(nutrition.kcal).frame(maxWidth:.infinity,alignment:.leading)
+                if typeSize.isAccessibilitySize{
+                    VStack(spacing:16){ForEach(MacroKey.allCases){key in macroGoal(key,nutrition:nutrition)}}
+                }else{
+                    HStack(alignment:.bottom,spacing:10){ForEach(MacroKey.allCases){key in macroColumn(key,nutrition:nutrition)}}
                 }
-            }
-            if typeSize.isAccessibilitySize{
-                VStack(spacing:16){ForEach(MacroKey.allCases){key in macroGoal(key,nutrition:nutrition)}}
             }else{
-                HStack(alignment:.bottom,spacing:20){ForEach(MacroKey.allCases){key in macroColumn(key,nutrition:nutrition)}}
+                Notice(text:diary.t("أكمل بيانات جميع المكونات لعرض إجمالي الوجبة وحفظها.","Complete every component to see and log the meal total."))
             }
-        }.luqmaCard()
+            mealChoice
+            Button{logMeal()}label:{Label(diary.t("إضافة الوجبة","Log meal"),systemImage:"plus")}
+                .buttonStyle(LuqmaPrimaryButtonStyle()).disabled(nutrition==nil || busy || loadingPhoto)
+        }.padding(.horizontal,16).padding(.top,10).padding(.bottom,16)
+            .frame(maxWidth:.infinity)
+            .background(Theme.background,in:UnevenRoundedRectangle(topLeadingRadius:28,topTrailingRadius:28,style:.continuous))
+    }
+    private func logMeal(){
+        guard total != nil else{return};let values=parts.compactMap{products[$0.id]};guard values.count==parts.count else{return}
+        if onCommit(values,meal){parts=[];products=[:]}
     }
     private func calorieValue(_ kcal:Double)->some View {
         HStack(alignment:.firstTextBaseline,spacing:5){
-            Image(systemName:"flame.fill").font(.system(size:19,weight:.semibold)).foregroundStyle(Theme.accent).accessibilityHidden(true)
-            Text(decimal(kcal,0)).luqmaFont(size:34,weight:.bold,relativeTo:.largeTitle).monospacedDigit().foregroundStyle(Theme.text)
-            Text(diary.t("سعرة","kcal")).luqmaFont(.caption).foregroundStyle(Theme.muted)
-        }.accessibilityElement(children:.combine)
+            Text(diary.t("تقدير الصورة","Photo estimate"))
+            Text("·").accessibilityHidden(true)
+            Text(decimal(kcal,0)+" "+diary.t("سعرة","kcal")).monospacedDigit()
+        }.luqmaFont(size:12,relativeTo:.caption).foregroundStyle(Theme.muted).accessibilityElement(children:.combine)
     }
     private func calorieContribution(_ kcal:Double)->some View {
         VStack(alignment:.leading,spacing:8){
@@ -212,19 +233,29 @@ import UIKit
     private func macroColumn(_ key:MacroKey,nutrition:Nutrition)->some View {
         let amount=nutrition[key]
         let largest=max(nutrition.protein,max(nutrition.carbs,nutrition.fat))
-        let fraction=largest>0 && amount>0 ? max(0.08,min(1,amount/largest)):0
-        return VStack(alignment:.center,spacing:10){
-            GeometryReader{geometry in
+        let fraction=largest>0 && amount>0 ? min(0.72,amount/largest*0.72):0
+        return GeometryReader{geometry in
                 ZStack(alignment:.bottom){
-                    RoundedRectangle(cornerRadius:12,style:.continuous).fill(Theme.surface)
-                    RoundedRectangle(cornerRadius:12,style:.continuous).fill(macroColor(key))
-                        .frame(height:geometry.size.height*CGFloat(fraction))
+                    RoundedRectangle(cornerRadius:18,style:.continuous).fill(Theme.surface)
+                    if key != .protein{
+                        RoundedRectangle(cornerRadius:18,style:.continuous).fill(macroColor(key))
+                            .frame(height:geometry.size.height*CGFloat(fraction))
+                    }
+                    VStack(spacing:6){
+                        Text(key.label(diary.language)).luqmaFont(size:12,weight:.medium,relativeTo:.caption)
+                        Text(decimal(amount)+" "+diary.t("جم","g")).luqmaFont(size:15,weight:.bold,relativeTo:.subheadline).monospacedDigit()
+                    }.foregroundStyle(Theme.text).padding(.horizontal,4).padding(.bottom,14)
+                    VStack{
+                        Image(systemName:macroSymbol(key)).font(.system(size:16,weight:.medium)).foregroundStyle(Theme.muted).padding(.top,12)
+                        Spacer(minLength:0)
+                    }.accessibilityHidden(true)
                 }
-            }.frame(width:56,height:116).accessibilityHidden(true)
-            Text(decimal(amount)+" "+diary.t("جم","g"))
-                .luqmaFont(size:18,weight:.bold,relativeTo:.headline).monospacedDigit()
-            Text(key.label(diary.language)).luqmaFont(.caption).foregroundStyle(Theme.muted)
-        }.frame(maxWidth:.infinity).accessibilityElement(children:.combine)
+        }.frame(maxWidth:.infinity).frame(height:154)
+            .accessibilityElement(children:.ignore).accessibilityLabel(key.label(diary.language))
+            .accessibilityValue(decimal(amount)+" "+diary.t("جم","g"))
+    }
+    private func macroSymbol(_ key:MacroKey)->String {
+        key == .protein ? "flame.fill":key == .carbs ? "fork.knife":"drop.fill"
     }
     private func macroGoal(_ key:MacroKey,nutrition:Nutrition)->some View {
         let goal=diary.state.goals[key]
@@ -257,21 +288,14 @@ import UIKit
         }.buttonStyle(.plain).accessibilityAddTraits(detailedComponents == detailed ? .isSelected:[])
     }
     private var mealChoice:some View {
-        VStack(alignment:.leading,spacing:10){
-            LuqmaSectionHeader(title:diary.t("أضفها إلى","Log under"))
-            LazyVGrid(columns:Array(repeating:GridItem(.flexible(),spacing:8),count:typeSize.isAccessibilitySize ? 2:4),spacing:8){
-                ForEach(Meal.allCases){value in
-                    Button{meal=value}label:{
-                        VStack(spacing:6){
-                            Image(systemName:value.symbol).font(.system(size:17,weight:.medium)).accessibilityHidden(true)
-                            Text(value.label(diary.language)).luqmaFont(size:13,weight:.semibold,relativeTo:.caption)
-                        }.foregroundStyle(meal == value ? Theme.text:Theme.muted)
-                            .padding(.vertical,12).frame(maxWidth:.infinity)
-                            .background(meal == value ? Theme.accent:Theme.card,in:RoundedRectangle(cornerRadius:16))
-                    }.buttonStyle(.plain).accessibilityAddTraits(meal == value ? .isSelected:[])
-                }
+        HStack(spacing:12){
+            Text(diary.t("أضفها إلى","Log under")).luqmaFont(.caption).foregroundStyle(Theme.muted)
+            Spacer(minLength:0)
+            Picker(diary.t("الوجبة","Meal"),selection:$meal){
+                ForEach(Meal.allCases){value in Text(value.label(diary.language)).tag(value)}
             }
-        }
+            .pickerStyle(.menu).labelsHidden().tint(Theme.text)
+        }.frame(minHeight:44)
     }
     private func component(_ part:PhotoPart)->some View {
         let product=products[part.id]
