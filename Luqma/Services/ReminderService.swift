@@ -68,7 +68,7 @@ struct DeliveredReminderNotification: Identifiable {
         if settings.authorizationStatus == .notDetermined {
             do { _ = try await center.requestAuthorization(options: [.alert, .sound]) }
             catch {
-                error = language.text("تعذّر طلب إذن الإشعارات. حاول مرة أخرى.", "Notification permission could not be requested. Try again.")
+                self.error = language.text("تعذّر طلب إذن الإشعارات. حاول مرة أخرى.", "Notification permission could not be requested. Try again.")
                 _ = await reconcile()
                 return false
             }
@@ -282,7 +282,7 @@ struct DeliveredReminderNotification: Identifiable {
                 catch {
                     successful = false
                     if currentRevision == revision {
-                        error = currentLanguage.text("حُفظ الوقت، لكن تعذّرت جدولة بعض التذكيرات. أعد المحاولة.", "The time was saved, but some reminders could not be scheduled. Try again.")
+                        self.error = currentLanguage.text("حُفظ الوقت، لكن تعذّرت جدولة بعض التذكيرات. أعد المحاولة.", "The time was saved, but some reminders could not be scheduled. Try again.")
                     }
                 }
             }
