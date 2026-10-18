@@ -15,6 +15,13 @@ struct DiaryView:View {
     @State private var category="meat"
     @State private var expandedMeals:Set<Meal>=[]
     @State private var expandedRoutine=false
+    #if DEBUG
+    @State private var routineCapturePosition:Meal? = {
+        if CommandLine.arguments.contains("-loqma-preview-routine-dinner"){return .dinner}
+        if CommandLine.arguments.contains("-loqma-preview-routine-snack"){return .snack}
+        return nil
+    }()
+    #endif
     private var day:String {DayKey.string(date)}
     var body:some View {
         ScrollView{diaryContent.padding(.horizontal,16).padding(.bottom,24)}.appBackground()
@@ -132,9 +139,9 @@ struct DiaryView:View {
                 }.luqmaFont(.subheadline).tint(Theme.accent)
             }else{
                 #if DEBUG
-                ScrollViewReader{proxy in
+                if routinePreviewMeal != nil{
                     ScrollView(.horizontal,showsIndicators:false){
-                        HStack(spacing:12){
+                        LazyHStack(spacing:12){
                             ForEach(summaries){summary in
                                 routineCard(summary)
                                     .containerRelativeFrame(.horizontal){width,_ in width*0.72}
@@ -142,12 +149,17 @@ struct DiaryView:View {
                             }
                         }.scrollTargetLayout()
                     }.scrollTargetBehavior(.viewAligned)
-                        .onAppear{
-                            guard let meal=routinePreviewMeal else{return}
-                            var transaction=Transaction(animation:nil)
-                            transaction.disablesAnimations=true
-                            withTransaction(transaction){proxy.scrollTo(meal,anchor:.leading)}
-                        }
+                        .scrollPosition(id:$routineCapturePosition,anchor:.leading)
+                        .transaction{$0.animation=nil;$0.disablesAnimations=true}
+                }else{
+                    ScrollView(.horizontal,showsIndicators:false){
+                        HStack(spacing:12){
+                            ForEach(summaries){summary in
+                                routineCard(summary)
+                                    .containerRelativeFrame(.horizontal){width,_ in width*0.72}
+                            }
+                        }.scrollTargetLayout()
+                    }.scrollTargetBehavior(.viewAligned)
                 }
                 #else
                 ScrollView(.horizontal,showsIndicators:false){

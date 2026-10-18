@@ -29,8 +29,15 @@ struct EditorialPanel:View {
     var body:some View {
         Group{
             if artwork == .kitchen{
-                Image(artwork.rawValue).resizable().scaledToFit()
-                    .frame(maxWidth:.infinity,maxHeight:.infinity)
+                GeometryReader{geometry in
+                    // Keep the whole 3:2 still life; round the image itself,
+                    // before expanding its container to the available width.
+                    let imageWidth=min(geometry.size.width,height*1.5)
+                    Image(artwork.rawValue).resizable().scaledToFit()
+                        .frame(width:imageWidth,height:min(height,imageWidth/1.5))
+                        .clipShape(RoundedRectangle(cornerRadius:cornerRadius,style:.continuous))
+                        .frame(maxWidth:.infinity,maxHeight:.infinity)
+                }
             }else{EditorialFill(artwork:artwork)}
         }.frame(height:height)
             .clipShape(RoundedRectangle(cornerRadius:cornerRadius,style:.continuous))
