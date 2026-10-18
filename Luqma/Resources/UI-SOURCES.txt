@@ -1,4 +1,24 @@
-Luqma 2.3 current reference: Sandow UI Kit: AI Fitness & Nutrition App (Community).
+Luqma 2.5 current reference: Sandow UI Kit: AI Fitness & Nutrition App (Community).
+Creator: strangehelix.bio. Community-page licence recorded: CC BY 4.0.
+https://creativecommons.org/licenses/by/4.0/
+Original reference: https://www.figma.com/file/IfMCdTI3FcvXpNFy79PRUA
+Inspected user-accessible copy: https://www.figma.com/design/HBIa4HlRoHRjxZWJfqyrUG
+Version 2.5 uses six unchanged original SVG assets from the Icon Set and dark
+alert instance: notification 2:12035, dinner 2:11835, clock 2:12061,
+loading dots 2:12151, check 2:11880 and red warning 2:9631.
+The measured 2:9631 alert has 12pt padding, 6pt gap, 14pt corner radius,
+20pt warning, Work Sans SemiBold 14, background #450A0A and #EF4444 border.
+The new notifications/reminders and operation states use actual local diary
+actions and iOS permission. No reference notification content is fabricated.
+Notification/utility boards 2:10119 and 2:10115 remain flattened images.
+Their 3D illustrations and reminder photographs are not separable original
+assets and are not embedded, cropped or substituted as original artwork.
+Loading inspection returned no motion tracks; the operation marker uses the
+static original loading glyph without invented completion percentages.
+See Docs/FigmaStates in the source for asset hashes and fidelity limits.
+
+Historical implementation notes for Luqma 2.3 and 2.4 follow:
+Luqma 2.3 reference: Sandow UI Kit: AI Fitness & Nutrition App (Community).
 Luqma 2.4 continues from the same saved original panels without further MCP reads.
 Search presentation/rows, Settings/About, Calorie Goal, photo-result composition
 and actual saved-recipe details were rebuilt from the documented visible evidence.
