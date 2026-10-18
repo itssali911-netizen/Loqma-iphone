@@ -413,6 +413,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = BC88FCEB1B7FEC70CC4BD5B3;
 		};
+		"0D927A5413DA33573D36B089" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "EditorialImagery.swift";
+			"sourceTree" = "<group>";
+		};
+		"1B5C51F8D41D4AEC3EF4BD67" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 0D927A5413DA33573D36B089;
+		};
 		"11772A999B0CF5E648C47233" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -538,6 +548,7 @@
 			"children" = (
 				8F7A2BF48A08222DC9D42E67,
 				BC88FCEB1B7FEC70CC4BD5B3,
+				0D927A5413DA33573D36B089,
 				11772A999B0CF5E648C47233,
 				29048C922B421BBD73B1A875,
 				BFE17ACE05D898E290332E40,
@@ -1065,6 +1076,7 @@
 				32A69040FD1EC58A7366E44B,
 				25FAC676E9E27349FB2F59A2,
 				2C605AA8C1E44D960F29D9D5,
+				1B5C51F8D41D4AEC3EF4BD67,
 				0E5577C4BBC679748E6C3F13,
 				531B4A74ADCF42F28BF17735,
 				0B2634EBC8B3FF8510852636,
@@ -1165,7 +1177,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				"MARKETING_VERSION" = "2.5";
+				"MARKETING_VERSION" = "2.6";
 				"PRODUCT_BUNDLE_IDENTIFIER" = "app.luqma.diary";
 				"PRODUCT_NAME" = "$(TARGET_NAME)";
 				"SDKROOT" = "iphoneos";
@@ -1213,7 +1225,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				"MARKETING_VERSION" = "2.5";
+				"MARKETING_VERSION" = "2.6";
 				"PRODUCT_BUNDLE_IDENTIFIER" = "app.luqma.diary";
 				"PRODUCT_NAME" = "$(TARGET_NAME)";
 				"SDKROOT" = "iphoneos";

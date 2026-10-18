@@ -139,9 +139,13 @@ struct KitchenView:View {
         Label(decimal(recipe.portions)+" "+diary.t("حصص","servings"),systemImage:"square.stack")
     }
     private var kitchenEmptyState:some View {
-        SandowEmptyState(title:diary.t("مطبخك يبدأ هنا","Your kitchen starts here"),
+        VStack(spacing:0){
+            EditorialPanel(artwork:.kitchen,height:164)
+                .padding(.top,12)
+            SandowEmptyState(title:diary.t("مطبخك يبدأ هنا","Your kitchen starts here"),
             message:diary.t("احفظ وصفتك الأولى أو استوردها من رابط، ثم احسب حصصها وأضفها ليومك.","Save your first recipe or import a link, then calculate servings and log them to your day."),
             actionLabel:diary.t("وصفة جديدة","New recipe"),onAction:{creating=true})
+        }
     }
     private func recipeMacro(_ key:MacroKey,_ nutrition:Nutrition)->some View {
         let ratio=nutrition.macroCalories>0 ? nutrition[key]*key.energy/nutrition.macroCalories:0

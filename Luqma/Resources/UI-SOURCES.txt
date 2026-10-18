@@ -1,4 +1,18 @@
-Luqma 2.5 current reference: Sandow UI Kit: AI Fitness & Nutrition App (Community).
+Luqma 2.6 editorial imagery integration:
+Five new original image_gen assets commissioned for this app: breakfast, lunch,
+dinner, snack photography-style images and the kitchen still-life illustration.
+These are illustrative editorial artwork, not photographs of a user's meals or
+AI analysis results. Generated artwork is not attributed to Figma or a stock site.
+Original Sandow fitness-equipment image from editable Welcome node 2:9530:
+illustration fitness equipments design background; creator strangehelix.bio.
+Original file IfMCdTI3FcvXpNFy79PRUA; accessible copy HBIa4HlRoHRjxZWJfqyrUG.
+Community-page licence recorded: CC BY 4.0, https://creativecommons.org/licenses/by/4.0/.
+The image was proportionally downsized and JPEG encoded; UI containers crop it.
+Sources, prompts, original/optimized SHA-256 and dimensions are documented in
+Docs/PremiumImagery. All six assets are bundled; no runtime external image URLs.
+The original state SVGs, existing user-photo analysis and diary data are unchanged.
+
+Luqma 2.5 reference: Sandow UI Kit: AI Fitness & Nutrition App (Community).
 Creator: strangehelix.bio. Community-page licence recorded: CC BY 4.0.
 https://creativecommons.org/licenses/by/4.0/
 Original reference: https://www.figma.com/file/IfMCdTI3FcvXpNFy79PRUA

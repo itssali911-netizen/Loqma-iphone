@@ -35,6 +35,10 @@ struct ProgressViewScreen:View {
                 Image(systemName:"scalemass").font(.system(size:22,weight:.regular)).foregroundStyle(Theme.text).frame(width:44,height:44).background(Theme.surface,in:RoundedRectangle(cornerRadius:13,style:.continuous)).accessibilityHidden(true)
             }
         } else {
+            VStack(alignment:.leading,spacing:6){
+                EditorialPanel(artwork:.fitness,height:112)
+                Text(diary.t("صورة توضيحية","Illustrative photo")).luqmaFont(size:10,relativeTo:.caption2).foregroundStyle(Theme.muted)
+            }
             Text(diary.t("ابدأ بتسجيل وزنك","Start with your weight")).luqmaFont(.headline)
             Notice(text:diary.t("تابع تغيّر وزنك ومتوسط الأسبوع هنا.","Track your weight trend and weekly average here."))
         }
