@@ -38,22 +38,18 @@ import SwiftUI
                         }.buttonStyle(LuqmaSecondaryButtonStyle())
                     }
                     if busy {
-                        HStack(spacing: 12) {
-                            ProgressView().tint(Theme.accent)
-                            Text(stage == .readingSource ? diary.t("نقرأ المقادير من الرابط…", "Reading ingredients from the link…") :
-                                diary.t("نحسب السعرات ونرتب الوصفة…", "Calculating nutrition and organizing the recipe…")).luqmaFont(.subheadline)
-                            Spacer(minLength: 8)
-                            Button(diary.t("إيقاف", "Stop")) { cancel() }.frame(minHeight:44)
-                        }.luqmaCard()
+                        SandowOperationState(title:stage == .readingSource ? diary.t("نقرأ المقادير من الرابط…", "Reading ingredients from the link…") :
+                            diary.t("نحسب السعرات ونرتب الوصفة…", "Calculating nutrition and organizing the recipe…"),
+                            cancelLabel:diary.t("إيقاف", "Stop"),onCancel:{cancel()})
                     }
                     if let error {
                         VStack(alignment: .leading, spacing: 12) {
-                            Label(error,systemImage:"exclamationmark.circle").luqmaFont(.footnote).foregroundStyle(Theme.accent).fixedSize(horizontal:false,vertical:true).accessibilityLabel(error)
+                            SandowStateAlert(text:error)
                             if let url = try? RecipeImport.canonicalURL(link) {
                                 Link(destination: url) { Label(diary.t("فتح المصدر ونسخ الوصفة", "Open source and copy recipe"), systemImage: "arrow.up.right.square") }
                                     .luqmaFont(.subheadline).foregroundStyle(Theme.accent)
                             }
-                        }.luqmaCard()
+                        }
                     }
                     if let draft { review(draft) }
                 }.padding(24)

@@ -57,7 +57,13 @@ TEMPLATE_ROUTES = (("macro-goals", "goals"),
                    ("backup", "backup"),
                    ("about", "about"),
                    ("barcode-guide", "barcode"),
-                   ("language", "language"))
+                   ("language", "language"),
+                   ("notifications", "notifications"),
+                   ("reminders", "reminders"),
+                   ("state-error", "stateError"),
+                   ("state-loading", "stateLoading"),
+                   ("state-empty", "stateEmpty"),
+                   ("state-success", "stateSuccess"))
 VARIANT_ROUTES = (("accessibility-today", ("-loqma-preview-overview", "-loqma-preview-accessibility")),
                   ("photo-components", ("-loqma-preview-photo", "-loqma-preview-photo-detailed")))
 EXPECTED_SCREEN_COUNT = len(SCREENS) + 2 + len(EXTRA_ROUTES) + len(TEMPLATE_ROUTES) + len(VARIANT_ROUTES)
@@ -75,7 +81,7 @@ def preview_cases() -> list[dict]:
               for screen, argument in routes]
     cases += [{"tab": None, "screen": screen, "arguments": ["-loqma-preview-template", route],
                "template_route": route, "read_only_preview": True,
-               "synthetic_fixture": route in {"portion", "recipe", "recipeDetail"}}
+               "synthetic_fixture": route in {"portion", "recipe", "recipeDetail"} or route.startswith("state")}
               for screen, route in TEMPLATE_ROUTES]
     cases += [{"tab": None, "screen": screen, "arguments": list(arguments),
                "synthetic_fixture": True,

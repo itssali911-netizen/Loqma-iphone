@@ -1,6 +1,7 @@
 import SwiftUI
 import PhotosUI
 import UIKit
+import AVFoundation
 
 @MainActor struct PhotoMealView:View {
     var initialMeal:Meal?=nil
@@ -8,6 +9,7 @@ import UIKit
     @EnvironmentObject var diary:DiaryStore
     @Environment(\.scenePhase) private var phase
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.openURL) private var openURL
     @State private var item:PhotosPickerItem?
     @State private var imageData:Data?
     @State private var preview:UIImage?
@@ -18,6 +20,8 @@ import UIKit
     @State private var detailedComponents=false
     @State private var description=""
     @State private var error:String?
+    @State private var cameraMessage:String?
+    @State private var cameraAccessBlocked=false
     @State private var cancellationMessage:String?
     @State private var parts:[PhotoPart]=[]
     private struct ProductSelection:Identifiable {var id:UUID;var name:String}
@@ -81,7 +85,10 @@ import UIKit
         })}
         .onChange(of:item){_,value in loadPhoto(value)}
         .onChange(of:imageData){_,data in analysisGeneration=UUID();analysisTask?.cancel();analysisTask=nil;busy=false;parts=[];products.removeAll();detailedComponents=false;showingPhotoInput=false;preview=data.flatMap{try? PhotoAnalyzer.image($0,maxPixels:640)}.map{UIImage(cgImage:$0)}}
-        .onChange(of:phase){_,value in if value != .active,busy{cancellationMessage=diary.t("توقف التحليل عند مغادرة الشاشة. افتح التطبيق وحاول مجددًا.","Analysis stopped when the app left the foreground. Reopen the app and retry.");analysisTask?.cancel()}}
+        .onChange(of:phase){_,value in
+            if value != .active,busy{cancellationMessage=diary.t("توقف التحليل عند مغادرة الشاشة. افتح التطبيق وحاول مجددًا.","Analysis stopped when the app left the foreground. Reopen the app and retry.");analysisTask?.cancel()}
+            if value == .active,cameraAccessBlocked,AVCaptureDevice.authorizationStatus(for:.video) == .authorized{cameraAccessBlocked=false;cameraMessage=nil}
+        }
         .onReceive(NotificationCenter.default.publisher(for:UIApplication.didReceiveMemoryWarningNotification)){_ in if busy{cancellationMessage=diary.t("توقف التحليل بسبب ضغط الذاكرة. حاول مجددًا.","Analysis stopped because of memory pressure. Retry.");analysisTask?.cancel()}}
         .onAppear{
             if !initialized{initialized=true;if let initialMeal{meal=initialMeal}}
@@ -103,17 +110,24 @@ import UIKit
             }
             HStack(spacing:12){
                 PhotosPicker(selection:$item,matching:.images){Label(diary.t("رفع صورة","Choose photo"),systemImage:"photo")}.buttonStyle(LuqmaSecondaryButtonStyle())
-                Button{Task{if UIImagePickerController.isSourceTypeAvailable(.camera),await CameraAccess.request(){camera=true}else{error=diary.t("الكاميرا غير متاحة أو تحتاج إذنًا من الإعدادات.","Camera is unavailable or needs access in Settings.")}}}label:{Label(diary.t("الكاميرا","Camera"),systemImage:"camera")}.buttonStyle(LuqmaSecondaryButtonStyle())
+                Button{openCamera()}label:{Label(diary.t("الكاميرا","Camera"),systemImage:"camera")}.buttonStyle(LuqmaSecondaryButtonStyle())
             }.disabled(busy)
+            if let cameraMessage{
+                SandowStateAlert(text:cameraMessage)
+                if cameraAccessBlocked{
+                    Button(diary.t("فتح الإعدادات","Open Settings")){if let url=URL(string:UIApplication.openSettingsURLString){openURL(url)}}
+                        .buttonStyle(LuqmaSecondaryButtonStyle())
+                }
+            }
             VStack(alignment:.leading,spacing:8){
                 Text(diary.t("وصف الوجبة (اختياري)","Meal description (optional)")).luqmaFont(size:15,weight:.bold,relativeTo:.subheadline)
                 TextField(diary.t("مثلاً: الوزن، طريقة الطبخ وكمية الزيت","For example: weight, cooking method and oil amount"),text:$description,axis:.vertical).focused($descriptionFocused).lineLimit(2...4).padding(16).background(Theme.card,in:RoundedRectangle(cornerRadius:16)).accessibilityLabel(diary.t("وصف الوجبة الاختياري","Optional meal description")).disabled(busy)
                 Notice(text:diary.t("تُرسل الصورة والوصف لخدمة التحليل. الوزن والزيت والصلصات تؤثر في التقدير؛ أضف ما تعرفه لتحسينه.","The photo and description are sent to the analysis service. Weight, oil and sauces affect the estimate; add what you know to improve it."))
             }
-            if loadingPhoto{ProgressView(diary.t("تجهيز الصورة…","Preparing photo…"))}
+            if loadingPhoto{SandowOperationState(title:diary.t("تجهيز الصورة…","Preparing photo…"),cancelLabel:diary.t("إلغاء","Cancel"),onCancel:{cancelPhotoLoad()})}
             Button{if ready{analyze()}else{showingSetup=true}}label:{Label(diary.t("تحليل الوجبة","Meal analysis"),systemImage:"sparkles")}.buttonStyle(LuqmaPrimaryButtonStyle()).disabled(imageData==nil || busy || loadingPhoto)
-            if busy{HStack(spacing:12){ProgressView().tint(Theme.accent);Text(diary.t("تقدير المكونات والسعرات…","Estimating components and calories…")).luqmaFont(.footnote);Spacer(minLength:0);Button(diary.t("إلغاء","Cancel")){analysisTask?.cancel()}.frame(minHeight:44)}.luqmaCard()}
-            if let error{Label(error,systemImage:"exclamationmark.circle").foregroundStyle(Theme.accent).luqmaFont(.footnote).fixedSize(horizontal:false,vertical:true).luqmaCard()}
+            if busy{SandowOperationState(title:diary.t("تقدير المكونات والسعرات…","Estimating components and calories…"),cancelLabel:diary.t("إلغاء","Cancel"),onCancel:{analysisTask?.cancel()})}
+            if let error{SandowStateAlert(text:error)}
         }
     }
     private var review:some View {
@@ -376,6 +390,28 @@ import UIKit
     }
     private func componentMacro(_ title:String,_ value:Double)->some View {
         VStack(alignment:.leading,spacing:4){Text(title).luqmaFont(.caption).foregroundStyle(Theme.muted);Text(decimal(value)+" "+diary.t("جم","g")).luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline).monospacedDigit()}.frame(maxWidth:.infinity,alignment:.leading)
+    }
+    private func openCamera(){
+        cameraMessage=nil;cameraAccessBlocked=false
+        guard UIImagePickerController.isSourceTypeAvailable(.camera) else{
+            cameraMessage=diary.t("لا توجد كاميرا متاحة على هذا الجهاز. اختر صورة من المكتبة.","No camera is available on this device. Choose a photo from your library.");return
+        }
+        Task{
+            if await CameraAccess.request(){camera=true;return}
+            switch AVCaptureDevice.authorizationStatus(for:.video){
+            case .denied:
+                cameraAccessBlocked=true
+                cameraMessage=diary.t("الوصول إلى الكاميرا مرفوض. اسمح للقمة باستخدامها من الإعدادات.","Camera access is denied. Allow Luqma to use it in Settings.")
+            case .restricted:
+                cameraAccessBlocked=true
+                cameraMessage=diary.t("الوصول إلى الكاميرا مقيّد على هذا الجهاز. راجع الإعدادات أو اختر صورة من المكتبة.","Camera access is restricted on this device. Check Settings or choose a photo from your library.")
+            default:
+                cameraMessage=diary.t("تعذّر فتح الكاميرا. اختر صورة من المكتبة أو حاول مجددًا.","The camera could not be opened. Choose a photo from your library or retry.")
+            }
+        }
+    }
+    private func cancelPhotoLoad(){
+        photoGeneration=UUID();photoLoadTask?.cancel();photoLoadTask=nil;loadingPhoto=false;item=nil
     }
     private func loadPhoto(_ value:PhotosPickerItem?){
         photoLoadTask?.cancel();let token=UUID();photoGeneration=token

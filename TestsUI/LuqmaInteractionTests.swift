@@ -144,6 +144,161 @@ final class LuqmaInteractionTests:XCTestCase {
         app.buttons["goals.save"].tap()
     }
 
+    func testNotificationPermissionAndReminderPersistence() throws {
+        // This case runs only on the first, newly created Simulator. No test flag
+        // grants notification permission, enables a reminder, or inserts an inbox.
+        app.buttons["nav.settings"].tap()
+        let notifications=app.buttons["settings.notifications"]
+        reveal(notifications)
+        notifications.tap()
+        XCTAssertTrue(app.staticTexts["No notifications here"].waitForExistence(timeout:10),app.debugDescription)
+        let setup=app.buttons["Set up reminders"]
+        reveal(setup)
+        setup.tap()
+        assertPermission("notDetermined")
+        assertPendingCount("0")
+        for kind in ["breakfast","lunch","dinner","snack","nutritionReview"] {
+            let toggle=app.switches["reminders.toggle."+kind]
+            XCTAssertTrue(toggle.exists,"Every supported reminder must be visible in the real settings hierarchy")
+            XCTAssertEqual(toggle.value as? String,"0","A fresh install must not enable reminders")
+        }
+
+        let breakfastTime=app.buttons["reminders.time.breakfast"]
+        reveal(breakfastTime)
+        XCTAssertEqual(breakfastTime.value as? String,"08:00")
+        breakfastTime.tap()
+        let picker=app.descendants(matching:.any).matching(identifier:"reminders.timePicker").firstMatch
+        XCTAssertTrue(picker.waitForExistence(timeout:10),app.debugDescription)
+        XCTAssertEqual(picker.pickerWheels.count,2,"The production en_GB editor must expose actual hour and minute wheels")
+        picker.pickerWheels.element(boundBy:1).adjust(toPickerWheelValue:"15")
+        app.buttons["reminders.saveTime"].tap()
+        XCTAssertTrue(breakfastTime.waitForExistence(timeout:10))
+        XCTAssertEqual(breakfastTime.value as? String,"08:15","Saving the native editor must persist the selected minute")
+        assertSavedConfirmation()
+
+        setBreakfastReminder(enabled:true)
+        assertSavedConfirmation()
+        assertPermission("notDetermined")
+        assertPendingCount("0")
+        let springboard=XCUIApplication(bundleIdentifier:"com.apple.springboard")
+        XCTAssertFalse(springboard.alerts.firstMatch.waitForExistence(timeout:1),"Changing reminder preferences must not implicitly request notification permission")
+
+        chooseNotificationPermission(allow:true)
+        assertPermission("allowed")
+        assertPendingCount("1")
+        XCTAssertFalse(app.buttons["reminders.enablePermission"].exists)
+
+        app.terminate()
+        app.launch()
+        openReminders()
+        assertPermission("allowed")
+        XCTAssertEqual(app.switches["reminders.toggle.breakfast"].value as? String,"1","Cold launch must reload the actual saved reminder choice")
+        XCTAssertEqual(app.buttons["reminders.time.breakfast"].value as? String,"08:15","Cold launch must reload the actual saved time")
+        assertPendingCount("1")
+        setBreakfastReminder(enabled:false)
+        assertSavedConfirmation()
+        assertPendingCount("0")
+
+        app.terminate()
+        app.launch()
+        openReminders()
+        assertPermission("allowed")
+        XCTAssertEqual(app.switches["reminders.toggle.breakfast"].value as? String,"0")
+        assertPendingCount("0")
+    }
+
+    func testNotificationDeniedDoesNotClaimDelivery() throws {
+        // The runner gives this case a second fresh Simulator because iOS has
+        // no supported simctl notification-permission reset. This is a genuine
+        // denial from the first-run system sheet, not a service stub.
+        openReminders()
+        assertPermission("notDetermined")
+        assertPendingCount("0")
+        setBreakfastReminder(enabled:true)
+        assertSavedConfirmation()
+        assertPermission("notDetermined")
+        assertPendingCount("0")
+        chooseNotificationPermission(allow:false)
+        assertPermission("denied")
+        assertPendingCount("0")
+        XCTAssertEqual(app.switches["reminders.toggle.breakfast"].value as? String,"1","Denying OS permission must preserve the user's saved preference")
+        XCTAssertTrue(app.buttons["reminders.openSettings"].exists,"Denied permission must expose the real iOS Settings recovery action")
+        XCTAssertFalse(app.buttons["reminders.enablePermission"].exists,"The app cannot request a previously denied permission again")
+
+        app.terminate()
+        app.launch()
+        openReminders()
+        assertPermission("denied")
+        XCTAssertEqual(app.switches["reminders.toggle.breakfast"].value as? String,"1")
+        assertPendingCount("0")
+        setBreakfastReminder(enabled:false)
+        assertSavedConfirmation()
+        assertPendingCount("0")
+    }
+
+    private func openReminders() {
+        XCTAssertTrue(app.buttons["nav.settings"].waitForExistence(timeout:15))
+        app.buttons["nav.settings"].tap()
+        let link=app.buttons["settings.reminders"]
+        reveal(link)
+        link.tap()
+        XCTAssertTrue(app.staticTexts["reminders.permissionStatus"].waitForExistence(timeout:10),app.debugDescription)
+    }
+
+    private func assertPermission(_ expected:String,file:StaticString=#filePath,line:UInt=#line) {
+        let status=app.staticTexts["reminders.permissionStatus"]
+        let ready=XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == true AND value == %@",expected),object:status)
+        XCTAssertEqual(XCTWaiter.wait(for:[ready],timeout:10),.completed,"Actual iOS permission status must become \(expected).\n"+app.debugDescription,file:file,line:line)
+    }
+
+    private func assertPendingCount(_ expected:String,file:StaticString=#filePath,line:UInt=#line) {
+        let count=app.staticTexts["reminders.pendingCount"]
+        let ready=XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == true AND label == %@",expected),object:count)
+        XCTAssertEqual(XCTWaiter.wait(for:[ready],timeout:10),.completed,"Actual system-scheduled request count must be \(expected).\n"+app.debugDescription,file:file,line:line)
+    }
+
+    private func assertSavedConfirmation(file:StaticString=#filePath,line:UInt=#line) {
+        let confirmation=app.descendants(matching:.any).matching(identifier:"reminders.savedConfirmation").firstMatch
+        XCTAssertTrue(confirmation.waitForExistence(timeout:10),"A save confirmation must follow a successful production preference write.\n"+app.debugDescription,file:file,line:line)
+    }
+
+    private func setBreakfastReminder(enabled:Bool) {
+        let row=app.switches["reminders.toggle.breakfast"]
+        // The first row may be above the current offset after editing a time.
+        revealTowardTop(row)
+        let ready=XCTNSPredicateExpectation(predicate:NSPredicate(format:"enabled == true"),object:row)
+        XCTAssertEqual(XCTWaiter.wait(for:[ready],timeout:10),.completed,app.debugDescription)
+        XCTAssertEqual(row.value as? String,enabled ? "0":"1")
+        let control=row.switches.firstMatch
+        (control.exists ? control:row).tap()
+        let changed=XCTNSPredicateExpectation(predicate:NSPredicate(format:"value == %@",enabled ? "1":"0"),object:row)
+        XCTAssertEqual(XCTWaiter.wait(for:[changed],timeout:10),.completed,app.debugDescription)
+    }
+
+    private func chooseNotificationPermission(allow:Bool) {
+        let request=app.buttons["reminders.enablePermission"]
+        revealTowardTop(request)
+        XCTAssertTrue(request.isEnabled)
+        request.tap()
+        let system=XCUIApplication(bundleIdentifier:"com.apple.springboard")
+        let alert=system.alerts.firstMatch
+        XCTAssertTrue(alert.waitForExistence(timeout:10),"The production permission action must open the real iOS sheet")
+        let text=alert.staticTexts.allElementsBoundByIndex.map(\.label).joined(separator:" ").lowercased()
+        XCTAssertTrue(text.contains("notifications"),"The observed system sheet must request notification access: "+text)
+        let choice=allow ? alert.buttons["Allow"]:alert.buttons.matching(NSPredicate(format:"label == %@ OR label == %@","Don’t Allow","Don't Allow")).firstMatch
+        XCTAssertTrue(choice.exists,"Required iOS notification permission choice is absent: "+alert.debugDescription)
+        choice.tap()
+    }
+
+    private func revealTowardTop(_ element:XCUIElement) {
+        for _ in 0..<8 {
+            if element.exists && element.isHittable {return}
+            let scroll=app.scrollViews.firstMatch
+            if scroll.exists {scroll.swipeDown()}else{app.swipeDown()}
+        }
+        XCTAssertTrue(element.exists && element.isHittable,"Required real control is unreachable\n"+app.debugDescription)
+    }
+
     private func goalCalories()->XCUIElement {
         let direct=app.textFields["goals.calories"]
         if direct.waitForExistence(timeout:3) {return direct}

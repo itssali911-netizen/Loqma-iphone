@@ -205,6 +205,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = BAFAA157BECEAFE793BB7738;
 		};
+		"F14823DAC1F986FC4D5D52AF" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Reminders.swift";
+			"sourceTree" = "<group>";
+		};
+		"E133E96386FD1259FF725B07" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = F14823DAC1F986FC4D5D52AF;
+		};
 		"F866668F7C766A3FE269DA0B" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -268,6 +278,7 @@
 				BF5E9B0B03A1B08CADE8C46A,
 				13D4FF53F409426D1B4DAAB9,
 				BAFAA157BECEAFE793BB7738,
+				F14823DAC1F986FC4D5D52AF,
 				F866668F7C766A3FE269DA0B,
 				1F0D75ECCB677A0C7DCB66DA,
 				B051277896438AB6FF8F5F11,
@@ -346,6 +357,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = 6CD95E8C5F11D12097591DAE;
 		};
+		"05ABEA1EB6AB0191A9018B86" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "ReminderService.swift";
+			"sourceTree" = "<group>";
+		};
+		"0B98F3CD8455B64F89CCBE22" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 05ABEA1EB6AB0191A9018B86;
+		};
 		"48D10B5AE5F72B6836EDFCD5" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -366,6 +387,7 @@
 				20744C83D0394496367E6FF9,
 				E540AB74E9432128CD9051EC,
 				6CD95E8C5F11D12097591DAE,
+				05ABEA1EB6AB0191A9018B86,
 				48D10B5AE5F72B6836EDFCD5,
 			);
 			"path" = "Services";
@@ -441,6 +463,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = 1B5A45297F07D1DE0EA2A17A;
 		};
+		"A24EB915455701EF95CA6601" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "NotificationsView.swift";
+			"sourceTree" = "<group>";
+		};
+		"092D7DA7DBD5AB497C6A3F7F" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = A24EB915455701EF95CA6601;
+		};
 		"69C4B1C7AA72B29F8292B817" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -491,6 +523,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = 9B60CD3496F33511D72B01E9;
 		};
+		"88E979820DC9DBB7BBD2AD7F" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "StateComponents.swift";
+			"sourceTree" = "<group>";
+		};
+		"A3649A21E2A5DDD3A101AC9C" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 88E979820DC9DBB7BBD2AD7F;
+		};
 		"6C923F6D92369A43B16924F4" = {
 			"isa" = "PBXGroup";
 			"children" = (
@@ -501,11 +543,13 @@
 				BFE17ACE05D898E290332E40,
 				3E31BDA889FB25A6C7913241,
 				1B5A45297F07D1DE0EA2A17A,
+				A24EB915455701EF95CA6601,
 				69C4B1C7AA72B29F8292B817,
 				C8ADF73E9B38238D03760F45,
 				440B250874D86CEECDBA87F1,
 				D9B5C82156891D1D3F88E6F5,
 				9B60CD3496F33511D72B01E9,
+				88E979820DC9DBB7BBD2AD7F,
 			);
 			"path" = "Views";
 			"sourceTree" = "<group>";
@@ -1005,6 +1049,7 @@
 				356CDBB91A8C3BF5F5F8C28D,
 				7D05374718928637A140CD05,
 				E0D20144630682CEEAA8B67E,
+				E133E96386FD1259FF725B07,
 				7156749514081042D0DEDDA9,
 				7F8C55211A3045987A30FBB4,
 				D7764BDF2E8F543F56223B46,
@@ -1016,6 +1061,7 @@
 				279360EAF13099BDBE667F01,
 				76A090779134DCD58DA2D30F,
 				082B6D20E4622E96660533DF,
+				0B98F3CD8455B64F89CCBE22,
 				32A69040FD1EC58A7366E44B,
 				25FAC676E9E27349FB2F59A2,
 				2C605AA8C1E44D960F29D9D5,
@@ -1024,11 +1070,13 @@
 				0B2634EBC8B3FF8510852636,
 				B9FCD0B7DEB5015571206492,
 				68B5EBAE280D4A4DE50CCC4E,
+				092D7DA7DBD5AB497C6A3F7F,
 				B7953420073CFA82ED6F7D0D,
 				AEE8BD9FC54BA9E2B3082726,
 				C97CAF7A95D4BDBFD294D148,
 				1C26F4B390171819FE1078DE,
 				C47CAFDAF2B68AFF61327ACC,
+				A3649A21E2A5DDD3A101AC9C,
 				D157A1D7B85C6A507F2273F7,
 			);
 			"runOnlyForDeploymentPostprocessing" = 0;
@@ -1117,7 +1165,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				"MARKETING_VERSION" = "2.4";
+				"MARKETING_VERSION" = "2.5";
 				"PRODUCT_BUNDLE_IDENTIFIER" = "app.luqma.diary";
 				"PRODUCT_NAME" = "$(TARGET_NAME)";
 				"SDKROOT" = "iphoneos";
@@ -1165,7 +1213,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				"MARKETING_VERSION" = "2.4";
+				"MARKETING_VERSION" = "2.5";
 				"PRODUCT_BUNDLE_IDENTIFIER" = "app.luqma.diary";
 				"PRODUCT_NAME" = "$(TARGET_NAME)";
 				"SDKROOT" = "iphoneos";

@@ -4,6 +4,7 @@ import UIKit
 @MainActor final class AppServices {
     static let shared = AppServices()
     let diary = DiaryStore()
+    let reminders = ReminderService()
     init(){
         #if DEBUG
         // Only the isolated UI-test Simulator uses this flag; it is absent from Release.
@@ -16,12 +17,14 @@ import UIKit
     func applicationProtectedDataDidBecomeAvailable(_ application: UIApplication) {
         // A launch while locked must not replace the protected diary with an empty one.
         _ = AppServices.shared.diary.restoreAfterUnlock()
+        Task{await AppServices.shared.reminders.refresh(language:AppServices.shared.diary.language)}
     }
 }
 
 @main @MainActor struct LuqmaApp:App {
     @UIApplicationDelegateAdaptor(DiaryAppDelegate.self) private var delegate
     @StateObject private var diary=AppServices.shared.diary
+    @StateObject private var reminders=AppServices.shared.reminders
     @Environment(\.scenePhase) private var phase
     init(){
         let navigation=UINavigationBarAppearance()
@@ -37,22 +40,30 @@ import UIKit
     }
     var body:some Scene {
         WindowGroup {
-            RootView().luqmaFont(.body).foregroundStyle(Theme.text).environmentObject(diary)
+            RootView().luqmaFont(.body).foregroundStyle(Theme.text).environmentObject(diary).environmentObject(reminders)
                 .environment(\.layoutDirection,diary.language == .ar ? .rightToLeft:.leftToRight)
                 .environment(\.locale,DisplayFormat.locale(diary.language))
                 .environment(\.calendar,DisplayFormat.calendar(diary.language))
                 .tint(Theme.accent).preferredColorScheme(.dark)
                 .onChange(of:phase, initial:true) { _,value in
-                    if value == .active,diary.restoreAfterUnlock() { diary.adapt() }
+                    if value == .active{
+                        if diary.restoreAfterUnlock(){diary.adapt()}
+                        Task{await reminders.refresh(language:diary.language)}
+                    }
                 }
+                .onChange(of:diary.language){_,language in Task{await reminders.refresh(language:language)}}
+                .onReceive(NotificationCenter.default.publisher(for:NSNotification.Name.NSSystemTimeZoneDidChange)){_ in Task{await reminders.refresh(language:diary.language)}}
                 .alert(diary.t("تنبيه","Notice"),isPresented:Binding(get:{diary.error != nil},set:{if !$0 {diary.error=nil}})) {Button(diary.t("حسنًا","OK")){diary.error=nil}} message:{Text(diary.error ?? "")}
         }
     }
 }
 struct RootView:View {
     @EnvironmentObject var diary:DiaryStore
+    @EnvironmentObject var reminders:ReminderService
     @State private var tab:Int
     @State private var adding=false
+    @State private var addingMeal:Meal?
+    @State private var todayRouteID=0
     @State private var photoPreview=false
     @State private var recipePreview=false
     @State private var searchPreview=false
@@ -60,7 +71,7 @@ struct RootView:View {
     #if DEBUG
     @Environment(\.dynamicTypeSize) private var typeSize
     private enum TemplatePreviewRoute:String,Identifiable {
-        case goals,portion,recipe,recipeDetail,plan,weight,connection,backup,about,barcode,language
+        case goals,portion,recipe,recipeDetail,plan,weight,connection,backup,about,barcode,language,notifications,reminders,stateError,stateLoading,stateEmpty,stateSuccess
         var id:String{rawValue}
     }
     @State private var templatePreview:TemplatePreviewRoute?
@@ -82,13 +93,13 @@ struct RootView:View {
     }
     var body:some View {
         TabView(selection:$tab) {
-            NavigationStack{DiaryView().toolbar(.hidden,for:.tabBar)}.tabItem{Label(diary.t("اليوم","Today"),systemImage:"house")}.tag(0)
+            NavigationStack{DiaryView().id(todayRouteID).toolbar(.hidden,for:.tabBar)}.tabItem{Label(diary.t("اليوم","Today"),systemImage:"house")}.tag(0)
             NavigationStack{KitchenView().toolbar(.hidden,for:.tabBar)}.tabItem{Label(diary.t("مطبخي","Kitchen"),systemImage:"fork.knife")}.tag(1)
             NavigationStack{ProgressViewScreen().toolbar(.hidden,for:.tabBar)}.tabItem{Label(diary.t("تقدّمي","Progress"),systemImage:"chart.bar")}.tag(2)
             NavigationStack{SettingsView(onBack:{tab=0}).toolbar(.hidden,for:.tabBar)}.tabItem{Label(diary.t("الإعدادات","Settings"),systemImage:"gearshape")}.tag(3)
         }.toolbar(.hidden,for:.tabBar)
             .safeAreaInset(edge:.bottom,spacing:0){bottomNavigation}
-            .fullScreenCover(isPresented:$adding){FoodAddView(onPhotoCommit:{foods,meal in
+            .fullScreenCover(isPresented:$adding,onDismiss:{addingMeal=nil;consumeReminderRoute()}){FoodAddView(initialMeal:addingMeal,onPhotoCommit:{foods,meal in
                 do{let entries=try foods.map{try DiaryEntry(food:$0.0,amount:$0.1,unit:$0.2,meal:meal,day:DayKey.today,language:diary.language)};return diary.add(entries,foods:foods.map{$0.0})}catch{diary.report(error);return false}
             }){food,amount,unit,meal in
                 do{return diary.add([try DiaryEntry(food:food,amount:amount,unit:unit,meal:meal,day:DayKey.today,language:diary.language)],foods:[food])}catch{diary.report(error);return false}
@@ -119,6 +130,14 @@ struct RootView:View {
                 NavigationStack{DiaryView()}
                 #endif
             }
+            .task(id:reminders.pendingRoute){
+                // A notification tap must not discard an open recipe/food draft.
+                // Keep the requested destination queued until the current modal closes.
+                while reminders.pendingRoute != nil,!Task.isCancelled{
+                    if !hasPresentedModal{consumeReminderRoute()}
+                    if reminders.pendingRoute != nil{try? await Task.sleep(for:.milliseconds(400))}
+                }
+            }
             #if DEBUG
             .sheet(item:$templatePreview){route in templatePreviewContent(route)}
             .environment(\.dynamicTypeSize,ProcessInfo.processInfo.arguments.contains("-loqma-preview-accessibility") ? .accessibility3:typeSize)
@@ -138,6 +157,12 @@ struct RootView:View {
             case .backup:NavigationStack{BackupSettingsView().navigationBarTitleDisplayMode(.inline)}
             case .about:NavigationStack{AboutLuqmaView().navigationBarTitleDisplayMode(.inline)}
             case .language:NavigationStack{LuqmaLanguageView()}
+            case .notifications:NavigationStack{NotificationsView()}
+            case .reminders:NavigationStack{RemindersView()}
+            case .stateError:statePreview{SandowStateAlert(text:diary.t("تعذّر إكمال الطلب. تحقق من الاتصال وحاول مجددًا.","The request could not be completed. Check your connection and retry."))}
+            case .stateLoading:statePreview{SandowOperationState(title:diary.t("تقدير المكونات والسعرات…","Estimating components and calories…"),cancelLabel:diary.t("إلغاء","Cancel"),onCancel:{})}
+            case .stateEmpty:statePreview{SandowEmptyState(title:diary.t("لا توجد نتائج","No results"),message:diary.t("جرّب اسمًا آخر أو غيّر كلمات البحث.","Try another name or change your search words."))}
+            case .stateSuccess:statePreview{SandowSavedConfirmation(text:diary.t("حُفظ وقت التذكير.","Reminder time saved."))}
             case .barcode:NavigationStack{
                 BarcodeScanGuide(language:diary.language).background(Theme.surface).ignoresSafeArea()
                     .sandowNavigation(diary.t("مسح الباركود","Scan barcode"),backLabel:diary.t("إغلاق","Close"))
@@ -145,6 +170,12 @@ struct RootView:View {
             }
             }
         }.allowsHitTesting(false)
+    }
+    private func statePreview<Content:View>(@ViewBuilder content:()->Content)->some View {
+        NavigationStack{ScrollView{VStack(spacing:24){
+            Notice(text:diary.t("معاينة لحالة الواجهة فقط؛ لم تنفّذ عملية أو تحفظ بيانات.","Interface-state preview only; no operation ran and no data was saved."))
+            content()
+        }.padding(16)}.appBackground().sandowNavigation(diary.t("معاينة الحالة","State preview"),backLabel:diary.t("إغلاق","Close"))}
     }
     private var previewPortionFood:Food {
         let serving=Nutrition(kcal:124,protein:17,carbs:8,fat:2.66)
@@ -161,11 +192,20 @@ struct RootView:View {
             portions:2,cookedWeight:200,notes:diary.t("مثال للعرض فقط؛ لا يُحفظ في سجلّك ولا يستخدم التحليل.","Display example only; it is not saved to your diary and uses no analysis request."))
     }
     #endif
+    private func consumeReminderRoute(){
+        guard let kind=reminders.pendingRoute,!adding,!hasPresentedModal else{return}
+        reminders.pendingRoute=nil;tab=0;todayRouteID+=1
+        if let meal=kind.meal{addingMeal=meal;adding=true}
+    }
+    private var hasPresentedModal:Bool {
+        UIApplication.shared.connectedScenes.compactMap{$0 as? UIWindowScene}.flatMap(\.windows)
+            .first(where:{$0.isKeyWindow})?.rootViewController?.presentedViewController != nil
+    }
     private var bottomNavigation:some View {
         HStack(alignment:.center,spacing:4){
             navigationButton(0,title:diary.t("اليوم","Today"),symbol:"house")
             navigationButton(1,title:diary.t("مطبخي","Kitchen"),symbol:"fork.knife")
-            Button{adding=true}label:{Image(systemName:"plus").font(.system(size:27,weight:.medium)).foregroundStyle(Theme.text).frame(width:54,height:54).background(Theme.accent,in:RoundedRectangle(cornerRadius:17,style:.continuous))}.buttonStyle(.plain).frame(maxWidth:.infinity,minHeight:54).accessibilityLabel(diary.t("إضافة طعام إلى اليوم","Add food to today")).accessibilityIdentifier("nav.add")
+            Button{addingMeal=nil;adding=true}label:{Image(systemName:"plus").font(.system(size:27,weight:.medium)).foregroundStyle(Theme.text).frame(width:54,height:54).background(Theme.accent,in:RoundedRectangle(cornerRadius:17,style:.continuous))}.buttonStyle(.plain).frame(maxWidth:.infinity,minHeight:54).accessibilityLabel(diary.t("إضافة طعام إلى اليوم","Add food to today")).accessibilityIdentifier("nav.add")
             navigationButton(2,title:diary.t("تقدّمي","Progress"),symbol:"chart.bar")
             navigationButton(3,title:diary.t("الإعدادات","Settings"),symbol:"gearshape")
         }.padding(.horizontal,10).padding(.vertical,6)

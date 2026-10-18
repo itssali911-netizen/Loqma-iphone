@@ -140,7 +140,7 @@ jobs:
         env:
           BUNDLE_ID: ${{ vars.BUNDLE_ID }}
           BUILD_NUMBER: ${{ github.run_number }}
-        run: python3 Scripts/ui_preview.py --packages BuildOutput/Packages --app UIPreview/derived/Build/Products/Debug-iphonesimulator/Luqma.app --output UIReference --device-type com.apple.CoreSimulator.SimDeviceType.iPhone-13-mini --language en --screens search macro-goals photo-estimate recipe-details
+        run: python3 Scripts/ui_preview.py --packages BuildOutput/Packages --app UIPreview/derived/Build/Products/Debug-iphonesimulator/Luqma.app --output UIReference --device-type com.apple.CoreSimulator.SimDeviceType.iPhone-13-mini --language en --screens search macro-goals photo-estimate recipe-details notifications reminders state-error state-loading state-empty state-success
 
       - name: Reference-width captures and readiness report
         if: always()

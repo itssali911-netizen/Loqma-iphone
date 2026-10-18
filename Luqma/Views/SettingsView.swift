@@ -21,6 +21,8 @@ struct SettingsView:View {
             }
             settingsGroup(diary.t("التفضيلات","Preferences")){
                 languageRow
+                NavigationLink{NotificationsView()}label:{settingsRow(diary.t("الإشعارات","Notifications"),symbol:"bell")}.accessibilityIdentifier("settings.notifications")
+                NavigationLink{RemindersView()}label:{settingsRow(diary.t("التذكيرات","Reminders"),symbol:"clock")}.accessibilityIdentifier("settings.reminders")
             }
             settingsGroup(diary.t("الربط والبيانات","Connections and data")){
                 Button{gemini=true}label:{settingsRow(diary.t("تحليل الوجبة","Meal analysis"),symbol:"sparkles")}

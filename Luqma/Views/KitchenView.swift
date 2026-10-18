@@ -28,7 +28,10 @@ struct KitchenView:View {
             }
             LuqmaSectionHeader(title:diary.t("محفوظاتك","Your saved items"),detail:decimal(Double(filteredRecipes.count),0))
             if diary.state.recipes.isEmpty{kitchenEmptyState}
-            else if filteredRecipes.isEmpty{ContentUnavailableView(diary.t("لا توجد نتائج","No results"),systemImage:"magnifyingglass",description:Text(diary.t("جرّب اسمًا آخر أو غيّر نوع المحفوظات.","Try another name or change the saved-item type.")))}
+            else if filteredRecipes.isEmpty{
+                SandowEmptyState(title:diary.t("لا توجد نتائج","No results"),message:diary.t("جرّب اسمًا آخر أو غيّر نوع المحفوظات.","Try another name or change the saved-item type."),
+                    actionLabel:diary.t("عرض جميع المحفوظات","Show all saved items"),onAction:{query="";filter="all"})
+            }
             ForEach(filteredRecipes){r in recipeCard(r)}
         }.padding(.horizontal,16).padding(.top,16).padding(.bottom,24)}.scrollDismissesKeyboard(.interactively).appBackground()
             .navigationTitle(diary.t("مطبخي","My kitchen"))
@@ -136,18 +139,9 @@ struct KitchenView:View {
         Label(decimal(recipe.portions)+" "+diary.t("حصص","servings"),systemImage:"square.stack")
     }
     private var kitchenEmptyState:some View {
-        VStack(alignment:.center,spacing:12){
-            Image(systemName:"book.closed").font(.system(size:18,weight:.medium))
-                .foregroundStyle(Theme.text).frame(width:38,height:38)
-                .background(Theme.accent,in:RoundedRectangle(cornerRadius:12))
-            Text(diary.t("مطبخك يبدأ هنا","Your kitchen starts here"))
-                .luqmaFont(size:18,weight:.bold,relativeTo:.title3)
-            Text(diary.t("احفظ وصفتك الأولى أو استوردها من رابط، ثم احسب حصصها وأضفها ليومك.","Save your first recipe or import a link, then calculate servings and log them to your day."))
-                .luqmaFont(size:13,relativeTo:.footnote).foregroundStyle(Theme.text.opacity(0.8))
-                .multilineTextAlignment(.center).fixedSize(horizontal:false,vertical:true)
-        }.padding(20).frame(maxWidth:.infinity,alignment:.center)
-            .foregroundStyle(Theme.text).background(Theme.card)
-            .clipShape(RoundedRectangle(cornerRadius:20,style:.continuous))
+        SandowEmptyState(title:diary.t("مطبخك يبدأ هنا","Your kitchen starts here"),
+            message:diary.t("احفظ وصفتك الأولى أو استوردها من رابط، ثم احسب حصصها وأضفها ليومك.","Save your first recipe or import a link, then calculate servings and log them to your day."),
+            actionLabel:diary.t("وصفة جديدة","New recipe"),onAction:{creating=true})
     }
     private func recipeMacro(_ key:MacroKey,_ nutrition:Nutrition)->some View {
         let ratio=nutrition.macroCalories>0 ? nutrition[key]*key.energy/nutrition.macroCalories:0
@@ -230,7 +224,10 @@ struct RecipeDetailView:View {
                             ForEach(info.assumptions,id:\.self){Notice(text:$0)}
                         }
                     }.padding(16).padding(.bottom,16)
-                }else{ContentUnavailableView(diary.t("الوصفة غير متاحة","Recipe unavailable"),systemImage:"book.closed")}
+                }else{
+                    SandowEmptyState(title:diary.t("الوصفة غير متاحة","Recipe unavailable"),message:diary.t("ربما حُذفت هذه الوصفة. ارجع إلى مطبخك للاطلاع على المحفوظات.","This recipe may have been deleted. Return to your kitchen to view saved items."),
+                        actionLabel:diary.t("العودة إلى مطبخي","Back to my kitchen"),onAction:{dismiss()}).padding(16)
+                }
             }.appBackground().sandowNavigation(diary.t("تفاصيل الوصفة","Recipe details"),backLabel:diary.t("إغلاق","Close"),onBack:{dismiss()})
                 .safeAreaInset(edge:.bottom,spacing:0){
                     if let recipe{

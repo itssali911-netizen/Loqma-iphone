@@ -1,6 +1,7 @@
 import SwiftUI
 import PhotosUI
 import UIKit
+import AVFoundation
 
 typealias FoodCommit = (Food,Double,FoodUnit,Meal) -> Bool
 typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
@@ -13,6 +14,8 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
     var onCommit:FoodCommit
     @EnvironmentObject var diary:DiaryStore
     @Environment(\.dismiss) var dismiss
+    @Environment(\.openURL) private var openURL
+    @Environment(\.scenePhase) private var phase
     @State private var tab=0
     @State private var query=""
     @State private var code=""
@@ -26,7 +29,8 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
     @State private var nextPage:Int?
     @State private var reachedSourceWindow=false
     @State private var selected:Food?
-    @State private var notice:String?
+    private struct SearchNotice {let text:String;let isError:Bool;let offersSettings:Bool}
+    @State private var notice:SearchNotice?
     @State private var photo:PhotosPickerItem?
     @State private var queryToken=UUID()
     @State private var searchTask:Task<Void,Never>?
@@ -63,8 +67,18 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                         if tab==0 {searchContent}
                         if tab==1 {barcodeContent}
                         if tab==2 && !productSelection {AnyView(PhotoMealView(initialMeal:initialMeal){foods,meal in onPhoto(foods,meal)})}
-                        if let notice,tab != 2 {Notice(text:notice)}
-                        if busy || choosingFood {ProgressView(choosingFood ? diary.t("جلب تفاصيل المنتج…","Loading product details…"):"").frame(maxWidth:.infinity)}
+                        if let notice,tab != 2 {
+                            if notice.isError{SandowStateAlert(text:notice.text)}else{Notice(text:notice.text)}
+                            if notice.offersSettings{
+                                Button(diary.t("فتح الإعدادات","Open Settings")){if let url=URL(string:UIApplication.openSettingsURLString){openURL(url)}}
+                                    .buttonStyle(LuqmaSecondaryButtonStyle())
+                            }
+                        }
+                        if busy || choosingFood {
+                            SandowOperationState(title:choosingFood ? diary.t("جلب تفاصيل المنتج…","Loading product details…"):
+                                diary.t(tab==1 ? "البحث عن المنتج…":"البحث عن المنتجات…",tab==1 ? "Looking up the product…":"Searching products…"),
+                                cancelLabel:diary.t("إلغاء","Cancel"),onCancel:{cancelOperation()})
+                        }
                         resultsContent
                     }.padding(SearchLayout.margin)
                 }.scrollDismissesKeyboard(.interactively)
@@ -78,7 +92,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                 .toolbar(.hidden,for:.navigationBar)
                 .sheet(item:$selected){food in FoodPortionView(food:food,sourceBarcode:tab==1,initialMeal:initialMeal,onCommit:{f,a,u,m in if onCommit(f,a,u,m){dismiss();return true};return false})}
                 .sheet(isPresented:$manual){FoodPortionView(food:Food(name:""),manual:true,initialMeal:initialMeal,onCommit:{f,a,u,m in if onCommit(f,a,u,m){dismiss();return true};return false})}
-                .sheet(isPresented:$scanning){NavigationStack{BarcodeCamera(language:diary.language,completion:{value in scanning=false;code=value;startLookup()},failed:{message in scanning=false;notice=message}).ignoresSafeArea().sandowNavigation(diary.t("مسح الباركود","Scan barcode"),backLabel:diary.t("إغلاق","Close"),onBack:{scanning=false})}}
+                .sheet(isPresented:$scanning){NavigationStack{BarcodeCamera(language:diary.language,completion:{value in scanning=false;code=value;startLookup()},failed:{message in scanning=false;presentNotice(message,error:true,settings:cameraAccessBlocked)}).ignoresSafeArea().sandowNavigation(diary.t("مسح الباركود","Scan barcode"),backLabel:diary.t("إغلاق","Close"),onBack:{scanning=false})}}
         }.onAppear{if let initial{selected=initial};if query.isEmpty && !initialQuery.isEmpty {query=initialQuery};refreshHistory();if tab==0 {searchTask=Task{await refreshLocal()}}}
             .onChange(of:diary.state.entries){_,_ in refreshHistory()}
             .onChange(of:diary.state.customFoods){_,_ in refreshHistory()}
@@ -87,6 +101,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
             .onChange(of:query){_,value in let submit=suggestedQuery==value;suggestedQuery=nil;resetSearch();searchTask=Task{if submit{await search()}else{await refreshLocal()}}}
             .onChange(of:filter){_,_ in resetSearch();searchTask=Task{await refreshLocal()}}
             .onChange(of:tab){_,value in resetSearch();barcodePhotoTask?.cancel();photoToken=UUID();photo=nil;if value==0 {searchTask=Task{await refreshLocal()}}}
+            .onChange(of:phase){_,value in if value == .active,notice?.offersSettings == true,AVCaptureDevice.authorizationStatus(for:.video) == .authorized{notice=nil}}
             .onDisappear{searchTask?.cancel();selectionTask?.cancel();historyTask?.cancel();queryToken=UUID();busy=false;pageLoading=false;choosingFood=false;barcodePhotoTask?.cancel();photoToken=UUID()}
             .onChange(of:photo){_,item in readBarcodePhoto(item)}
     }
@@ -257,7 +272,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
     }
     private var barcodeContent:some View {
         VStack(alignment:.leading,spacing:16) {
-            Button{Task{let token=queryToken;let allowed=await CameraAccess.request();guard tab==1,token==queryToken,!Task.isCancelled else{return};if allowed{scanning=true}else{notice=diary.t("اسمح للُقمة باستخدام الكاميرا من إعدادات الآيفون.","Allow Luqma camera access in iPhone Settings.")}}}label:{Label(diary.t("مسح الباركود","Scan barcode"),systemImage:"barcode.viewfinder")}.buttonStyle(LuqmaPrimaryButtonStyle())
+            Button{openBarcodeCamera()}label:{Label(diary.t("مسح الباركود","Scan barcode"),systemImage:"barcode.viewfinder")}.buttonStyle(LuqmaPrimaryButtonStyle())
             PhotosPicker(selection:$photo,matching:.images){Label(diary.t("قراءة باركود من صورة","Read a barcode photo"),systemImage:"photo")}
             DisclosureGroup(diary.t("كتابة رقم الباركود","Enter barcode number")) {
                 HStack{TextField(diary.t("رقم الباركود","Barcode number"),text:$code).keyboardType(.numberPad).environment(\.layoutDirection,.leftToRight);Button(diary.t("بحث","Look up")){startLookup()}.disabled(busy || code.isEmpty)}.padding(.vertical,12)
@@ -284,7 +299,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
             } catch {
                 guard !Task.isCancelled,token==queryToken,selectionQuery==query,selectionTab==tab else{return}
                 choosingFood=false
-                notice=(error as? AppError)?.message(diary.language) ?? diary.t("تعذّر جلب تفاصيل المنتج ووحدته. أعد المحاولة عند توفر الإنترنت أو أضفه من الملصق.","Could not load the product details and unit. Retry when connected, or add it from the label.")
+                presentNotice((error as? AppError)?.message(diary.language) ?? diary.t("تعذّر جلب تفاصيل المنتج ووحدته. أعد المحاولة عند توفر الإنترنت أو أضفه من الملصق.","Could not load the product details and unit. Retry when connected, or add it from the label."),error:true)
             }
         }
     }
@@ -292,6 +307,33 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
     private func resetSearch() {
         searchTask?.cancel();selectionTask?.cancel();queryToken=UUID();busy=false;pageLoading=false;choosingFood=false;nextPage=nil;reachedSourceWindow=false
         localResults=[];remoteResults=[];publishResults([]);nearbyResults=[];suggestions=[];notice=nil
+    }
+    private func presentNotice(_ text:String,error:Bool=false,settings:Bool=false){
+        notice=SearchNotice(text:text,isError:error,offersSettings:settings)
+    }
+    private func cancelOperation(){
+        queryToken=UUID();photoToken=UUID();searchTask?.cancel();selectionTask?.cancel();barcodePhotoTask?.cancel()
+        searchTask=nil;selectionTask=nil;barcodePhotoTask=nil;busy=false;pageLoading=false;choosingFood=false
+    }
+    private var cameraAccessBlocked:Bool {
+        let status=AVCaptureDevice.authorizationStatus(for:.video)
+        return status == .denied || status == .restricted
+    }
+    private func openBarcodeCamera(){
+        notice=nil
+        guard UIImagePickerController.isSourceTypeAvailable(.camera) else{
+            presentNotice(diary.t("لا توجد كاميرا متاحة على هذا الجهاز. استخدم صورة للباركود أو اكتب رقمه.","No camera is available on this device. Use a barcode photo or enter its number."),error:true);return
+        }
+        Task{
+            let token=queryToken,allowed=await CameraAccess.request()
+            guard tab==1,token==queryToken,!Task.isCancelled else{return}
+            if allowed{scanning=true}
+            else if cameraAccessBlocked{
+                presentNotice(diary.t("الوصول إلى الكاميرا مرفوض أو مقيّد. راجع إذن الكاميرا في الإعدادات أو استخدم صورة للباركود.","Camera access is denied or restricted. Check camera access in Settings or use a barcode photo."),error:true,settings:true)
+            }else{
+                presentNotice(diary.t("تعذّر فتح الكاميرا. استخدم صورة للباركود أو اكتب رقمه.","The camera could not be opened. Use a barcode photo or enter its number."),error:true)
+            }
+        }
     }
     private func refreshHistory() {
         historyTask?.cancel();let snapshot=diary.state
@@ -304,7 +346,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
     private func readBarcodePhoto(_ item:PhotosPickerItem?) {
         barcodePhotoTask?.cancel();let token=UUID();photoToken=token
         guard tab==1,let item else{return}
-        searchTask?.cancel();queryToken=UUID();busy=false;pageLoading=false
+        searchTask?.cancel();queryToken=UUID();busy=false;pageLoading=false;notice=nil
         barcodePhotoTask=Task {
             do {
                 let data=try await item.loadTransferable(type:Data.self)
@@ -313,7 +355,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                 if let data {value=try await CameraAccess.barcode(in:data)} else {value=nil}
                 guard !Task.isCancelled,token==photoToken,tab==1 else{return}
                 if let value {code=value;startLookup()}
-                else {notice=diary.t("لم نعثر على باركود واضح في الصورة.","No readable barcode was found in the photo.")}
+                else {presentNotice(diary.t("لم نعثر على باركود واضح في الصورة.","No readable barcode was found in the photo."))}
             } catch {
                 guard !Task.isCancelled,token==photoToken,tab==1 else{return};diary.report(error)
             }
@@ -354,10 +396,10 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
             guard !Task.isCancelled,token==queryToken else{return}
             remoteResults=page.foods;nextPage=page.nextPage;reachedSourceWindow=page.reachedSourceWindow
             guard await mergeResults(token) else{return}
-            if results.isEmpty {notice=diary.t(nearbyResults.isEmpty ? "لم نجد منتجًا مطابقًا. اختصر البحث أو جرّب اسم العلامة التجارية." : "لم نجد تطابقًا لكل الكلمات. المنتجات القريبة أدناه قد تختلف في العلامة أو النوع؛ راجعها قبل الإضافة.",nearbyResults.isEmpty ? "No matching product. Shorten the query or try its brand name.":"No product matches every word. Nearby products may have a different brand or type; review them before adding.")}
+            if results.isEmpty {presentNotice(diary.t(nearbyResults.isEmpty ? "لم نجد منتجًا مطابقًا. اختصر البحث أو جرّب اسم العلامة التجارية." : "لم نجد تطابقًا لكل الكلمات. المنتجات القريبة أدناه قد تختلف في العلامة أو النوع؛ راجعها قبل الإضافة.",nearbyResults.isEmpty ? "No matching product. Shorten the query or try its brand name.":"No product matches every word. Nearby products may have a different brand or type; review them before adding."))}
         } catch {
             guard !Task.isCancelled,token==queryToken else{return}
-            notice=(error as? AppError)?.message(diary.language) ?? diary.t("البحث عبر الإنترنت غير متاح. نعرض الأطعمة المحفوظة.","Online search is unavailable. Saved foods are shown.")
+            presentNotice((error as? AppError)?.message(diary.language) ?? diary.t("البحث عبر الإنترنت غير متاح. نعرض الأطعمة المحفوظة.","Online search is unavailable. Saved foods are shown."),error:true)
         }
         if token==queryToken {busy=false}
     }
@@ -371,15 +413,15 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
             guard await mergeResults(token) else{return}
         } catch {
             guard !Task.isCancelled,token==queryToken else{return}
-            notice=(error as? AppError)?.message(diary.language) ?? diary.t("تعذّر تحميل المزيد. حاول مرة أخرى.","Could not load more. Try again.")
+            presentNotice((error as? AppError)?.message(diary.language) ?? diary.t("تعذّر تحميل المزيد. حاول مرة أخرى.","Could not load more. Try again."),error:true)
         }
         if token==queryToken {pageLoading=false}
     }
     private func lookup() async {
         guard !Task.isCancelled,tab==1 else{return}
         let token=UUID();queryToken=token;busy=true;notice=nil
-        do{let food=try await FoodDatabase.shared.barcode(code,cached:diary.state.products);guard !Task.isCancelled,token==queryToken else{return};if let food{diary.remember(food,barcode:true);selected=food}else{notice=diary.t("الباركود مقروء لكن المنتج غير مسجل في Open Food Facts. أضفه من الملصق.","The barcode was read, but the product is absent from Open Food Facts. Add its label nutrition.")}}
-        catch{guard !Task.isCancelled,token==queryToken else{return};notice=(error as? AppError)?.message(diary.language) ?? diary.t("تعذّر الاتصال بقاعدة المنتجات. أعد المحاولة عند توفر الإنترنت.","The database could not be reached. Retry when connected.")}
+        do{let food=try await FoodDatabase.shared.barcode(code,cached:diary.state.products);guard !Task.isCancelled,token==queryToken else{return};if let food{diary.remember(food,barcode:true);selected=food}else{presentNotice(diary.t("الباركود مقروء لكن المنتج غير مسجل في Open Food Facts. أضفه من الملصق.","The barcode was read, but the product is absent from Open Food Facts. Add its label nutrition."))}}
+        catch{guard !Task.isCancelled,token==queryToken else{return};presentNotice((error as? AppError)?.message(diary.language) ?? diary.t("تعذّر الاتصال بقاعدة المنتجات. أعد المحاولة عند توفر الإنترنت.","The database could not be reached. Retry when connected."),error:true)}
         if token==queryToken {busy=false}
     }
     private func onPhoto(_ values:[(Food,Double,FoodUnit)],_ meal:Meal) -> Bool {
