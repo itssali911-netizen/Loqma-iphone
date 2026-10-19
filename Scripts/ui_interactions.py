@@ -23,9 +23,10 @@ from vision_compat import apply_vision_compat
 
 PRIMARY_TESTS = ('testFoodAddResizePersistenceAndDelete', 'testTabNavigationAndGoalsPersistAfterRelaunch',
                  'testLanguageSelectionPersistsAfterRelaunch', 'testRecipeDraftSurvivesIngredientSearch',
-                 'testNotificationPermissionAndReminderPersistence', 'testFitnessDraftApplyAndDeletePreserveDiary')
+                 'testNotificationPermissionAndReminderPersistence')
 DENIED_TESTS = ('testNotificationDeniedDoesNotClaimDelivery',)
-TESTS = PRIMARY_TESTS + DENIED_TESTS
+FITNESS_TESTS = ('testFitnessDraftApplyAndDeletePreserveDiary',)
+TESTS = PRIMARY_TESTS + DENIED_TESTS + FITNESS_TESTS
 
 
 def run_scenario(output: Path, packages: Path, derived: Path, runtime: dict,
@@ -92,7 +93,8 @@ def run_tests(output: Path, packages: Path, derived: Path) -> None:
         runtime=select_runtime(inventory)
         apply_vision_compat(packages)
         for name,directory,methods in [('permission-allowed',output,PRIMARY_TESTS),
-                                        ('permission-denied',output/'permission-denied',DENIED_TESTS)]:
+                                        ('permission-denied',output/'permission-denied',DENIED_TESTS),
+                                        ('fitness-assessment',output/'fitness-assessment',FITNESS_TESTS)]:
             scenario=dict(name=name,status='running',fresh_simulator=False,required_cases=list(methods))
             report['scenarios'].append(scenario)
             run_scenario(directory,packages,derived,runtime,methods,scenario)

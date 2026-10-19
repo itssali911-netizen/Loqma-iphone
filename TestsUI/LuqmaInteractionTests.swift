@@ -215,9 +215,16 @@ final class LuqmaInteractionTests:XCTestCase {
         reveal(status)
         XCTAssertEqual(status.value as? String,"active")
         let removeProfile=app.buttons["fitness.delete"]
-        reveal(removeProfile);removeProfile.tap()
-        let confirm=app.buttons["fitness.confirmDelete"]
-        XCTAssertTrue(confirm.waitForExistence(timeout:5));confirm.tap()
+        revealFitnessDelete(removeProfile)
+        recordFitnessScreen("Fitness profile before delete confirmation")
+        removeProfile.coordinate(withNormalizedOffset:CGVector(dx:0.5,dy:0.5)).tap()
+        recordFitnessScreen("Fitness delete confirmation after real tap")
+        // UIKit's native alert does not promise to retain a SwiftUI button ID.
+        // Require the actual titled alert and its destructive button instead.
+        let confirmation=app.alerts["Delete fitness assessment data?"]
+        XCTAssertTrue(confirmation.waitForExistence(timeout:5),app.debugDescription)
+        let confirm=confirmation.buttons["Delete fitness profile"]
+        XCTAssertTrue(confirm.exists && confirm.isHittable);confirm.tap()
         XCTAssertTrue(app.descendants(matching:.any).matching(identifier:"fitness.deletedConfirmation").firstMatch.waitForExistence(timeout:10))
         app.terminate();app.launch()
         XCTAssertTrue(app.buttons["nav.today"].waitForExistence(timeout:15))
@@ -248,6 +255,31 @@ final class LuqmaInteractionTests:XCTestCase {
         let link=app.buttons["settings.fitness"]
         reveal(link);link.tap()
         XCTAssertTrue(app.scrollViews["fitness.profile"].waitForExistence(timeout:10),app.debugDescription)
+    }
+    private func recordFitnessScreen(_ name:String) {
+        print("LUQMA_FITNESS_CHECKPOINT \(name)\n"+app.debugDescription)
+        let attachment=XCTAttachment(screenshot:app.screenshot())
+        attachment.name=name;attachment.lifetime = .keepAlways;add(attachment)
+    }
+    private func revealFitnessDelete(_ button:XCUIElement,file:StaticString=#filePath,line:UInt=#line) {
+        let profile=app.scrollViews["fitness.profile"]
+        XCTAssertTrue(profile.exists,file:file,line:line)
+        for _ in 0..<12 {
+            let viewport=profile.frame.intersection(app.frame)
+            let nav=app.buttons["nav.today"]
+            let top=max(viewport.minY,app.frame.minY+100)
+            let bottom=min(viewport.maxY,nav.exists ? nav.frame.minY:app.frame.maxY)-12
+            if button.exists && button.isHittable && button.frame.minY>=top+8 && button.frame.maxY<=bottom {
+                print("LUQMA_FITNESS_DELETE_FRAME \(button.frame) viewport \(viewport) safeY \(top)...\(bottom)")
+                return
+            }
+            XCTAssertGreaterThan(bottom-top,80,file:file,line:line)
+            let origin=app.coordinate(withNormalizedOffset:CGVector(dx:0,dy:0))
+            let x=viewport.midX-app.frame.minX
+            origin.withOffset(CGVector(dx:x,dy:bottom-25-app.frame.minY))
+                .press(forDuration:0.05,thenDragTo:origin.withOffset(CGVector(dx:x,dy:top+25-app.frame.minY)))
+        }
+        XCTFail("Delete must be fully inside the visible profile, above the app navigation.\n"+app.debugDescription,file:file,line:line)
     }
 
     private func addFitnessHistoryFood(named name:String) {

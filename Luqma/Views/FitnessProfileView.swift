@@ -42,7 +42,7 @@ struct FitnessProfileView: View {
         }.appBackground().accessibilityIdentifier("fitness.profile")
             .sandowNavigation(diary.t("ملف اللياقة", "Fitness profile"), backLabel: diary.t("رجوع", "Back"))
             .sheet(isPresented: $editing) { FitnessAssessmentView() }
-            .confirmationDialog(diary.t("حذف بيانات تقييم اللياقة؟", "Delete fitness assessment data?"), isPresented: $confirmingDelete, titleVisibility: .visible) {
+            .alert(diary.t("حذف بيانات تقييم اللياقة؟", "Delete fitness assessment data?"), isPresented: $confirmingDelete) {
                 Button(diary.t("حذف ملف اللياقة", "Delete fitness profile"), role: .destructive) {
                     deleted = diary.deleteFitnessProfile()
                 }.accessibilityIdentifier("fitness.confirmDelete")
