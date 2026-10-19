@@ -261,7 +261,9 @@ struct FitnessAssessmentView:View {
     }
     @discardableResult private func persist()->Bool {
         guard previewPage == nil,loaded,!reviewed else{return true}
-        return diary.saveFitnessDraft(FitnessAssessmentDraft(answers:answers,step:group,updatedDay:DayKey.today,pageIndex:page))
+        let saved=diary.saveFitnessDraft(FitnessAssessmentDraft(answers:answers,step:group,updatedDay:DayKey.today,pageIndex:page))
+        if !saved{validation=diary.error ?? diary.t("تعذّر حفظ الإجابات. حاول مرة أخرى.","Could not save your answers. Try again.")}
+        return saved
     }
     private func back(){
         if page>0{page-=1;validation=nil;_ = persist()}
@@ -283,7 +285,10 @@ struct FitnessAssessmentView:View {
         guard valid else{validation=diary.t("أكمل الاختيار أو أدخل قيمة ضمن النطاق الموضح قبل المتابعة.","Complete the selection or enter a value within the stated range before continuing.");return}
         do{try answers.validate()}catch{validation=(error as? AppError)?.message(diary.language) ?? error.localizedDescription;return}
         if page == 16{
-            if previewPage == nil,diary.previewFitnessPlan(answers){reviewed=true;showingPlan=true}
+            if previewPage == nil{
+                if diary.previewFitnessPlan(answers){reviewed=true;showingPlan=true}
+                else{validation=diary.error ?? diary.t("تعذّرت معاينة الخطة. راجع الإجابات وحاول مرة أخرى.","Could not preview the plan. Review your answers and try again.")}
+            }
         }else{advance()}
     }
     private func advance(){page=min(total-1,page+1);validation=nil;_ = persist()}

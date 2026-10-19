@@ -189,9 +189,20 @@ final class LuqmaInteractionTests:XCTestCase {
         tapAssessmentOption("assessment.activity.light")
         advanceAssessment(to:9)
         for step in 10...16 {skipAssessment(to:step)}
-        tapAssessmentOption("assessment.safety.generalAdult")
+        tapAssessmentOption("assessment.safety.medicalDiet")
         advanceAssessment(to:17)
         let review=app.buttons["assessment.review"]
+        reveal(review);review.tap()
+        let eligibilityError=app.descendants(matching:.any).matching(identifier:"assessment.validation").firstMatch
+        reveal(eligibilityError)
+        XCTAssertTrue(eligibilityError.exists,app.debugDescription)
+        XCTAssertTrue(eligibilityError.label.contains("This estimator does not create plans"),"Unsuitable assessment answers must explain why the plan cannot be previewed")
+        assertAssessmentStep(17)
+        XCTAssertFalse(app.scrollViews["fitness.review"].exists,"A rejected assessment must not create or apply a plan")
+        app.buttons["assessment.back"].tap()
+        assertAssessmentStep(16)
+        tapAssessmentOption("assessment.safety.generalAdult")
+        advanceAssessment(to:17)
         reveal(review);review.tap()
         XCTAssertTrue(app.scrollViews["fitness.review"].waitForExistence(timeout:10),app.debugDescription)
         let current=app.staticTexts.matching(identifier:"fitness.review.calories.current").firstMatch
