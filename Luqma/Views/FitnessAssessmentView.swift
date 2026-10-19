@@ -28,7 +28,8 @@ struct FitnessAssessmentView:View {
     }
     var body:some View {
         NavigationStack {
-            ScrollView {
+            ScrollViewReader{scroll in
+              ScrollView {
                 VStack(spacing:32){
                     if previewPage != nil{Notice(text:diary.t("مثال للعرض فقط؛ لا تُحفظ هذه الإجابات في ملفك.","Display example only; these answers are not saved to your profile."))}
                     Text(question).luqmaFont(size:30,weight:.bold,relativeTo:.title)
@@ -36,9 +37,13 @@ struct FitnessAssessmentView:View {
                         .frame(maxWidth:.infinity).accessibilityAddTraits(.isHeader)
                         .accessibilityIdentifier("assessment.question")
                     pageContent
-                    if let validation{SandowStateAlert(text:validation).accessibilityIdentifier("assessment.validation")}
+                    if let validation{SandowStateAlert(text:validation).accessibilityIdentifier("assessment.validation").id("assessment.validation")}
                 }.padding(.horizontal,16).padding(.top,32).padding(.bottom,24)
-            }.scrollDismissesKeyboard(.interactively).appBackground()
+              }.scrollDismissesKeyboard(.interactively).appBackground()
+                .onChange(of:validation){_,message in
+                    if message != nil{DispatchQueue.main.async{scroll.scrollTo("assessment.validation",anchor:.bottom)}}
+                }
+            }
                 .safeAreaInset(edge:.top,spacing:0){header}
                 .safeAreaInset(edge:.bottom,spacing:0){footer}
                 .toolbar(.hidden,for:.navigationBar)

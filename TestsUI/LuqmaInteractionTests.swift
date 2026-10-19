@@ -194,7 +194,8 @@ final class LuqmaInteractionTests:XCTestCase {
         let review=app.buttons["assessment.review"]
         reveal(review);review.tap()
         let eligibilityError=app.descendants(matching:.any).matching(identifier:"assessment.validation").firstMatch
-        reveal(eligibilityError)
+        let visibleReason=XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == true AND hittable == true"),object:eligibilityError)
+        XCTAssertEqual(XCTWaiter.wait(for:[visibleReason],timeout:5),.completed,"A rejected preview must bring its reason into view without requiring the user to search for it")
         XCTAssertTrue(eligibilityError.exists,app.debugDescription)
         XCTAssertTrue(eligibilityError.label.contains("This estimator does not create plans"),"Unsuitable assessment answers must explain why the plan cannot be previewed")
         XCTAssertFalse(app.alerts["Notice"].exists,"The inline assessment message must not compete with the root alert")
