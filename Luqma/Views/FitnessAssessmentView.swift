@@ -148,8 +148,20 @@ struct FitnessAssessmentView:View {
             Button{answers.sex=sex;validation=nil}label:{
                 ZStack(alignment:.leading){
                     Theme.card
-                    GeometryReader{geometry in Image(sex == .male ? "AssessmentMale":"AssessmentFemale").resizable().scaledToFill()
-                        .frame(width:geometry.size.width,height:144,alignment:.topTrailing).clipped().blendMode(.lighten).accessibilityHidden(true)}
+                    GeometryReader{geometry in
+                        // Original 2:9680 photo boxes, including the card's 16pt
+                        // inset: male 340×227 at (81,-32), female 408×308 at
+                        // (52,-82). Move the box to the opposite side for RTL;
+                        // preserve its aspect and face rather than filling the card.
+                        let width:CGFloat=sex == .male ? 340:408
+                        let height:CGFloat=sex == .male ? 227:308
+                        let originalX:CGFloat=sex == .male ? 81:52
+                        let imageX=diary.language == .ar ? 344-originalX-width:geometry.size.width-344+originalX
+                        let imageY:CGFloat=sex == .male ? -32:-82
+                        Image(sex == .male ? "AssessmentMale":"AssessmentFemale").resizable().scaledToFill()
+                            .frame(width:width,height:height).position(x:imageX+width/2,y:imageY+height/2)
+                            .blendMode(.lighten).accessibilityHidden(true)
+                    }.environment(\.layoutDirection,.leftToRight)
                     VStack(alignment:.leading,spacing:32){
                         Text(sex.title(diary.language)).luqmaFont(.button).padding(.horizontal,4).background(Theme.card.opacity(0.9),in:Capsule())
                         Image(answers.sex == sex ? "AssessmentChecked":"AssessmentUnchecked").frame(width:24,height:24)
