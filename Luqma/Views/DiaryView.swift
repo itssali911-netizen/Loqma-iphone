@@ -371,7 +371,10 @@ struct DiaryView:View {
             HStack(spacing:5){Text(key.label(diary.language)).luqmaFont(size:11,relativeTo:.caption).foregroundStyle(Theme.muted);Spacer(minLength:0);Image(systemName:symbol).luqmaFont(size:12).foregroundStyle(symbolColor).accessibilityHidden(true)}
             HStack(alignment:.firstTextBaseline,spacing:3){
                 Text(decimal(current[key],0)).luqmaFont(size:17,weight:.heavy,relativeTo:.headline).foregroundStyle(Theme.text)
-                Text("/ "+decimal(goal[key],0)+" "+diary.t("جم","g")).luqmaFont(size:10,relativeTo:.caption2).foregroundStyle(Theme.muted)
+                // Keep the numeric ratio independent of the Arabic unit so
+                // Unicode bidi cannot move its slash behind the target.
+                Text("/ "+decimal(goal[key],0)).luqmaFont(size:10,relativeTo:.caption2).foregroundStyle(Theme.muted)
+                Text(diary.t("جم","g")).luqmaFont(size:10,relativeTo:.caption2).foregroundStyle(Theme.muted)
             }.monospacedDigit().lineLimit(1).minimumScaleFactor(0.7).environment(\.layoutDirection,.leftToRight)
             ProgressView(value:progress).tint(color)
                 .accessibilityLabel(key.label(diary.language)+" "+diary.t("التقدّم اليومي","daily progress"))
