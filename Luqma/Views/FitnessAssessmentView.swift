@@ -45,7 +45,7 @@ struct FitnessAssessmentView:View {
                 .navigationDestination(isPresented:$showingPlan){FitnessPlanReviewView()}
                 .onAppear{load()}
                 .onChange(of:answers){_,_ in reviewed=false}
-                .onDisappear{if !reviewed{_ = persist()}}
+                .onDisappear{if !reviewed{_ = persist(reportInline:false)}}
         }.foregroundStyle(Theme.text)
     }
     private var header:some View {
@@ -259,11 +259,16 @@ struct FitnessAssessmentView:View {
         if let draft=diary.state.fitnessDraft{answers=draft.answers;page=min(16,max(0,draft.pageIndex ?? (draft.step == .review ? 16:0)))}
         else if let profile=diary.state.fitnessProfile{answers=profile.answers}
     }
-    @discardableResult private func persist()->Bool {
+    @discardableResult private func persist(reportInline:Bool=true)->Bool {
         guard previewPage == nil,loaded,!reviewed else{return true}
         let saved=diary.saveFitnessDraft(FitnessAssessmentDraft(answers:answers,step:group,updatedDay:DayKey.today,pageIndex:page))
-        if !saved{validation=diary.error ?? diary.t("تعذّر حفظ الإجابات. حاول مرة أخرى.","Could not save your answers. Try again.")}
+        if !saved,reportInline{showOperationError("تعذّر حفظ الإجابات. حاول مرة أخرى.","Could not save your answers. Try again.")}
         return saved
+    }
+    private func showOperationError(_ ar:String,_ en:String){
+        validation=diary.error ?? diary.t(ar,en)
+        // This form owns the visible error; do not also request the root alert.
+        diary.error=nil
     }
     private func back(){
         if page>0{page-=1;validation=nil;_ = persist()}
@@ -287,7 +292,7 @@ struct FitnessAssessmentView:View {
         if page == 16{
             if previewPage == nil{
                 if diary.previewFitnessPlan(answers){reviewed=true;showingPlan=true}
-                else{validation=diary.error ?? diary.t("تعذّرت معاينة الخطة. راجع الإجابات وحاول مرة أخرى.","Could not preview the plan. Review your answers and try again.")}
+                else{showOperationError("تعذّرت معاينة الخطة. راجع الإجابات وحاول مرة أخرى.","Could not preview the plan. Review your answers and try again.")}
             }
         }else{advance()}
     }

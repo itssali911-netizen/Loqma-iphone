@@ -197,6 +197,7 @@ final class LuqmaInteractionTests:XCTestCase {
         reveal(eligibilityError)
         XCTAssertTrue(eligibilityError.exists,app.debugDescription)
         XCTAssertTrue(eligibilityError.label.contains("This estimator does not create plans"),"Unsuitable assessment answers must explain why the plan cannot be previewed")
+        XCTAssertFalse(app.alerts["Notice"].exists,"The inline assessment message must not compete with the root alert")
         assertAssessmentStep(17)
         XCTAssertFalse(app.scrollViews["fitness.review"].exists,"A rejected assessment must not create or apply a plan")
         app.buttons["assessment.back"].tap()
