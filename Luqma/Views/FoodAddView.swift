@@ -110,7 +110,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
             HStack(spacing:8){
                 Button{if tab==0{closeFoodAdd()}else{tab=0}}label:{
                     Image(systemName:"chevron.backward").font(.system(size:13,weight:.semibold))
-                        .frame(width:36,height:36).background(Theme.text.opacity(0.15),in:RoundedRectangle(cornerRadius:12,style:.continuous))
+                        .frame(width:36,height:36).background((tab==0 ? Theme.onAccent:Theme.text).opacity(0.12),in:RoundedRectangle(cornerRadius:12,style:.continuous))
                         .frame(width:44,height:44).contentShape(Rectangle())
                 }.buttonStyle(.plain).accessibilityLabel(diary.t(tab==0 ? "إغلاق":"العودة للبحث",tab==0 ? "Close":"Back to search"))
                     .accessibilityIdentifier("search.close")
@@ -159,7 +159,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                     }
                 }.accessibilityElement(children:.contain).accessibilityLabel(diary.t("قائمة الأطعمة","Food list"))
             }
-        }.foregroundStyle(Theme.text).padding(.horizontal,SearchLayout.margin).padding(.top,6).padding(.bottom,10)
+        }.foregroundStyle(tab==0 ? Theme.onAccent:Theme.text).padding(.horizontal,SearchLayout.margin).padding(.top,6).padding(.bottom,10)
             .frame(maxWidth:.infinity,alignment:.leading)
             .background{
                 if tab==0{UnevenRoundedRectangle(bottomLeadingRadius:SearchLayout.headerRadius,bottomTrailingRadius:SearchLayout.headerRadius,style:.continuous).fill(Theme.accent).ignoresSafeArea(edges:.top)}
@@ -169,10 +169,10 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
     private func sourceFilter(_ value:Int,title:String,symbol:String)->some View {
         Button{filter=value}label:{
             Label(title,systemImage:symbol).luqmaFont(size:12,weight:.medium,relativeTo:.caption)
-                .foregroundStyle(Theme.text)
+                .foregroundStyle(Theme.onAccent)
                 .padding(.horizontal,8).frame(minHeight:28)
-                .background(filter==value ? Theme.text.opacity(0.14):Color.clear,in:RoundedRectangle(cornerRadius:SearchLayout.chipRadius,style:.continuous))
-                .overlay{RoundedRectangle(cornerRadius:SearchLayout.chipRadius,style:.continuous).strokeBorder(Theme.text.opacity(filter==value ? 1:0.85),lineWidth:1)}
+                .background(filter==value ? Theme.onAccent.opacity(0.12):Color.clear,in:RoundedRectangle(cornerRadius:SearchLayout.chipRadius,style:.continuous))
+                .overlay{RoundedRectangle(cornerRadius:SearchLayout.chipRadius,style:.continuous).strokeBorder(Theme.onAccent,lineWidth:1)}
                 .frame(minHeight:44).contentShape(Rectangle())
         }.buttonStyle(.plain).disabled(choosingFood).accessibilityAddTraits(filter==value ? .isSelected:[])
             .accessibilityIdentifier("search.filter."+String(value))

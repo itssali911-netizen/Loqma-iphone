@@ -72,9 +72,11 @@ struct RootView:View {
     @Environment(\.dynamicTypeSize) private var typeSize
     private enum TemplatePreviewRoute:String,Identifiable {
         case goals,portion,recipe,recipeDetail,plan,weight,connection,backup,about,barcode,language,notifications,reminders,stateError,stateLoading,stateEmpty,stateSuccess
+        case assessmentGoal,assessmentGender,assessmentDiet,assessmentActivity,assessmentSleep,assessmentReview,fitnessProfile,fitnessPlan
         var id:String{rawValue}
     }
     @State private var templatePreview:TemplatePreviewRoute?
+    @StateObject private var fitnessPreviewStore=DiaryStore(previewSnapshot:FitnessPreviewData.snapshot)
     #endif
     init(){
         var selected=0
@@ -141,6 +143,7 @@ struct RootView:View {
             #if DEBUG
             .sheet(item:$templatePreview){route in templatePreviewContent(route)}
             .environment(\.dynamicTypeSize,ProcessInfo.processInfo.arguments.contains("-loqma-preview-accessibility") ? .accessibility3:typeSize)
+            .task{writeFontAudit()}
             #endif
     }
     #if DEBUG
@@ -159,6 +162,14 @@ struct RootView:View {
             case .language:NavigationStack{LuqmaLanguageView()}
             case .notifications:NavigationStack{NotificationsView()}
             case .reminders:NavigationStack{RemindersView()}
+            case .assessmentGoal:FitnessAssessmentView(previewPage:0)
+            case .assessmentGender:FitnessAssessmentView(previewPage:1)
+            case .assessmentDiet:FitnessAssessmentView(previewPage:13)
+            case .assessmentActivity:FitnessAssessmentView(previewPage:7)
+            case .assessmentSleep:FitnessAssessmentView(previewPage:11)
+            case .assessmentReview:FitnessAssessmentView(previewPage:16)
+            case .fitnessProfile:fitnessFixture{FitnessProfileView()}
+            case .fitnessPlan:fitnessFixture{FitnessPlanReviewView()}
             case .stateError:statePreview{SandowStateAlert(text:diary.t("تعذّر إكمال الطلب. تحقق من الاتصال وحاول مجددًا.","The request could not be completed. Check your connection and retry."))}
             case .stateLoading:statePreview{SandowOperationState(title:diary.t("تقدير المكونات والسعرات…","Estimating components and calories…"),cancelLabel:diary.t("إلغاء","Cancel"),onCancel:{})}
             case .stateEmpty:statePreview{SandowEmptyState(title:diary.t("لا توجد نتائج","No results"),message:diary.t("جرّب اسمًا آخر أو غيّر كلمات البحث.","Try another name or change your search words."))}
@@ -170,6 +181,26 @@ struct RootView:View {
             }
             }
         }.allowsHitTesting(false)
+    }
+    private func fitnessFixture<Content:View>(@ViewBuilder content:()->Content)->some View {
+        NavigationStack{VStack(spacing:0){
+            Notice(text:diary.t("مثال للعرض فقط؛ لا يُحفظ هذا الملف في سجلّك.","Display example only; this profile is not saved to your diary.")).padding(16)
+            content()
+        }}.environmentObject(fitnessPreviewStore)
+            .onAppear{fitnessPreviewStore.change{$0.language=diary.language}}
+    }
+    private func writeFontAudit(){
+        guard ProcessInfo.processInfo.arguments.contains("-loqma-preview-font-audit") else{return}
+        do{
+            let category:UIContentSizeCategory?=ProcessInfo.processInfo.arguments.contains("-loqma-preview-accessibility") ? .accessibilityExtraLarge:nil
+            let data=try JSONEncoder().encode(LTypography.runtimeFontAudit(category:category))
+            let audit=try JSONSerialization.jsonObject(with:data)
+            let contrasts=try JSONSerialization.jsonObject(with:JSONEncoder().encode(VisualDesignTokens.contrastAudit))
+            let envelope:[String:Any]=["processIdentifier":ProcessInfo.processInfo.processIdentifier,"fontAudit":audit,"contrastAudit":contrasts]
+            let encoded=try JSONSerialization.data(withJSONObject:envelope,options:[.prettyPrinted,.sortedKeys])
+            let folder=FileManager.default.urls(for:.documentDirectory,in:.userDomainMask)[0]
+            try encoded.write(to:folder.appendingPathComponent("luqma-font-audit.json"),options:.atomic)
+        }catch{print("Native font audit could not be written.")}
     }
     private func statePreview<Content:View>(@ViewBuilder content:()->Content)->some View {
         NavigationStack{ScrollView{VStack(spacing:24){
@@ -205,7 +236,7 @@ struct RootView:View {
         HStack(alignment:.center,spacing:4){
             navigationButton(0,title:diary.t("اليوم","Today"),symbol:"house")
             navigationButton(1,title:diary.t("مطبخي","Kitchen"),symbol:"fork.knife")
-            Button{addingMeal=nil;adding=true}label:{Image(systemName:"plus").font(.system(size:27,weight:.medium)).foregroundStyle(Theme.text).frame(width:54,height:54).background(Theme.accent,in:RoundedRectangle(cornerRadius:17,style:.continuous))}.buttonStyle(.plain).frame(maxWidth:.infinity,minHeight:54).accessibilityLabel(diary.t("إضافة طعام إلى اليوم","Add food to today")).accessibilityIdentifier("nav.add")
+            Button{addingMeal=nil;adding=true}label:{Image(systemName:"plus").font(.system(size:27,weight:.medium)).foregroundStyle(Theme.onAccent).frame(width:54,height:54).background(Theme.accent,in:RoundedRectangle(cornerRadius:17,style:.continuous))}.buttonStyle(.plain).frame(maxWidth:.infinity,minHeight:54).accessibilityLabel(diary.t("إضافة طعام إلى اليوم","Add food to today")).accessibilityIdentifier("nav.add")
             navigationButton(2,title:diary.t("تقدّمي","Progress"),symbol:"chart.bar")
             navigationButton(3,title:diary.t("الإعدادات","Settings"),symbol:"gearshape")
         }.padding(.horizontal,10).padding(.vertical,6)

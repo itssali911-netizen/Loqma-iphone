@@ -114,7 +114,9 @@ jobs:
 
       - name: Capture native SwiftUI screens
         if: success()
-        timeout-minutes: 25
+        # Eight assessment/profile screens and a real per-launch font audit are
+        # added to the original capture set; retain room for a cold Debug build.
+        timeout-minutes: 30
         env:
           BUNDLE_ID: ${{ vars.BUNDLE_ID }}
           BUILD_NUMBER: ${{ github.run_number }}
@@ -130,6 +132,7 @@ jobs:
             UIPreview/*.json
             UIPreview/*.log
             UIPreview/*.xcresult
+            UIPreview/font-audits/
           if-no-files-found: ignore
           retention-days: 7
 
@@ -140,7 +143,7 @@ jobs:
         env:
           BUNDLE_ID: ${{ vars.BUNDLE_ID }}
           BUILD_NUMBER: ${{ github.run_number }}
-        run: python3 Scripts/ui_preview.py --packages BuildOutput/Packages --app UIPreview/derived/Build/Products/Debug-iphonesimulator/Luqma.app --output UIReference --device-type com.apple.CoreSimulator.SimDeviceType.iPhone-13-mini --language en --screens today kitchen progress search macro-goals photo-estimate recipe-details notifications reminders state-error state-loading state-empty state-success
+        run: python3 Scripts/ui_preview.py --packages BuildOutput/Packages --app UIPreview/derived/Build/Products/Debug-iphonesimulator/Luqma.app --output UIReference --device-type com.apple.CoreSimulator.SimDeviceType.iPhone-13-mini --language en --screens today kitchen progress search macro-goals photo-estimate recipe-details notifications reminders state-error state-loading state-empty state-success assessment-goal assessment-gender assessment-review
 
       - name: Reference-width captures and readiness report
         if: always()
@@ -151,6 +154,7 @@ jobs:
             UIReference/*.png
             UIReference/*.json
             UIReference/*.log
+            UIReference/font-audits/
           if-no-files-found: ignore
           retention-days: 7
 

@@ -44,9 +44,9 @@ for folder in ['Core','Services','Views','Resources']:
     for file in sorted((APP/folder).iterdir()):
         if not file.is_file():
             continue
-        if file.suffix not in ['.swift','.json','.txt','.xcprivacy','.ttf','.otf']:
+        if file.suffix not in ['.swift','.json','.txt','.xcprivacy','.ttf','.otf','.storyboard']:
             continue
-        kind={'.swift':'sourcecode.swift','.json':'text.json','.txt':'text','.xcprivacy':'text.xml','.ttf':'file','.otf':'file'}[file.suffix]
+        kind={'.swift':'sourcecode.swift','.json':'text.json','.txt':'text','.xcprivacy':'text.xml','.ttf':'file','.otf':'file','.storyboard':'file.storyboard'}[file.suffix]
         key=str(file.relative_to(ROOT))
         identifier=add('file:'+key,'PBXFileReference',lastKnownFileType=kind,path=file.name,sourceTree='<group>')
         children.append(identifier)
@@ -98,7 +98,7 @@ for name in ['Debug','Release']:
     targetconfigs.append(add('config:target:'+name,'XCBuildConfiguration',buildSettings=ts,name=name))
 pc=add('configs:project','XCConfigurationList',buildConfigurations=projectconfigs,defaultConfigurationIsVisible=0,defaultConfigurationName='Release')
 tc=add('configs:target','XCConfigurationList',buildConfigurations=targetconfigs,defaultConfigurationIsVisible=0,defaultConfigurationName='Release')
-for config in targetconfigs: objects[config]['buildSettings']['MARKETING_VERSION']='2.6'
+for config in targetconfigs: objects[config]['buildSettings']['MARKETING_VERSION']='2.7'
 target=add('target','PBXNativeTarget',buildConfigurationList=tc,buildPhases=phases,buildRules=[],dependencies=[],name='Luqma',packageProductDependencies=[ort]+mlxproducts,productName='Luqma',productReference=product,productType='com.apple.product-type.application')
 uitestconfigs=[]
 for name in ['Debug','Release']:

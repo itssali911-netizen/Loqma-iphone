@@ -19,6 +19,7 @@ import argparse
 from datetime import datetime, timezone
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import platform
@@ -64,12 +65,20 @@ TEMPLATE_ROUTES = (("macro-goals", "goals"),
                    ("state-loading", "stateLoading"),
                    ("state-empty", "stateEmpty"),
                    ("state-success", "stateSuccess"))
+FITNESS_ROUTES = (("assessment-goal", "assessmentGoal"),
+                  ("assessment-gender", "assessmentGender"),
+                  ("assessment-diet", "assessmentDiet"),
+                  ("assessment-activity", "assessmentActivity"),
+                  ("assessment-sleep", "assessmentSleep"),
+                  ("assessment-review", "assessmentReview"),
+                  ("fitness-profile", "fitnessProfile"),
+                  ("fitness-plan", "fitnessPlan"))
 VARIANT_ROUTES = (("accessibility-today", ("-loqma-preview-overview", "-loqma-preview-accessibility")),
                   ("photo-components", ("-loqma-preview-photo", "-loqma-preview-photo-detailed")),
                   ("editorial-dinner", ("-loqma-preview-routine-dinner",)),
                   ("editorial-snack", ("-loqma-preview-routine-snack",)),
                   ("accessibility-editorial", ("-loqma-preview-accessibility", "-loqma-preview-editorial-expanded")))
-EXPECTED_SCREEN_COUNT = len(SCREENS) + 2 + len(EXTRA_ROUTES) + len(TEMPLATE_ROUTES) + len(VARIANT_ROUTES)
+EXPECTED_SCREEN_COUNT = len(SCREENS) + 2 + len(EXTRA_ROUTES) + len(TEMPLATE_ROUTES) + len(VARIANT_ROUTES) + len(FITNESS_ROUTES)
 MAX_EMPTY_FRAME_RETRIES = 2
 EMPTY_FRAME_RETRY_SECONDS = 5.0
 
@@ -93,7 +102,93 @@ def preview_cases() -> list[dict]:
                   if "-loqma-preview-accessibility" in arguments else
                   {"component_detail_preview": True} if "-loqma-preview-photo-detailed" in arguments else {})}
               for screen, arguments in VARIANT_ROUTES]
+    cases += [{"tab": None, "screen": screen,
+               "arguments": ["-loqma-preview-template", route],
+               "template_route": route, "read_only_preview": True,
+               "synthetic_fixture": True} for screen, route in FITNESS_ROUTES]
     return cases
+
+
+def validate_runtime_font_audit(value: dict, pid: int, accessibility: bool) -> dict:
+    """Check native UIFont registration AND actual CoreText shaped glyph runs.
+
+    The app writes this DEBUG-only envelope after startup. The launch PID rejects
+    stale data from the preceding screenshot process; filenames alone cannot
+    establish that a requested custom font actually rendered on iOS.
+    """
+    if not isinstance(value, dict) or value.get("processIdentifier") != pid:
+        raise BuildError("Runtime font audit is stale or has no matching application process ID.")
+    audit = value.get("fontAudit")
+    if not isinstance(audit, dict) or audit.get("source") != "Actual UIKit fonts and CoreText shaped runs from LuqmaTypography":
+        raise BuildError("Runtime font audit lacks native UIKit/CoreText provenance.")
+    if audit.get("passed") is not True:
+        raise BuildError("The app's native runtime font audit failed; inspect the saved audit JSON.")
+    entries = audit.get("entries")
+    required = {"display", "screenTitle", "sectionTitle", "headline", "body", "subheadline",
+                "helper", "caption", "caption2", "button", "metric", "legacyLightPromoted"}
+    if not isinstance(entries, list) or not all(isinstance(entry, dict) for entry in entries):
+        raise BuildError("Runtime font audit has no valid role entries.")
+    roles = [entry.get("role") for entry in entries]
+    if not all(isinstance(role, str) for role in roles) or len(set(roles)) != len(roles) or not required.issubset(roles):
+        raise BuildError("Runtime font audit omits or duplicates required typography roles.")
+    actual_fonts = set()
+    for entry in entries:
+        latin = entry.get("resolvedLatinPostScript", "")
+        arabic = entry.get("resolvedArabicPostScript", "")
+        if not isinstance(latin, str) or not isinstance(arabic, str) or not latin.startswith("WorkSans-") or not arabic.startswith("Tajawal-"):
+            raise BuildError("A runtime font role resolved to an unexpected system or substitute face.")
+        if not all(isinstance(entry.get(field), list) and all(isinstance(font, str) for font in entry[field])
+                   for field in ("latinRuns", "arabicRuns", "mixedRuns")):
+            raise BuildError("Runtime font audit has malformed shaped-font run data.")
+        if (entry.get("passed") is not True or entry.get("registered") is not True or
+                entry.get("missingGlyphs") != 0 or entry.get("uiFontPostScript") != latin or
+                set(entry.get("latinRuns", [])) != {latin} or
+                set(entry.get("arabicRuns", [])) != {arabic} or
+                set(entry.get("mixedRuns", [])) != {latin, arabic}):
+            raise BuildError("A runtime font role failed registration or actual Latin/Arabic shaping checks.")
+        if entry.get("effectiveWeight") in {"light", "thin", "ultraLight"}:
+            raise BuildError("App typography unexpectedly uses a thin effective text weight.")
+        for field in ("basePoints", "scaledPoints", "lineHeight"):
+            number = entry.get(field)
+            if not isinstance(number, (int, float)) or isinstance(number, bool) or not math.isfinite(number) or number <= 0:
+                raise BuildError("Runtime font audit contains an invalid measured font size.")
+        if entry["basePoints"] < 12:
+            raise BuildError("Runtime typography contains text below the declared readable base size.")
+        if accessibility and entry["scaledPoints"] <= entry["basePoints"]:
+            raise BuildError("Accessibility preview fonts did not actually scale above their base size.")
+        actual_fonts.update((latin, arabic))
+    category = audit.get("contentSizeCategory", "")
+    if not isinstance(category, str) or not category or (accessibility and "Accessibility" not in category):
+        raise BuildError("Runtime font audit has the wrong Dynamic Type category for this capture.")
+    emoji = audit.get("emojiFonts")
+    if not isinstance(emoji, list) or not any(isinstance(font, str) and "emoji" in font.lower() for font in emoji):
+        raise BuildError("Runtime audit did not resolve the emoji sample through the system emoji cascade.")
+    return {"passed": True, "process_id": pid, "roles_checked": len(entries),
+            "actual_postscript_fonts": sorted(actual_fonts), "content_size_category": category,
+            "accessibility_scaling_verified": accessibility,
+            "zero_missing_glyphs": True, "emoji_fonts": emoji}
+
+
+def collect_runtime_font_audit(output: Path, device: str, bundle: str,
+                               screen: str, pid: int, number: int, accessibility: bool) -> dict:
+    container = Path(command(["xcrun", "simctl", "get_app_container", device, bundle, "data"],
+                             output, "preview-font-container-" + screen).strip())
+    if not container.is_absolute():
+        raise BuildError("Simulator did not return an absolute app data container for font verification.")
+    source = container / "Documents/luqma-font-audit.json"
+    if not source.is_file() or source.stat().st_size > 250_000:
+        raise BuildError("The launched app did not produce a bounded native runtime font audit.")
+    data = source.read_bytes()
+    directory = output / "font-audits"
+    directory.mkdir(exist_ok=True)
+    target = directory / f"{number:02d}-{screen}.json"
+    target.write_bytes(data)
+    try:
+        value = json.loads(data)
+    except (ValueError, UnicodeError) as error:
+        raise BuildError("The launched app's runtime font audit is not valid JSON.") from error
+    details = validate_runtime_font_audit(value, pid, accessibility)
+    return {**details, "file": target.relative_to(output).as_posix(), "sha256": hashlib.sha256(data).hexdigest()}
 
 
 def command(arguments: list[str], output: Path, label: str, timeout: int = 120,
@@ -360,6 +455,8 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
         "synthetic_overview_fixture": True,
         "synthetic_portion_fixture": True,
         "synthetic_recipe_editor_fixture": True,
+        "synthetic_fitness_profile_fixtures": True,
+        "fitness_preview_writes_real_profile": False,
         "secondary_form_previews_read_only": True,
         "accessibility_preview_dynamic_type": "accessibility3",
         "preview_language_override": "DEBUG English flag on this newly created Simulator" if language=='en' else "Default Arabic diary language",
@@ -373,6 +470,7 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
                               "maximum_recaptures": MAX_EMPTY_FRAME_RETRIES,
                               "pixel_check_proves_layout_correct": False},
         "screenshots": [],
+        "runtime_font_audits": [],
     }
     device = None
     try:
@@ -417,6 +515,7 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
             tab, screen, arguments = case["tab"], case["screen"], case["arguments"]
             launched = command(["xcrun", "simctl", "launch", "--terminate-running-process",
                                 device, bundle, *arguments,
+                                "-loqma-preview-font-audit",
                                 *(["-loqma-ui-test-en"] if language=='en' else []),
                                 "-AppleLanguages", "("+language+")", "-AppleLocale", "en_US" if language=='en' else "ar_SA"],
                                output, "preview-launch-" + screen, 300 if number == 1 else 120)
@@ -427,6 +526,9 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
             confirm_process(pid, settle_seconds)
             screenshot = output / f"{number:02d}-{screen}.png"
             details = capture_screenshot(output, device, screen, pid, screenshot)
+            font_details = collect_runtime_font_audit(output, device, bundle, screen, pid, number,
+                                                      "-loqma-preview-accessibility" in arguments)
+            report["runtime_font_audits"].append({"screen": screen, **font_details})
             report["screenshots"].append({"tab": tab, "screen": screen,
                                           "kind": "tab" if tab is not None else screen,
                                           "synthetic_fixture": case["synthetic_fixture"],
@@ -438,6 +540,9 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
             raise BuildError("The native preview did not capture all required screens.")
         if len({item["frame_sha256"] for item in report["screenshots"]}) != report['expected_screenshot_count']:
             raise BuildError("Screenshots are identical; verify the DEBUG preview routes are installed.")
+        if len(report["runtime_font_audits"]) != report['expected_screenshot_count']:
+            raise BuildError("Native font verification did not cover every captured screen.")
+        report["runtime_fonts_verified"] = True
         report["status"] = "captured"
     except BaseException as error:
         report["status"] = "cancelled" if isinstance(error, (SystemExit, KeyboardInterrupt)) else "failed"

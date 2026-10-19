@@ -22,6 +22,13 @@ import UIKit
             }
         }
     }
+    #if DEBUG
+    // Native visual fixtures use an isolated temporary file, never the user's diary.
+    init(previewSnapshot: DiarySnapshot) {
+        file = FileManager.default.temporaryDirectory.appendingPathComponent("luqma-preview-\(UUID().uuidString).json")
+        state = previewSnapshot
+    }
+    #endif
     func restoreAfterUnlock() -> Bool {
         guard waitingForUnlock else { return !loadFailed }
         guard UIApplication.shared.isProtectedDataAvailable else { return false }
@@ -83,7 +90,20 @@ import UIKit
         do { var next=state; next.recipes.removeAll { $0.id == recipe.id }; next.recipes.append(recipe); try commit(next); return true } catch { report(error); return false }
     }
     func removeRecipe(_ id: UUID) { change { $0.recipes.removeAll { $0.id == id } } }
-    @discardableResult func saveWeight(_ w: WeightReading) -> Bool {do{var s=state;s.weights.removeAll{$0.day==w.day};s.weights.append(w);s.weights.sort{$0.day<$1.day};try commit(s);adapt();return true}catch{report(error);return false}}
+    @discardableResult func saveWeight(_ w: WeightReading) -> Bool {
+        do {
+            var next = state
+            next.weights.removeAll { $0.day == w.day }
+            next.weights.append(w)
+            next.weights.sort { $0.day < $1.day }
+            if w.day >= (next.fitnessProfile?.updatedDay ?? DayKey.today) && w.day <= DayKey.today {
+                FitnessAssessmentState.stageLatestWeight(in: &next)
+            }
+            try commit(next)
+            adapt()
+            return true
+        } catch { report(error); return false }
+    }
     func removeWeight(_ day: String) { change { $0.weights.removeAll { $0.day == day } }; adapt() }
     func adapt() {
         adaptiveMessage = nil
@@ -94,6 +114,30 @@ import UIKit
     }
     @discardableResult func applyPlan(_ p: WeightPlan, _ result: WeightResult) -> Bool {do{var s=state;s.weightPlan=p;s.goals=result.goals;try commit(s);adapt();return true}catch{report(error);return false}}
     @discardableResult func setGoals(_ n: Nutrition) -> Bool {do{var s=state;s.goals=n.balanced();s.adaptive=false;try commit(s);return true}catch{report(error);return false}}
+    @discardableResult func saveFitnessDraft(_ draft: FitnessAssessmentDraft) -> Bool {
+        do { var next = state; try FitnessAssessmentState.saveDraft(draft, in: &next); try commit(next); return true }
+        catch { report(error); return false }
+    }
+    @discardableResult func previewFitnessPlan(_ answers: FitnessAnswers) -> Bool {
+        do { var next = state; try FitnessAssessmentState.preview(answers, in: &next); try commit(next); return true }
+        catch { report(error); return false }
+    }
+    @discardableResult func applyFitnessPlan() -> Bool {
+        do { var next = state; try FitnessAssessmentState.apply(in: &next); try commit(next); adaptiveMessage = nil; return true }
+        catch { report(error); return false }
+    }
+    @discardableResult func discardFitnessDraft() -> Bool {
+        do { var next = state; next.fitnessDraft = nil; try commit(next); return true }
+        catch { report(error); return false }
+    }
+    @discardableResult func deleteFitnessProfile() -> Bool {
+        do { var next = state; FitnessAssessmentState.deleteProfile(in: &next); try commit(next); return true }
+        catch { report(error); return false }
+    }
+    @discardableResult func deferFitnessAssessment() -> Bool {
+        do { var next = state; next.fitnessOnboardingDismissed = true; try commit(next); return true }
+        catch { report(error); return false }
+    }
     func importBackup(_ incoming: DiarySnapshot) -> Bool {
         do { let next=try Backup.merge(incoming,into:state); try commit(next,recovery:true); adapt(); return true } catch { report(error); return false }
     }

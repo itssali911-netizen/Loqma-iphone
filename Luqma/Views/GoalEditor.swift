@@ -77,10 +77,10 @@ struct GoalEditor:View {
     private var goalStatus:some View {
         Label(canSave ? diary.t("هدفك جاهز للحفظ","Your goal is ready to save"):diary.t("أدخل هدفًا بين 500 و10000 سعرة","Enter a goal from 500 to 10,000 kcal"),systemImage:canSave ? "checkmark.circle.fill":"exclamationmark.circle")
             .luqmaFont(size:12,weight:.medium,relativeTo:.caption)
-            .foregroundStyle(canSave ? Theme.text:Theme.accent)
+            .foregroundStyle(canSave ? Theme.success:Theme.warning)
             .padding(.horizontal,12).padding(.vertical,10).frame(maxWidth:.infinity,alignment:.leading)
-            .background(canSave ? Color.green.opacity(0.12):Theme.card,in:RoundedRectangle(cornerRadius:12,style:.continuous))
-            .overlay{RoundedRectangle(cornerRadius:12).strokeBorder(canSave ? Color.green.opacity(0.65):Theme.accent.opacity(0.5),lineWidth:1)}
+            .background(canSave ? Theme.success.opacity(0.08):Theme.card,in:RoundedRectangle(cornerRadius:12,style:.continuous))
+            .overlay{RoundedRectangle(cornerRadius:12).strokeBorder(canSave ? Theme.success:Theme.warning,lineWidth:1)}
     }
     private var saveButton:some View {
         Button{if diary.setGoals(goals){dismiss()}}label:{

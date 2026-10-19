@@ -144,6 +144,164 @@ final class LuqmaInteractionTests:XCTestCase {
         app.buttons["goals.save"].tap()
     }
 
+    func testFitnessDraftApplyAndDeletePreserveDiary() throws {
+        let originalGoal=readCalorieGoal()
+        let historyName="Fitness History Oats"
+        addFitnessHistoryFood(named:historyName)
+        openFitnessProfile()
+        let edit=app.buttons["fitness.edit"]
+        reveal(edit);edit.tap()
+        assertAssessmentStep(1)
+        tapAssessmentOption("assessment.goal.fatLoss")
+        advanceAssessment(to:2)
+        tapAssessmentOption("assessment.sex.male")
+        advanceAssessment(to:3)
+
+        // This is a real validation failure in the production form, not a
+        // screenshot fixture or a prefilled answer injected into storage.
+        replace(app.textFields["assessment.age"],with:"17")
+        app.buttons["assessment.next"].tap()
+        XCTAssertTrue(app.descendants(matching:.any).matching(identifier:"assessment.validation").firstMatch.waitForExistence(timeout:5))
+        assertAssessmentStep(3)
+        replace(app.textFields["assessment.age"],with:"30")
+        advanceAssessment(to:4)
+        let saveDraft=app.buttons["assessment.saveDraft"]
+        reveal(saveDraft);saveDraft.tap()
+        XCTAssertTrue(app.scrollViews["fitness.profile"].waitForExistence(timeout:10),app.debugDescription)
+
+        app.terminate();app.launch()
+        XCTAssertTrue(app.buttons["nav.today"].waitForExistence(timeout:15))
+        openFitnessProfile()
+        let resume=app.buttons["fitness.edit"]
+        reveal(resume);resume.tap()
+        assertAssessmentStep(4)
+        XCTAssertTrue(app.textFields["assessment.height"].exists,"The real saved page index must resume at height")
+        app.buttons["assessment.back"].tap()
+        assertAssessmentStep(3)
+        XCTAssertEqual(app.textFields["assessment.age"].value as? String,"30","The typed age must survive a cold launch")
+        advanceAssessment(to:4)
+        replace(app.textFields["assessment.height"],with:"175")
+        advanceAssessment(to:5)
+        replace(app.textFields["assessment.weight"],with:"80")
+        advanceAssessment(to:6)
+        skipAssessment(to:7) // Target weight is optional.
+        skipAssessment(to:8) // Pace uses its documented default.
+        tapAssessmentOption("assessment.activity.light")
+        advanceAssessment(to:9)
+        for step in 10...16 {skipAssessment(to:step)}
+        tapAssessmentOption("assessment.safety.generalAdult")
+        advanceAssessment(to:17)
+        let review=app.buttons["assessment.review"]
+        reveal(review);review.tap()
+        XCTAssertTrue(app.scrollViews["fitness.review"].waitForExistence(timeout:10),app.debugDescription)
+        let current=app.staticTexts.matching(identifier:"fitness.review.calories.current").firstMatch
+        let proposed=app.staticTexts.matching(identifier:"fitness.review.calories.proposed").firstMatch
+        reveal(current)
+        XCTAssertEqual(numeric(current.label),numeric(originalGoal),"Preview must leave the actual diary calorie target unchanged")
+        let proposedGoal=proposed.label
+        XCTAssertNotEqual(numeric(proposedGoal),numeric(originalGoal),"These adult inputs must produce a personalized target, not the unchanged default")
+        XCTAssertTrue((numeric(proposedGoal) ?? 0)>0)
+        let apply=app.buttons["fitness.apply"]
+        reveal(apply);apply.tap()
+        let applied=app.descendants(matching:.any).matching(identifier:"fitness.appliedConfirmation").firstMatch
+        revealTowardTop(applied)
+        XCTAssertTrue(applied.exists,"Success must follow an actual persisted plan application")
+
+        app.terminate();app.launch()
+        XCTAssertTrue(app.buttons["nav.today"].waitForExistence(timeout:15))
+        XCTAssertEqual(numeric(readCalorieGoal()),numeric(proposedGoal),"Applied targets must feed the real diary and persist after relaunch")
+        openFitnessProfile()
+        let status=app.staticTexts["fitness.profile.appliedStatus"]
+        reveal(status)
+        XCTAssertEqual(status.value as? String,"active")
+        let removeProfile=app.buttons["fitness.delete"]
+        reveal(removeProfile);removeProfile.tap()
+        let confirm=app.buttons["fitness.confirmDelete"]
+        XCTAssertTrue(confirm.waitForExistence(timeout:5));confirm.tap()
+        XCTAssertTrue(app.descendants(matching:.any).matching(identifier:"fitness.deletedConfirmation").firstMatch.waitForExistence(timeout:10))
+        app.terminate();app.launch()
+        XCTAssertTrue(app.buttons["nav.today"].waitForExistence(timeout:15))
+        XCTAssertEqual(numeric(readCalorieGoal()),numeric(proposedGoal),"Deleting fitness data must preserve the current diary targets as manual goals")
+        openBreakfastEntry(named:historyName)
+        XCTAssertEqual(app.textFields["entry.amount"].value as? String,"1")
+        XCTAssertTrue(app.staticTexts["100"].exists,"The food logged before assessment must survive applying and deleting a fitness profile")
+
+        // Remove only data created by this case, leaving subsequent existing
+        // tests their original calorie target and empty breakfast diary.
+        let removeEntry=app.buttons["entry.delete"]
+        reveal(removeEntry);removeEntry.tap()
+        XCTAssertTrue(app.buttons["Delete"].waitForExistence(timeout:5))
+        app.buttons["Delete"].tap()
+        XCTAssertTrue(app.buttons["nav.today"].waitForExistence(timeout:10))
+        app.buttons["diary.goals"].tap()
+        app.buttons["goals.editCalories"].tap()
+        replace(goalCalories(),with:originalGoal)
+        finishCalorieEditing()
+        app.buttons["goals.save"].tap()
+        openFitnessProfile()
+        XCTAssertTrue(app.buttons["fitness.edit"].waitForExistence(timeout:5))
+        XCTAssertFalse(app.buttons["fitness.delete"].exists,"The deleted profile must remain absent after a cold launch")
+    }
+
+    private func openFitnessProfile() {
+        app.buttons["nav.settings"].tap()
+        let link=app.buttons["settings.fitness"]
+        reveal(link);link.tap()
+        XCTAssertTrue(app.scrollViews["fitness.profile"].waitForExistence(timeout:10),app.debugDescription)
+    }
+
+    private func addFitnessHistoryFood(named name:String) {
+        app.buttons["nav.add"].tap()
+        let personal=app.buttons["search.filter.3"]
+        XCTAssertTrue(personal.waitForExistence(timeout:10));personal.tap()
+        let manual=app.buttons["search.manual"]
+        reveal(manual);manual.tap()
+        replace(app.textFields["portion.name"],with:name)
+        replace(app.textFields["portion.kcal"],with:"100")
+        replace(app.textFields["portion.protein"],with:"10")
+        replace(app.textFields["portion.carbs"],with:"15")
+        replace(app.textFields["portion.fat"],with:"0")
+        let save=app.buttons["portion.save"]
+        reveal(save);XCTAssertTrue(save.isEnabled);save.tap()
+        XCTAssertTrue(app.buttons["nav.today"].waitForExistence(timeout:10))
+    }
+
+    private func readCalorieGoal()->String {
+        let goals=app.buttons["diary.goals"]
+        reveal(goals);goals.tap()
+        app.buttons["goals.editCalories"].tap()
+        let value=goalCalories().value as? String ?? ""
+        XCTAssertNotNil(numeric(value))
+        finishCalorieEditing()
+        app.buttons["goals.save"].tap()
+        XCTAssertTrue(app.buttons["nav.today"].waitForExistence(timeout:10))
+        return value
+    }
+
+    private func numeric(_ value:String)->Double? {Double(value.replacingOccurrences(of:",",with:"").replacingOccurrences(of:" ",with:""))}
+
+    private func assertAssessmentStep(_ number:Int,file:StaticString=#filePath,line:UInt=#line) {
+        let step=app.staticTexts["assessment.step"]
+        let ready=XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == true AND label == %@","\(number) of 17"),object:step)
+        XCTAssertEqual(XCTWaiter.wait(for:[ready],timeout:10),.completed,app.debugDescription,file:file,line:line)
+    }
+
+    private func tapAssessmentOption(_ identifier:String) {
+        let option=app.buttons[identifier]
+        reveal(option);option.tap()
+        XCTAssertTrue(option.isSelected,"The real choice must become selected")
+    }
+
+    private func advanceAssessment(to step:Int) {
+        let next=app.buttons["assessment.next"]
+        reveal(next);next.tap();assertAssessmentStep(step)
+    }
+
+    private func skipAssessment(to step:Int) {
+        let skip=app.buttons["assessment.skip"]
+        reveal(skip);skip.tap();assertAssessmentStep(step)
+    }
+
     func testNotificationPermissionAndReminderPersistence() throws {
         // This case runs only on the first, newly created Simulator. No test flag
         // grants notification permission, enables a reminder, or inserts an inbox.
@@ -316,7 +474,7 @@ final class LuqmaInteractionTests:XCTestCase {
         XCTAssertEqual(XCTWaiter.wait(for:[dismissed],timeout:5),.completed,app.debugDescription)
     }
 
-    private func openBreakfastEntry() {
+    private func openBreakfastEntry(named name:String="UI Test Oats") {
         let details=app.descendants(matching:.any).matching(identifier:"diary.details.breakfast").firstMatch
         reveal(details)
         // The real DisclosureGroup chevron is the hit target. The button's
@@ -324,7 +482,7 @@ final class LuqmaInteractionTests:XCTestCase {
         let disclosure=details.images["collapsed"]
         reveal(disclosure)
         disclosure.tap()
-        let entry=app.buttons["UI Test Oats"]
+        let entry=app.buttons[name]
         XCTAssertTrue(entry.waitForExistence(timeout:5),app.debugDescription)
         reveal(entry)
         entry.tap()

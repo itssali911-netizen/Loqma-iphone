@@ -16,6 +16,7 @@ struct SettingsView:View {
     var body:some View {
         ScrollView{VStack(alignment:.leading,spacing:24){
             settingsGroup(diary.t("أهدافي","My goals")){
+                NavigationLink{FitnessProfileView()}label:{settingsRow(diary.t("ملف اللياقة والخطة الشخصية","Fitness profile and personal plan"),symbol:"person.crop.circle")}.accessibilityIdentifier("settings.fitness")
                 Button{goals=true}label:{settingsRow(diary.t("السعرات والماكروز","Calories and macros"),symbol:"target")}.accessibilityIdentifier("settings.goals")
                 NavigationLink{PlanView()}label:{settingsRow(diary.t("خطة الوزن","Weight plan"),symbol:"chart.line.uptrend.xyaxis")}
             }
@@ -112,11 +113,11 @@ struct LuqmaLanguageView:View {
     private func languageOption(_ language:AppLanguage,selected:Bool)->some View {
         Button{if language != diary.language{diary.change{$0.language=language}}}label:{
             HStack(spacing:14){
-                Image(systemName:"flag").font(.system(size:20,weight:.regular)).foregroundStyle(selected ? Theme.accent:Theme.text)
+                Image(systemName:"flag").font(.system(size:20,weight:.regular)).foregroundStyle(selected ? Theme.onAccent:Theme.text)
                     .frame(width:44,height:44).background(selected ? Theme.text:Theme.surface,in:RoundedRectangle(cornerRadius:13)).accessibilityHidden(true)
-                Text(language == .ar ? "العربية (AR)":"English (EN)").luqmaFont(size:14,weight:.medium,relativeTo:.subheadline).foregroundStyle(Theme.text)
+                Text(language == .ar ? "العربية (AR)":"English (EN)").luqmaFont(size:14,weight:.medium,relativeTo:.subheadline).foregroundStyle(selected ? Theme.onAccent:Theme.text)
                 Spacer(minLength:8)
-                Image(systemName:selected ? "checkmark.square.fill":"square").font(.system(size:18)).foregroundStyle(Theme.text).accessibilityHidden(true)
+                Image(systemName:selected ? "checkmark.square.fill":"square").font(.system(size:18)).foregroundStyle(selected ? Theme.onAccent:Theme.text).accessibilityHidden(true)
             }.padding(12).frame(maxWidth:.infinity,minHeight:68).background(selected ? Theme.accent:Theme.card,in:RoundedRectangle(cornerRadius:22,style:.continuous)).contentShape(Rectangle())
         }.buttonStyle(.plain).accessibilityAddTraits(selected ? .isSelected:[]).accessibilityIdentifier("language.option."+language.rawValue)
     }
@@ -137,6 +138,9 @@ struct BackupSettingsView:View {
             }.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
             Section{
                 Notice(text:diary.t("صدّر نسخة لحفظ بياناتك أو نقلها إلى جهاز آخر. عند الاستيراد تُدمج البيانات، وتُحدَّث السجلات المطابقة دون حذف باقي سجلك.","Export a backup to save your data or move it to another device. Import merges the data and updates matching records without deleting the rest of your diary."))
+                if diary.state.fitnessProfile != nil || diary.state.fitnessDraft != nil{
+                    Notice(text:diary.t("تتضمن النسخة إجابات تقييم اللياقة والوزن والحساسيات والخطط المحفوظة. احفظ ملف التصدير في مكان خاص؛ إعداد اتصال التحليل يبقى خارج النسخة.","The backup includes fitness answers, weight, allergies and saved plans. Keep the exported file private; analysis connection credentials remain excluded."))
+                }
             }.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
         }.sandowForm().sandowNavigation(diary.t("النسخ الاحتياطي","Backup"),backLabel:diary.t("رجوع","Back"))
             .fileExporter(isPresented:$exporting,document:document,contentType:.json,defaultFilename:"luqma-backup-"+DayKey.today){if case let .failure(error)=$0{diary.report(error)}}

@@ -2,15 +2,28 @@ import SwiftUI
 
 enum Theme {
     // Sandow Community dark file: Sandow Gray/100 and Pulse Orange/50.
-    static let background=Color(red:17.0/255,green:18.0/255,blue:20.0/255)
-    static let card=Color(red:36.0/255,green:38.0/255,blue:43.0/255)
-    static let surface=Color(red:57.0/255,green:60.0/255,blue:67.0/255)
+    private static func color(_ value:VisualRGB)->Color {Color(.sRGB,red:value.red,green:value.green,blue:value.blue,opacity:1)}
+    static let background=color(VisualDesignTokens.background)
+    static let card=color(VisualDesignTokens.card)
+    static let surface=color(VisualDesignTokens.surface)
     static let input=background
-    static let accent=Color(red:249.0/255,green:115.0/255,blue:22.0/255)
-    static let secondaryAccent=Color(red:37.0/255,green:99.0/255,blue:235.0/255)
-    static let muted=Color(red:158.0/255,green:160.0/255,blue:165.0/255)
-    static let text=Color.white
-    static let stroke=Color.white.opacity(0.08)
+    static let accent=color(VisualDesignTokens.accent)
+    static let secondaryAccent=color(VisualDesignTokens.secondaryAccent)
+    static let text=color(VisualDesignTokens.text)
+    static let textSecondary=color(VisualDesignTokens.textSecondary)
+    static let muted=textSecondary
+    static let onAccent=color(VisualDesignTokens.onAccent)
+    static let onSecondaryAccent=color(VisualDesignTokens.onSecondaryAccent)
+    static let accentText=color(VisualDesignTokens.accentText)
+    static let secondaryAccentText=color(VisualDesignTokens.secondaryAccentText)
+    static let link=accentText
+    static let success=color(VisualDesignTokens.success)
+    static let warning=color(VisualDesignTokens.warning)
+    static let error=color(VisualDesignTokens.error)
+    static let errorBackground=color(VisualDesignTokens.errorBackground)
+    static let errorBorder=color(VisualDesignTokens.errorBorder)
+    static let controlBorder=color(VisualDesignTokens.controlBorder)
+    static let stroke=color(VisualDesignTokens.divider)
     static let cardRadius:CGFloat=20
     // Directly read instance heights: Top Nav 2:10015; Button Primary Icon 2:10013.
     // These values do not imply that the flattened target panels expose their child metrics.
@@ -36,7 +49,7 @@ struct LuqmaPageHeader:View {
                 .foregroundStyle(Theme.text).frame(width:44,height:44)
                 .background(Theme.card,in:RoundedRectangle(cornerRadius:16)).accessibilityHidden(true)
             VStack(alignment:.leading,spacing:3){
-                Text(subtitle).luqmaFont(size:14,weight:.light,relativeTo:.caption).foregroundStyle(Theme.muted)
+                Text(subtitle).luqmaFont(size:14,relativeTo:.caption).foregroundStyle(Theme.textSecondary)
                 Text(title).luqmaFont(size:22,weight:.bold,relativeTo:.title2).foregroundStyle(Theme.text).accessibilityAddTraits(.isHeader)
             }
             Spacer(minLength:0)
@@ -59,7 +72,7 @@ struct LuqmaSectionHeader:View {
 struct LuqmaPrimaryButtonStyle:ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
     func makeBody(configuration:Configuration)->some View {
-        configuration.label.luqmaFont(.headline).foregroundStyle(Theme.text)
+        configuration.label.luqmaFont(.headline).foregroundStyle(Theme.onAccent)
             .frame(maxWidth:.infinity,minHeight:Theme.primaryButtonHeight)
             .background(Theme.accent,in:RoundedRectangle(cornerRadius:16,style:.continuous))
             .opacity(!isEnabled ? 0.4:configuration.isPressed ? 0.8:1)
@@ -129,7 +142,7 @@ struct NumericInput:View {
     @State private var text=""
     @FocusState private var focused:Bool
     var body:some View {
-        HStack{Text(title);Spacer();TextField(title,text:$text).keyboardType(.decimalPad).focused($focused).multilineTextAlignment(.trailing).frame(minWidth:65,maxWidth:120).accessibilityLabel(title).accessibilityIdentifier(identifier ?? title);if !suffix.isEmpty{Text(DisplayFormat.westernDigits(suffix)).foregroundStyle(.secondary)}}
+        HStack{Text(title);Spacer();TextField(title,text:$text).keyboardType(.decimalPad).focused($focused).multilineTextAlignment(.trailing).frame(minWidth:65,maxWidth:120).accessibilityLabel(title).accessibilityIdentifier(identifier ?? title);if !suffix.isEmpty{Text(DisplayFormat.westernDigits(suffix)).foregroundStyle(Theme.textSecondary)}}
             .onAppear{text=decimal(value,value.rounded()==value ? 0:1)}
             .onChange(of:text){_,s in
                 guard focused else{return} // Formatting another macro must not edit its value.
@@ -180,7 +193,7 @@ struct FoodRow:View {
                 Text(food.label(diary.language)).luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline)
                     .foregroundStyle(Theme.text).multilineTextAlignment(.leading).lineLimit(2).fixedSize(horizontal:false,vertical:true)
                 if let n=food.values(for:food.unit){Text("\(decimal(n.kcal,0)) \(diary.t("سعرة","kcal")) · \(reference)").luqmaFont(size:11,relativeTo:.caption).foregroundStyle(Theme.muted)}
-                else{Text(diary.t("بيانات غذائية غير مكتملة","Incomplete nutrition data")).luqmaFont(size:11,relativeTo:.caption).foregroundStyle(.orange)}
+                else{Text(diary.t("بيانات غذائية غير مكتملة","Incomplete nutrition data")).luqmaFont(size:11,relativeTo:.caption).foregroundStyle(Theme.warning)}
                 if !metadata.isEmpty{Text(metadata).luqmaFont(size:10,relativeTo:.caption2).foregroundStyle(Theme.muted).lineLimit(2)}
             };Spacer(minLength:0)
             Image(systemName:"chevron.forward").font(.system(size:12,weight:.medium)).foregroundStyle(Theme.muted).frame(width:24,height:40).accessibilityHidden(true)

@@ -80,7 +80,7 @@ struct KitchenView:View {
     }
     private func kitchenAction(_ title:String,symbol:String,primary:Bool,action:@escaping()->Void)->some View {
         Button(action:action){Label(title,systemImage:symbol).luqmaFont(size:13,weight:.semibold,relativeTo:.subheadline)
-            .foregroundStyle(Theme.text).padding(.horizontal,10).frame(maxWidth:.infinity,minHeight:44)
+            .foregroundStyle(primary ? Theme.onAccent:Theme.text).padding(.horizontal,10).frame(maxWidth:.infinity,minHeight:44)
             .background(primary ? Theme.accent:Theme.card,in:RoundedRectangle(cornerRadius:12,style:.continuous))
         }.buttonStyle(.plain)
     }
@@ -215,7 +215,8 @@ struct RecipeDetailView:View {
                                     LuqmaSectionHeader(title:diary.t("خطوات التحضير","Instructions"))
                                     ForEach(Array(info.steps.enumerated()),id:\.offset){index,step in
                                         HStack(alignment:.top,spacing:12){
-                                            Text(String(index+1)).luqmaFont(.caption).frame(width:26,height:26)
+                                            Text(String(index+1)).luqmaFont(.caption).frame(minWidth:26,minHeight:26)
+                                                .foregroundStyle(Theme.onAccent)
                                                 .background(Theme.accent,in:RoundedRectangle(cornerRadius:8))
                                             Text(DisplayFormat.westernDigits(step)).luqmaFont(.footnote).foregroundStyle(Theme.muted)
                                                 .frame(maxWidth:.infinity,alignment:.leading).fixedSize(horizontal:false,vertical:true)

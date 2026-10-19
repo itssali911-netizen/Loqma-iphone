@@ -1,0 +1,251 @@
+const assetPathPrefix = "../assets";
+const imgIsBlackTrue = `${assetPathPrefix}/b37ef.svg`;
+const imgIPhoneXOrNewer = `${assetPathPrefix}/72f5b.svg`;
+const imgMonotoneChevronLeft = `${assetPathPrefix}/7c9b3.svg`;
+const imgSolidCloseX = `${assetPathPrefix}/53587.svg`;
+const imgMonotoneArrowRight = `${assetPathPrefix}/c1a83.svg`;
+
+type HomeIndicatorProps = {
+  className?: string;
+  isBlack?: "True";
+};
+
+function HomeIndicator({ className, isBlack = "True" }: HomeIndicatorProps) {
+  return (
+    <div className={className || "h-[34px] relative w-[375px]"} data-node-id="2:4508">
+      <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIsBlackTrue} />
+    </div>
+  );
+}
+
+export default function ComprehensiveFitnessAssessment() {
+  return (
+    <div className="bg-[#111214] overflow-clip relative rounded-[40px] size-full" data-node-id="2:9890" data-name="Comprehensive Fitness Assessment">
+      <div className="absolute h-[44px] left-0 top-0 w-[375px]" data-node-id="2:9891" data-name="iPhone X or newer">
+        <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIPhoneXOrNewer} />
+      </div>
+      <HomeIndicator className="-translate-x-1/2 absolute bottom-0 h-[34px] left-1/2 w-[375px]" />
+      <div className="-translate-x-1/2 absolute content-stretch flex gap-[12px] items-center left-1/2 top-[60px] w-[343px]" data-node-id="2:9893" data-name="Top Nav">
+        <div className="bg-[#393c43] content-stretch flex items-center justify-center relative rounded-[18px] shrink-0 size-[48px]" data-node-id="I2:9893;41:4259" data-name="Button Container">
+          <div className="relative shrink-0 size-[24px]" data-node-id="I2:9893;41:4260" data-name="Monotone chevron left">
+            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgMonotoneChevronLeft} />
+          </div>
+        </div>
+        <p className="[word-break:break-word] flex-[1_0_0] font-['Work_Sans:Bold'] font-bold leading-[normal] min-w-px relative text-[20px] text-white tracking-[-0.1px]" data-node-id="I2:9893;41:4261">
+          Assessment
+        </p>
+        <div className="bg-[#172554] content-stretch flex h-[32px] items-center justify-center overflow-clip px-[12px] py-[6px] relative rounded-[11px] shrink-0" data-node-id="I2:9893;153:22995" data-name="Tag Master">
+          <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[#2563eb] text-[14px] text-center tracking-[-0.028px] whitespace-nowrap" data-node-id="I2:9893;153:22995;765:39751">
+            12 of 17
+          </p>
+        </div>
+      </div>
+      <div className="absolute content-stretch flex flex-col gap-[40px] items-start left-[16px] top-[148px]" data-node-id="2:9894" data-name="Frame">
+        <div className="[word-break:break-word] content-stretch flex flex-col gap-[8px] items-center relative shrink-0 text-center w-[343px]" data-node-id="2:9895" data-name="Frame">
+          <p className="font-['Work_Sans:Bold'] font-bold leading-[38px] relative shrink-0 text-[30px] text-white tracking-[-0.3px] w-full" data-node-id="2:9896">
+            Specify Supplement
+          </p>
+          <p className="font-['Work_Sans:Regular'] font-normal leading-[1.6] relative shrink-0 text-[#d7d8d9] text-[16px] tracking-[-0.048px] w-full" data-node-id="2:9897">
+            Please specify your supplement.
+          </p>
+        </div>
+        <div className="content-stretch flex flex-col gap-[32px] items-center relative shrink-0" data-node-id="2:9898" data-name="Frame">
+          <div className="content-stretch flex flex-col gap-[12px] items-start relative shrink-0" data-node-id="2:9899" data-name="Frame">
+            <div className="[word-break:break-word] content-stretch flex h-[24px] items-center justify-between leading-[normal] relative shrink-0 w-[343px] whitespace-nowrap" data-node-id="2:9900" data-name="Sub Nav">
+              <p className="font-['Work_Sans:Bold'] font-bold relative shrink-0 text-[16px] text-white tracking-[-0.048px]" data-node-id="I2:9900;1157:5800">
+                Most Common
+              </p>
+              <p className="font-['Work_Sans:Medium'] font-medium relative shrink-0 text-[#f97316] text-[14px] tracking-[-0.028px]" data-node-id="I2:9900;1157:5803">
+                See All Supplements
+              </p>
+            </div>
+            <div className="h-[272px] relative shrink-0 w-[343px]" data-node-id="2:9901" data-name="Frame">
+              <div className="-translate-x-1/2 absolute content-stretch flex gap-[8px] items-start left-[calc(50%+56.5px)] top-0" data-node-id="2:9902" data-name="Frame">
+                <div className="bg-[#24262b] content-stretch flex h-[48px] items-center justify-center overflow-clip px-[16px] py-[10px] relative rounded-[16px] shrink-0" data-node-id="2:9903" data-name="Tag Master">
+                  <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9903;765:39759">
+                    Protein
+                  </p>
+                </div>
+                <div className="bg-[#24262b] content-stretch flex h-[48px] items-center justify-center overflow-clip px-[16px] py-[10px] relative rounded-[16px] shrink-0" data-node-id="2:9904" data-name="Tag Master">
+                  <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9904;765:39759">
+                    Whey
+                  </p>
+                </div>
+                <div className="bg-[#676c75] content-stretch flex h-[48px] items-center justify-center overflow-clip px-[16px] py-[10px] relative rounded-[16px] shadow-[0px_0px_0px_4px_rgba(129,133,141,0.25)] shrink-0" data-node-id="2:9905" data-name="Tag Master">
+                  <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9905;765:39761">
+                    BCAAs
+                  </p>
+                </div>
+                <div className="bg-[#24262b] content-stretch flex h-[48px] items-center justify-center overflow-clip px-[16px] py-[10px] relative rounded-[16px] shrink-0" data-node-id="2:9906" data-name="Tag Master">
+                  <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9906;765:39759">
+                    Vitamin D
+                  </p>
+                </div>
+                <div className="bg-[#24262b] content-stretch flex h-[48px] items-center justify-center overflow-clip px-[16px] py-[10px] relative rounded-[16px] shrink-0" data-node-id="2:9907" data-name="Tag Master">
+                  <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9907;765:39759">
+                    Caffeine
+                  </p>
+                </div>
+              </div>
+              <div className="absolute content-stretch flex gap-[8px] items-start left-[-43px] top-[56px]" data-node-id="2:9908" data-name="Frame">
+                <div className="bg-[#24262b] content-stretch flex h-[48px] items-center justify-center overflow-clip px-[16px] py-[10px] relative rounded-[16px] shrink-0" data-node-id="2:9909" data-name="Tag Master">
+                  <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9909;765:39759">
+                    Beta-Alanine
+                  </p>
+                </div>
+                <div className="bg-[#24262b] content-stretch flex h-[48px] items-center justify-center overflow-clip px-[16px] py-[10px] relative rounded-[16px] shrink-0" data-node-id="2:9910" data-name="Tag Master">
+                  <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9910;765:39759">
+                    Tumeric
+                  </p>
+                </div>
+                <div className="bg-[#24262b] content-stretch flex h-[48px] items-center justify-center overflow-clip px-[16px] py-[10px] relative rounded-[16px] shrink-0" data-node-id="2:9911" data-name="Tag Master">
+                  <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9911;765:39759">
+                    Curcumin
+                  </p>
+                </div>
+                <div className="bg-[#24262b] content-stretch flex h-[48px] items-center justify-center overflow-clip px-[16px] py-[10px] relative rounded-[16px] shrink-0" data-node-id="2:9912" data-name="Tag Master">
+                  <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9912;765:39759">
+                    Glucosamine
+                  </p>
+                </div>
+                <div className="bg-[#24262b] content-stretch flex h-[48px] items-center justify-center overflow-clip px-[16px] py-[10px] relative rounded-[16px] shrink-0" data-node-id="2:9913" data-name="Tag Master">
+                  <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9913;765:39759">
+                    Calcium
+                  </p>
+                </div>
+              </div>
+              <div className="-translate-x-1/2 absolute content-stretch flex gap-[8px] items-start left-[calc(50%+32.5px)] top-[112px]" data-node-id="2:9914" data-name="Frame">
+                <div className="bg-[#676c75] content-stretch flex h-[48px] items-center justify-center overflow-clip px-[16px] py-[10px] relative rounded-[16px] shadow-[0px_0px_0px_4px_rgba(129,133,141,0.25)] shrink-0" data-node-id="2:9915" data-name="Tag Master">
+                  <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9915;765:39761">
+                    Magnesium
+                  </p>
+                </div>
+                <div className="bg-[#24262b] content-stretch flex h-[48px] items-center justify-center overflow-clip px-[16px] py-[10px] relative rounded-[16px] shrink-0" data-node-id="2:9916" data-name="Tag Master">
+                  <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9916;765:39759">
+                    Iron
+                  </p>
+                </div>
+                <div className="bg-[#24262b] content-stretch flex h-[48px] items-center justify-center overflow-clip px-[16px] py-[10px] relative rounded-[16px] shrink-0" data-node-id="2:9917" data-name="Tag Master">
+                  <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9917;765:39759">
+                    Omega 4
+                  </p>
+                </div>
+                <div className="bg-[#24262b] content-stretch flex h-[48px] items-center justify-center overflow-clip px-[16px] py-[10px] relative rounded-[16px] shrink-0" data-node-id="2:9918" data-name="Tag Master">
+                  <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9918;765:39759">
+                    Omega 8
+                  </p>
+                </div>
+                <div className="bg-[#24262b] content-stretch flex h-[48px] items-center justify-center overflow-clip px-[16px] py-[10px] relative rounded-[16px] shrink-0" data-node-id="2:9919" data-name="Tag Master">
+                  <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9919;765:39759">
+                    Calcium
+                  </p>
+                </div>
+              </div>
+              <div className="-translate-x-1/2 absolute content-stretch flex gap-[8px] items-start left-[calc(50%+44px)] top-[224px]" data-node-id="2:9920" data-name="Frame">
+                <div className="bg-[#24262b] content-stretch flex h-[48px] items-center justify-center overflow-clip px-[16px] py-[10px] relative rounded-[16px] shrink-0" data-node-id="2:9921" data-name="Tag Master">
+                  <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9921;765:39759">
+                    Omega 12
+                  </p>
+                </div>
+                <div className="bg-[#24262b] content-stretch flex h-[48px] items-center justify-center overflow-clip px-[16px] py-[10px] relative rounded-[16px] shrink-0" data-node-id="2:9922" data-name="Tag Master">
+                  <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9922;765:39759">
+                    Omega 2
+                  </p>
+                </div>
+                <div className="bg-[#24262b] content-stretch flex h-[48px] items-center justify-center overflow-clip px-[16px] py-[10px] relative rounded-[16px] shrink-0" data-node-id="2:9923" data-name="Tag Master">
+                  <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9923;765:39759">
+                    Creatine
+                  </p>
+                </div>
+                <div className="bg-[#676c75] content-stretch flex h-[48px] items-center justify-center overflow-clip px-[16px] py-[10px] relative rounded-[16px] shadow-[0px_0px_0px_4px_rgba(129,133,141,0.25)] shrink-0" data-node-id="2:9924" data-name="Tag Master">
+                  <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9924;765:39761">
+                    Createine 2
+                  </p>
+                </div>
+                <div className="bg-[#24262b] content-stretch flex h-[48px] items-center justify-center overflow-clip px-[16px] py-[10px] relative rounded-[16px] shrink-0" data-node-id="2:9925" data-name="Tag Master">
+                  <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9925;765:39759">
+                    Glutamine
+                  </p>
+                </div>
+              </div>
+              <div className="absolute content-stretch flex gap-[8px] items-start left-[-42px] top-[168px]" data-node-id="2:9926" data-name="Frame">
+                <div className="bg-[#24262b] content-stretch flex h-[48px] items-center justify-center overflow-clip px-[16px] py-[10px] relative rounded-[16px] shrink-0" data-node-id="2:9927" data-name="Tag Master">
+                  <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9927;765:39759">
+                    Vitamin A
+                  </p>
+                </div>
+                <div className="bg-[#24262b] content-stretch flex h-[48px] items-center justify-center overflow-clip px-[16px] py-[10px] relative rounded-[16px] shrink-0" data-node-id="2:9928" data-name="Tag Master">
+                  <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9928;765:39759">
+                    Vitamin B
+                  </p>
+                </div>
+                <div className="bg-[#24262b] content-stretch flex h-[48px] items-center justify-center overflow-clip px-[16px] py-[10px] relative rounded-[16px] shrink-0" data-node-id="2:9929" data-name="Tag Master">
+                  <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9929;765:39759">
+                    Vitamin C
+                  </p>
+                </div>
+                <div className="bg-[#24262b] content-stretch flex h-[48px] items-center justify-center overflow-clip px-[16px] py-[10px] relative rounded-[16px] shrink-0" data-node-id="2:9930" data-name="Tag Master">
+                  <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9930;765:39759">
+                    Fiber
+                  </p>
+                </div>
+                <div className="bg-[#24262b] content-stretch flex h-[48px] items-center justify-center overflow-clip px-[16px] py-[10px] relative rounded-[16px] shrink-0" data-node-id="2:9931" data-name="Tag Master">
+                  <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9931;765:39759">
+                    Multivitamin
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="content-stretch flex gap-[12px] items-center relative shrink-0" data-node-id="2:9932" data-name="Frame">
+            <p className="[word-break:break-word] font-['Work_Sans:Medium'] font-medium leading-[normal] relative shrink-0 text-[12px] text-white tracking-[-0.018px] whitespace-nowrap" data-node-id="2:9933">
+              Selected
+            </p>
+            <div className="content-stretch flex gap-[8px] items-start relative shrink-0" data-node-id="2:9934" data-name="Frame">
+              <div className="bg-[#172554] content-stretch flex h-[28px] items-center justify-center overflow-clip px-[8px] py-[6px] relative rounded-[9px] shrink-0" data-node-id="2:9935" data-name="Tag Master">
+                <div className="content-stretch flex gap-[4px] items-center justify-center relative shrink-0" data-node-id="I2:9935;765:39801" data-name="Frame">
+                  <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[#2563eb] text-[14px] text-center tracking-[-0.028px] whitespace-nowrap" data-node-id="I2:9935;765:39802">
+                    BCAAs
+                  </p>
+                  <div className="relative shrink-0 size-[16px]" data-node-id="I2:9935;765:39803" data-name="Solid close x">
+                    <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgSolidCloseX} />
+                  </div>
+                </div>
+              </div>
+              <div className="bg-[#172554] content-stretch flex h-[28px] items-center justify-center overflow-clip px-[8px] py-[6px] relative rounded-[9px] shrink-0" data-node-id="2:9936" data-name="Tag Master">
+                <div className="content-stretch flex gap-[4px] items-center justify-center relative shrink-0" data-node-id="I2:9936;765:39801" data-name="Frame">
+                  <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[#2563eb] text-[14px] text-center tracking-[-0.028px] whitespace-nowrap" data-node-id="I2:9936;765:39802">
+                    Omega-3
+                  </p>
+                  <div className="relative shrink-0 size-[16px]" data-node-id="I2:9936;765:39803" data-name="Solid close x">
+                    <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgSolidCloseX} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="bg-[#f97316] content-stretch flex h-[56px] items-center justify-center px-[28px] py-[16px] relative rounded-[19px] shrink-0 w-[343px]" data-node-id="2:9937" data-name="Button Primary Icon">
+          <div className="content-stretch flex gap-[12px] items-center justify-center relative shrink-0" data-node-id="I2:9937;40:2535" data-name="Content">
+            <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9937;40:2536">
+              Continue
+            </p>
+            <div className="relative shrink-0 size-[24px]" data-node-id="I2:9937;40:2537" data-name="Monotone arrow right">
+              <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgMonotoneArrowRight} />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+SUPER CRITICAL: The generated React+Tailwind code MUST be converted to match the target project's technology stack and styling system.
+1. Analyze the target codebase to identify: technology stack, styling approach, component patterns, and design tokens
+2. Convert React syntax to the target framework/library
+3. Transform all Tailwind classes to the target styling system while preserving exact visual design
+4. Follow the project's existing patterns and conventions
+DO NOT install any Tailwind as a dependency unless the user instructs you to do so.
+
+Node ids have been added to the code as data attributes, e.g. `data-node-id="1:2"`.
+These styles are contained in the design: Sandow Gray/White: #FFFFFF, Sandow Gray/100: #111214, Sandow Gray/20: #D7D8D9, Sandow Gray/80: #393C43, Text xl/Bold: Font(family: "Work Sans", style: Bold, size: 20, weight: 700, lineHeight: 100, letterSpacing: -0.5), Tabata Blue/60: #2563EB, Text sm/SemiBold: Font(family: "Work Sans", style: SemiBold, size: 14, weight: 600, lineHeight: 100, letterSpacing: -0.20000000298023224), Tabata Blue/100: #172554, Heading sm/Bold: Font(family: "Work Sans", style: Bold, size: 30, weight: 700, lineHeight: 38, letterSpacing: -1), Paragraph/md: Font(family: "Work Sans", style: Regular, size: 16, weight: 400, lineHeight: 1.600000023841858, letterSpacing: -0.30000001192092896), Text md/Bold: Font(family: "Work Sans", style: Bold, size: 16, weight: 700, lineHeight: 100, letterSpacing: -0.30000001192092896), Pulse Orange/50: #F97316, Text sm/Medium: Font(family: "Work Sans", style: Medium, size: 14, weight: 500, lineHeight: 100, letterSpacing: -0.20000000298023224), Text md/SemiBold: Font(family: "Work Sans", style: SemiBold, size: 16, weight: 600, lineHeight: 100, letterSpacing: -0.30000001192092896), Sandow Gray/90: #24262B, Sandow Gray/60: #676C75, Focus/ring-gray: Effect(type: DROP_SHADOW, color: #81858D40, offset: (0, 0), radius: 0, spread: 4), Text xs/Medium: Font(family: "Work Sans", style: Medium, size: 12, weight: 500, lineHeight: 100, letterSpacing: -0.15000000596046448), Tabata Blue/70: #1D4ED8.
+The generated code contains image and SVG URL constants, e.g. const image = `${assetPathPrefix}/<asset file name>`, where assetPathPrefix is declared once at the top of the code and every asset URL interpolates it. URLs were downloaded; the local assets directory is the durable reference. Download each asset into the project with curl -L, then replace its URL in the generated code with a reference to the downloaded asset. Never use the temporary URLs as runtime image sources.

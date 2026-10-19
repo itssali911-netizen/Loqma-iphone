@@ -1,0 +1,126 @@
+const assetPathPrefix = "../assets";
+const imgIsBlackFalse = `${assetPathPrefix}/49b57.svg`;
+const imgBlackManStudioPortraitFitnessStrengthPowerDarkLightPhotography = `${assetPathPrefix}/a5378.png`;
+const imgDynamicPhotographFemaleAthlete = `${assetPathPrefix}/46d16.png`;
+const imgIPhoneXOrNewer = `${assetPathPrefix}/72f5b.svg`;
+const imgMonotoneChevronLeft = `${assetPathPrefix}/7c9b3.svg`;
+const imgSolidHeadHeart = `${assetPathPrefix}/08c29.svg`;
+const imgMonotoneCheckboxEmpty = `${assetPathPrefix}/34b5e.svg`;
+const imgSolidHeadHeart1 = `${assetPathPrefix}/640e5.svg`;
+const imgMonotoneCheckboxEmpty1 = `${assetPathPrefix}/3ee61.svg`;
+const imgSolidCloseX = `${assetPathPrefix}/a32a1.svg`;
+const imgMonotoneArrowRight = `${assetPathPrefix}/c1a83.svg`;
+
+type HomeIndicatorProps = {
+  className?: string;
+  isBlack?: "False";
+};
+
+function HomeIndicator({ className, isBlack = "False" }: HomeIndicatorProps) {
+  return (
+    <div className={className || "h-[34px] relative w-[375px]"} data-node-id="2:4510">
+      <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIsBlackFalse} />
+    </div>
+  );
+}
+
+export default function ComprehensiveFitnessAssessment() {
+  return (
+    <div className="bg-[#111214] overflow-clip relative rounded-[40px] size-full" data-node-id="2:9680" data-name="Comprehensive Fitness Assessment">
+      <div className="absolute h-[44px] left-0 top-0 w-[375px]" data-node-id="2:9681" data-name="iPhone X or newer">
+        <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIPhoneXOrNewer} />
+      </div>
+      <HomeIndicator className="-translate-x-1/2 absolute bottom-0 h-[34px] left-1/2 w-[375px]" />
+      <div className="-translate-x-1/2 absolute content-stretch flex gap-[12px] items-center left-1/2 top-[60px] w-[343px]" data-node-id="2:9683" data-name="Top Nav">
+        <div className="bg-[#393c43] content-stretch flex items-center justify-center relative rounded-[18px] shrink-0 size-[48px]" data-node-id="I2:9683;41:4259" data-name="Button Container">
+          <div className="relative shrink-0 size-[24px]" data-node-id="I2:9683;41:4260" data-name="Monotone chevron left">
+            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgMonotoneChevronLeft} />
+          </div>
+        </div>
+        <p className="[word-break:break-word] flex-[1_0_0] font-['Work_Sans:Bold'] font-bold leading-[normal] min-w-px relative text-[20px] text-white tracking-[-0.1px]" data-node-id="I2:9683;41:4261">
+          Assessment
+        </p>
+        <div className="bg-[#172554] content-stretch flex h-[32px] items-center justify-center overflow-clip px-[12px] py-[6px] relative rounded-[11px] shrink-0" data-node-id="I2:9683;153:22995" data-name="Tag Master">
+          <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[#2563eb] text-[14px] text-center tracking-[-0.028px] whitespace-nowrap" data-node-id="I2:9683;153:22995;765:39751">
+            2 of 17
+          </p>
+        </div>
+      </div>
+      <div className="-translate-x-1/2 absolute content-stretch flex flex-col gap-[48px] items-start left-[calc(50%+0.5px)] top-[148px]" data-node-id="2:9684" data-name="Frame">
+        <p className="[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[38px] relative shrink-0 text-[30px] text-center text-white tracking-[-0.3px] w-[343px]" data-node-id="2:9685">
+          What is your gender?
+        </p>
+        <div className="content-stretch flex flex-col gap-[8px] items-start relative shrink-0" data-node-id="2:9686" data-name="Frame">
+          <div className="bg-[#24262b] content-stretch flex items-start overflow-clip p-[16px] relative rounded-[32px] shrink-0 w-[344px]" data-node-id="2:9687" data-name="Frame">
+            <div className="content-stretch flex flex-[1_0_0] flex-col gap-[64px] items-start justify-end min-w-px relative" data-node-id="I2:9687;213:23158" data-name="Frame">
+              <div className="-translate-y-1/2 absolute h-[227px] left-[65px] mix-blend-lighten top-[calc(50%+9.5px)] w-[340px]" data-node-id="I2:9687;213:23196" data-name="black man studio portrait fitness strength power dark light photography">
+                <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={imgBlackManStudioPortraitFitnessStrengthPowerDarkLightPhotography} />
+              </div>
+              <div className="content-stretch flex gap-[4px] items-center relative shrink-0 w-full" data-node-id="I2:9687;213:23159" data-name="Frame">
+                <div className="relative shrink-0 size-[24px]" data-node-id="I2:9687;213:23160" data-name="Solid head heart">
+                  <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgSolidHeadHeart} />
+                </div>
+                <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9687;213:23161">
+                  Male
+                </p>
+              </div>
+              <div className="relative shrink-0 size-[24px]" data-node-id="I2:9687;213:23162" data-name="Monotone checkbox empty">
+                <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgMonotoneCheckboxEmpty} />
+              </div>
+            </div>
+          </div>
+          <div className="bg-[#24262b] border border-[#f97316] border-solid content-stretch flex items-start overflow-clip p-[16px] relative rounded-[32px] shadow-[0px_0px_0px_4px_rgba(249,115,22,0.25)] shrink-0 w-[344px]" data-node-id="2:9688" data-name="Frame">
+            <div className="content-stretch flex flex-[1_0_0] flex-col gap-[64px] items-start justify-end min-w-px relative" data-node-id="I2:9688;213:23165" data-name="Frame">
+              <div className="-translate-y-1/2 absolute h-[308px] left-[36px] mix-blend-lighten top-1/2 w-[408px]" data-node-id="I2:9688;213:23195" data-name="dynamic photograph female athlete">
+                <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={imgDynamicPhotographFemaleAthlete} />
+              </div>
+              <div className="content-stretch flex gap-[4px] items-center relative shrink-0 w-full" data-node-id="I2:9688;213:23167" data-name="Frame">
+                <div className="relative shrink-0 size-[24px]" data-node-id="I2:9688;213:23168" data-name="Solid head heart">
+                  <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgSolidHeadHeart1} />
+                </div>
+                <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9688;213:23169">
+                  Female
+                </p>
+              </div>
+              <div className="relative shrink-0 size-[24px]" data-node-id="I2:9688;213:23170" data-name="Monotone checkbox empty">
+                <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgMonotoneCheckboxEmpty1} />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="content-stretch flex flex-col gap-[8px] items-start relative shrink-0" data-node-id="2:9689" data-name="Frame">
+          <div className="bg-[#431407] content-stretch flex h-[56px] items-center justify-center px-[28px] py-[16px] relative rounded-[19px] shrink-0 w-[343px]" data-node-id="2:9690" data-name="Button Primary Icon">
+            <div className="content-stretch flex gap-[12px] items-center justify-center relative shrink-0" data-node-id="I2:9690;40:2535" data-name="Content">
+              <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[#f97316] text-[16px] tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9690;40:2536">
+                Prefer to skip, thanks!
+              </p>
+              <div className="relative shrink-0 size-[24px]" data-node-id="I2:9690;40:2537" data-name="Solid close x">
+                <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgSolidCloseX} />
+              </div>
+            </div>
+          </div>
+          <div className="bg-[#f97316] content-stretch flex h-[56px] items-center justify-center px-[28px] py-[16px] relative rounded-[19px] shrink-0 w-[343px]" data-node-id="2:9691" data-name="Button Primary Icon">
+            <div className="content-stretch flex gap-[12px] items-center justify-center relative shrink-0" data-node-id="I2:9691;40:2535" data-name="Content">
+              <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9691;40:2536">
+                Continue
+              </p>
+              <div className="relative shrink-0 size-[24px]" data-node-id="I2:9691;40:2537" data-name="Monotone arrow right">
+                <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgMonotoneArrowRight} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+SUPER CRITICAL: The generated React+Tailwind code MUST be converted to match the target project's technology stack and styling system.
+1. Analyze the target codebase to identify: technology stack, styling approach, component patterns, and design tokens
+2. Convert React syntax to the target framework/library
+3. Transform all Tailwind classes to the target styling system while preserving exact visual design
+4. Follow the project's existing patterns and conventions
+DO NOT install any Tailwind as a dependency unless the user instructs you to do so.
+
+Node ids have been added to the code as data attributes, e.g. `data-node-id="1:2"`.
+These styles are contained in the design: Sandow Gray/White: #FFFFFF, Sandow Gray/20: #D7D8D9, Sandow Gray/80: #393C43, Text xl/Bold: Font(family: "Work Sans", style: Bold, size: 20, weight: 700, lineHeight: 100, letterSpacing: -0.5), Tabata Blue/60: #2563EB, Text sm/SemiBold: Font(family: "Work Sans", style: SemiBold, size: 14, weight: 600, lineHeight: 100, letterSpacing: -0.20000000298023224), Tabata Blue/100: #172554, Heading sm/Bold: Font(family: "Work Sans", style: Bold, size: 30, weight: 700, lineHeight: 38, letterSpacing: -1), Text md/SemiBold: Font(family: "Work Sans", style: SemiBold, size: 16, weight: 600, lineHeight: 100, letterSpacing: -0.30000001192092896), Sandow Gray/90: #24262B, Pulse Orange/50: #F97316, Focus/ring-orange: Effect(type: DROP_SHADOW, color: #F9731640, offset: (0, 0), radius: 0, spread: 4), Pulse Orange/100: #431407, Sandow Gray/100: #111214.
+The generated code contains image and SVG URL constants, e.g. const image = `${assetPathPrefix}/<asset file name>`, where assetPathPrefix is declared once at the top of the code and every asset URL interpolates it. URLs were downloaded; the local assets directory is the durable reference. Download each asset into the project with curl -L, then replace its URL in the generated code with a reference to the downloaded asset. Never use the temporary URLs as runtime image sources.

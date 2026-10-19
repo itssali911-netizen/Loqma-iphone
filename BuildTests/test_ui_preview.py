@@ -14,9 +14,10 @@ from unittest.mock import patch
 import zlib
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "Scripts"))
-from ui_preview import (BuildError, DEVICE_TYPE, EXPECTED_SCREEN_COUNT, EXTRA_ROUTES, SimulatorSetupError,
+from ui_preview import (BuildError, DEVICE_TYPE, EXPECTED_SCREEN_COUNT, EXTRA_ROUTES, FITNESS_ROUTES, SimulatorSetupError,
                         SCREENS, TEMPLATE_ROUTES, VARIANT_ROUTES,
-                        capture, capture_screenshot, decode_png, framebuffer_content, png_details, preview_cases)
+                        capture, capture_screenshot, collect_runtime_font_audit, decode_png, framebuffer_content,
+                        png_details, preview_cases, validate_runtime_font_audit)
 
 
 def chunk(kind, content):
@@ -161,7 +162,7 @@ class CaptureRetryTests(unittest.TestCase):
     def test_all_routes_have_distinct_names_and_the_count_tracks_coverage(self):
         cases = preview_cases()
         self.assertEqual(EXPECTED_SCREEN_COUNT,
-                         len(SCREENS) + 2 + len(EXTRA_ROUTES) + len(TEMPLATE_ROUTES) + len(VARIANT_ROUTES))
+                         len(SCREENS) + 2 + len(EXTRA_ROUTES) + len(TEMPLATE_ROUTES) + len(VARIANT_ROUTES) + len(FITNESS_ROUTES))
         self.assertEqual(len(cases), EXPECTED_SCREEN_COUNT)
         self.assertEqual(len({case["screen"] for case in cases}), len(cases))
         self.assertTrue(all(case["arguments"] and all(isinstance(value, str) for value in case["arguments"])
@@ -184,6 +185,85 @@ class CaptureRetryTests(unittest.TestCase):
         self.assertEqual(case["arguments"], ["-loqma-preview-overview", "-loqma-preview-accessibility"])
         self.assertEqual(case["dynamic_type_override"], "accessibility3")
         self.assertTrue(case["synthetic_fixture"])
+
+    def test_fitness_routes_are_explicit_read_only_synthetic_previews(self):
+        cases = {case["screen"]: case for case in preview_cases()}
+        self.assertEqual(len(FITNESS_ROUTES), 8)
+        for screen, route in FITNESS_ROUTES:
+            with self.subTest(screen=screen):
+                self.assertEqual(cases[screen]["arguments"], ["-loqma-preview-template", route])
+                self.assertTrue(cases[screen]["synthetic_fixture"])
+                self.assertTrue(cases[screen]["read_only_preview"])
+
+
+def synthetic_font_audit(pid=1234, accessibility=False):
+    """Validator input only: this fixture is never used as native font evidence."""
+    roles = ["display", "screenTitle", "sectionTitle", "headline", "body", "subheadline",
+             "helper", "caption", "caption2", "button", "metric", "legacyLightPromoted"]
+    entries = [{"role": role, "resolvedLatinPostScript": "WorkSans-Regular",
+                "resolvedArabicPostScript": "Tajawal-Regular", "uiFontPostScript": "WorkSans-Regular",
+                "latinRuns": ["WorkSans-Regular"], "arabicRuns": ["Tajawal-Regular"],
+                "mixedRuns": ["WorkSans-Regular", "Tajawal-Regular"], "missingGlyphs": 0,
+                "registered": True, "passed": True, "basePoints": 16,
+                "scaledPoints": 32 if accessibility else 16, "lineHeight": 40 if accessibility else 20,
+                "effectiveWeight": "regular"} for role in roles]
+    return {"processIdentifier": pid, "fontAudit": {
+        "source": "Actual UIKit fonts and CoreText shaped runs from LuqmaTypography", "passed": True,
+        "entries": entries, "emojiFonts": ["AppleColorEmoji"],
+        "contentSizeCategory": "UICTContentSizeCategoryAccessibilityXXXL" if accessibility else "UICTContentSizeCategoryL"}}
+
+
+class RuntimeFontAuditTests(unittest.TestCase):
+    def test_registered_names_and_actual_shaped_runs_are_both_required(self):
+        value = synthetic_font_audit()
+        self.assertTrue(validate_runtime_font_audit(value, 1234, False)["passed"])
+        value["fontAudit"]["entries"][0]["arabicRuns"] = [".SFArabic-Regular"]
+        with self.assertRaisesRegex(BuildError, "shaping"):
+            validate_runtime_font_audit(value, 1234, False)
+
+    def test_matching_process_id_rejects_stale_previous_launch(self):
+        with self.assertRaisesRegex(BuildError, "process ID"):
+            validate_runtime_font_audit(synthetic_font_audit(pid=42), 1234, False)
+
+    def test_missing_glyphs_fail_even_when_app_summary_claims_passed(self):
+        value = synthetic_font_audit()
+        value["fontAudit"]["entries"][0]["missingGlyphs"] = 1
+        with self.assertRaisesRegex(BuildError, "shaping"):
+            validate_runtime_font_audit(value, 1234, False)
+
+    def test_accessibility_requires_real_larger_points_and_category(self):
+        self.assertTrue(validate_runtime_font_audit(synthetic_font_audit(accessibility=True), 1234, True)["accessibility_scaling_verified"])
+        with self.assertRaisesRegex(BuildError, "scale"):
+            validate_runtime_font_audit(synthetic_font_audit(), 1234, True)
+        value = synthetic_font_audit(accessibility=True)
+        value["fontAudit"]["contentSizeCategory"] = "UICTContentSizeCategoryL"
+        with self.assertRaisesRegex(BuildError, "Dynamic Type"):
+            validate_runtime_font_audit(value, 1234, True)
+
+    def test_missing_roles_thin_weight_and_invalid_measured_size_fail(self):
+        for change, message in ((lambda value: value["fontAudit"]["entries"].pop(), "roles"),
+                                (lambda value: value["fontAudit"]["entries"][0].update(effectiveWeight="light"), "thin"),
+                                (lambda value: value["fontAudit"]["entries"][0].update(scaledPoints=float("nan")), "size")):
+            with self.subTest(message=message):
+                value = synthetic_font_audit()
+                change(value)
+                with self.assertRaisesRegex(BuildError, message):
+                    validate_runtime_font_audit(value, 1234, False)
+
+    def test_native_audit_bytes_are_preserved_before_failed_validation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            container = Path(directory) / "app-data"
+            source = container / "Documents/luqma-font-audit.json"
+            source.parent.mkdir(parents=True)
+            value = synthetic_font_audit(pid=42)
+            data = json.dumps(value).encode()
+            source.write_bytes(data)
+            output = Path(directory) / "capture"
+            output.mkdir()
+            with patch("ui_preview.command", return_value=str(container)):
+                with self.assertRaisesRegex(BuildError, "process ID"):
+                    collect_runtime_font_audit(output, "created-device", "app.luqma.diary", "today", 1234, 1, False)
+            self.assertEqual((output / "font-audits/01-today.json").read_bytes(), data)
 
 
 class SimulatorIntegrationTests(unittest.TestCase):

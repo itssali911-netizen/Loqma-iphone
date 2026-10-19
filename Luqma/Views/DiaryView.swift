@@ -69,8 +69,35 @@ struct DiaryView:View {
             foodCategories
             dailyRoutine(meals)
             summary
+            fitnessSummary
             mealList(meals)
         }.padding(.top,16)
+    }
+    @ViewBuilder private var fitnessSummary:some View {
+        if diary.state.fitnessProfile != nil || diary.state.fitnessDraft != nil || diary.state.fitnessOnboardingDismissed != true {
+            VStack(alignment:.leading,spacing:12){
+                HStack{
+                    Text(diary.t("خطتك الشخصية","Your personal plan")).luqmaFont(.sectionTitle).accessibilityAddTraits(.isHeader)
+                    Spacer()
+                    if diary.state.fitnessProfile == nil && diary.state.fitnessDraft == nil{
+                        Button(diary.t("لاحقًا","Later")){_ = diary.deferFitnessAssessment()}.luqmaFont(.helper).foregroundStyle(Theme.link).frame(minHeight:44).accessibilityIdentifier("diary.deferFitness")
+                    }
+                }
+                if let plan=diary.state.appliedFitnessPlan,FitnessAssessmentState.hasAppliedGoals(diary.state){
+                    Text(diary.t("\(plan.activity.trainingDays) أيام تدريب أسبوعيًا · \(plan.activity.stepsPerDay) خطوة مقترحة يوميًا","\(plan.activity.trainingDays) training days / week · \(plan.activity.stepsPerDay) suggested daily steps"))
+                        .luqmaFont(.helper).foregroundStyle(Theme.muted).fixedSize(horizontal:false,vertical:true)
+                    if let target=diary.state.fitnessProfile?.answers.targetWeightKG{
+                        Text(diary.t("وزن الهدف: \(decimal(target)) كجم","Target weight: \(decimal(target)) kg")).luqmaFont(.helper).foregroundStyle(Theme.muted)
+                    }
+                }else{
+                    Text(diary.t("تقديرات للتغذية والنشاط بحسب إجاباتك، مع مراجعة قبل اعتماد الأهداف.","Nutrition and activity estimates from your answers, with a review before you apply any targets.")).luqmaFont(.helper).foregroundStyle(Theme.muted).fixedSize(horizontal:false,vertical:true)
+                }
+                NavigationLink{FitnessProfileView()}label:{HStack{
+                    Text(diary.t(diary.state.fitnessDraft != nil ? "متابعة التقييم":"عرض ملف اللياقة",diary.state.fitnessDraft != nil ? "Continue assessment":"Open fitness profile"))
+                    Spacer();Image(systemName:"chevron.forward")
+                }.luqmaFont(.button).foregroundStyle(Theme.link).frame(minHeight:44)}.accessibilityIdentifier("diary.fitnessProfile")
+            }.luqmaCard()
+        }
     }
     #if DEBUG
     private var mealPreviewContent:some View {
@@ -118,7 +145,7 @@ struct DiaryView:View {
     private func openSearch(_ query:String="",meal:Meal?=nil){searchQuery=query;chosenMeal=meal;adding=true}
     private var foodCategories:some View {
         VStack(alignment:.leading,spacing:10){
-            HStack{Text(diary.t("بحث سريع","Quick search")).luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline);Spacer();Button{openSearch()}label:{Text(diary.t("عرض الكل","See all")).luqmaFont(size:11,weight:.medium,relativeTo:.caption).foregroundStyle(Theme.accent)}.buttonStyle(.plain)}
+            HStack{Text(diary.t("بحث سريع","Quick search")).luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline);Spacer();Button{openSearch()}label:{Text(diary.t("عرض الكل","See all")).luqmaFont(size:11,weight:.medium,relativeTo:.caption).foregroundStyle(Theme.link)}.buttonStyle(.plain)}
             ScrollView(.horizontal,showsIndicators:false){HStack(spacing:6){
                 categoryChip("vegetables",ar:"خيار",en:"Cucumber",symbol:"carrot",query:diary.t("خيار","cucumber"))
                 categoryChip("meat",ar:"دجاج",en:"Chicken",symbol:"fork.knife",query:diary.t("دجاج","chicken"))
@@ -183,7 +210,7 @@ struct DiaryView:View {
             VStack(alignment:.leading,spacing:9){
                     HStack{
                         Image(systemName:"fork.knife").font(.system(size:13,weight:.semibold))
-                            .foregroundStyle(.white).frame(width:30,height:30)
+                            .foregroundStyle(Theme.onAccent).frame(width:30,height:30)
                             .background(Theme.accent,in:RoundedRectangle(cornerRadius:9))
                         Spacer(minLength:0)
                         Image(systemName:"plus").font(.system(size:12,weight:.semibold))
@@ -308,7 +335,7 @@ struct DiaryView:View {
                     }
                 }
                 Spacer(minLength:0)
-                Button{goals=true}label:{Image(systemName:"gearshape").font(.system(size:18,weight:.medium)).frame(width:40,height:40).overlay(RoundedRectangle(cornerRadius:12).strokeBorder(Theme.text.opacity(0.35),lineWidth:1))}.buttonStyle(.plain).accessibilityLabel(diary.t("تعديل هدف السعرات","Edit calorie goal"))
+                Button{goals=true}label:{Image(systemName:"gearshape").font(.system(size:18,weight:.medium)).frame(width:40,height:40).overlay(RoundedRectangle(cornerRadius:12).strokeBorder(Theme.onAccent,lineWidth:1))}.buttonStyle(.plain).accessibilityLabel(diary.t("تعديل هدف السعرات","Edit calorie goal"))
             }
             if typeSize.isAccessibilitySize{
                 VStack(alignment:.leading,spacing:8){
@@ -323,10 +350,10 @@ struct DiaryView:View {
                 }
             }
             GeometryReader{geometry in
-                ZStack(alignment:.leading){Capsule().fill(Theme.text.opacity(0.3));Capsule().fill(Theme.text).frame(width:geometry.size.width*progress)}
+                ZStack(alignment:.leading){Capsule().fill(Theme.onAccent.opacity(0.18));Capsule().fill(Theme.onAccent).frame(width:geometry.size.width*progress)}
             }.frame(height:8).accessibilityElement(children:.ignore)
                 .accessibilityLabel(diary.t("التقدّم نحو هدف السعرات","Progress toward your calorie goal")).accessibilityValue(decimal(progress*100,0)+"%")
-        }.foregroundStyle(Theme.text).padding(16).frame(maxWidth:.infinity,alignment:.leading).background(Theme.accent,in:RoundedRectangle(cornerRadius:20,style:.continuous))
+        }.foregroundStyle(Theme.onAccent).padding(16).frame(maxWidth:.infinity,alignment:.leading).background(Theme.accent,in:RoundedRectangle(cornerRadius:20,style:.continuous))
             .accessibilityIdentifier("diary.calorieGoal").accessibilityValue(decimal(goal,0))
     }
     private func consumedCalories(_ consumed:Double,_ goal:Double)->some View {
@@ -337,13 +364,14 @@ struct DiaryView:View {
     }
     private func macroProgress(_ key:MacroKey,_ current:Nutrition,_ goal:Nutrition) -> some View {
         let color=key == .protein ? Theme.secondaryAccent:key == .carbs ? Theme.accent:Theme.text
+        let symbolColor=key == .protein ? Theme.secondaryAccentText:key == .carbs ? Theme.accentText:Theme.text
         let symbol=key == .carbs ? "leaf.fill":key == .protein ? "fish.fill":"drop.fill"
         let progress=goal[key]>0 ? min(1,max(0,current[key]/goal[key])):0
         return VStack(alignment:.leading,spacing:6){
-            HStack(spacing:5){Text(key.label(diary.language)).luqmaFont(size:11,weight:.light,relativeTo:.caption).foregroundStyle(Theme.muted);Spacer(minLength:0);Image(systemName:symbol).luqmaFont(size:12).foregroundStyle(color).accessibilityHidden(true)}
+            HStack(spacing:5){Text(key.label(diary.language)).luqmaFont(size:11,relativeTo:.caption).foregroundStyle(Theme.muted);Spacer(minLength:0);Image(systemName:symbol).luqmaFont(size:12).foregroundStyle(symbolColor).accessibilityHidden(true)}
             HStack(alignment:.firstTextBaseline,spacing:3){
                 Text(decimal(current[key],0)).luqmaFont(size:17,weight:.heavy,relativeTo:.headline).foregroundStyle(Theme.text)
-                Text("/ "+decimal(goal[key],0)+" "+diary.t("جم","g")).luqmaFont(size:10,weight:.light,relativeTo:.caption2).foregroundStyle(Theme.muted)
+                Text("/ "+decimal(goal[key],0)+" "+diary.t("جم","g")).luqmaFont(size:10,relativeTo:.caption2).foregroundStyle(Theme.muted)
             }.monospacedDigit().lineLimit(1).minimumScaleFactor(0.7).environment(\.layoutDirection,.leftToRight)
             ProgressView(value:progress).tint(color)
                 .accessibilityLabel(key.label(diary.language)+" "+diary.t("التقدّم اليومي","daily progress"))

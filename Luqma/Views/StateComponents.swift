@@ -7,10 +7,10 @@ struct SandowStateAlert:View {
         HStack(alignment:.top,spacing:6){
             Image("SandowWarning").frame(width:20,height:20).accessibilityHidden(true)
             Text(DisplayFormat.westernDigits(text)).luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline)
-                .tracking(-0.028).fixedSize(horizontal:false,vertical:true).frame(maxWidth:.infinity,alignment:.leading)
+                .fixedSize(horizontal:false,vertical:true).frame(maxWidth:.infinity,alignment:.leading)
         }.foregroundStyle(Theme.text).padding(12)
-            .background(Color(red:69.0/255,green:10.0/255,blue:10.0/255),in:RoundedRectangle(cornerRadius:14))
-            .overlay{RoundedRectangle(cornerRadius:14).stroke(Color(red:239.0/255,green:68.0/255,blue:68.0/255),lineWidth:1)}
+            .background(Theme.errorBackground,in:RoundedRectangle(cornerRadius:14))
+            .overlay{RoundedRectangle(cornerRadius:14).stroke(Theme.errorBorder,lineWidth:1)}
             .accessibilityElement(children:.combine)
     }
 }
@@ -63,7 +63,7 @@ struct SandowSavedConfirmation:View {
             Image("SandowCheck").frame(width:24,height:24).padding(6)
                 .background(Theme.accent,in:RoundedRectangle(cornerRadius:12)).accessibilityHidden(true)
             Text(text).luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline)
-                .fixedSize(horizontal:false,vertical:true).frame(maxWidth:.infinity,alignment:.leading)
+                .foregroundStyle(Theme.success).fixedSize(horizontal:false,vertical:true).frame(maxWidth:.infinity,alignment:.leading)
         }.padding(12).background(Theme.card,in:RoundedRectangle(cornerRadius:14))
             .accessibilityElement(children:.combine)
     }

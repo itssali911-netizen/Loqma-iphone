@@ -258,7 +258,10 @@ import AVFoundation
                     VStack(spacing:6){
                         Text(key.label(diary.language)).luqmaFont(size:12,weight:.medium,relativeTo:.caption)
                         Text(decimal(amount)+" "+diary.t("جم","g")).luqmaFont(size:15,weight:.bold,relativeTo:.subheadline).monospacedDigit()
-                    }.foregroundStyle(Theme.text).padding(.horizontal,4).padding(.bottom,14)
+                    }.foregroundStyle(Theme.text).padding(.horizontal,6).padding(.vertical,10)
+                        .frame(maxWidth:.infinity)
+                        .background(Theme.card,in:RoundedRectangle(cornerRadius:12,style:.continuous))
+                        .padding(.horizontal,8).padding(.bottom,8)
                     VStack{
                         Image(systemName:macroSymbol(key)).font(.system(size:16,weight:.medium)).foregroundStyle(Theme.muted).padding(.top,12)
                         Spacer(minLength:0)
@@ -296,7 +299,7 @@ import AVFoundation
         Button{detailedComponents=detailed}label:{
             Label(title,systemImage:detailed ? "list.bullet":"square.stack")
                 .luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline)
-                .foregroundStyle(detailedComponents == detailed ? Theme.text:Theme.muted)
+                .foregroundStyle(detailedComponents == detailed ? Theme.onAccent:Theme.muted)
                 .frame(maxWidth:.infinity,minHeight:44)
                 .background(detailedComponents == detailed ? Theme.accent:Theme.card,in:RoundedRectangle(cornerRadius:14))
         }.buttonStyle(.plain).accessibilityAddTraits(detailedComponents == detailed ? .isSelected:[])
@@ -338,7 +341,7 @@ import AVFoundation
                 Button{selection=ProductSelection(id:part.id,name:part.food.food.label(diary.language))}label:{
                     Label(diary.t("مطابقة منتج من قاعدة الطعام","Match a catalog product"),systemImage:"magnifyingglass")
                         .luqmaFont(.caption).frame(maxWidth:.infinity,alignment:.leading).frame(minHeight:44)
-                }.buttonStyle(.plain).foregroundStyle(Theme.accent)
+                }.buttonStyle(.plain).foregroundStyle(Theme.link)
             }
             if nutrition==nil{Notice(text:diary.t("أكمل بيانات هذا المكوّن قبل الحفظ.","Complete this component before logging."))}
         }.luqmaCard()

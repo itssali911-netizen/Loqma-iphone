@@ -23,7 +23,7 @@ from vision_compat import apply_vision_compat
 
 PRIMARY_TESTS = ('testFoodAddResizePersistenceAndDelete', 'testTabNavigationAndGoalsPersistAfterRelaunch',
                  'testLanguageSelectionPersistsAfterRelaunch', 'testRecipeDraftSurvivesIngredientSearch',
-                 'testNotificationPermissionAndReminderPersistence')
+                 'testNotificationPermissionAndReminderPersistence', 'testFitnessDraftApplyAndDeletePreserveDiary')
 DENIED_TESTS = ('testNotificationDeniedDoesNotClaimDelivery',)
 TESTS = PRIMARY_TESTS + DENIED_TESTS
 

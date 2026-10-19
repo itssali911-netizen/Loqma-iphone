@@ -47,7 +47,7 @@ import SwiftUI
                             SandowStateAlert(text:error)
                             if let url = try? RecipeImport.canonicalURL(link) {
                                 Link(destination: url) { Label(diary.t("فتح المصدر ونسخ الوصفة", "Open source and copy recipe"), systemImage: "arrow.up.right.square") }
-                                    .luqmaFont(.subheadline).foregroundStyle(Theme.accent)
+                                    .luqmaFont(.subheadline).foregroundStyle(Theme.link)
                             }
                         }
                     }
@@ -109,7 +109,7 @@ import SwiftUI
                     get: { draft?.servings ?? 0 }, set: { draft?.servings = $0 }))
                 if result.servings == nil || !(result.servings.map { $0.isFinite && $0 > 0 && $0 <= 1000 } ?? false) {
                     Text(diary.t("أدخل عدد الحصص لإكمال الوصفة.", "Enter the serving count to complete the recipe."))
-                        .luqmaFont(.caption).foregroundStyle(.orange)
+                        .luqmaFont(.caption).foregroundStyle(Theme.warning)
                 }
             }.luqmaCard()
 
@@ -154,8 +154,8 @@ import SwiftUI
                 }
                 ForEach(Array(result.steps.enumerated()), id: \.offset) { number, step in
                     HStack(alignment: .top, spacing: 12) {
-                        Text(String(number + 1)).luqmaFont(size:12,weight:.bold,relativeTo:.caption).foregroundStyle(Theme.accent)
-                            .frame(width: 30, height: 30).background(Theme.accent.opacity(0.12), in: RoundedRectangle(cornerRadius:10)).accessibilityHidden(true)
+                        Text(String(number + 1)).luqmaFont(size:12,weight:.bold,relativeTo:.caption).foregroundStyle(Theme.accentText)
+                            .frame(minWidth: 30, minHeight: 30).background(Theme.accent.opacity(0.12), in: RoundedRectangle(cornerRadius:10)).accessibilityHidden(true)
                         Text(DisplayFormat.westernDigits(step)).luqmaFont(.subheadline).frame(maxWidth: .infinity, alignment: .leading)
                     }.accessibilityElement(children: .combine)
                 }
@@ -300,11 +300,11 @@ import SwiftUI
             }
             if let quantity = ingredient.quantity {
                 Text("\(decimal(quantity)) \(unitLabel)").luqmaFont(.subheadline).foregroundStyle(Theme.muted)
-            } else { Text(diary.t("المقدار غير محدد", "Quantity unspecified")).luqmaFont(.caption).foregroundStyle(.orange) }
+            } else { Text(diary.t("المقدار غير محدد", "Quantity unspecified")).luqmaFont(.caption).foregroundStyle(Theme.warning) }
             if let nutrition = ingredient.nutrition {
                 HStack(alignment:.firstTextBaseline,spacing:5){Text(decimal(nutrition.kcal,0)).luqmaFont(size:24,weight:.bold,relativeTo:.title2).monospacedDigit().foregroundStyle(Theme.accent);Text(diary.t("سعرة","kcal")).luqmaFont(.caption).foregroundStyle(Theme.muted)}
                 HStack(spacing:12){ingredientMacro(diary.t("بروتين","Protein"),nutrition.protein);ingredientMacro(diary.t("كارب","Carbs"),nutrition.carbs);ingredientMacro(diary.t("دهون","Fat"),nutrition.fat)}.padding(12).background(Theme.surface,in:RoundedRectangle(cornerRadius:12))
-            } else { Text(diary.t("القيم الغذائية غير مكتملة", "Nutrition is incomplete")).luqmaFont(.caption).foregroundStyle(.orange) }
+            } else { Text(diary.t("القيم الغذائية غير مكتملة", "Nutrition is incomplete")).luqmaFont(.caption).foregroundStyle(Theme.warning) }
             if !ingredient.assumption.isEmpty { Text(DisplayFormat.westernDigits(ingredient.assumption)).luqmaFont(.caption).foregroundStyle(Theme.muted) }
             DisclosureGroup(diary.t("تعديل المكوّن", "Edit ingredient"), isExpanded: $editing) {
                 VStack(alignment: .leading, spacing: 12) {
@@ -323,7 +323,7 @@ import SwiftUI
                     nutrientInput(diary.t("البروتين (جم)", "Protein (g)"), value: $protein)
                     nutrientInput(diary.t("الكارب (جم)", "Carbs (g)"), value: $carbs)
                     nutrientInput(diary.t("الدهون (جم)", "Fat (g)"), value: $fat)
-                    if let error { Text(error).luqmaFont(.caption).foregroundStyle(.orange) }
+                    if let error { Text(error).luqmaFont(.caption).foregroundStyle(Theme.error) }
                     Button(diary.t("تطبيق القيم", "Apply values"), action: applyNutrition).buttonStyle(LuqmaSecondaryButtonStyle())
                     if nutritionPending {
                         Button(diary.t("إلغاء تعديلات القيم", "Discard value edits")) {

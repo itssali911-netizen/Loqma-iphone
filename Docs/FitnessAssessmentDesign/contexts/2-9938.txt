@@ -1,0 +1,168 @@
+const assetPathPrefix = "../assets";
+const imgIsBlackTrue = `${assetPathPrefix}/857e2.svg`;
+const imgSolidSearch = `${assetPathPrefix}/bc11f.svg`;
+const imgMonotoneRadioFilled = `${assetPathPrefix}/7d629.svg`;
+const imgMonotoneRadioFilled1 = `${assetPathPrefix}/34b5e.svg`;
+const imgSolidCloseX = `${assetPathPrefix}/53587.svg`;
+const imgMonotoneArrowRight = `${assetPathPrefix}/f24f8.svg`;
+const imgIPhoneXOrNewer = `${assetPathPrefix}/72f5b.svg`;
+
+type BottomPopupDrawerProps = {
+  className?: string;
+  isBlack?: "True";
+};
+
+function BottomPopupDrawer({ className, isBlack = "True" }: BottomPopupDrawerProps) {
+  return (
+    <div className={className || "h-[24px] relative w-[375px]"} data-node-id="2:6752">
+      <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIsBlackTrue} />
+    </div>
+  );
+}
+
+export default function ComprehensiveFitnessAssessment() {
+  return (
+    <div className="bg-[#393c43] overflow-clip relative rounded-[40px] size-full" data-node-id="2:9938" data-name="Comprehensive Fitness Assessment">
+      <div className="-translate-x-1/2 absolute bg-[#50535b] h-[150px] left-1/2 opacity-48 rounded-[24px] top-[124px] w-[297px]" data-node-id="2:9939" data-name="Rectangle" />
+      <div className="-translate-x-1/2 absolute bg-[#50535b] h-[150px] left-1/2 rounded-[32px] top-[140px] w-[343px]" data-node-id="2:9940" data-name="Rectangle" />
+      <div className="absolute bg-[#111214] drop-shadow-[0px_24px_24px_rgba(17,26,20,0.15)] h-[652px] left-0 rounded-[40px] top-[160px] w-[376px]" data-node-id="2:9941" data-name="Frame">
+        <div className="-translate-x-1/2 absolute bottom-0 h-[34px] left-[calc(50%-0.5px)] w-[375px]" data-node-id="2:9942" data-name="Home Indicator">
+          <div className="-translate-x-1/2 absolute bg-white bottom-[8px] h-[5px] left-[calc(50%+0.5px)] rounded-[2.2px] w-[134px]" data-node-id="I2:9942;2014:136065" data-name="Home Indicator" />
+        </div>
+        <div className="-translate-x-1/2 absolute content-stretch flex flex-col gap-[24px] items-start left-1/2 top-[63px]" data-node-id="2:9943" data-name="Frame">
+          <p className="[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[normal] min-w-full relative shrink-0 text-[20px] text-center text-white tracking-[-0.1px] w-[min-content]" data-node-id="2:9944">
+            All Supplements
+          </p>
+          <div className="content-stretch flex flex-col gap-[24px] items-center relative shrink-0" data-node-id="2:9945" data-name="Frame">
+            <div className="content-stretch flex flex-col gap-[16px] items-end relative shrink-0" data-node-id="2:9946" data-name="Frame">
+              <div className="bg-[#24262b] border border-[#f97316] border-solid content-stretch flex flex-col items-start overflow-clip p-[16px] relative rounded-[19px] shadow-[0px_0px_0px_4px_rgba(249,115,22,0.25)] shrink-0 w-[343px]" data-node-id="2:9947" data-name="Input Text">
+                <div className="content-stretch flex items-center justify-between relative shrink-0 w-full" data-node-id="I2:9947;41:3174" data-name="Content">
+                  <p className="[word-break:break-word] font-['Work_Sans:Medium'] font-medium leading-[normal] relative shrink-0 text-[16px] text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9947;41:3175">
+                    Search supplements...
+                  </p>
+                  <div className="relative shrink-0 size-[24px]" data-node-id="I2:9947;41:3176" data-name="Solid search">
+                    <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgSolidSearch} />
+                  </div>
+                </div>
+              </div>
+              <div className="content-stretch flex gap-[4px] items-center relative shrink-0 w-[344px]" data-node-id="2:9948" data-name="Frame">
+                <div className="content-stretch flex flex-[1_0_0] flex-col gap-[8px] items-start min-w-px relative" data-node-id="2:9949" data-name="Frame">
+                  <div className="bg-[#2563eb] content-stretch flex flex-col h-[48px] items-start justify-center overflow-clip p-[12px] relative rounded-[16px] shadow-[0px_0px_0px_4px_rgba(37,99,235,0.25)] shrink-0 w-full" data-node-id="2:9950" data-name="Frame">
+                    <div className="content-stretch flex gap-[8px] items-center relative shrink-0 w-full" data-node-id="I2:9950;758:131870" data-name="Text">
+                      <p className="[word-break:break-word] flex-[1_0_0] font-['Work_Sans:Medium'] font-medium leading-[normal] min-w-px relative text-[16px] text-white tracking-[-0.048px]" data-node-id="I2:9950;758:131871">
+                        Whey
+                      </p>
+                      <div className="relative shrink-0 size-[24px]" data-node-id="I2:9950;758:131872" data-name="Monotone radio filled">
+                        <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgMonotoneRadioFilled} />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-[#24262b] content-stretch flex flex-col h-[48px] items-start justify-center overflow-clip p-[12px] relative rounded-[16px] shrink-0 w-full" data-node-id="2:9951" data-name="Frame">
+                    <div className="content-stretch flex gap-[8px] items-center relative shrink-0 w-full" data-node-id="I2:9951;759:131909" data-name="Text">
+                      <p className="[word-break:break-word] flex-[1_0_0] font-['Work_Sans:Medium'] font-medium leading-[normal] min-w-px relative text-[16px] text-white tracking-[-0.048px]" data-node-id="I2:9951;759:131910">
+                        Protein
+                      </p>
+                      <div className="relative shrink-0 size-[24px]" data-node-id="I2:9951;759:131911" data-name="Monotone radio filled">
+                        <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgMonotoneRadioFilled1} />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-[#2563eb] content-stretch flex flex-col h-[48px] items-start justify-center overflow-clip p-[12px] relative rounded-[16px] shadow-[0px_0px_0px_4px_rgba(37,99,235,0.25)] shrink-0 w-full" data-node-id="2:9952" data-name="Frame">
+                    <div className="content-stretch flex gap-[8px] items-center relative shrink-0 w-full" data-node-id="I2:9952;758:131870" data-name="Text">
+                      <p className="[word-break:break-word] flex-[1_0_0] font-['Work_Sans:Medium'] font-medium leading-[normal] min-w-px relative text-[16px] text-white tracking-[-0.048px]" data-node-id="I2:9952;758:131871">
+                        BCAAs
+                      </p>
+                      <div className="relative shrink-0 size-[24px]" data-node-id="I2:9952;758:131872" data-name="Monotone radio filled">
+                        <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgMonotoneRadioFilled} />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-[#24262b] content-stretch flex flex-col h-[48px] items-start justify-center overflow-clip p-[12px] relative rounded-[16px] shrink-0 w-full" data-node-id="2:9953" data-name="Frame">
+                    <div className="content-stretch flex gap-[8px] items-center relative shrink-0 w-full" data-node-id="I2:9953;759:131909" data-name="Text">
+                      <p className="[word-break:break-word] flex-[1_0_0] font-['Work_Sans:Medium'] font-medium leading-[normal] min-w-px relative text-[16px] text-white tracking-[-0.048px]" data-node-id="I2:9953;759:131910">
+                        Vitamin D
+                      </p>
+                      <div className="relative shrink-0 size-[24px]" data-node-id="I2:9953;759:131911" data-name="Monotone radio filled">
+                        <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgMonotoneRadioFilled1} />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-[#24262b] content-stretch flex flex-col h-[48px] items-start justify-center overflow-clip p-[12px] relative rounded-[16px] shrink-0 w-full" data-node-id="2:9954" data-name="Frame">
+                    <div className="content-stretch flex gap-[8px] items-center relative shrink-0 w-full" data-node-id="I2:9954;759:131909" data-name="Text">
+                      <p className="[word-break:break-word] flex-[1_0_0] font-['Work_Sans:Medium'] font-medium leading-[normal] min-w-px relative text-[16px] text-white tracking-[-0.048px]" data-node-id="I2:9954;759:131910">
+                        Magnesium
+                      </p>
+                      <div className="relative shrink-0 size-[24px]" data-node-id="I2:9954;759:131911" data-name="Monotone radio filled">
+                        <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgMonotoneRadioFilled1} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-row items-center self-stretch" data-node-id="2:9955">
+                  <div className="content-stretch flex h-full items-start pl-[4px] py-[8px] relative shrink-0 w-[8px]" data-name="Scroll Bar">
+                    <div className="bg-[#393c43] flex-[1_0_0] h-full min-w-px relative rounded-[1px]" data-node-id="I2:9955;762:136277" data-name="Base">
+                      <div className="absolute h-[312px] left-0 top-0 w-[4px]" data-node-id="I2:9955;762:136278" data-name="Frame">
+                        <div className="-translate-y-1/2 absolute bg-[#676c75] h-[96px] left-0 right-0 rounded-[1.5px] top-[calc(50%-48px)]" data-node-id="I2:9955;762:136279" data-name="Bar" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="content-stretch flex gap-[12px] items-center relative shrink-0" data-node-id="2:9956" data-name="Frame">
+              <p className="[word-break:break-word] font-['Work_Sans:Medium'] font-medium leading-[normal] relative shrink-0 text-[12px] text-white tracking-[-0.018px] whitespace-nowrap" data-node-id="2:9957">
+                Selected
+              </p>
+              <div className="content-stretch flex gap-[8px] items-start relative shrink-0" data-node-id="2:9958" data-name="Frame">
+                <div className="bg-[#172554] content-stretch flex h-[28px] items-center justify-center overflow-clip px-[8px] py-[6px] relative rounded-[9px] shrink-0" data-node-id="2:9959" data-name="Tag Master">
+                  <div className="content-stretch flex gap-[4px] items-center justify-center relative shrink-0" data-node-id="I2:9959;765:39801" data-name="Frame">
+                    <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[#2563eb] text-[14px] text-center tracking-[-0.028px] whitespace-nowrap" data-node-id="I2:9959;765:39802">
+                      BCAAs
+                    </p>
+                    <div className="relative shrink-0 size-[16px]" data-node-id="I2:9959;765:39803" data-name="Solid close x">
+                      <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgSolidCloseX} />
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-[#172554] content-stretch flex h-[28px] items-center justify-center overflow-clip px-[8px] py-[6px] relative rounded-[9px] shrink-0" data-node-id="2:9960" data-name="Tag Master">
+                  <div className="content-stretch flex gap-[4px] items-center justify-center relative shrink-0" data-node-id="I2:9960;765:39801" data-name="Frame">
+                    <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[#2563eb] text-[14px] text-center tracking-[-0.028px] whitespace-nowrap" data-node-id="I2:9960;765:39802">
+                      Omega-3
+                    </p>
+                    <div className="relative shrink-0 size-[16px]" data-node-id="I2:9960;765:39803" data-name="Solid close x">
+                      <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgSolidCloseX} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-[#f97316] content-stretch flex h-[56px] items-center justify-center px-[28px] py-[16px] relative rounded-[19px] shrink-0 w-[343px]" data-node-id="2:9961" data-name="Button Primary Icon">
+            <div className="content-stretch flex gap-[12px] items-center justify-center relative shrink-0" data-node-id="I2:9961;40:2535" data-name="Content">
+              <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9961;40:2536">
+                Apply
+              </p>
+              <div className="relative shrink-0 size-[24px]" data-node-id="I2:9961;40:2537" data-name="Monotone arrow right">
+                <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgMonotoneArrowRight} />
+              </div>
+            </div>
+          </div>
+        </div>
+        <BottomPopupDrawer className="absolute h-[24px] left-0 top-0 w-[375px]" />
+      </div>
+      <div className="absolute h-[44px] left-0 top-0 w-[375px]" data-node-id="2:9963" data-name="iPhone X or newer">
+        <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIPhoneXOrNewer} />
+      </div>
+    </div>
+  );
+}
+SUPER CRITICAL: The generated React+Tailwind code MUST be converted to match the target project's technology stack and styling system.
+1. Analyze the target codebase to identify: technology stack, styling approach, component patterns, and design tokens
+2. Convert React syntax to the target framework/library
+3. Transform all Tailwind classes to the target styling system while preserving exact visual design
+4. Follow the project's existing patterns and conventions
+DO NOT install any Tailwind as a dependency unless the user instructs you to do so.
+
+Node ids have been added to the code as data attributes, e.g. `data-node-id="1:2"`.
+These styles are contained in the design: Sandow Gray/70: #50535B, Sandow Gray/White: #FFFFFF, Text xl/Bold: Font(family: "Work Sans", style: Bold, size: 20, weight: 700, lineHeight: 100, letterSpacing: -0.5), Text md/Medium: Font(family: "Work Sans", style: Medium, size: 16, weight: 500, lineHeight: 100, letterSpacing: -0.30000001192092896), Sandow Gray/90: #24262B, Pulse Orange/50: #F97316, Focus/ring-orange: Effect(type: DROP_SHADOW, color: #F9731640, offset: (0, 0), radius: 0, spread: 4), Tabata Blue/60: #2563EB, Focus/ring-blue: Effect(type: DROP_SHADOW, color: #2563EB40, offset: (0, 0), radius: 0, spread: 4), Sandow Gray/60: #676C75, Sandow Gray/80: #393C43, Text xs/Medium: Font(family: "Work Sans", style: Medium, size: 12, weight: 500, lineHeight: 100, letterSpacing: -0.15000000596046448), Text sm/SemiBold: Font(family: "Work Sans", style: SemiBold, size: 14, weight: 600, lineHeight: 100, letterSpacing: -0.20000000298023224), Tabata Blue/70: #1D4ED8, Tabata Blue/100: #172554, Text md/SemiBold: Font(family: "Work Sans", style: SemiBold, size: 16, weight: 600, lineHeight: 100, letterSpacing: -0.30000001192092896), Sandow Gray/100: #111214, Shadow/xl: Effect(type: DROP_SHADOW, color: #111A1426, offset: (0, 24), radius: 48, spread: 0).
+The generated code contains image and SVG URL constants, e.g. const image = `${assetPathPrefix}/<asset file name>`, where assetPathPrefix is declared once at the top of the code and every asset URL interpolates it. URLs were downloaded; the local assets directory is the durable reference. Download each asset into the project with curl -L, then replace its URL in the generated code with a reference to the downloaded asset. Never use the temporary URLs as runtime image sources.

@@ -1,0 +1,105 @@
+const assetPathPrefix = "../assets";
+const imgIsBlackFalse = `${assetPathPrefix}/49b57.svg`;
+const imgIPhoneXOrNewer = `${assetPathPrefix}/14254.svg`;
+const imgMonotoneChevronLeft = `${assetPathPrefix}/7c9b3.svg`;
+const imgSolidArrowRightSm = `${assetPathPrefix}/e196a.svg`;
+const imgSolidArrowRightSm1 = `${assetPathPrefix}/231db.svg`;
+const imgMonotoneArrowRight = `${assetPathPrefix}/f24f8.svg`;
+
+type HomeIndicatorProps = {
+  className?: string;
+  isBlack?: "False";
+};
+
+function HomeIndicator({ className, isBlack = "False" }: HomeIndicatorProps) {
+  return (
+    <div className={className || "h-[34px] relative w-[375px]"} data-node-id="2:4510">
+      <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIsBlackFalse} />
+    </div>
+  );
+}
+
+export default function ComprehensiveFitnessAssessment() {
+  return (
+    <div className="bg-[#111214] overflow-clip relative rounded-[40px] size-full" data-node-id="2:9964" data-name="Comprehensive Fitness Assessment">
+      <div className="absolute h-[44px] left-0 top-0 w-[375px]" data-node-id="2:9965" data-name="iPhone X or newer">
+        <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIPhoneXOrNewer} />
+      </div>
+      <HomeIndicator className="-translate-x-1/2 absolute bottom-0 h-[34px] left-1/2 w-[375px]" />
+      <div className="-translate-x-1/2 absolute content-stretch flex gap-[12px] items-center left-1/2 top-[60px] w-[343px]" data-node-id="2:9967" data-name="Top Nav">
+        <div className="bg-[#393c43] content-stretch flex items-center justify-center relative rounded-[18px] shrink-0 size-[48px]" data-node-id="I2:9967;41:4259" data-name="Button Container">
+          <div className="relative shrink-0 size-[24px]" data-node-id="I2:9967;41:4260" data-name="Monotone chevron left">
+            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgMonotoneChevronLeft} />
+          </div>
+        </div>
+        <p className="[word-break:break-word] flex-[1_0_0] font-['Work_Sans:Bold'] font-bold leading-[normal] min-w-px relative text-[20px] text-white tracking-[-0.1px]" data-node-id="I2:9967;41:4261">
+          Assessment
+        </p>
+        <div className="bg-[#172554] content-stretch flex h-[32px] items-center justify-center overflow-clip px-[12px] py-[6px] relative rounded-[11px] shrink-0" data-node-id="I2:9967;153:22995" data-name="Tag Master">
+          <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[#2563eb] text-[14px] text-center tracking-[-0.028px] whitespace-nowrap" data-node-id="I2:9967;153:22995;765:39751">
+            13 of 17
+          </p>
+        </div>
+      </div>
+      <div className="absolute content-stretch flex flex-col gap-[58px] items-start left-[16px] top-[148px]" data-node-id="2:9968" data-name="Frame">
+        <p className="[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[38px] relative shrink-0 text-[30px] text-center text-white tracking-[-0.3px] w-[343px]" data-node-id="2:9969">
+          What’s Your Calorie Goal per day?
+        </p>
+        <div className="content-stretch flex flex-col gap-[40px] items-center relative shrink-0" data-node-id="2:9970" data-name="Frame">
+          <div className="bg-[#393c43] content-stretch flex items-start p-[4px] relative rounded-[20px] shrink-0 w-[343px]" data-node-id="2:9971" data-name="Tab Group Text">
+            <div className="bg-[#676c75] content-stretch flex flex-[1_0_0] flex-col h-[56px] items-center justify-center min-w-px overflow-clip px-[16px] py-[8px] relative rounded-[19px] shadow-[0px_0px_0px_4px_rgba(129,133,141,0.25)]" data-node-id="I2:9971;763:37436" data-name="Tab Single">
+              <p className="[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[16px] text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9971;763:37436;763:37411">
+                Kcal
+              </p>
+            </div>
+            <div className="content-stretch flex flex-[1_0_0] flex-col h-[56px] items-center justify-center min-w-px overflow-clip px-[16px] py-[8px] relative rounded-[19px]" data-node-id="I2:9971;763:37440" data-name="Tab Single">
+              <p className="[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[#9ea0a5] text-[16px] tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9971;763:37440;763:37422">
+                Joule’s
+              </p>
+            </div>
+          </div>
+          <div className="[word-break:break-word] content-stretch flex flex-col gap-[12px] items-center relative shrink-0 text-center" data-node-id="2:9972" data-name="Frame">
+            <p className="font-['Work_Sans:ExtraBold'] font-extrabold leading-none relative shrink-0 text-[96px] text-white tracking-[-1.92px] w-full" data-node-id="2:9973">
+              1,550
+            </p>
+            <p className="font-['Work_Sans:Medium'] font-medium leading-[normal] relative shrink-0 text-[#d7d8d9] text-[24px] tracking-[-0.192px] w-full" data-node-id="2:9974">
+              calories daily
+            </p>
+          </div>
+          <div className="content-stretch flex gap-[16px] items-center relative shrink-0 w-[240px]" data-node-id="2:9975" data-name="Frame">
+            <div className="bg-[#393c43] flex-[1_0_0] h-[64px] min-w-px overflow-clip relative rounded-[21px]" data-node-id="2:9976" data-name="Button Icon FAB">
+              <div className="-translate-x-1/2 -translate-y-1/2 absolute left-1/2 size-[24px] top-1/2" data-node-id="I2:9976;42:5323" data-name="Solid arrow right sm">
+                <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgSolidArrowRightSm} />
+              </div>
+            </div>
+            <div className="bg-[#f97316] flex-[1_0_0] h-[64px] min-w-px overflow-clip relative rounded-[21px] shadow-[0px_0px_0px_4px_rgba(249,115,22,0.25)]" data-node-id="2:9977" data-name="Button Icon FAB">
+              <div className="-translate-x-1/2 -translate-y-1/2 absolute left-1/2 size-[24px] top-1/2" data-node-id="I2:9977;42:5323" data-name="Solid arrow right sm">
+                <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgSolidArrowRightSm1} />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="bg-[#f97316] content-stretch flex h-[56px] items-center justify-center px-[28px] py-[16px] relative rounded-[19px] shrink-0 w-[343px]" data-node-id="2:9978" data-name="Button Primary Icon">
+          <div className="content-stretch flex gap-[12px] items-center justify-center relative shrink-0" data-node-id="I2:9978;40:2535" data-name="Content">
+            <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9978;40:2536">
+              Continue
+            </p>
+            <div className="relative shrink-0 size-[24px]" data-node-id="I2:9978;40:2537" data-name="Monotone arrow right">
+              <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgMonotoneArrowRight} />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+SUPER CRITICAL: The generated React+Tailwind code MUST be converted to match the target project's technology stack and styling system.
+1. Analyze the target codebase to identify: technology stack, styling approach, component patterns, and design tokens
+2. Convert React syntax to the target framework/library
+3. Transform all Tailwind classes to the target styling system while preserving exact visual design
+4. Follow the project's existing patterns and conventions
+DO NOT install any Tailwind as a dependency unless the user instructs you to do so.
+
+Node ids have been added to the code as data attributes, e.g. `data-node-id="1:2"`.
+These styles are contained in the design: Sandow Gray/White: #FFFFFF, Sandow Gray/20: #D7D8D9, Sandow Gray/80: #393C43, Text xl/Bold: Font(family: "Work Sans", style: Bold, size: 20, weight: 700, lineHeight: 100, letterSpacing: -0.5), Tabata Blue/60: #2563EB, Text sm/SemiBold: Font(family: "Work Sans", style: SemiBold, size: 14, weight: 600, lineHeight: 100, letterSpacing: -0.20000000298023224), Tabata Blue/100: #172554, Heading sm/Bold: Font(family: "Work Sans", style: Bold, size: 30, weight: 700, lineHeight: 38, letterSpacing: -1), Text md/Bold: Font(family: "Work Sans", style: Bold, size: 16, weight: 700, lineHeight: 100, letterSpacing: -0.30000001192092896), Sandow Gray/60: #676C75, Focus/ring-gray: Effect(type: DROP_SHADOW, color: #81858D40, offset: (0, 0), radius: 0, spread: 4), Sandow Gray/40: #9EA0A5, Display sm/ExtraBold: Font(family: "Work Sans", style: ExtraBold, size: 96, weight: 800, lineHeight: 1, letterSpacing: -2), Text 2xl/Medium: Font(family: "Work Sans", style: Medium, size: 24, weight: 500, lineHeight: 100, letterSpacing: -0.800000011920929), Pulse Orange/50: #F97316, Focus/ring-orange: Effect(type: DROP_SHADOW, color: #F9731640, offset: (0, 0), radius: 0, spread: 4), Text md/SemiBold: Font(family: "Work Sans", style: SemiBold, size: 16, weight: 600, lineHeight: 100, letterSpacing: -0.30000001192092896), Sandow Gray/100: #111214.
+The generated code contains image and SVG URL constants, e.g. const image = `${assetPathPrefix}/<asset file name>`, where assetPathPrefix is declared once at the top of the code and every asset URL interpolates it. URLs were downloaded; the local assets directory is the durable reference. Download each asset into the project with curl -L, then replace its URL in the generated code with a reference to the downloaded asset. Never use the temporary URLs as runtime image sources.

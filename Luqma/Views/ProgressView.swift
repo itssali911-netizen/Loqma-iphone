@@ -16,12 +16,30 @@ struct ProgressViewScreen:View {
             Text(diary.t("اتجاه الوزن","Weight trend")).luqmaFont(size:13,weight:.semibold,relativeTo:.subheadline)
                 .accessibilityAddTraits(.isHeader)
             weightChart(snapshot)
+            fitnessProfile
             weightPlan
             weightHistory(snapshot.readings)
         }.padding(16).padding(.bottom,10)}.appBackground().navigationTitle(diary.t("تقدّمي","My progress"))
             .toolbar(.hidden,for:.navigationBar)
             .sheet(isPresented:$adding){WeightEditor()}
             .confirmationDialog(diary.t("حذف قراءة الوزن؟","Delete weight reading?"),isPresented:Binding(get:{deleting != nil},set:{if !$0{deleting=nil}}),titleVisibility:.visible){Button(diary.t("حذف","Delete"),role:.destructive){if let w=deleting{diary.removeWeight(w.day)};deleting=nil}}
+    }
+    private var fitnessProfile:some View {
+        NavigationLink{FitnessProfileView()}label:{VStack(alignment:.leading,spacing:10){
+            HStack(spacing:10){
+                Text(diary.t("خطة اللياقة الشخصية","Personal fitness plan")).luqmaFont(.headline).foregroundStyle(Theme.text)
+                Spacer(minLength:8)
+                Image(systemName:"chevron.forward").font(.system(size:13,weight:.medium)).foregroundStyle(Theme.muted)
+            }
+            if let profile=diary.state.fitnessProfile{
+                Text(profile.answers.goal?.title(diary.language) ?? "—").luqmaFont(.footnote).foregroundStyle(Theme.muted)
+                if diary.state.proposedFitnessPlan != nil{
+                    Text(diary.t("لديك معاينة جديدة للمراجعة؛ لم تتغير أهدافك الحالية.","A new preview is ready for review. Your current targets are unchanged.")).luqmaFont(.footnote).foregroundStyle(Theme.accentText)
+                }
+            }else{
+                Text(diary.t("تقييم قصير لتقدير التغذية والنشاط","A short assessment for nutrition and activity estimates")).luqmaFont(.footnote).foregroundStyle(Theme.muted)
+            }
+        }.luqmaCard()}.buttonStyle(.plain).accessibilityIdentifier("progress.fitnessProfile")
     }
     private var weightSummary:some View {VStack(alignment:.leading,spacing:16){
         if let latest=diary.state.weights.last {
@@ -44,7 +62,7 @@ struct ProgressViewScreen:View {
         }
         Button{adding=true}label:{Label(diary.t("تسجيل وزن","Log weight"),systemImage:"plus")
             .luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline)
-            .frame(maxWidth:.infinity,minHeight:44).foregroundStyle(Theme.text)
+            .frame(maxWidth:.infinity,minHeight:44).foregroundStyle(Theme.onAccent)
             .background(Theme.accent,in:RoundedRectangle(cornerRadius:12,style:.continuous))}.buttonStyle(.plain)
     }.luqmaCard()}
     private var weightPlan:some View {VStack(alignment:.leading,spacing:12){

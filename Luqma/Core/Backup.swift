@@ -41,6 +41,7 @@ enum DiaryValidation {
             try require((f.catalogID?.count ?? 0) <= 360 && (f.serving?.count ?? 0) <= 240 && (f.servingUnit?.count ?? 0) <= 240 && (f.servingQuantity.map { $0.isFinite && $0 > 0 && $0 <= 10000 } ?? true))
         }
         if let p = s.weightPlan { try p.validate() }
+        try FitnessAssessmentState.validate(s)
     }
     static func average(_ weights: [WeightReading], ending: String, days: Int = 7) -> (count: Int, kg: Double?) {
         let range = weights.filter { let n = WeightModel.days($0.day, ending); return n >= 0 && n < days }
@@ -95,6 +96,17 @@ enum Backup {
         if current.customFoods != nil || incoming.customFoods != nil || !currentPersonal.isEmpty || !incomingPersonal.isEmpty { result.customFoods = combine(currentPersonal, incomingPersonal, id: { $0.id }) }
         result.goals = incoming.goals.balanced(); result.weightPlan = incoming.weightPlan ?? current.weightPlan
         result.adaptive = incoming.adaptive && result.weightPlan != nil
+        // Restore the optional assessment as a coherent group. Older backups
+        // have no assessment keys and do not erase the existing local profile.
+        if incoming.fitnessProfile != nil {
+            result.fitnessProfile = incoming.fitnessProfile
+            result.proposedFitnessPlan = incoming.proposedFitnessPlan
+            result.appliedFitnessPlan = incoming.appliedFitnessPlan
+            result.fitnessDraft = incoming.fitnessDraft
+        } else if let draft = incoming.fitnessDraft {
+            result.fitnessDraft = draft
+        }
+        if let dismissed = incoming.fitnessOnboardingDismissed { result.fitnessOnboardingDismissed = dismissed }
         // Imported goals may use a different activity assumption. Require a
         // fresh opt-in before attaching current Health activity to those goals.
         HealthActivity.setGoalAssociation(false, in: &result)
