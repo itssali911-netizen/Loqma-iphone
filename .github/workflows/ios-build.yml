@@ -54,7 +54,7 @@ concurrency:
 jobs:
   build:
     runs-on: macos-26
-    timeout-minutes: 75
+    timeout-minutes: 90
     defaults:
       run:
         shell: bash
@@ -114,9 +114,9 @@ jobs:
 
       - name: Capture native SwiftUI screens
         if: success()
-        # Eight assessment/profile screens and a real per-launch font audit are
-        # added to the original capture set; retain room for a cold Debug build.
-        timeout-minutes: 30
+        # All 17 assessment pages, profile/review and three larger-text variants
+        # join the original capture set with actual per-launch font audits.
+        timeout-minutes: 35
         env:
           BUNDLE_ID: ${{ vars.BUNDLE_ID }}
           BUILD_NUMBER: ${{ github.run_number }}
@@ -143,7 +143,7 @@ jobs:
         env:
           BUNDLE_ID: ${{ vars.BUNDLE_ID }}
           BUILD_NUMBER: ${{ github.run_number }}
-        run: python3 Scripts/ui_preview.py --packages BuildOutput/Packages --app UIPreview/derived/Build/Products/Debug-iphonesimulator/Luqma.app --output UIReference --device-type com.apple.CoreSimulator.SimDeviceType.iPhone-13-mini --language en --screens today kitchen progress search macro-goals photo-estimate recipe-details notifications reminders state-error state-loading state-empty state-success assessment-goal assessment-gender assessment-review
+        run: python3 Scripts/ui_preview.py --packages BuildOutput/Packages --app UIPreview/derived/Build/Products/Debug-iphonesimulator/Luqma.app --output UIReference --device-type com.apple.CoreSimulator.SimDeviceType.iPhone-13-mini --language en --screens today kitchen progress search macro-goals photo-estimate recipe-details notifications reminders state-error state-loading state-empty state-success assessment-goal assessment-gender assessment-diet assessment-activity assessment-sleep assessment-review fitness-profile fitness-plan assessment-age assessment-height assessment-weight assessment-target assessment-pace assessment-experience assessment-training assessment-exercise assessment-recovery assessment-preferences assessment-safety
 
       - name: Reference-width captures and readiness report
         if: always()

@@ -15,7 +15,7 @@ import zlib
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "Scripts"))
 from ui_preview import (BuildError, DEVICE_TYPE, EXPECTED_SCREEN_COUNT, EXTRA_ROUTES, FITNESS_ROUTES, SimulatorSetupError,
-                        SCREENS, TEMPLATE_ROUTES, VARIANT_ROUTES,
+                        SCREENS, TEMPLATE_ROUTES, VARIANT_ROUTES, ASSESSMENT_EXTRA_ROUTES, ASSESSMENT_ACCESSIBILITY_ROUTES,
                         capture, capture_screenshot, collect_runtime_font_audit, decode_png, framebuffer_content,
                         png_details, preview_cases, validate_runtime_font_audit)
 
@@ -162,7 +162,7 @@ class CaptureRetryTests(unittest.TestCase):
     def test_all_routes_have_distinct_names_and_the_count_tracks_coverage(self):
         cases = preview_cases()
         self.assertEqual(EXPECTED_SCREEN_COUNT,
-                         len(SCREENS) + 2 + len(EXTRA_ROUTES) + len(TEMPLATE_ROUTES) + len(VARIANT_ROUTES) + len(FITNESS_ROUTES))
+                         len(SCREENS) + 2 + len(EXTRA_ROUTES) + len(TEMPLATE_ROUTES) + len(VARIANT_ROUTES) + len(FITNESS_ROUTES) + len(ASSESSMENT_EXTRA_ROUTES) + len(ASSESSMENT_ACCESSIBILITY_ROUTES))
         self.assertEqual(len(cases), EXPECTED_SCREEN_COUNT)
         self.assertEqual(len({case["screen"] for case in cases}), len(cases))
         self.assertTrue(all(case["arguments"] and all(isinstance(value, str) for value in case["arguments"])
@@ -194,6 +194,14 @@ class CaptureRetryTests(unittest.TestCase):
                 self.assertEqual(cases[screen]["arguments"], ["-loqma-preview-template", route])
                 self.assertTrue(cases[screen]["synthetic_fixture"])
                 self.assertTrue(cases[screen]["read_only_preview"])
+        extra = [case for case in cases.values() if "assessment_page" in case]
+        self.assertEqual({case["assessment_page"] for case in extra} | {0,1,7,11,13,16}, set(range(17)))
+        self.assertEqual(len(extra),14)
+        for case in extra:
+            self.assertTrue(case["synthetic_fixture"])
+            self.assertTrue(case["read_only_preview"])
+            self.assertEqual(case["arguments"][2:4],["-loqma-preview-assessment-page",str(case["assessment_page"])])
+        self.assertEqual(sum(case.get("dynamic_type_override")=="accessibility3" for case in extra),3)
 
 
 def synthetic_font_audit(pid=1234, accessibility=False):

@@ -162,7 +162,7 @@ struct RootView:View {
             case .language:NavigationStack{LuqmaLanguageView()}
             case .notifications:NavigationStack{NotificationsView()}
             case .reminders:NavigationStack{RemindersView()}
-            case .assessmentGoal:FitnessAssessmentView(previewPage:0)
+            case .assessmentGoal:FitnessAssessmentView(previewPage:assessmentPreviewPage)
             case .assessmentGender:FitnessAssessmentView(previewPage:1)
             case .assessmentDiet:FitnessAssessmentView(previewPage:13)
             case .assessmentActivity:FitnessAssessmentView(previewPage:7)
@@ -188,6 +188,12 @@ struct RootView:View {
             content()
         }}.environmentObject(fitnessPreviewStore)
             .onAppear{fitnessPreviewStore.change{$0.language=diary.language}}
+    }
+    private var assessmentPreviewPage:Int {
+        let arguments=ProcessInfo.processInfo.arguments
+        guard let index=arguments.firstIndex(of:"-loqma-preview-assessment-page"),arguments.indices.contains(index+1),
+              let value=Int(arguments[index+1]),(0...16).contains(value) else{return 0}
+        return value
     }
     private func writeFontAudit(){
         guard ProcessInfo.processInfo.arguments.contains("-loqma-preview-font-audit") else{return}

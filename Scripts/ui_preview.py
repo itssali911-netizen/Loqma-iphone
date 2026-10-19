@@ -73,12 +73,21 @@ FITNESS_ROUTES = (("assessment-goal", "assessmentGoal"),
                   ("assessment-review", "assessmentReview"),
                   ("fitness-profile", "fitnessProfile"),
                   ("fitness-plan", "fitnessPlan"))
+ASSESSMENT_EXTRA_ROUTES = (("assessment-age", 2), ("assessment-height", 3),
+                           ("assessment-weight", 4), ("assessment-target", 5),
+                           ("assessment-pace", 6), ("assessment-experience", 8),
+                           ("assessment-training", 9), ("assessment-exercise", 10),
+                           ("assessment-recovery", 12), ("assessment-preferences", 14),
+                           ("assessment-safety", 15))
+ASSESSMENT_ACCESSIBILITY_ROUTES = (("accessibility-assessment-goal", 0),
+                                  ("accessibility-assessment-age", 2),
+                                  ("accessibility-assessment-safety", 15))
 VARIANT_ROUTES = (("accessibility-today", ("-loqma-preview-overview", "-loqma-preview-accessibility")),
                   ("photo-components", ("-loqma-preview-photo", "-loqma-preview-photo-detailed")),
                   ("editorial-dinner", ("-loqma-preview-routine-dinner",)),
                   ("editorial-snack", ("-loqma-preview-routine-snack",)),
                   ("accessibility-editorial", ("-loqma-preview-accessibility", "-loqma-preview-editorial-expanded")))
-EXPECTED_SCREEN_COUNT = len(SCREENS) + 2 + len(EXTRA_ROUTES) + len(TEMPLATE_ROUTES) + len(VARIANT_ROUTES) + len(FITNESS_ROUTES)
+EXPECTED_SCREEN_COUNT = len(SCREENS) + 2 + len(EXTRA_ROUTES) + len(TEMPLATE_ROUTES) + len(VARIANT_ROUTES) + len(FITNESS_ROUTES) + len(ASSESSMENT_EXTRA_ROUTES) + len(ASSESSMENT_ACCESSIBILITY_ROUTES)
 MAX_EMPTY_FRAME_RETRIES = 2
 EMPTY_FRAME_RETRY_SECONDS = 5.0
 
@@ -106,6 +115,13 @@ def preview_cases() -> list[dict]:
                "arguments": ["-loqma-preview-template", route],
                "template_route": route, "read_only_preview": True,
                "synthetic_fixture": True} for screen, route in FITNESS_ROUTES]
+    cases += [{"tab": None, "screen": screen,
+               "arguments": ["-loqma-preview-template", "assessmentGoal", "-loqma-preview-assessment-page", str(page),
+                             *(["-loqma-preview-accessibility"] if screen.startswith("accessibility-") else [])],
+               "template_route": "assessmentGoal", "read_only_preview": True, "synthetic_fixture": True,
+               "assessment_page": page,
+               **({"dynamic_type_override": "accessibility3"} if screen.startswith("accessibility-") else {})}
+              for screen, page in ASSESSMENT_EXTRA_ROUTES + ASSESSMENT_ACCESSIBILITY_ROUTES]
     return cases
 
 
