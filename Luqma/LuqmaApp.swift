@@ -141,9 +141,13 @@ struct RootView:View {
                 }
             }
             #if DEBUG
-            .sheet(item:$templatePreview){route in templatePreviewContent(route)}
+            .sheet(item:$templatePreview){route in
+                templatePreviewContent(route)
+                    .modifier(NativePreviewFontAudit(scope:"template"))
+                    .environment(\.dynamicTypeSize,previewDynamicTypeSize)
+            }
+            .modifier(NativePreviewFontAudit(scope:"root",enabled:templatePreview == nil))
             .environment(\.dynamicTypeSize,ProcessInfo.processInfo.arguments.contains("-loqma-preview-accessibility") ? .accessibility3:typeSize)
-            .task{writeFontAudit()}
             #endif
     }
     #if DEBUG
@@ -195,18 +199,8 @@ struct RootView:View {
               let value=Int(arguments[index+1]),(0...16).contains(value) else{return 0}
         return value
     }
-    private func writeFontAudit(){
-        guard ProcessInfo.processInfo.arguments.contains("-loqma-preview-font-audit") else{return}
-        do{
-            let category:UIContentSizeCategory?=ProcessInfo.processInfo.arguments.contains("-loqma-preview-accessibility") ? .accessibilityExtraLarge:nil
-            let data=try JSONEncoder().encode(LTypography.runtimeFontAudit(category:category))
-            let audit=try JSONSerialization.jsonObject(with:data)
-            let contrasts=try JSONSerialization.jsonObject(with:JSONEncoder().encode(VisualDesignTokens.contrastAudit))
-            let envelope:[String:Any]=["processIdentifier":ProcessInfo.processInfo.processIdentifier,"fontAudit":audit,"contrastAudit":contrasts]
-            let encoded=try JSONSerialization.data(withJSONObject:envelope,options:[.prettyPrinted,.sortedKeys])
-            let folder=FileManager.default.urls(for:.documentDirectory,in:.userDomainMask)[0]
-            try encoded.write(to:folder.appendingPathComponent("luqma-font-audit.json"),options:.atomic)
-        }catch{print("Native font audit could not be written.")}
+    private var previewDynamicTypeSize:DynamicTypeSize {
+        ProcessInfo.processInfo.arguments.contains("-loqma-preview-accessibility") ? .accessibility3:typeSize
     }
     private func statePreview<Content:View>(@ViewBuilder content:()->Content)->some View {
         NavigationStack{ScrollView{VStack(spacing:24){
@@ -259,3 +253,53 @@ struct RootView:View {
             .accessibilityIdentifier(["nav.today","nav.kitchen","nav.progress","nav.settings"][value])
     }
 }
+
+#if DEBUG
+/// Read from the rendered subtree, including presentation boundaries. Command
+/// arguments request a preview size but are not evidence that it was received.
+private struct NativePreviewFontAudit:ViewModifier {
+    let scope:String
+    var enabled=true
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @ScaledMetric(relativeTo:.body) private var bodyPoints:CGFloat=16
+
+    func body(content:Content)->some View {
+        content.task(id:typeSize){writeAudit()}
+    }
+    private var observedSize:(name:String,category:UIContentSizeCategory) {
+        switch typeSize {
+        case .xSmall:return ("xSmall",.extraSmall)
+        case .small:return ("small",.small)
+        case .medium:return ("medium",.medium)
+        case .large:return ("large",.large)
+        case .xLarge:return ("xLarge",.extraLarge)
+        case .xxLarge:return ("xxLarge",.extraExtraLarge)
+        case .xxxLarge:return ("xxxLarge",.extraExtraExtraLarge)
+        case .accessibility1:return ("accessibility1",.accessibilityMedium)
+        case .accessibility2:return ("accessibility2",.accessibilityLarge)
+        case .accessibility3:return ("accessibility3",.accessibilityExtraLarge)
+        case .accessibility4:return ("accessibility4",.accessibilityExtraExtraLarge)
+        case .accessibility5:return ("accessibility5",.accessibilityExtraExtraExtraLarge)
+        @unknown default:return ("unrecognized",.large)
+        }
+    }
+    @MainActor private func writeAudit(){
+        guard enabled,ProcessInfo.processInfo.arguments.contains("-loqma-preview-font-audit") else{return}
+        do{
+            let data=try JSONEncoder().encode(LTypography.runtimeFontAudit(category:observedSize.category))
+            let audit=try JSONSerialization.jsonObject(with:data)
+            let contrasts=try JSONSerialization.jsonObject(with:JSONEncoder().encode(VisualDesignTokens.contrastAudit))
+            let envelope:[String:Any]=[
+                "processIdentifier":ProcessInfo.processInfo.processIdentifier,
+                "fontAudit":audit,"contrastAudit":contrasts,"renderingScope":scope,
+                "swiftUIDynamicTypeSize":observedSize.name,
+                "swiftUIIsAccessibilitySize":typeSize.isAccessibilitySize,
+                "swiftUIBodyPoints":Double(bodyPoints)
+            ]
+            let encoded=try JSONSerialization.data(withJSONObject:envelope,options:[.prettyPrinted,.sortedKeys])
+            let folder=FileManager.default.urls(for:.documentDirectory,in:.userDomainMask)[0]
+            try encoded.write(to:folder.appendingPathComponent("luqma-font-audit.json"),options:.atomic)
+        }catch{print("Native font audit could not be written.")}
+    }
+}
+#endif

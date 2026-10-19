@@ -125,7 +125,8 @@ def preview_cases() -> list[dict]:
     return cases
 
 
-def validate_runtime_font_audit(value: dict, pid: int, accessibility: bool) -> dict:
+def validate_runtime_font_audit(value: dict, pid: int, accessibility: bool,
+                                expected_scope: str | None = None) -> dict:
     """Check native UIFont registration AND actual CoreText shaped glyph runs.
 
     The app writes this DEBUG-only envelope after startup. The launch PID rejects
@@ -134,6 +135,26 @@ def validate_runtime_font_audit(value: dict, pid: int, accessibility: bool) -> d
     """
     if not isinstance(value, dict) or value.get("processIdentifier") != pid:
         raise BuildError("Runtime font audit is stale or has no matching application process ID.")
+    scope = value.get("renderingScope")
+    if (not isinstance(scope, str) or scope not in {"root", "template"} or
+            (expected_scope is not None and (not isinstance(expected_scope, str) or expected_scope not in {"root", "template"} or scope != expected_scope))):
+        raise BuildError("Runtime font audit has the wrong rendering scope for this captured view.")
+    actual_size = value.get("swiftUIDynamicTypeSize")
+    actual_accessibility = value.get("swiftUIIsAccessibilitySize")
+    body_points = value.get("swiftUIBodyPoints")
+    normal_sizes = {"xSmall", "small", "medium", "large", "xLarge", "xxLarge", "xxxLarge"}
+    accessibility_sizes = {"accessibility1", "accessibility2", "accessibility3", "accessibility4", "accessibility5"}
+    if (not isinstance(actual_size, str) or actual_size not in normal_sizes | accessibility_sizes or
+            type(actual_accessibility) is not bool or actual_accessibility != (actual_size in accessibility_sizes)):
+        raise BuildError("Runtime font audit lacks a valid actual SwiftUI Dynamic Type environment.")
+    if (not isinstance(body_points, (int, float)) or isinstance(body_points, bool) or
+            not math.isfinite(body_points) or body_points <= 0):
+        raise BuildError("Runtime font audit has an invalid actual SwiftUI body size.")
+    if accessibility:
+        if actual_size != "accessibility3" or actual_accessibility is not True or body_points <= 16:
+            raise BuildError("Accessibility preview did not actually scale its SwiftUI environment to accessibility3.")
+    elif actual_accessibility or actual_size not in normal_sizes:
+        raise BuildError("Ordinary preview unexpectedly uses an accessibility SwiftUI Dynamic Type environment.")
     audit = value.get("fontAudit")
     if not isinstance(audit, dict) or audit.get("source") != "Actual UIKit fonts and CoreText shaped runs from LuqmaTypography":
         raise BuildError("Runtime font audit lacks native UIKit/CoreText provenance.")
@@ -174,13 +195,20 @@ def validate_runtime_font_audit(value: dict, pid: int, accessibility: bool) -> d
             raise BuildError("Accessibility preview fonts did not actually scale above their base size.")
         actual_fonts.update((latin, arabic))
     category = audit.get("contentSizeCategory", "")
-    if not isinstance(category, str) or not category or (accessibility and "Accessibility" not in category):
+    if (not isinstance(category, str) or not category or
+            ("Accessibility" in category) != actual_accessibility):
         raise BuildError("Runtime font audit has the wrong Dynamic Type category for this capture.")
+    body = next(entry for entry in entries if entry["role"] == "body")
+    if abs(body["basePoints"] - 16) > 0.000001 or abs(body["scaledPoints"] - body_points) > 0.5:
+        raise BuildError("Actual SwiftUI body size does not match the measured body font role.")
     emoji = audit.get("emojiFonts")
     if not isinstance(emoji, list) or not any(isinstance(font, str) and "emoji" in font.lower() for font in emoji):
         raise BuildError("Runtime audit did not resolve the emoji sample through the system emoji cascade.")
     return {"passed": True, "process_id": pid, "roles_checked": len(entries),
             "actual_postscript_fonts": sorted(actual_fonts), "content_size_category": category,
+            "rendering_scope": scope, "swiftui_dynamic_type_size": actual_size,
+            "swiftui_body_points": body_points, "swiftui_is_accessibility_size": actual_accessibility,
+            "swiftui_body_matches_role": True,
             "accessibility_scaling_verified": accessibility,
             "zero_missing_glyphs": True, "emoji_fonts": emoji}
 
@@ -203,7 +231,11 @@ def collect_runtime_font_audit(output: Path, device: str, bundle: str,
         value = json.loads(data)
     except (ValueError, UnicodeError) as error:
         raise BuildError("The launched app's runtime font audit is not valid JSON.") from error
-    details = validate_runtime_font_audit(value, pid, accessibility)
+    case = next((item for item in preview_cases() if item["screen"] == screen), None)
+    if case is None:
+        raise BuildError("Runtime font audit has no recognized captured view route.")
+    expected_scope = "template" if "template_route" in case else "root"
+    details = validate_runtime_font_audit(value, pid, accessibility, expected_scope=expected_scope)
     return {**details, "file": target.relative_to(output).as_posix(), "sha256": hashlib.sha256(data).hexdigest()}
 
 

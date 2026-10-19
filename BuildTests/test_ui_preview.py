@@ -204,7 +204,7 @@ class CaptureRetryTests(unittest.TestCase):
         self.assertEqual(sum(case.get("dynamic_type_override")=="accessibility3" for case in extra),3)
 
 
-def synthetic_font_audit(pid=1234, accessibility=False):
+def synthetic_font_audit(pid=1234, accessibility=False, scope="root"):
     """Validator input only: this fixture is never used as native font evidence."""
     roles = ["display", "screenTitle", "sectionTitle", "headline", "body", "subheadline",
              "helper", "caption", "caption2", "button", "metric", "legacyLightPromoted"]
@@ -215,7 +215,10 @@ def synthetic_font_audit(pid=1234, accessibility=False):
                 "registered": True, "passed": True, "basePoints": 16,
                 "scaledPoints": 32 if accessibility else 16, "lineHeight": 40 if accessibility else 20,
                 "effectiveWeight": "regular"} for role in roles]
-    return {"processIdentifier": pid, "fontAudit": {
+    return {"processIdentifier": pid, "renderingScope": scope,
+            "swiftUIDynamicTypeSize": "accessibility3" if accessibility else "large",
+            "swiftUIBodyPoints": 32 if accessibility else 16,
+            "swiftUIIsAccessibilitySize": accessibility, "fontAudit": {
         "source": "Actual UIKit fonts and CoreText shaped runs from LuqmaTypography", "passed": True,
         "entries": entries, "emojiFonts": ["AppleColorEmoji"],
         "contentSizeCategory": "UICTContentSizeCategoryAccessibilityXXXL" if accessibility else "UICTContentSizeCategoryL"}}
@@ -224,7 +227,13 @@ def synthetic_font_audit(pid=1234, accessibility=False):
 class RuntimeFontAuditTests(unittest.TestCase):
     def test_registered_names_and_actual_shaped_runs_are_both_required(self):
         value = synthetic_font_audit()
-        self.assertTrue(validate_runtime_font_audit(value, 1234, False)["passed"])
+        details = validate_runtime_font_audit(value, 1234, False)
+        self.assertTrue(details["passed"])
+        self.assertEqual(details["rendering_scope"], "root")
+        self.assertEqual(details["swiftui_dynamic_type_size"], "large")
+        self.assertEqual(details["swiftui_body_points"], 16)
+        self.assertFalse(details["swiftui_is_accessibility_size"])
+        self.assertTrue(details["swiftui_body_matches_role"])
         value["fontAudit"]["entries"][0]["arabicRuns"] = [".SFArabic-Regular"]
         with self.assertRaisesRegex(BuildError, "shaping"):
             validate_runtime_font_audit(value, 1234, False)
@@ -232,6 +241,13 @@ class RuntimeFontAuditTests(unittest.TestCase):
     def test_matching_process_id_rejects_stale_previous_launch(self):
         with self.assertRaisesRegex(BuildError, "process ID"):
             validate_runtime_font_audit(synthetic_font_audit(pid=42), 1234, False)
+        for scope in (None, "unknown", 1, ["root"]):
+            with self.subTest(scope=scope), self.assertRaisesRegex(BuildError, "scope"):
+                value = synthetic_font_audit(); value["renderingScope"] = scope
+                validate_runtime_font_audit(value, 1234, False)
+        for scope, expected in (("root", "template"), ("template", "root")):
+            with self.subTest(scope=scope, expected=expected), self.assertRaisesRegex(BuildError, "scope"):
+                validate_runtime_font_audit(synthetic_font_audit(scope=scope), 1234, False, expected_scope=expected)
 
     def test_missing_glyphs_fail_even_when_app_summary_claims_passed(self):
         value = synthetic_font_audit()
@@ -247,6 +263,22 @@ class RuntimeFontAuditTests(unittest.TestCase):
         value["fontAudit"]["contentSizeCategory"] = "UICTContentSizeCategoryL"
         with self.assertRaisesRegex(BuildError, "Dynamic Type"):
             validate_runtime_font_audit(value, 1234, True)
+        for size, flag in (("accessibility2", True), ("large", False)):
+            with self.subTest(size=size), self.assertRaisesRegex(BuildError, "scale"):
+                value = synthetic_font_audit(accessibility=True)
+                value.update(swiftUIDynamicTypeSize=size, swiftUIIsAccessibilitySize=flag)
+                validate_runtime_font_audit(value, 1234, True)
+        with self.assertRaisesRegex(BuildError, "accessibility"):
+            validate_runtime_font_audit(synthetic_font_audit(accessibility=True), 1234, False)
+        value = synthetic_font_audit()
+        value["fontAudit"]["contentSizeCategory"] = "UICTContentSizeCategoryAccessibilityXXXL"
+        with self.assertRaisesRegex(BuildError, "Dynamic Type"):
+            validate_runtime_font_audit(value, 1234, False)
+        for key, new_value in (("swiftUIIsAccessibilitySize", 1), ("swiftUIIsAccessibilitySize", False),
+                               ("swiftUIDynamicTypeSize", "unsupported"), ("swiftUIBodyPoints", 16)):
+            with self.subTest(field=key, value=new_value), self.assertRaises(BuildError):
+                value = synthetic_font_audit(accessibility=True); value[key] = new_value
+                validate_runtime_font_audit(value, 1234, True)
 
     def test_missing_roles_thin_weight_and_invalid_measured_size_fail(self):
         for change, message in ((lambda value: value["fontAudit"]["entries"].pop(), "roles"),
@@ -257,6 +289,21 @@ class RuntimeFontAuditTests(unittest.TestCase):
                 change(value)
                 with self.assertRaisesRegex(BuildError, message):
                     validate_runtime_font_audit(value, 1234, False)
+        for field, new_value in (("swiftUIBodyPoints", float("nan")), ("swiftUIBodyPoints", True),
+                                 ("swiftUIBodyPoints", 0), ("swiftUIBodyPoints", "16")):
+            with self.subTest(field=field, value=new_value), self.assertRaisesRegex(BuildError, "size"):
+                value = synthetic_font_audit(); value[field] = new_value
+                validate_runtime_font_audit(value, 1234, False)
+        for change in (lambda value: value.update(swiftUIBodyPoints=17),
+                       lambda value: next(entry for entry in value["fontAudit"]["entries"] if entry["role"] == "body").update(basePoints=15)):
+            with self.subTest(body_mismatch=True), self.assertRaisesRegex(BuildError, "body"):
+                value = synthetic_font_audit(); change(value)
+                validate_runtime_font_audit(value, 1234, False)
+        value = synthetic_font_audit(); value["swiftUIBodyPoints"] = 16.49
+        self.assertTrue(validate_runtime_font_audit(value, 1234, False)["swiftui_body_matches_role"])
+        value["swiftUIBodyPoints"] = 16.500001
+        with self.assertRaisesRegex(BuildError, "body"):
+            validate_runtime_font_audit(value, 1234, False)
 
     def test_native_audit_bytes_are_preserved_before_failed_validation(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -272,6 +319,20 @@ class RuntimeFontAuditTests(unittest.TestCase):
                 with self.assertRaisesRegex(BuildError, "process ID"):
                     collect_runtime_font_audit(output, "created-device", "app.luqma.diary", "today", 1234, 1, False)
             self.assertEqual((output / "font-audits/01-today.json").read_bytes(), data)
+            # A matching PID from RootView is insufficient for a presented
+            # template. Check the actual template environment, then its bytes.
+            value = synthetic_font_audit(accessibility=True)
+            source.write_text(json.dumps(value), encoding="utf-8")
+            with patch("ui_preview.command", return_value=str(container)):
+                with self.assertRaisesRegex(BuildError, "scope"):
+                    collect_runtime_font_audit(output, "created-device", "app.luqma.diary", "accessibility-assessment-age", 1234, 2, True)
+                value["renderingScope"] = "template"
+                data = json.dumps(value).encode(); source.write_bytes(data)
+                details = collect_runtime_font_audit(output, "created-device", "app.luqma.diary", "accessibility-assessment-age", 1234, 2, True)
+            self.assertEqual(details["rendering_scope"], "template")
+            self.assertTrue(details["swiftui_is_accessibility_size"])
+            self.assertEqual(details["sha256"], hashlib.sha256(data).hexdigest())
+            self.assertEqual((output / "font-audits/02-accessibility-assessment-age.json").read_bytes(), data)
 
 
 class SimulatorIntegrationTests(unittest.TestCase):
