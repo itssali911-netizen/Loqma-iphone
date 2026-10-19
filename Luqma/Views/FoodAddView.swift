@@ -275,7 +275,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
             Button{openBarcodeCamera()}label:{Label(diary.t("مسح الباركود","Scan barcode"),systemImage:"barcode.viewfinder")}.buttonStyle(LuqmaPrimaryButtonStyle())
             PhotosPicker(selection:$photo,matching:.images){Label(diary.t("قراءة باركود من صورة","Read a barcode photo"),systemImage:"photo")}
             DisclosureGroup(diary.t("كتابة رقم الباركود","Enter barcode number")) {
-                HStack{TextField(diary.t("رقم الباركود","Barcode number"),text:$code).keyboardType(.numberPad).environment(\.layoutDirection,.leftToRight);Button(diary.t("بحث","Look up")){startLookup()}.disabled(busy || code.isEmpty)}.padding(.vertical,12)
+                HStack{TextField(diary.t("رقم الباركود","Barcode number"),text:$code,prompt:Text(diary.t("رقم الباركود","Barcode number")).foregroundColor(Theme.muted)).keyboardType(.numberPad).environment(\.layoutDirection,.leftToRight);Button(diary.t("بحث","Look up")){startLookup()}.disabled(busy || code.isEmpty)}.padding(.vertical,12)
             }.luqmaCard()
             let scanned=diary.state.barcodeHistory.filter(FoodSearch.isCatalogFood)
             if !scanned.isEmpty {recent(diary.t("آخر المنتجات الممسوحة","Recently scanned products"),scanned)}
@@ -469,7 +469,7 @@ struct FoodPortionView:View {
     var body:some View {
         NavigationStack{Form{
             Section{
-                if manual {TextField(diary.t("اسم الطعام","Food name"),text:$name).accessibilityIdentifier("portion.name")}else{Text(name).luqmaFont(.headline);if let brand=food.brand{Text(DisplayFormat.westernDigits(brand)).luqmaFont(.caption).foregroundStyle(Theme.muted)}}
+                if manual {TextField(diary.t("اسم الطعام","Food name"),text:$name,prompt:Text(diary.t("اسم الطعام","Food name")).foregroundColor(Theme.muted)).accessibilityIdentifier("portion.name")}else{Text(name).luqmaFont(.headline);if let brand=food.brand{Text(DisplayFormat.westernDigits(brand)).luqmaFont(.caption).foregroundStyle(Theme.muted)}}
                 Picker(diary.t("الوجبة","Meal"),selection:$meal){ForEach(Meal.allCases){Text($0.label(diary.language)).tag($0)}}
             }.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
             Section(diary.t("الكمية","Amount")) {
@@ -509,7 +509,7 @@ struct FoodPortionView:View {
         input(diary.t("السعرات","Calories"),$kcal,identifier:"portion.kcal");input(diary.t("البروتين","Protein"),$protein,identifier:"portion.protein");input(diary.t("الكارب","Carbs"),$carbs,identifier:"portion.carbs");input(diary.t("الدهون","Fat"),$fat,identifier:"portion.fat")
         if !manual,portionFood.values(for:unit)==nil && !needsServingSize {Notice(text:diary.t("المنتج ينقصه بيانات؛ أكملها من الملصق قبل الإضافة.","Nutrition is incomplete. Fill in the label values before adding."))}
     }}
-    private func input(_ label:String,_ text:Binding<String>,identifier:String?=nil) -> some View {HStack{Text(label);Spacer();TextField(label,text:text).keyboardType(.decimalPad).multilineTextAlignment(.trailing).frame(width:120).accessibilityIdentifier(identifier ?? label)}}
+    private func input(_ label:String,_ text:Binding<String>,identifier:String?=nil) -> some View {HStack{Text(label);Spacer();TextField(label,text:text,prompt:Text(label).foregroundColor(Theme.muted)).keyboardType(.decimalPad).multilineTextAlignment(.trailing).frame(width:120).accessibilityIdentifier(identifier ?? label)}}
     private func loadBase(){let n=portionFood.values(for:unit);kcal=n.map{decimal($0.kcal,2)} ?? "";protein=n.map{decimal($0.protein,3)} ?? "";carbs=n.map{decimal($0.carbs,3)} ?? "";fat=n.map{decimal($0.fat,3)} ?? ""}
     private func save(){
         guard let base,let quantity else{return}

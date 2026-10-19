@@ -143,9 +143,11 @@ struct RootView:View {
             #if DEBUG
             .sheet(item:$templatePreview){route in
                 templatePreviewContent(route)
+                    .luqmaFont(.body)
                     .modifier(NativePreviewFontAudit(scope:"template"))
                     .environment(\.dynamicTypeSize,previewDynamicTypeSize)
             }
+            .luqmaFont(.body)
             .modifier(NativePreviewFontAudit(scope:"root",enabled:templatePreview == nil))
             .environment(\.dynamicTypeSize,ProcessInfo.processInfo.arguments.contains("-loqma-preview-accessibility") ? .accessibility3:typeSize)
             #endif

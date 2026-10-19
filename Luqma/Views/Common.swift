@@ -142,7 +142,7 @@ struct NumericInput:View {
     @State private var text=""
     @FocusState private var focused:Bool
     var body:some View {
-        HStack{Text(title);Spacer();TextField(title,text:$text).keyboardType(.decimalPad).focused($focused).multilineTextAlignment(.trailing).frame(minWidth:65,maxWidth:120).accessibilityLabel(title).accessibilityIdentifier(identifier ?? title);if !suffix.isEmpty{Text(DisplayFormat.westernDigits(suffix)).foregroundStyle(Theme.textSecondary)}}
+        HStack{Text(title);Spacer();TextField(title,text:$text,prompt:Text(title).foregroundColor(Theme.muted)).keyboardType(.decimalPad).focused($focused).multilineTextAlignment(.trailing).frame(minWidth:65,maxWidth:120).accessibilityLabel(title).accessibilityIdentifier(identifier ?? title);if !suffix.isEmpty{Text(DisplayFormat.westernDigits(suffix)).foregroundStyle(Theme.textSecondary)}}
             .onAppear{text=decimal(value,value.rounded()==value ? 0:1)}
             .onChange(of:text){_,s in
                 guard focused else{return} // Formatting another macro must not edit its value.

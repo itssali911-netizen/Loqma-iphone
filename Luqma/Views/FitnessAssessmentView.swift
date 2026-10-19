@@ -248,10 +248,10 @@ struct FitnessAssessmentView:View {
     }
     private func helper(_ ar:String,_ en:String)->some View {Text(diary.t(ar,en)).luqmaFont(.helper).foregroundStyle(Theme.muted).fixedSize(horizontal:false,vertical:true).frame(maxWidth:.infinity,alignment:.leading)}
     private func notes(_ title:String,text:Binding<String>,id:String)->some View {
-        VStack(alignment:.leading,spacing:8){Text(title).luqmaFont(.label);TextField(title,text:text,axis:.vertical).lineLimit(2...5).padding(16).background(Theme.card,in:RoundedRectangle(cornerRadius:19)).accessibilityIdentifier("assessment.\(id)")}
+        VStack(alignment:.leading,spacing:8){Text(title).luqmaFont(.label);TextField(title,text:text,prompt:Text(title).foregroundColor(Theme.muted),axis:.vertical).lineLimit(2...5).padding(16).background(Theme.card,in:RoundedRectangle(cornerRadius:19)).accessibilityIdentifier("assessment.\(id)")}
     }
     private func timeField(_ title:String,value:Binding<String?>,id:String)->some View {
-        VStack(alignment:.leading,spacing:8){Text(title).luqmaFont(.label);TextField("HH:mm",text:Binding(get:{value.wrappedValue ?? ""},set:{value.wrappedValue=$0.isEmpty ? nil:DisplayFormat.westernDigits($0)})).keyboardType(.numbersAndPunctuation).environment(\.layoutDirection,.leftToRight).padding(16).background(Theme.card,in:RoundedRectangle(cornerRadius:19)).accessibilityIdentifier("assessment.\(id)")}
+        VStack(alignment:.leading,spacing:8){Text(title).luqmaFont(.label);TextField("HH:mm",text:Binding(get:{value.wrappedValue ?? ""},set:{value.wrappedValue=$0.isEmpty ? nil:DisplayFormat.westernDigits($0)}),prompt:Text("HH:mm").foregroundColor(Theme.muted)).keyboardType(.numbersAndPunctuation).environment(\.layoutDirection,.leftToRight).padding(16).background(Theme.card,in:RoundedRectangle(cornerRadius:19)).accessibilityIdentifier("assessment.\(id)")}
     }
     private func intBinding(_ key:WritableKeyPath<FitnessAnswers,Int?>)->Binding<Double?> {
         Binding(get:{answers[keyPath:key].map(Double.init)},set:{answers[keyPath:key]=$0.flatMap{v in v.isFinite && (0...100000).contains(v) && v.rounded()==v ? Int(v):nil}})
@@ -319,7 +319,7 @@ private struct FitnessNumberField:View {
         VStack(alignment:.leading,spacing:12){
             Text(title).luqmaFont(.label).fixedSize(horizontal:false,vertical:true)
             HStack(alignment:.firstTextBaseline,spacing:12){
-                TextField("—",text:$text).keyboardType(integer ? .numberPad:.decimalPad).focused($focused)
+                TextField("—",text:$text,prompt:Text("—").foregroundColor(Theme.muted)).keyboardType(integer ? .numberPad:.decimalPad).focused($focused)
                     .luqmaFont(size:40,weight:.bold,relativeTo:.largeTitle).monospacedDigit()
                     .environment(\.layoutDirection,.leftToRight).accessibilityLabel(title).accessibilityIdentifier(identifier)
                 Text(suffix).luqmaFont(.label).foregroundStyle(Theme.muted)

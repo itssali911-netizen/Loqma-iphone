@@ -49,7 +49,7 @@ struct KitchenView:View {
             Text(diary.t("مطبخي","My kitchen")).luqmaFont(size:14,weight:.semibold,relativeTo:.headline)
                 .foregroundStyle(Theme.text).frame(maxWidth:.infinity).accessibilityAddTraits(.isHeader)
             HStack(spacing:10){
-                TextField(diary.t("ابحث في محفوظاتك","Search your saved items"),text:$query)
+                TextField(diary.t("ابحث في محفوظاتك","Search your saved items"),text:$query,prompt:Text(diary.t("ابحث في محفوظاتك","Search your saved items")).foregroundColor(Theme.muted))
                     .luqmaFont(size:13,relativeTo:.subheadline).submitLabel(.search)
                     .accessibilityLabel(diary.t("البحث في وصفاتك ووجباتك","Search your recipes and meals"))
                 if !query.isEmpty{Button{query=""}label:{Image(systemName:"xmark.circle.fill").foregroundStyle(Theme.muted).frame(minWidth:32,minHeight:44)}.buttonStyle(.plain).accessibilityLabel(diary.t("مسح البحث","Clear search"))}
@@ -262,7 +262,7 @@ struct RecipeEditor:View {
     @State private var initialized=false
     var body:some View {
         NavigationStack{Form{
-            Section{TextField(diary.t("اسم الوصفة أو الوجبة","Recipe or meal name"),text:$recipe.name);Picker(diary.t("النوع","Type"),selection:$recipe.type){Text(diary.t("وصفة","Recipe")).tag("recipe");Text(diary.t("وجبة محفوظة","Saved meal")).tag("meal");Text(diary.t("تحضير وجبات","Meal prep")).tag("prep")}}.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
+            Section{TextField(diary.t("اسم الوصفة أو الوجبة","Recipe or meal name"),text:$recipe.name,prompt:Text(diary.t("اسم الوصفة أو الوجبة","Recipe or meal name")).foregroundColor(Theme.muted));Picker(diary.t("النوع","Type"),selection:$recipe.type){Text(diary.t("وصفة","Recipe")).tag("recipe");Text(diary.t("وجبة محفوظة","Saved meal")).tag("meal");Text(diary.t("تحضير وجبات","Meal prep")).tag("prep")}}.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
             Section(diary.t("المكونات","Ingredients")){
                 ForEach(recipe.ingredients){i in HStack(spacing:12){Image(systemName:"fork.knife").font(.system(size:16)).foregroundStyle(Theme.accent).frame(width:36,height:36).background(Theme.surface,in:RoundedRectangle(cornerRadius:10)).accessibilityHidden(true);VStack(alignment:.leading,spacing:5){Text(DisplayFormat.westernDigits(i.name)).luqmaFont(size:15,weight:.semibold,relativeTo:.subheadline);Text("\(decimal(i.amount)) \(DisplayFormat.westernDigits(recipe.importInfo?.ingredientUnitLabels[i.id.uuidString] ?? i.unit.label(diary.language))) · \(decimal(i.kcal,0)) \(diary.t("سعرة","kcal"))").luqmaFont(.caption).foregroundStyle(Theme.muted)}}.padding(.vertical,4)}.onDelete{indices in
                     recipe.ingredients.remove(atOffsets:indices)
@@ -277,7 +277,7 @@ struct RecipeEditor:View {
                 if byWeight{NumericInput(title:diary.t("الوزن بعد الطبخ","Cooked weight"),value:Binding(get:{recipe.cookedWeight ?? 0},set:{recipe.cookedWeight=$0}),suffix:diary.t("جم","g"));Notice(text:diary.t("أدخل الوزن النهائي لحساب أي كمية بالجرام. الماء يغيّر الوزن دون تغيير مجموع السعرات.","Enter the final weight to calculate any gram portion. Water changes weight without changing total calories."))}
             }.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
             if !recipe.ingredients.isEmpty{Section(diary.t("لكل حصة","Per serving")){NutritionView(value:recipe.total.scaled(1/max(recipe.portions,0.001)))}.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke);if byWeight,let w=recipe.cookedWeight,w>0{Section(diary.t("لكل ١٠٠ جم بعد الطبخ","Per 100 g cooked")){NutritionView(value:recipe.total.scaled(100/w))}.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)}}
-            Section{DisclosureGroup(diary.t("ملاحظات اختيارية","Optional notes"),isExpanded:$showingNotes){TextField(diary.t("ملاحظاتك","Your notes"),text:$recipe.notes,axis:.vertical).lineLimit(2...5)}}.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
+            Section{DisclosureGroup(diary.t("ملاحظات اختيارية","Optional notes"),isExpanded:$showingNotes){TextField(diary.t("ملاحظاتك","Your notes"),text:$recipe.notes,prompt:Text(diary.t("ملاحظاتك","Your notes")).foregroundColor(Theme.muted),axis:.vertical).lineLimit(2...5)}}.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
             if let info=recipe.importInfo{
                 Section(diary.t("خطوات التحضير","Preparation steps")){ForEach(Array(info.steps.enumerated()),id:\.offset){index,step in Text("\(index+1). "+DisplayFormat.westernDigits(step))}}.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
                 Section(diary.t("المصدر والتقدير","Source and estimate")){

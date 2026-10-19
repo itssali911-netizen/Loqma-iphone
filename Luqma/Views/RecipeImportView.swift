@@ -61,7 +61,7 @@ import SwiftUI
     private var sourceInput: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text(diary.t("رابط الوصفة", "Recipe link")).luqmaFont(.headline)
-            TextField(diary.t("الصق رابط الموقع أو المنشور", "Paste the page or post link"), text: $link)
+            TextField(diary.t("الصق رابط الموقع أو المنشور", "Paste the page or post link"), text: $link, prompt: Text(diary.t("الصق رابط الموقع أو المنشور", "Paste the page or post link")).foregroundColor(Theme.muted))
                 .keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
                 .focused($inputFocus, equals: .link)
                 .submitLabel(.go).onSubmit { if hasInput && !busy { extract() } }
@@ -103,7 +103,7 @@ import SwiftUI
                         .luqmaFont(.caption).foregroundStyle(Theme.muted)
                 }
                 TextField(diary.t("اسم الوصفة", "Recipe name"), text: Binding(
-                    get: { draft?.title ?? "" }, set: { draft?.title = $0 }))
+                    get: { draft?.title ?? "" }, set: { draft?.title = $0 }), prompt: Text(diary.t("اسم الوصفة", "Recipe name")).foregroundColor(Theme.muted))
                     .luqmaFont(.headline).accessibilityLabel(diary.t("اسم الوصفة", "Recipe name"))
                 NumericInput(title: diary.t("عدد الحصص", "Number of servings"), value: Binding(
                     get: { draft?.servings ?? 0 }, set: { draft?.servings = $0 }))
@@ -308,7 +308,7 @@ import SwiftUI
             if !ingredient.assumption.isEmpty { Text(DisplayFormat.westernDigits(ingredient.assumption)).luqmaFont(.caption).foregroundStyle(Theme.muted) }
             DisclosureGroup(diary.t("تعديل المكوّن", "Edit ingredient"), isExpanded: $editing) {
                 VStack(alignment: .leading, spacing: 12) {
-                    TextField(diary.t("اسم المكوّن", "Ingredient name"), text: $ingredient.name)
+                    TextField(diary.t("اسم المكوّن", "Ingredient name"), text: $ingredient.name, prompt: Text(diary.t("اسم المكوّن", "Ingredient name")).foregroundColor(Theme.muted))
                     if ingredient.nutrition == nil {
                         Picker(diary.t("وحدة المقدار", "Quantity unit"),selection:Binding(get:{ingredient.unit},set:{unit in
                             ingredient.unit=unit;ingredient.unitLabel=unit.label(diary.language);ingredient.nutrition=nil
@@ -346,7 +346,7 @@ import SwiftUI
             Spacer()
             TextField(title, text: Binding(get: { value.wrappedValue }, set: {
                 value.wrappedValue = $0; nutritionPending = true; onPendingEdit(ingredient.id, true)
-            }))
+            }), prompt: Text(title).foregroundColor(Theme.muted))
                 .keyboardType(.decimalPad).multilineTextAlignment(.trailing)
                 .frame(maxWidth: 110).accessibilityLabel(title)
         }
