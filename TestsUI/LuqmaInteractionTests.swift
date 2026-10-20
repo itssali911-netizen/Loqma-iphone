@@ -241,12 +241,19 @@ final class LuqmaInteractionTests:XCTestCase {
         recordFitnessScreen("Fitness profile before delete confirmation")
         removeProfile.coordinate(withNormalizedOffset:CGVector(dx:0.5,dy:0.5)).tap()
         recordFitnessScreen("Fitness delete confirmation after real tap")
-        // UIKit's native alert does not promise to retain a SwiftUI button ID.
-        // Require the actual titled alert and its destructive button instead.
+        // Native alerts may expose a non-interactive accessibility wrapper
+        // around the action. Require the titled alert and tap only a real,
+        // enabled, hittable button with the destructive action's exact label.
         let confirmation=app.alerts["Delete fitness assessment data?"]
         XCTAssertTrue(confirmation.waitForExistence(timeout:5),app.debugDescription)
-        let confirm=confirmation.buttons["Delete fitness profile"]
-        XCTAssertTrue(confirm.exists && confirm.isHittable);confirm.tap()
+        let confirmButtons=confirmation.buttons.matching(NSPredicate(format:"label == %@","Delete fitness profile"))
+        let confirmReady=XCTNSPredicateExpectation(predicate:NSPredicate { _,_ in
+            confirmation.exists && confirmButtons.allElementsBoundByIndex.contains { $0.exists && $0.isEnabled && $0.isHittable }
+        },object:confirmation)
+        XCTAssertEqual(XCTWaiter.wait(for:[confirmReady],timeout:5),.completed,app.debugDescription)
+        let confirm=try XCTUnwrap(confirmButtons.allElementsBoundByIndex.first { $0.exists && $0.isEnabled && $0.isHittable },
+            "The actual native destructive action must be reachable inside its confirmation alert.\n"+app.debugDescription)
+        confirm.tap()
         XCTAssertTrue(app.descendants(matching:.any).matching(identifier:"fitness.deletedConfirmation").firstMatch.waitForExistence(timeout:10))
         app.terminate();app.launch()
         XCTAssertTrue(app.buttons["nav.today"].waitForExistence(timeout:15))
