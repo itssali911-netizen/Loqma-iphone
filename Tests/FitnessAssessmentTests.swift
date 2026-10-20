@@ -293,4 +293,186 @@ final class FitnessAssessmentTests: XCTestCase {
         XCTAssertTrue(state.adaptive)
         assertHistory(state, matches: original)
     }
+
+    func testAllLegacyQuestionIndexesResumeAtTheMatchingShortenedQuestion() {
+        let expected: [FitnessAssessmentPage] = [.goal, .sex, .age, .height, .weight, .targetPace, .targetPace,
+            .activity, .training, .training, .training, .details, .details, .details, .details, .suitability, .review]
+        for (index, page) in expected.enumerated() {
+            let draft = FitnessAssessmentDraft(pageIndex: index)
+            XCTAssertEqual(draft.resolvedPage, page, "Old question \(index) must retain its meaning")
+        }
+        XCTAssertEqual(FitnessAssessmentPage.allCases.count, 11)
+        XCTAssertEqual(FitnessAssessmentPage.allCases.map(\.index), Array(0...10))
+    }
+    func testStablePageIdentityTakesPriorityAndUnknownIdentityUsesLegacyProgress() {
+        var draft = FitnessAssessmentDraft(pageIndex: 3, pageID: FitnessAssessmentPage.age.rawValue)
+        XCTAssertEqual(draft.resolvedPage, .age)
+        draft.pageID = "future-question"
+        XCTAssertEqual(draft.resolvedPage, .height)
+        draft.pageIndex = nil; draft.step = .nutrition
+        XCTAssertEqual(draft.resolvedPage, .details)
+        XCTAssertNoThrow(try draft.validate(), "An unknown future page ID must not make saved answers unreadable")
+    }
+    func testEarlierGroupedDraftsAndExtendedLegacyReviewIndexesStillResume() throws {
+        let expected: [FitnessAssessmentStep: FitnessAssessmentPage] = [
+            .basics: .sex, .goal: .goal, .activity: .activity, .recovery: .details, .nutrition: .details, .review: .review]
+        for (step, page) in expected {
+            XCTAssertEqual(FitnessAssessmentDraft(step: step).resolvedPage, page)
+        }
+        for index in 16...30 {
+            let draft = FitnessAssessmentDraft(step: .nutrition, pageIndex: index)
+            XCTAssertEqual(draft.resolvedPage, .review)
+            XCTAssertNoThrow(try draft.validate())
+        }
+    }
+    func testNewPageIdentitiesRetainLegacyCompatibleIndexesAcrossRoundTrip() throws {
+        for page in FitnessAssessmentPage.allCases {
+            let draft = FitnessAssessmentDraft(step: page.group, updatedDay: day,
+                pageIndex: page.legacyIndex, pageID: page.rawValue)
+            let restored = try JSONDecoder().decode(FitnessAssessmentDraft.self, from: JSONEncoder().encode(draft))
+            XCTAssertEqual(restored, draft)
+            XCTAssertEqual(restored.resolvedPage, page)
+            XCTAssertEqual(FitnessAssessmentPage.fromLegacyIndex(page.legacyIndex), page)
+        }
+    }
+    func testOldDraftWithoutNewKeysPreservesEveryLegacyPreference() throws {
+        var input = answers()
+        input.targetWeightKG = 75; input.stepsPerDay = 5200; input.experience = .intermediate
+        input.trainingDays = 4; input.sessionMinutes = 40; input.trainingPlace = .outdoors
+        input.exercise = [.walking, .cycling]; input.sleepHours = 7.5; input.sleepQuality = .fair
+        input.bedtime = "23:30"; input.wakeTime = "07:00"; input.stress = 3
+        input.diet = .vegetarian; input.mealsPerDay = 4; input.dislikedFoods = "Mushrooms"
+        input.allergies = "Sesame"; input.restrictions = "Low salt on advice"
+        let original = FitnessAssessmentDraft(answers: input, step: .nutrition, updatedDay: day, pageIndex: 14)
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(original)) as? [String: Any])
+        object.removeValue(forKey: "pageID"); object.removeValue(forKey: "numericInputs")
+        let restored = try JSONDecoder().decode(FitnessAssessmentDraft.self, from: JSONSerialization.data(withJSONObject: object))
+        XCTAssertEqual(restored.answers, input)
+        XCTAssertNil(restored.pageID); XCTAssertNil(restored.numericInputs)
+        XCTAssertEqual(restored.resolvedPage, .details)
+        XCTAssertEqual(try plan(restored.answers).answers, input)
+        XCTAssertEqual(try plan(restored.answers).goals, try plan(input).goals)
+    }
+    func testPartialNumericTextSurvivesProtectedDiaryBackupWithoutBecomingAnAnswer() throws {
+        var state = try populatedDiary()
+        var input = answers(); input.age = nil; input.heightCM = nil
+        let raw = ["age": "١٧٫٥", "height": "", "sleepHours": "7.", "futureNumeric": "?"]
+        let draft = FitnessAssessmentDraft(answers: input, step: .basics, updatedDay: day,
+            pageIndex: 3, pageID: FitnessAssessmentPage.height.rawValue, numericInputs: raw)
+        try FitnessAssessmentState.saveDraft(draft, in: &state)
+        let restored = try Backup.decode(Backup.encode(state))
+        XCTAssertEqual(restored.fitnessDraft, draft)
+        XCTAssertEqual(restored.fitnessDraft?.numericInputs, raw)
+        XCTAssertNil(restored.fitnessDraft?.answers.age)
+        XCTAssertNil(restored.fitnessDraft?.answers.heightCM)
+        XCTAssertEqual(restored.fitnessDraft?.resolvedPage, .height)
+        assertHistory(restored, matches: state)
+    }
+    func testDraftBoundsRawInputMetadataWithoutRejectingFutureKeysOrMalformedPartialText() throws {
+        var draft = FitnessAssessmentDraft(numericInputs: ["futureField": String(repeating: "?", count: 64)])
+        XCTAssertNoThrow(try draft.validate())
+        draft.numericInputs = ["height": String(repeating: "1", count: 65)]
+        XCTAssertThrowsError(try draft.validate())
+        draft.numericInputs = [String(repeating: "k", count: 65): "1"]
+        XCTAssertThrowsError(try draft.validate())
+        draft.numericInputs = ["": "1"]
+        XCTAssertThrowsError(try draft.validate())
+        draft.numericInputs = Dictionary(uniqueKeysWithValues: (0...32).map { ("future\($0)", "") })
+        XCTAssertThrowsError(try draft.validate())
+        draft.numericInputs = nil; draft.pageID = String(repeating: "p", count: 65)
+        XCTAssertThrowsError(try draft.validate())
+    }
+    func testCurrentControlsCanBeAddedToAFullFutureDraftWithoutLosingUnknownInputs() throws {
+        var state = try populatedDiary()
+        var raw = Dictionary(uniqueKeysWithValues: (0..<32).map { ("future\($0)", "unfinished?") })
+        let futureInputs = raw
+        for field in FitnessAssessmentNumberField.allCases {
+            raw[field.rawValue] = field.displayText(field.suggestedValue)
+        }
+        let draft = FitnessAssessmentDraft(answers: answers(), step: .basics, updatedDay: day,
+            pageIndex: 3, pageID: FitnessAssessmentPage.height.rawValue, numericInputs: raw)
+        try FitnessAssessmentState.saveDraft(draft, in: &state)
+        let restored = try Backup.decode(Backup.encode(state))
+        XCTAssertEqual(restored.fitnessDraft, draft)
+        XCTAssertEqual(restored.fitnessDraft?.numericInputs?.count, 32 + FitnessAssessmentNumberField.allCases.count)
+        for (key, value) in futureInputs {
+            XCTAssertEqual(restored.fitnessDraft?.numericInputs?[key], value)
+        }
+        XCTAssertEqual(restored.fitnessDraft?.answers, draft.answers)
+        assertHistory(restored, matches: state)
+    }
+    func testNumericParsingAcceptsWesternArabicAndPersianDigitsWithoutChangingTheirValue() {
+        XCTAssertEqual(FitnessAssessmentNumberField.age.parse("30"), 30)
+        XCTAssertEqual(FitnessAssessmentNumberField.age.parse("٣٠"), 30)
+        XCTAssertEqual(FitnessAssessmentNumberField.age.parse("۳۰"), 30)
+        XCTAssertEqual(FitnessAssessmentNumberField.height.parse(" ١٧٥٫٥ "), 175.5)
+        XCTAssertEqual(FitnessAssessmentNumberField.height.parse("۱۷۵,۲۵"), 175.25)
+        XCTAssertEqual(FitnessAssessmentNumberField.sleepHours.parse("7.5"), 7.5)
+        XCTAssertEqual(FitnessAssessmentNumberField.trainingDays.parse("0"), 0)
+    }
+    func testTypedNumericValidationDoesNotClampOrAcceptFractionalIntegerFields() {
+        for raw in ["", "17", "101", "30.5", "NaN", "inf", "1e2", "-30", "age30", "٣٠سنة"] {
+            XCTAssertNil(FitnessAssessmentNumberField.age.parse(raw), raw)
+            XCTAssertNotNil(FitnessAssessmentNumberField.age.validationMessage(for: raw, language: .ar), raw)
+        }
+        XCTAssertNil(FitnessAssessmentNumberField.height.parse("119.9"))
+        XCTAssertNil(FitnessAssessmentNumberField.height.parse("230.1"))
+        XCTAssertNil(FitnessAssessmentNumberField.trainingDays.parse("3.5"))
+        XCTAssertNil(FitnessAssessmentNumberField.sessionMinutes.parse("4"))
+        XCTAssertNil(FitnessAssessmentNumberField.steps.parse("100001"))
+        XCTAssertNil(FitnessAssessmentNumberField.meals.parse("0"))
+        XCTAssertNil(FitnessAssessmentNumberField.weight.parse("70..5"))
+        XCTAssertNotNil(FitnessAssessmentNumberField.height.validationMessage(for: "119", language: .en))
+    }
+    func testOptionalBlankNumericInputsRemainEmptyAndDoNotInstallSuggestedDefaults() {
+        for field in FitnessAssessmentNumberField.allCases {
+            XCTAssertNil(field.parse(""))
+            XCTAssertEqual(field.validationMessage(for: " \n", language: .ar) == nil, !field.required)
+            XCTAssertTrue(field.range.contains(field.suggestedValue))
+            XCTAssertNil(field.validationMessage(for: field.displayText(field.suggestedValue), language: .en))
+        }
+        let untouched = FitnessAnswers()
+        for field in FitnessAssessmentNumberField.allCases { XCTAssertNil(field.value(in: untouched)) }
+    }
+    func testOnlyInteractiveControlsClampAndSnapToTheirStep() {
+        let height = FitnessAssessmentNumberField.height
+        XCTAssertEqual(height.clampedInteractionValue(119), 120)
+        XCTAssertEqual(height.clampedInteractionValue(231), 230)
+        XCTAssertEqual(height.clampedInteractionValue(175.26), 175.5)
+        XCTAssertEqual(height.clampedInteractionValue(.nan), 170)
+        XCTAssertEqual(height.clampedInteractionValue(.infinity), 170)
+        XCTAssertEqual(FitnessAssessmentNumberField.age.clampedInteractionValue(30.7), 31)
+        XCTAssertEqual(FitnessAssessmentNumberField.age.clampedInteractionValue(0), 18)
+        XCTAssertNil(height.parse("119"), "Direct text entry must not silently become 120")
+    }
+    func testNumericModelHelpersKeepOneValueAndPreserveUnrelatedAnswers() {
+        var input = answers(); input.allergies = "Sesame"; input.exercise = [.cycling]
+        for field in FitnessAssessmentNumberField.allCases {
+            field.setValue(field.suggestedValue, in: &input)
+            XCTAssertEqual(field.value(in: input), field.suggestedValue)
+            field.setValue(.nan, in: &input)
+            XCTAssertNil(field.value(in: input))
+            field.setValue(field.range.upperBound + 1, in: &input)
+            XCTAssertNil(field.value(in: input))
+            field.setValue(nil, in: &input)
+            XCTAssertNil(field.value(in: input))
+        }
+        FitnessAssessmentNumberField.age.setValue(30.5, in: &input)
+        XCTAssertNil(input.age)
+        FitnessAssessmentNumberField.height.setValue(175.25, in: &input)
+        XCTAssertEqual(input.heightCM, 175.25)
+        XCTAssertEqual(input.allergies, "Sesame"); XCTAssertEqual(input.exercise, [.cycling])
+    }
+    func testNumericDisplayPreservesExactStoredMeasurementsAndWesternDigits() {
+        for value in [120.0, 175.5, 175.25, 175.125, 230.0] {
+            let text = FitnessAssessmentNumberField.height.displayText(value)
+            XCTAssertEqual(FitnessAssessmentNumberField.height.parse(text), value)
+            XCTAssertFalse(text.unicodeScalars.contains { (0x0660...0x0669).contains($0.value) || (0x06F0...0x06F9).contains($0.value) })
+        }
+        let small = 0.0000001
+        let text = FitnessAssessmentNumberField.sleepHours.displayText(small)
+        XCTAssertFalse(text.contains("e"))
+        XCTAssertEqual(FitnessAssessmentNumberField.sleepHours.parse(text), small)
+        XCTAssertEqual(FitnessAssessmentNumberField.age.displayText(30), "30")
+    }
 }

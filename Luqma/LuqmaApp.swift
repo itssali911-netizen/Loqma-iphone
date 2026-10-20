@@ -72,7 +72,7 @@ struct RootView:View {
     @Environment(\.dynamicTypeSize) private var typeSize
     private enum TemplatePreviewRoute:String,Identifiable {
         case goals,portion,recipe,recipeDetail,plan,weight,connection,backup,about,barcode,language,notifications,reminders,stateError,stateLoading,stateEmpty,stateSuccess
-        case assessmentGoal,assessmentGender,assessmentDiet,assessmentActivity,assessmentSleep,assessmentReview,fitnessProfile,fitnessPlan
+        case assessmentGoal,assessmentGender,assessmentActivity,assessmentDetails,assessmentReview,fitnessProfile,fitnessPlan
         var id:String{rawValue}
     }
     @State private var templatePreview:TemplatePreviewRoute?
@@ -169,11 +169,10 @@ struct RootView:View {
             case .notifications:NavigationStack{NotificationsView()}
             case .reminders:NavigationStack{RemindersView()}
             case .assessmentGoal:FitnessAssessmentView(previewPage:assessmentPreviewPage)
-            case .assessmentGender:FitnessAssessmentView(previewPage:1)
-            case .assessmentDiet:FitnessAssessmentView(previewPage:13)
+            case .assessmentGender:FitnessAssessmentView(previewPage:2)
             case .assessmentActivity:FitnessAssessmentView(previewPage:7)
-            case .assessmentSleep:FitnessAssessmentView(previewPage:11)
-            case .assessmentReview:FitnessAssessmentView(previewPage:16)
+            case .assessmentDetails:FitnessAssessmentView(previewPage:9)
+            case .assessmentReview:FitnessAssessmentView(previewPage:10)
             case .fitnessProfile:fitnessFixture{FitnessProfileView()}
             case .fitnessPlan:fitnessFixture{FitnessPlanReviewView()}
             case .stateError:statePreview{SandowStateAlert(text:diary.t("تعذّر إكمال الطلب. تحقق من الاتصال وحاول مجددًا.","The request could not be completed. Check your connection and retry."))}
@@ -198,7 +197,7 @@ struct RootView:View {
     private var assessmentPreviewPage:Int {
         let arguments=ProcessInfo.processInfo.arguments
         guard let index=arguments.firstIndex(of:"-loqma-preview-assessment-page"),arguments.indices.contains(index+1),
-              let value=Int(arguments[index+1]),(0...16).contains(value) else{return 0}
+              let value=Int(arguments[index+1]),(0...10).contains(value) else{return 0}
         return value
     }
     private var previewDynamicTypeSize:DynamicTypeSize {

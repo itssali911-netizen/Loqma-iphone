@@ -18,7 +18,7 @@ enum FitnessGoal: String, Codable, FitnessOption {
         switch self {
         case .fatLoss: return ("خسارة الدهون", "Lose fat")
         case .muscleGain: return ("بناء العضلات", "Build muscle")
-        case .recomposition: return ("إعادة تركيب الجسم", "Body recomposition")
+        case .recomposition: return ("خفض الدهون مع بناء العضلات", "Lose fat and build muscle")
         case .maintenance: return ("المحافظة على الوزن", "Maintain weight")
         case .wellbeing: return ("اللياقة والصحة العامة", "General fitness")
         }
@@ -26,7 +26,7 @@ enum FitnessGoal: String, Codable, FitnessOption {
 }
 enum FitnessPace: String, Codable, FitnessOption {
     case gentle, moderate
-    var labels: (String, String) { self == .gentle ? ("تدريجية", "Gentle") : ("معتدلة", "Moderate") }
+    var labels: (String, String) { self == .gentle ? ("تدريجي — تعديل أصغر للسعرات", "Gentle — smaller calorie adjustment") : ("معتدل — تعديل أكبر للسعرات", "Moderate — larger calorie adjustment") }
 }
 enum FitnessActivity: String, Codable, FitnessOption {
     case sedentary, light, moderate, active, veryActive
@@ -36,11 +36,11 @@ enum FitnessActivity: String, Codable, FitnessOption {
     }
     var labels: (String, String) {
         switch self {
-        case .sedentary: return ("أغلب اليوم جلوس", "Mostly sitting")
-        case .light: return ("نشاط خفيف", "Light activity")
-        case .moderate: return ("نشاط متوسط", "Moderate activity")
-        case .active: return ("نشاط مرتفع", "Active")
-        case .veryActive: return ("نشاط مرتفع جدًا", "Very active")
+        case .sedentary: return ("أغلب اليوم جلوس وحركة قليلة", "Mostly sitting, little movement")
+        case .light: return ("جلوس مع مشي خفيف", "Sitting with some light walking")
+        case .moderate: return ("أتحرك وأمشي جزءًا من اليوم", "Moving and walking part of the day")
+        case .active: return ("أقف وأتحرك معظم اليوم", "Standing and moving most of the day")
+        case .veryActive: return ("عمل بدني شاق أو حركة مكثفة", "Physical work or intensive movement")
         }
     }
 }
@@ -112,6 +112,164 @@ enum FitnessAssessmentStep: String, Codable, FitnessOption {
     var index: Int { Self.allCases.firstIndex(of: self) ?? 0 }
 }
 
+/// Stable screen identities keep saved progress independent of the visible
+/// question count. The legacy index remains meaningful to earlier app builds.
+enum FitnessAssessmentPage: String, Codable, CaseIterable {
+    case goal, suitability, sex, age, height, weight, targetPace, activity, training, details, review
+
+    var index: Int { Self.allCases.firstIndex(of: self) ?? 0 }
+    var legacyIndex: Int {
+        switch self {
+        case .goal: return 0
+        case .suitability: return 15
+        case .sex: return 1
+        case .age: return 2
+        case .height: return 3
+        case .weight: return 4
+        case .targetPace: return 5
+        case .activity: return 7
+        case .training: return 8
+        case .details: return 11
+        case .review: return 16
+        }
+    }
+    var group: FitnessAssessmentStep {
+        switch self {
+        case .goal, .targetPace: return .goal
+        case .suitability, .sex, .age, .height, .weight: return .basics
+        case .activity, .training: return .activity
+        case .details: return .nutrition
+        case .review: return .review
+        }
+    }
+    static func fromLegacyIndex(_ index: Int) -> Self {
+        switch index {
+        case 0: return .goal
+        case 1: return .sex
+        case 2: return .age
+        case 3: return .height
+        case 4: return .weight
+        case 5, 6: return .targetPace
+        case 7: return .activity
+        case 8...10: return .training
+        case 11...14: return .details
+        case 15: return .suitability
+        case 16...30: return .review
+        default: return .goal
+        }
+    }
+}
+
+/// Form rules are separate from FitnessAnswers' permissive draft validation.
+/// Raw text can therefore survive a restart without turning an invalid input
+/// into a different accepted value. Clamping is reserved for direct controls.
+enum FitnessAssessmentNumberField: String, CaseIterable {
+    case age, height, weight, targetWeight, steps, trainingDays, sessionMinutes, sleepHours, meals
+
+    var range: ClosedRange<Double> {
+        switch self {
+        case .age: return 18...100
+        case .height: return 120...230
+        case .weight, .targetWeight: return 35...300
+        case .steps: return 0...100000
+        case .trainingDays: return 0...7
+        case .sessionMinutes: return 5...180
+        case .sleepHours: return 0...24
+        case .meals: return 1...8
+        }
+    }
+    var integer: Bool {
+        switch self {
+        case .age, .steps, .trainingDays, .sessionMinutes, .meals: return true
+        default: return false
+        }
+    }
+    var required: Bool { self == .age || self == .height || self == .weight }
+    var step: Double { integer ? 1 : 0.5 }
+    var suggestedValue: Double {
+        switch self {
+        case .age: return 30
+        case .height: return 170
+        case .weight, .targetWeight: return 70
+        case .steps: return 5000
+        case .trainingDays: return 3
+        case .sessionMinutes: return 30
+        case .sleepHours: return 8
+        case .meals: return 3
+        }
+    }
+    func parse(_ raw: String) -> Double? {
+        let normalized = DisplayFormat.westernDigits(raw).trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalized.isEmpty,
+              normalized.unicodeScalars.allSatisfy({ (48...57).contains($0.value) || $0.value == 46 || $0.value == 44 || $0.value == 0x066B }),
+              let number = TextSearch.number(normalized), number.isFinite,
+              (!integer || number.rounded() == number), range.contains(number) else { return nil }
+        return number
+    }
+    func validationMessage(for raw: String, language: AppLanguage) -> String? {
+        if raw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return required ? language.text("أدخل قيمة قبل المتابعة.", "Enter a value before continuing.") : nil
+        }
+        guard parse(raw) == nil else { return nil }
+        let lower = DisplayFormat.decimal(range.lowerBound, digits: 0)
+        let upper = DisplayFormat.decimal(range.upperBound, digits: 0)
+        return language.text(
+            integer ? "أدخل عددًا صحيحًا من \(lower) إلى \(upper)." : "أدخل قيمة من \(lower) إلى \(upper).",
+            integer ? "Enter a whole number from \(lower) to \(upper)." : "Enter a value from \(lower) to \(upper).")
+    }
+    func clampedInteractionValue(_ proposed: Double) -> Double {
+        let bounded = min(range.upperBound, max(range.lowerBound, proposed.isFinite ? proposed : suggestedValue))
+        return min(range.upperBound, max(range.lowerBound, (bounded / step).rounded() * step))
+    }
+    func displayText(_ value: Double) -> String {
+        guard value.isFinite else { return "—" }
+        if value == 0 { return "0" }
+        if value < 0 { return "-" + displayText(-value) }
+        let text = String(value)
+        if text.hasSuffix(".0") { return String(text.dropLast(2)) }
+        // Double.description preserves the stored value. Expand its rare
+        // scientific notation so the result is still editable on a number pad.
+        let parts = text.lowercased().split(separator: "e")
+        guard parts.count == 2, let exponent = Int(parts[1]) else { return text }
+        let coefficient = String(parts[0])
+        let digits = coefficient.replacingOccurrences(of: ".", with: "")
+        let point = (coefficient.firstIndex(of: ".").map { coefficient.distance(from: coefficient.startIndex, to: $0) } ?? coefficient.count) + exponent
+        if point <= 0 { return "0." + String(repeating: "0", count: -point) + digits }
+        if point >= digits.count { return digits + String(repeating: "0", count: point - digits.count) }
+        let insertion = digits.index(digits.startIndex, offsetBy: point)
+        return String(digits[..<insertion]) + "." + String(digits[insertion...])
+    }
+    func value(in answers: FitnessAnswers) -> Double? {
+        switch self {
+        case .age: return answers.age.map(Double.init)
+        case .height: return answers.heightCM
+        case .weight: return answers.weightKG
+        case .targetWeight: return answers.targetWeightKG
+        case .steps: return answers.stepsPerDay.map(Double.init)
+        case .trainingDays: return answers.trainingDays.map(Double.init)
+        case .sessionMinutes: return answers.sessionMinutes.map(Double.init)
+        case .sleepHours: return answers.sleepHours
+        case .meals: return answers.mealsPerDay.map(Double.init)
+        }
+    }
+    func setValue(_ value: Double?, in answers: inout FitnessAnswers) {
+        let accepted = value.flatMap { number in
+            number.isFinite && range.contains(number) && (!integer || number.rounded() == number) ? number : nil
+        }
+        switch self {
+        case .age: answers.age = accepted.map(Int.init)
+        case .height: answers.heightCM = accepted
+        case .weight: answers.weightKG = accepted
+        case .targetWeight: answers.targetWeightKG = accepted
+        case .steps: answers.stepsPerDay = accepted.map(Int.init)
+        case .trainingDays: answers.trainingDays = accepted.map(Int.init)
+        case .sessionMinutes: answers.sessionMinutes = accepted.map(Int.init)
+        case .sleepHours: answers.sleepHours = accepted
+        case .meals: answers.mealsPerDay = accepted.map(Int.init)
+        }
+    }
+}
+
 /// Only information needed for a local estimate; no name, email or exact birth date.
 struct FitnessAnswers: Codable, Equatable {
     var sex: FitnessSex?
@@ -176,9 +334,33 @@ struct FitnessAssessmentDraft: Codable, Equatable {
     var step: FitnessAssessmentStep = .basics
     var updatedDay = DayKey.today
     var pageIndex: Int?
+    var pageID: String? = nil
+    var numericInputs: [String: String]? = nil
+    var resolvedPage: FitnessAssessmentPage {
+        if let pageID, let page = FitnessAssessmentPage(rawValue: pageID) { return page }
+        if let pageIndex { return .fromLegacyIndex(pageIndex) }
+        switch step {
+        case .goal: return .goal
+        case .basics: return .sex
+        case .activity: return .activity
+        case .recovery, .nutrition: return .details
+        case .review: return .review
+        }
+    }
     func validate() throws {
         try answers.validate()
-        guard DayKey.valid(updatedDay), pageIndex.map({ (0...30).contains($0) }) ?? true else {
+        guard DayKey.valid(updatedDay), pageIndex.map({ (0...30).contains($0) }) ?? true,
+              pageID.map({ $0.count <= 64 }) ?? true,
+              numericInputs.map({ inputs in
+                  // Loading a future draft preserves its unknown fields and
+                  // adds the current controls. Reserve their capacity so that
+                  // a readable draft does not become impossible to save.
+                  inputs.count <= 32 + FitnessAssessmentNumberField.allCases.count &&
+                  inputs.keys.filter { FitnessAssessmentNumberField(rawValue: $0) == nil }.count <= 32 &&
+                  inputs.allSatisfy {
+                      !$0.key.isEmpty && $0.key.count <= 64 && $0.value.count <= 64
+                  }
+              }) ?? true else {
             throw AppError.invalid("تعذّر قراءة تقدم التقييم.", "The assessment progress is invalid.")
         }
     }

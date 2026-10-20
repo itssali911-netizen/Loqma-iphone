@@ -154,67 +154,99 @@ final class LuqmaInteractionTests:XCTestCase {
         assertAssessmentStep(1)
         tapAssessmentOption("assessment.goal.fatLoss")
         advanceAssessment(to:2)
-        tapAssessmentOption("assessment.sex.male")
-        advanceAssessment(to:3)
-
-        // This is a real validation failure in the production form, not a
-        // screenshot fixture or a prefilled answer injected into storage.
-        replace(app.textFields["assessment.age"],with:"17")
-        app.buttons["assessment.next"].tap()
-        XCTAssertTrue(app.descendants(matching:.any).matching(identifier:"assessment.validation").firstMatch.waitForExistence(timeout:5))
-        assertAssessmentStep(3)
-        replace(app.textFields["assessment.age"],with:"30")
-        advanceAssessment(to:4)
-        let saveDraft=app.buttons["assessment.saveDraft"]
-        reveal(saveDraft);saveDraft.tap()
-        XCTAssertTrue(app.scrollViews["fitness.profile"].waitForExistence(timeout:10),app.debugDescription)
-
-        app.terminate();app.launch()
-        XCTAssertTrue(app.buttons["nav.today"].waitForExistence(timeout:15))
-        openFitnessProfile()
-        let resume=app.buttons["fitness.edit"]
-        reveal(resume);resume.tap()
-        assertAssessmentStep(4)
-        XCTAssertTrue(app.textFields["assessment.height"].exists,"The real saved page index must resume at height")
-        app.buttons["assessment.back"].tap()
-        assertAssessmentStep(3)
-        XCTAssertEqual(app.textFields["assessment.age"].value as? String,"30","The typed age must survive a cold launch")
-        advanceAssessment(to:4)
-        replace(app.textFields["assessment.height"],with:"175")
-        let finishHeight=app.buttons["assessment.keyboardDone"]
-        XCTAssertTrue(finishHeight.waitForExistence(timeout:5) && finishHeight.isHittable,"Numeric entry must provide a real keyboard Done action")
-        finishHeight.tap()
-        let keyboardDismissed=XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == false"),object:app.keyboards.firstMatch)
-        XCTAssertEqual(XCTWaiter.wait(for:[keyboardDismissed],timeout:5),.completed,"Done must dismiss the actual numeric keyboard")
-        XCTAssertEqual(numeric(app.textFields["assessment.height"].value as? String ?? ""),175,"Closing the keyboard must preserve the typed measurement")
-        let increaseHeight=app.buttons["assessment.height.increase"]
-        revealAssessmentControl(increaseHeight);increaseHeight.tap()
-        XCTAssertEqual(numeric(app.textFields["assessment.height"].value as? String ?? ""),175.5,"The supplied ruler control must edit the actual assessment value")
-        advanceAssessment(to:5)
-        replace(app.textFields["assessment.weight"],with:"80")
-        advanceAssessment(to:6)
-        skipAssessment(to:7) // Target weight is optional.
-        skipAssessment(to:8) // Pace uses its documented default.
-        tapAssessmentOption("assessment.activity.light")
-        advanceAssessment(to:9)
-        for step in 10...16 {skipAssessment(to:step)}
+        // Unsuitable cases stop at the real early safety question and never
+        // create a plan. The normal diary remains available after this error.
         tapAssessmentOption("assessment.safety.medicalDiet")
-        advanceAssessment(to:17)
-        let review=app.buttons["assessment.review"]
-        reveal(review);review.tap()
+        tapAssessmentNextExpectingError(at:2)
         let eligibilityError=app.descendants(matching:.any).matching(identifier:"assessment.validation").firstMatch
-        let visibleReason=XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == true AND hittable == true"),object:eligibilityError)
-        XCTAssertEqual(XCTWaiter.wait(for:[visibleReason],timeout:5),.completed,"A rejected preview must bring its reason into view without requiring the user to search for it")
-        XCTAssertTrue(eligibilityError.exists,app.debugDescription)
         XCTAssertTrue(eligibilityError.label.contains("This estimator does not create plans"),"Unsuitable assessment answers must explain why the plan cannot be previewed")
         XCTAssertFalse(app.alerts["Notice"].exists,"The inline assessment message must not compete with the root alert")
-        assertAssessmentStep(17)
         XCTAssertFalse(app.scrollViews["fitness.review"].exists,"A rejected assessment must not create or apply a plan")
-        app.buttons["assessment.back"].tap()
-        assertAssessmentStep(16)
         tapAssessmentOption("assessment.safety.generalAdult")
-        advanceAssessment(to:17)
-        reveal(review);review.tap()
+        advanceAssessment(to:3)
+        tapAssessmentOption("assessment.sex.male")
+        advanceAssessment(to:4)
+
+        // Exercise the actual controls from an empty answer: no fake default
+        // is inserted into storage, and an unanswered step cannot advance.
+        tapAssessmentNextExpectingError(at:4)
+        let age=app.textFields["assessment.age"]
+        let increaseAge=app.buttons["assessment.age.increase"]
+        revealAssessmentControl(increaseAge);increaseAge.tap()
+        XCTAssertEqual(numeric(age.value as? String ?? ""),31,"The first + must bootstrap an empty age using the stated suggestion")
+        exerciseAssessmentSlider("assessment.age.slider",field:age,range:18...100)
+        replace(age,with:"17")
+        tapAssessmentNextExpectingError(at:4)
+        XCTAssertEqual(age.value as? String,"17","Invalid input must remain editable instead of disappearing")
+        replace(age,with:"30")
+        advanceAssessment(to:5)
+        saveAndResumeFitnessDraft(expectedStep:5)
+        XCTAssertTrue(app.textFields["assessment.height"].exists,"The real saved page identifier must resume at height")
+        backAssessment(to:4)
+        XCTAssertEqual(app.textFields["assessment.age"].value as? String,"30","The typed age must survive a cold launch")
+        advanceAssessment(to:5)
+
+        let height=app.textFields["assessment.height"]
+        tapAssessmentNextExpectingError(at:5)
+        let increaseHeight=app.buttons["assessment.height.increase"]
+        revealAssessmentControl(increaseHeight);increaseHeight.tap()
+        XCTAssertEqual(numeric(height.value as? String ?? ""),170.5,"The first + must make an empty height usable")
+        let decreaseHeight=app.buttons["assessment.height.decrease"]
+        revealAssessmentControl(decreaseHeight);decreaseHeight.tap()
+        XCTAssertEqual(numeric(height.value as? String ?? ""),170)
+        exerciseAssessmentSlider("assessment.height.slider",field:height,range:120...230)
+        replace(height,with:"999")
+        tapAssessmentNextExpectingError(at:5)
+        XCTAssertEqual(height.value as? String,"999","Out-of-range manual input must stay visible for correction")
+        saveAndResumeFitnessDraft(expectedStep:5)
+        XCTAssertEqual(height.value as? String,"999","Save/resume must retain invalid raw input without treating it as a valid measurement")
+        backAssessment(to:4)
+        XCTAssertEqual(age.value as? String,"30")
+        advanceAssessment(to:5)
+        XCTAssertEqual(height.value as? String,"999","Back/forward must not discard an unfinished answer")
+        replace(height,with:"175")
+        finishAssessmentEditing()
+        XCTAssertEqual(numeric(height.value as? String ?? ""),175,"Closing the keyboard must preserve the typed measurement")
+        revealAssessmentControl(increaseHeight);increaseHeight.tap()
+        XCTAssertEqual(numeric(height.value as? String ?? ""),175.5,"Buttons, manual entry and the slider must edit the same value")
+        backAssessment(to:4)
+        advanceAssessment(to:5)
+        XCTAssertEqual(numeric(height.value as? String ?? ""),175.5,"The visible chosen height must match the retained answer")
+        advanceAssessment(to:6)
+        replace(app.textFields["assessment.weight"],with:"80")
+        finishAssessmentEditing()
+        let repeatedNext=app.buttons["assessment.next"]
+        reveal(repeatedNext);waitUntilEnabled(repeatedNext);repeatedNext.doubleTap()
+        assertAssessmentStep(7)
+        XCTAssertTrue(app.textFields["assessment.target"].exists,"Rapid repeated Continue taps must advance only once, rather than skipping an optional question")
+        replace(app.textFields["assessment.target"],with:"999")
+        tapAssessmentNextExpectingError(at:7)
+        replace(app.textFields["assessment.target"],with:"70")
+        finishAssessmentEditing()
+        skipAssessment(to:8)
+        backAssessment(to:7)
+        XCTAssertEqual(numeric(app.textFields["assessment.target"].value as? String ?? ""),70,"Optional skip must preserve an answer already supplied")
+        advanceAssessment(to:8)
+        tapAssessmentOption("assessment.activity.light")
+        advanceAssessment(to:9)
+        tapAssessmentOption("assessment.experience.beginner")
+        replace(app.textFields["assessment.days"],with:"3")
+        replace(app.textFields["assessment.minutes"],with:"30")
+        finishAssessmentEditing()
+        skipAssessment(to:10)
+        backAssessment(to:9)
+        XCTAssertEqual(numeric(app.textFields["assessment.days"].value as? String ?? ""),3)
+        XCTAssertEqual(numeric(app.textFields["assessment.minutes"].value as? String ?? ""),30,"Grouped training answers must survive optional skip and Back")
+        advanceAssessment(to:10)
+        replace(app.textFields["assessment.sleepHours"],with:"7.5")
+        finishAssessmentEditing()
+        skipAssessment(to:11)
+        backAssessment(to:10)
+        XCTAssertEqual(numeric(app.textFields["assessment.sleepHours"].value as? String ?? ""),7.5)
+        advanceAssessment(to:11)
+        recordFitnessScreen("Fitness compact review after manual and slider edits")
+        let review=app.buttons["assessment.review"]
+        reveal(review);waitUntilEnabled(review);review.tap()
         XCTAssertTrue(app.scrollViews["fitness.review"].waitForExistence(timeout:10),app.debugDescription)
         let current=app.staticTexts.matching(identifier:"fitness.review.calories.current").firstMatch
         let proposed=app.staticTexts.matching(identifier:"fitness.review.calories.proposed").firstMatch
@@ -343,8 +375,59 @@ final class LuqmaInteractionTests:XCTestCase {
 
     private func assertAssessmentStep(_ number:Int,file:StaticString=#filePath,line:UInt=#line) {
         let step=app.staticTexts["assessment.step"]
-        let ready=XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == true AND label == %@","\(number) of 17"),object:step)
+        let ready=XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == true AND label == %@","\(number) of 11"),object:step)
         XCTAssertEqual(XCTWaiter.wait(for:[ready],timeout:10),.completed,app.debugDescription,file:file,line:line)
+    }
+
+    private func waitUntilEnabled(_ control:XCUIElement,file:StaticString=#filePath,line:UInt=#line) {
+        let ready=XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == true AND enabled == true"),object:control)
+        XCTAssertEqual(XCTWaiter.wait(for:[ready],timeout:10),.completed,"The actual control must finish its current action before receiving another tap.\n"+app.debugDescription,file:file,line:line)
+    }
+
+    private func tapAssessmentNextExpectingError(at step:Int,file:StaticString=#filePath,line:UInt=#line) {
+        let next=app.buttons["assessment.next"]
+        reveal(next);waitUntilEnabled(next);next.tap()
+        let error=app.descendants(matching:.any).matching(identifier:"assessment.validation").firstMatch
+        let visible=XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == true AND hittable == true"),object:error)
+        XCTAssertEqual(XCTWaiter.wait(for:[visible],timeout:5),.completed,"The rejected step must bring its reason into view.\n"+app.debugDescription,file:file,line:line)
+        assertAssessmentStep(step,file:file,line:line)
+    }
+
+    private func exerciseAssessmentSlider(_ identifier:String,field:XCUIElement,range:ClosedRange<Double>,file:StaticString=#filePath,line:UInt=#line) {
+        let slider=app.sliders[identifier]
+        revealAssessmentControl(slider,file:file,line:line)
+        let original=numeric(field.value as? String ?? "")
+        // These are real consecutive native thumb drags without app-wide swipes,
+        // injected values, private gesture APIs or a pause between adjustments.
+        for position in [CGFloat(0.8),CGFloat(0.2),CGFloat(0.6)] {
+            slider.adjust(toNormalizedSliderPosition:position)
+            guard let displayed=numeric(field.value as? String ?? "") else {
+                XCTFail("Dragging must always leave a visible numeric measurement.\n"+app.debugDescription,file:file,line:line);return
+            }
+            XCTAssertTrue(displayed.isFinite && range.contains(displayed),"The actual value must remain in the displayed supported range",file:file,line:line)
+        }
+        XCTAssertNotEqual(numeric(field.value as? String ?? ""),original,"Native dragging must update the actual editable answer",file:file,line:line)
+        recordFitnessScreen("Fitness native slider interaction "+identifier)
+    }
+
+    private func finishAssessmentEditing(file:StaticString=#filePath,line:UInt=#line) {
+        let done=app.buttons["assessment.keyboardDone"]
+        XCTAssertTrue(done.waitForExistence(timeout:5) && done.isHittable,"Numeric entry must expose a real keyboard Done action",file:file,line:line)
+        done.tap()
+        let dismissed=XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == false"),object:app.keyboards.firstMatch)
+        XCTAssertEqual(XCTWaiter.wait(for:[dismissed],timeout:5),.completed,"Done must dismiss the actual numeric keyboard",file:file,line:line)
+    }
+
+    private func saveAndResumeFitnessDraft(expectedStep:Int) {
+        let save=app.buttons["assessment.saveDraft"]
+        reveal(save);waitUntilEnabled(save);save.tap()
+        XCTAssertTrue(app.scrollViews["fitness.profile"].waitForExistence(timeout:10),app.debugDescription)
+        app.terminate();app.launch()
+        XCTAssertTrue(app.buttons["nav.today"].waitForExistence(timeout:15))
+        openFitnessProfile()
+        let resume=app.buttons["fitness.edit"]
+        reveal(resume);resume.tap()
+        assertAssessmentStep(expectedStep)
     }
 
     private func tapAssessmentOption(_ identifier:String) {
@@ -377,12 +460,17 @@ final class LuqmaInteractionTests:XCTestCase {
 
     private func advanceAssessment(to step:Int) {
         let next=app.buttons["assessment.next"]
-        reveal(next);next.tap();assertAssessmentStep(step)
+        reveal(next);waitUntilEnabled(next);next.tap();assertAssessmentStep(step)
+    }
+
+    private func backAssessment(to step:Int) {
+        let back=app.buttons["assessment.back"]
+        waitUntilEnabled(back);back.tap();assertAssessmentStep(step)
     }
 
     private func skipAssessment(to step:Int) {
         let skip=app.buttons["assessment.skip"]
-        reveal(skip);skip.tap();assertAssessmentStep(step)
+        reveal(skip);waitUntilEnabled(skip);skip.tap();assertAssessmentStep(step)
     }
 
     func testNotificationPermissionAndReminderPersistence() throws {

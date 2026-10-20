@@ -140,7 +140,7 @@ jobs:
 
       - name: Capture native SwiftUI screens
         if: success()
-        # All 17 assessment pages, profile/review and three larger-text variants
+        # All 11 assessment pages, profile/review and three larger-text variants
         # join the original capture set with actual per-launch font audits.
         timeout-minutes: 35
         env:
@@ -169,7 +169,7 @@ jobs:
         env:
           BUNDLE_ID: ${{ vars.BUNDLE_ID }}
           BUILD_NUMBER: ${{ github.run_number }}
-        run: python3 Scripts/ui_preview.py --packages BuildOutput/Packages --app UIInteractionDerived/Build/Products/Debug-iphonesimulator/Luqma.app --output UIReference --device-type com.apple.CoreSimulator.SimDeviceType.iPhone-13-mini --language en --screens today kitchen progress search macro-goals photo-estimate recipe-details notifications reminders state-error state-loading state-empty state-success assessment-goal assessment-gender assessment-diet assessment-activity assessment-sleep assessment-review fitness-profile fitness-plan assessment-age assessment-height assessment-weight assessment-target assessment-pace assessment-experience assessment-training assessment-exercise assessment-recovery assessment-preferences assessment-safety
+        run: python3 Scripts/ui_preview.py --packages BuildOutput/Packages --app UIInteractionDerived/Build/Products/Debug-iphonesimulator/Luqma.app --output UIReference --device-type com.apple.CoreSimulator.SimDeviceType.iPhone-13-mini --language en --screens today kitchen progress search macro-goals photo-estimate recipe-details notifications reminders state-error state-loading state-empty state-success assessment-goal assessment-gender assessment-activity assessment-details assessment-review fitness-profile fitness-plan assessment-age assessment-height assessment-weight assessment-target assessment-training assessment-safety
 
       - name: Reference-width captures and readiness report
         if: always()

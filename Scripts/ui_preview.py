@@ -67,21 +67,17 @@ TEMPLATE_ROUTES = (("macro-goals", "goals"),
                    ("state-success", "stateSuccess"))
 FITNESS_ROUTES = (("assessment-goal", "assessmentGoal"),
                   ("assessment-gender", "assessmentGender"),
-                  ("assessment-diet", "assessmentDiet"),
                   ("assessment-activity", "assessmentActivity"),
-                  ("assessment-sleep", "assessmentSleep"),
+                  ("assessment-details", "assessmentDetails"),
                   ("assessment-review", "assessmentReview"),
                   ("fitness-profile", "fitnessProfile"),
                   ("fitness-plan", "fitnessPlan"))
-ASSESSMENT_EXTRA_ROUTES = (("assessment-age", 2), ("assessment-height", 3),
-                           ("assessment-weight", 4), ("assessment-target", 5),
-                           ("assessment-pace", 6), ("assessment-experience", 8),
-                           ("assessment-training", 9), ("assessment-exercise", 10),
-                           ("assessment-recovery", 12), ("assessment-preferences", 14),
-                           ("assessment-safety", 15))
+ASSESSMENT_EXTRA_ROUTES = (("assessment-age", 3), ("assessment-height", 4),
+                           ("assessment-weight", 5), ("assessment-target", 6),
+                           ("assessment-training", 8), ("assessment-safety", 1))
 ASSESSMENT_ACCESSIBILITY_ROUTES = (("accessibility-assessment-goal", 0),
-                                  ("accessibility-assessment-age", 2),
-                                  ("accessibility-assessment-safety", 15))
+                                  ("accessibility-assessment-age", 3),
+                                  ("accessibility-assessment-safety", 1))
 VARIANT_ROUTES = (("accessibility-today", ("-loqma-preview-overview", "-loqma-preview-accessibility")),
                   ("photo-components", ("-loqma-preview-photo", "-loqma-preview-photo-detailed")),
                   ("editorial-dinner", ("-loqma-preview-routine-dinner",)),

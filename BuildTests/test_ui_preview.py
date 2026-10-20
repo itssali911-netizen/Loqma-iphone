@@ -188,15 +188,24 @@ class CaptureRetryTests(unittest.TestCase):
 
     def test_fitness_routes_are_explicit_read_only_synthetic_previews(self):
         cases = {case["screen"]: case for case in preview_cases()}
-        self.assertEqual(len(FITNESS_ROUTES), 8)
+        self.assertEqual(len(FITNESS_ROUTES), 7)
         for screen, route in FITNESS_ROUTES:
             with self.subTest(screen=screen):
                 self.assertEqual(cases[screen]["arguments"], ["-loqma-preview-template", route])
                 self.assertTrue(cases[screen]["synthetic_fixture"])
                 self.assertTrue(cases[screen]["read_only_preview"])
         extra = [case for case in cases.values() if "assessment_page" in case]
-        self.assertEqual({case["assessment_page"] for case in extra} | {0,1,7,11,13,16}, set(range(17)))
-        self.assertEqual(len(extra),14)
+        self.assertEqual({case["assessment_page"] for case in extra} | {0,2,7,9,10}, set(range(11)))
+        self.assertEqual(len(extra),9)
+        self.assertEqual(EXPECTED_SCREEN_COUNT,47)
+        self.assertEqual(dict(ASSESSMENT_EXTRA_ROUTES),{
+            "assessment-age":3,"assessment-height":4,"assessment-weight":5,
+            "assessment-target":6,"assessment-training":8,"assessment-safety":1})
+        self.assertEqual(dict(ASSESSMENT_ACCESSIBILITY_ROUTES),{
+            "accessibility-assessment-goal":0,"accessibility-assessment-age":3,
+            "accessibility-assessment-safety":1})
+        self.assertNotIn("assessment-diet",cases)
+        self.assertNotIn("assessment-recovery",cases)
         for case in extra:
             self.assertTrue(case["synthetic_fixture"])
             self.assertTrue(case["read_only_preview"])
