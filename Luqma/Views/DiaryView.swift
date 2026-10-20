@@ -86,6 +86,9 @@ struct DiaryView:View {
                 if let plan=diary.state.appliedFitnessPlan,FitnessAssessmentState.hasAppliedGoals(diary.state){
                     Text(diary.t("\(plan.activity.trainingDays) أيام تدريب أسبوعيًا · \(plan.activity.stepsPerDay) خطوة مقترحة يوميًا","\(plan.activity.trainingDays) training days / week · \(plan.activity.stepsPerDay) suggested daily steps"))
                         .luqmaFont(.helper).foregroundStyle(Theme.muted).fixedSize(horizontal:false,vertical:true)
+                    if let current=diary.state.weights.max(by:{$0.day < $1.day})?.kg ?? diary.state.fitnessProfile?.answers.weightKG{
+                        Text(diary.t("الوزن الحالي: \(decimal(current)) كجم","Current weight: \(decimal(current)) kg")).luqmaFont(.helper).foregroundStyle(Theme.muted)
+                    }
                     if let target=diary.state.fitnessProfile?.answers.targetWeightKG{
                         Text(diary.t("وزن الهدف: \(decimal(target)) كجم","Target weight: \(decimal(target)) kg")).luqmaFont(.helper).foregroundStyle(Theme.muted)
                     }

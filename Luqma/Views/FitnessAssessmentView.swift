@@ -32,13 +32,13 @@ struct FitnessAssessmentView:View {
               ScrollView {
                 VStack(spacing:32){
                     if previewPage != nil{Notice(text:diary.t("مثال للعرض فقط؛ لا تُحفظ هذه الإجابات في ملفك.","Display example only; these answers are not saved to your profile."))}
-                    Text(question).luqmaFont(size:30,weight:.bold,relativeTo:.title)
+                    Text(question).luqmaFont(size:30,weight:.heavy,relativeTo:.title)
                         .multilineTextAlignment(.center).fixedSize(horizontal:false,vertical:true)
                         .frame(maxWidth:.infinity).accessibilityAddTraits(.isHeader)
                         .accessibilityIdentifier("assessment.question")
                     pageContent
                     if let validation{SandowStateAlert(text:validation).accessibilityIdentifier("assessment.validation").id("assessment.validation")}
-                }.padding(.horizontal,16).padding(.top,32).padding(.bottom,24)
+                }.padding(.horizontal,16).padding(.top,28).padding(.bottom,24)
               }.scrollDismissesKeyboard(.interactively).appBackground()
                 .onChange(of:validation){_,message in
                     if message != nil{DispatchQueue.main.async{scroll.scrollTo("assessment.validation",anchor:.bottom)}}
@@ -90,10 +90,10 @@ struct FitnessAssessmentView:View {
     }
     @ViewBuilder private var pageContent:some View {
         switch page {
-        case 0:choices(FitnessGoal.allCases,selection:$answers.goal,prefix:"goal",icons:["AssessmentGoalLose","AssessmentGoalMuscle","AssessmentGoalMuscle","AssessmentGoalEndurance","AssessmentGoalExplore"])
+        case 0:choices(FitnessGoal.allCases,selection:$answers.goal,prefix:"goal",icons:["CFAGoalScale","CFAGoalDumbbell","CFAGoalDumbbell","CFAGoalScale","CFAGoalEndurance"])
         case 1:gender
         case 2:VStack(spacing:16){
-            FitnessNumberField(title:diary.t("العمر بالسنوات","Age in years"),value:Binding(get:{answers.age.map(Double.init)},set:{answers.age=$0.flatMap{v in v.isFinite && (0...120).contains(v) && v.rounded()==v ? Int(v):nil}}),suffix:diary.t("سنة","years"),identifier:"assessment.age",integer:true)
+            FitnessNumberField(title:diary.t("العمر بالسنوات","Age in years"),value:Binding(get:{answers.age.map(Double.init)},set:{answers.age=$0.flatMap{v in v.isFinite && (0...120).contains(v) && v.rounded()==v ? Int(v):nil}}),suffix:diary.t("سنة","years"),identifier:"assessment.age",integer:true,pickerStyle:.age,pickerRange:18...100)
             helper("يُستخدم العمر لحساب احتياج الطاقة. هذه الحاسبة للبالغين من 18 إلى 100 سنة.","Age is used in the energy equation. This estimator supports adults aged 18 to 100.")
         }
         case 3:measurement(diary.t("الطول","Height"),value:$answers.heightCM,suffix:diary.t("سم","cm"),id:"height",note:diary.t("أدخل طولك بالسنتيمتر. نطاق هذه الحاسبة 120–230 سم.","Enter your height in centimetres. This estimator supports 120–230 cm."))
@@ -101,9 +101,13 @@ struct FitnessAssessmentView:View {
         case 5:measurement(diary.t("وزن الهدف — اختياري","Target weight — optional"),value:$answers.targetWeightKG,suffix:diary.t("كجم","kg"),id:"target",note:diary.t("لن نحدد موعدًا مضمونًا للوصول إلى هذا الوزن.","This does not promise a date for reaching that weight."))
         case 6:VStack(spacing:16){choices(FitnessPace.allCases,selection:$answers.pace,prefix:"pace");helper("تدرّجية هي الافتراضية. يتغير تقدير الطاقة بخطوة صغيرة بحسب هدفك؛ راجع الأرقام قبل اعتمادها.","Gentle is the default. Your goal determines a small estimated energy adjustment; review the numbers before applying them.")}
         case 7:VStack(spacing:16){choices(FitnessActivity.allCases,selection:$answers.activity,prefix:"activity");FitnessNumberField(title:diary.t("متوسط الخطوات — اختياري","Average daily steps — optional"),value:intBinding(\.stepsPerDay),suffix:diary.t("خطوة","steps"),identifier:"assessment.steps",integer:true);helper("اختر نشاط يومك المعتاد. لا تتم مزامنة خطوات من جهاز أو ساعة.","Choose your usual daily activity. Steps are not synced from a device or watch.")}
-        case 8:choices(FitnessExperience.allCases,selection:$answers.experience,prefix:"experience")
+        case 8:VStack(spacing:24){
+            Image("CFAGymEquipment").resizable().scaledToFit().frame(maxWidth:343,maxHeight:280).blendMode(.lighten).accessibilityHidden(true)
+            choices(FitnessExperience.allCases,selection:$answers.experience,prefix:"experience")
+        }
         case 9:VStack(spacing:20){
             FitnessNumberField(title:diary.t("أيام التدريب في الأسبوع","Training days per week"),value:intBinding(\.trainingDays),suffix:diary.t("أيام","days"),identifier:"assessment.days",integer:true)
+            trainingDays
             FitnessNumberField(title:diary.t("مدة الحصة","Session duration"),value:intBinding(\.sessionMinutes),suffix:diary.t("دقيقة","minutes"),identifier:"assessment.minutes",integer:true)
             choices(FitnessTrainingPlace.allCases,selection:$answers.trainingPlace,prefix:"place")
             helper("اختر ما تستطيع الالتزام به. الاقتراح النهائي يراعي خبرتك ولا ينشئ تمارين أو حجوزات.","Choose what fits your routine. The suggestion accounts for experience and does not create workouts or bookings.")
@@ -139,7 +143,7 @@ struct FitnessAssessmentView:View {
     private func choices<T:FitnessOption & Equatable>(_ options:[T],selection:Binding<T?>,prefix:String,icons:[String]=[])->some View {
         VStack(spacing:8){ForEach(Array(options.enumerated()),id:\.element.id){index,option in
             Button{selection.wrappedValue=option;validation=nil}label:{HStack(spacing:8){
-                if icons.indices.contains(index){Image(icons[index]).frame(width:24,height:24).accessibilityHidden(true)}
+                if icons.indices.contains(index){Image(icons[index]).renderingMode(.template).resizable().scaledToFit().frame(width:20,height:20).foregroundStyle(selection.wrappedValue == option ? Theme.text:Theme.muted).frame(width:28,height:28).accessibilityHidden(true)}
                 Text(option.title(diary.language)).luqmaFont(.button).fixedSize(horizontal:false,vertical:true).frame(maxWidth:.infinity,alignment:.leading)
                 Image(selection.wrappedValue == option ? "AssessmentChecked":"AssessmentUnchecked").frame(width:24,height:24).accessibilityHidden(true)
             }.padding(16).frame(minHeight:56).background(selection.wrappedValue == option ? Theme.surface:Theme.card,in:RoundedRectangle(cornerRadius:19))
@@ -153,27 +157,21 @@ struct FitnessAssessmentView:View {
             Button{answers.sex=sex;validation=nil}label:{
                 ZStack(alignment:.leading){
                     Theme.card
-                    GeometryReader{geometry in
-                        // Original 2:9680 photo boxes, including the card's 16pt
-                        // inset: male 340×227 at (81,-32), female 408×308 at
-                        // (52,-82). Move the box to the opposite side for RTL;
-                        // preserve its aspect and face rather than filling the card.
-                        let width:CGFloat=sex == .male ? 340:408
-                        let height:CGFloat=sex == .male ? 227:308
-                        let originalX:CGFloat=sex == .male ? 81:52
-                        let imageX=diary.language == .ar ? 344-originalX-width:geometry.size.width-344+originalX
-                        let imageY:CGFloat=sex == .male ? -32:-82
-                        Image(sex == .male ? "AssessmentMale":"AssessmentFemale").resizable().scaledToFill()
-                            .frame(width:width,height:height).position(x:imageX+width/2,y:imageY+height/2)
-                            .blendMode(.lighten).accessibilityHidden(true)
-                    }.environment(\.layoutDirection,.leftToRight)
+                    // The supplied 2669a71 card uses a 220×140 photo slot.
+                    // HStack mirrors the slot in RTL; the portrait stays natural.
+                    HStack(spacing:0){Spacer(minLength:0)
+                        Image(sex == .male ? "CFAMaleAthlete":"CFAFemaleAthlete").resizable().scaledToFill()
+                            .frame(width:220,height:140).clipped().blendMode(.lighten).allowsHitTesting(false).accessibilityHidden(true)
+                    }.allowsHitTesting(false)
                     VStack(alignment:.leading,spacing:32){
                         Text(sex.title(diary.language)).luqmaFont(.button).padding(.horizontal,4).background(Theme.card.opacity(0.9),in:Capsule())
                         Image(answers.sex == sex ? "AssessmentChecked":"AssessmentUnchecked").frame(width:24,height:24)
                     }.padding(16)
-                }.frame(height:144).clipShape(RoundedRectangle(cornerRadius:32))
-                    .overlay{RoundedRectangle(cornerRadius:32).stroke(answers.sex == sex ? Theme.accent:Color.clear,lineWidth:2)}
-            }.buttonStyle(.plain).accessibilityIdentifier("assessment.sex.\(sex.rawValue)").accessibilityAddTraits(answers.sex == sex ? .isSelected:[])
+                }.frame(minHeight:140).clipShape(RoundedRectangle(cornerRadius:24))
+                    .contentShape(RoundedRectangle(cornerRadius:24))
+                    .overlay{RoundedRectangle(cornerRadius:24).stroke(answers.sex == sex ? Theme.accent:Color.clear,lineWidth:1.5)}
+            }.buttonStyle(.plain).accessibilityElement(children:.ignore).accessibilityLabel(sex.title(diary.language))
+                .accessibilityIdentifier("assessment.sex.\(sex.rawValue)").accessibilityAddTraits(answers.sex == sex ? .isSelected:[])
         }
         helper("تحتاج معادلة الطاقة هذا الاختيار ولا يُستخدم لإثبات هويتك. لا نطلب اسمك أو تاريخ ميلادك الكامل.","The energy equation needs this input; it is not an identity check. We do not ask for your name or full date of birth.")}
     }
@@ -192,7 +190,7 @@ struct FitnessAssessmentView:View {
             let selected=answers.exercise.contains(option)
             Button{if selected{answers.exercise.removeAll{$0 == option}}else{answers.exercise.append(option)}}label:{VStack(spacing:16){
                 if option == .swimming{Image(systemName:"figure.pool.swim").font(.system(size:38,weight:.regular)).frame(width:48,height:48).accessibilityHidden(true)}
-                else{Image("AssessmentExercise\(index)").frame(width:48,height:48).accessibilityHidden(true)}
+                else{Image(["CFAExWalking","CFAExWeightlift","CFAExCardio","CFAExBiking","CFAExYoga"][index]).renderingMode(.template).resizable().scaledToFit().frame(width:48,height:48).foregroundStyle(selected ? Theme.text:Theme.muted).accessibilityHidden(true)}
                 Text(option.title(diary.language)).luqmaFont(.button).fixedSize(horizontal:false,vertical:true).frame(maxWidth:.infinity,minHeight:44)
             }.padding(12).background(selected ? Theme.surface:Theme.card,in:RoundedRectangle(cornerRadius:24))
                 .overlay{RoundedRectangle(cornerRadius:24).stroke(selected ? Theme.controlBorder:Color.clear,lineWidth:2)}}
@@ -201,7 +199,7 @@ struct FitnessAssessmentView:View {
     }
     private var sleepQuality:some View {
         VStack(spacing:8){ForEach(Array(FitnessSleepQuality.allCases.enumerated()),id:\.element.id){index,quality in
-            Button{answers.sleepQuality=quality}label:{HStack(spacing:16){Image("AssessmentSleep\([4,2,0][index])").frame(width:48,height:48).accessibilityHidden(true)
+            Button{answers.sleepQuality=quality}label:{HStack(spacing:16){Image(["CFASleepBad","CFASleepNormal","CFASleepExcellent"][index]).renderingMode(.template).resizable().scaledToFit().frame(width:48,height:48).foregroundStyle(answers.sleepQuality == quality ? Theme.text:Theme.muted).accessibilityHidden(true)
                 Text(quality.title(diary.language)).luqmaFont(size:18,weight:.semibold,relativeTo:.headline).frame(maxWidth:.infinity,alignment:.leading)
                 Image(answers.sleepQuality == quality ? "AssessmentChecked":"AssessmentUnchecked").frame(width:24,height:24)
             }.padding(.horizontal,16).padding(.vertical,12).frame(minHeight:72)
@@ -237,14 +235,23 @@ struct FitnessAssessmentView:View {
     }
     @ViewBuilder private func dietIcon(_ option:FitnessDietPreference)->some View {
         switch option {
-        case .vegan,.vegetarian:Image("AssessmentDietPlant").frame(width:24,height:24).accessibilityHidden(true)
-        case .balanced:Image("AssessmentDietBread").frame(width:24,height:24).accessibilityHidden(true)
+        case .vegan,.vegetarian:Image("CFADietVegan").renderingMode(.template).resizable().scaledToFit().frame(width:24,height:24).accessibilityHidden(true)
+        case .balanced:Image("CFADietCarbo").renderingMode(.template).resizable().scaledToFit().frame(width:24,height:24).accessibilityHidden(true)
         case .pescatarian:Image(systemName:"fish.fill").font(.system(size:23)).frame(width:24,height:24).accessibilityHidden(true)
-        case .halal:Image("AssessmentDietFood").frame(width:24,height:24).accessibilityHidden(true)
+        case .halal:Image("CFADietTraditional").renderingMode(.template).resizable().scaledToFit().frame(width:24,height:24).accessibilityHidden(true)
         }
     }
     private func measurement(_ title:String,value:Binding<Double?>,suffix:String,id:String,note:String)->some View {
-        VStack(spacing:20){FitnessNumberField(title:title,value:value,suffix:suffix,identifier:"assessment.\(id)");Text(note).luqmaFont(.helper).foregroundStyle(Theme.muted).fixedSize(horizontal:false,vertical:true)}
+        VStack(spacing:20){FitnessNumberField(title:title,value:value,suffix:suffix,identifier:"assessment.\(id)",pickerStyle:id == "height" ? .height:.weight,pickerRange:id == "height" ? 120...230:35...300);Text(note).luqmaFont(.helper).foregroundStyle(Theme.muted).fixedSize(horizontal:false,vertical:true)}
+    }
+    private var trainingDays:some View {
+        LazyVGrid(columns:[GridItem(.adaptive(minimum:44),spacing:8)],spacing:8){ForEach(0...7,id:\.self){day in
+            Button{answers.trainingDays=day;validation=nil}label:{Text(String(day)).luqmaFont(size:20,weight:.heavy,relativeTo:.title3).monospacedDigit().frame(maxWidth:.infinity,minHeight:56)
+                .foregroundStyle(answers.trainingDays == day ? Theme.onSecondaryAccent:Theme.muted)
+                .background(answers.trainingDays == day ? Theme.secondaryAccent:Theme.card,in:RoundedRectangle(cornerRadius:18))}
+                .buttonStyle(.plain).accessibilityLabel(diary.t("\(day) أيام أسبوعيًا","\(day) days per week")).accessibilityIdentifier("assessment.days.choice.\(day)")
+                .accessibilityAddTraits(answers.trainingDays == day ? .isSelected:[])
+        }}
     }
     private func helper(_ ar:String,_ en:String)->some View {Text(diary.t(ar,en)).luqmaFont(.helper).foregroundStyle(Theme.muted).fixedSize(horizontal:false,vertical:true).frame(maxWidth:.infinity,alignment:.leading)}
     private func notes(_ title:String,text:Binding<String>,id:String)->some View {
@@ -313,10 +320,19 @@ private struct FitnessNumberField:View {
     var suffix:String
     var identifier:String
     var integer=false
+    var pickerStyle:AssessmentNumberPicker.Style?=nil
+    var pickerRange:ClosedRange<Double> = 0...300
     @State private var text=""
+    @State private var pickerEditing=false
     @FocusState private var focused:Bool
+    private var isEditing:Bool{pickerStyle == nil ? focused:pickerEditing}
     var body:some View {
-        VStack(alignment:.leading,spacing:12){
+        Group{if let pickerStyle{
+            AssessmentNumberPicker(title:title,text:Binding(get:{text},set:{new in
+                text=new
+                value=TextSearch.number(new).flatMap{$0.isFinite ? $0:nil}
+            }),unit:suffix,range:pickerRange,step:integer ? 1:0.5,identifier:identifier,style:pickerStyle,onEditingChanged:{pickerEditing=$0})
+        }else{VStack(alignment:.leading,spacing:12){
             Text(title).luqmaFont(.label).fixedSize(horizontal:false,vertical:true)
             HStack(alignment:.firstTextBaseline,spacing:12){
                 TextField("—",text:$text,prompt:Text("—").foregroundColor(Theme.muted)).keyboardType(integer ? .numberPad:.decimalPad).focused($focused)
@@ -324,10 +340,11 @@ private struct FitnessNumberField:View {
                     .environment(\.layoutDirection,.leftToRight).accessibilityLabel(title).accessibilityIdentifier(identifier)
                 Text(suffix).luqmaFont(.label).foregroundStyle(Theme.muted)
             }.padding(20).background(Theme.card,in:RoundedRectangle(cornerRadius:24))
-        }.onAppear{text=value.map{decimal($0,integer ? 0:1)} ?? ""}
-            .onChange(of:text){_,new in if focused{value=TextSearch.number(new).flatMap{$0.isFinite ? $0:nil}}}
+        }}}.onAppear{text=value.map{decimal($0,integer ? 0:1)} ?? ""}
+            .onChange(of:text){_,new in if focused && pickerStyle == nil{value=TextSearch.number(new).flatMap{$0.isFinite ? $0:nil}}}
             .onChange(of:focused){_,active in if !active{text=value.map{decimal($0,integer ? 0:1)} ?? ""}}
-            .onChange(of:value){_,new in if !focused{text=new.map{decimal($0,integer ? 0:1)} ?? ""}}
+            .onChange(of:pickerEditing){_,active in if !active{text=value.map{decimal($0,integer ? 0:1)} ?? ""}}
+            .onChange(of:value){_,new in if !isEditing{text=new.map{decimal($0,integer ? 0:1)} ?? ""}}
     }
 }
 

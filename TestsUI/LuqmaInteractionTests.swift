@@ -181,6 +181,9 @@ final class LuqmaInteractionTests:XCTestCase {
         XCTAssertEqual(app.textFields["assessment.age"].value as? String,"30","The typed age must survive a cold launch")
         advanceAssessment(to:4)
         replace(app.textFields["assessment.height"],with:"175")
+        let increaseHeight=app.buttons["assessment.height.increase"]
+        reveal(increaseHeight);increaseHeight.tap()
+        XCTAssertEqual(numeric(app.textFields["assessment.height"].value as? String ?? ""),175.5,"The supplied ruler control must edit the actual assessment value")
         advanceAssessment(to:5)
         replace(app.textFields["assessment.weight"],with:"80")
         advanceAssessment(to:6)
