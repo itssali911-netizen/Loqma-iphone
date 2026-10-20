@@ -112,6 +112,28 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+      - name: Test actual navigation, food edits and persistence
+        if: success()
+        # Run the isolated fitness case before the other native scenarios and
+        # screenshot capture so interaction regressions fail without that wait.
+        # Keep derived data separate; capture requires a new UIPreview folder.
+        timeout-minutes: 45
+        run: python3 Scripts/ui_interactions.py --packages BuildOutput/Packages --derived UIInteractionDerived --output UIInteractions
+
+      - name: Native interaction test results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: Luqma-ui-interactions-${{ github.run_number }}-attempt-${{ github.run_attempt }}
+          path: |
+            UIInteractions/*.json
+            UIInteractions/*.log
+            UIInteractions/*.xcresult
+            UIInteractions/permission-denied/
+            UIInteractions/fitness-assessment/
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Capture native SwiftUI screens
         if: success()
         # All 17 assessment pages, profile/review and three larger-text variants
@@ -155,28 +177,6 @@ jobs:
             UIReference/*.json
             UIReference/*.log
             UIReference/font-audits/
-          if-no-files-found: ignore
-          retention-days: 7
-
-      - name: Test actual navigation, food edits and persistence
-        if: success()
-        # Three separate fresh Simulators include compilation, first boot and
-        # real permission dialogs. The first six cases passed before the old
-        # 22-minute budget expired while preparing the fitness scenario.
-        timeout-minutes: 45
-        run: python3 Scripts/ui_interactions.py --packages BuildOutput/Packages --derived UIPreview/derived --output UIInteractions
-
-      - name: Native interaction test results
-        if: always()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        with:
-          name: Luqma-ui-interactions-${{ github.run_number }}-attempt-${{ github.run_attempt }}
-          path: |
-            UIInteractions/*.json
-            UIInteractions/*.log
-            UIInteractions/*.xcresult
-            UIInteractions/permission-denied/
-            UIInteractions/fitness-assessment/
           if-no-files-found: ignore
           retention-days: 7
 

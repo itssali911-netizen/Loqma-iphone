@@ -87,17 +87,24 @@ def run_tests(output: Path, packages: Path, derived: Path) -> None:
                 fresh_simulator=False, existing_device_data_modified=False,
                 api_key_used=False, physical_device_verified=False,
                 physical_notification_delivery_verified=False, permissions_pregranted=False,
-                scenarios=[])
+                scenarios=[], scenario_execution_order=[])
     try:
         inventory=json.loads(command(['xcrun','simctl','list','--json'],output,'inventory'))
         runtime=select_runtime(inventory)
         apply_vision_compat(packages)
-        for name,directory,methods in [('permission-allowed',output,PRIMARY_TESTS),
-                                        ('permission-denied',output/'permission-denied',DENIED_TESTS),
-                                        ('fitness-assessment',output/'fitness-assessment',FITNESS_TESTS)]:
+        # Exercise the assessment first, before the longer existing scenarios.
+        # Failed reports retain the actual partial execution order and evidence.
+        for name,directory,methods in [('fitness-assessment',output/'fitness-assessment',FITNESS_TESTS),
+                                        ('permission-allowed',output,PRIMARY_TESTS),
+                                        ('permission-denied',output/'permission-denied',DENIED_TESTS)]:
             scenario=dict(name=name,status='running',fresh_simulator=False,required_cases=list(methods))
             report['scenarios'].append(scenario)
+            report['scenario_execution_order'].append(name)
             run_scenario(directory,packages,derived,runtime,methods,scenario)
+        # Successful evidence keeps the established consumer/schema order.
+        # This reorders only actual completed scenarios, not their outcomes.
+        completed={item['name']:item for item in report['scenarios']}
+        report['scenarios']=[completed[name] for name in ('permission-allowed','permission-denied','fitness-assessment')]
         report['fresh_simulator']=all(item['fresh_simulator'] for item in report['scenarios'])
         report['simulator']=report['scenarios'][0]['simulator']
         report['passed_cases']=[name for item in report['scenarios'] for name in item['passed_cases']]
@@ -119,7 +126,7 @@ if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output',type=Path,default=Path('UIInteractions'))
     parser.add_argument('--packages',type=Path,default=Path('BuildOutput/Packages'))
-    parser.add_argument('--derived',type=Path,default=Path('UIPreview/derived'))
+    parser.add_argument('--derived',type=Path,default=Path('UIInteractionDerived'))
     args=parser.parse_args()
     try:run_tests(args.output.resolve(),args.packages.resolve(),args.derived.resolve())
     except (BuildError,OSError,ValueError) as error:

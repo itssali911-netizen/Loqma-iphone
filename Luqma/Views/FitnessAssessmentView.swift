@@ -165,12 +165,12 @@ struct FitnessAssessmentView:View {
                     }.allowsHitTesting(false)
                     VStack(alignment:.leading,spacing:32){
                         Text(sex.title(diary.language)).luqmaFont(.button).padding(.horizontal,4).background(Theme.card.opacity(0.9),in:Capsule())
-                        Image(answers.sex == sex ? "AssessmentChecked":"AssessmentUnchecked").frame(width:24,height:24)
+                        Image(answers.sex == sex ? "AssessmentChecked":"AssessmentUnchecked").frame(width:24,height:24).accessibilityHidden(true)
                     }.padding(16)
                 }.frame(minHeight:140).clipShape(RoundedRectangle(cornerRadius:24))
                     .contentShape(RoundedRectangle(cornerRadius:24))
                     .overlay{RoundedRectangle(cornerRadius:24).stroke(answers.sex == sex ? Theme.accent:Color.clear,lineWidth:1.5)}
-            }.buttonStyle(.plain).accessibilityElement(children:.ignore).accessibilityLabel(sex.title(diary.language))
+            }.buttonStyle(.plain).accessibilityLabel(sex.title(diary.language))
                 .accessibilityIdentifier("assessment.sex.\(sex.rawValue)").accessibilityAddTraits(answers.sex == sex ? .isSelected:[])
         }
         helper("تحتاج معادلة الطاقة هذا الاختيار ولا يُستخدم لإثبات هويتك. لا نطلب اسمك أو تاريخ ميلادك الكامل.","The energy equation needs this input; it is not an identity check. We do not ask for your name or full date of birth.")}
