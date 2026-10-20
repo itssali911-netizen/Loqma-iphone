@@ -54,7 +54,7 @@ concurrency:
 jobs:
   build:
     runs-on: macos-26
-    timeout-minutes: 90
+    timeout-minutes: 150
     defaults:
       run:
         shell: bash
@@ -160,7 +160,10 @@ jobs:
 
       - name: Test actual navigation, food edits and persistence
         if: success()
-        timeout-minutes: 22
+        # Three separate fresh Simulators include compilation, first boot and
+        # real permission dialogs. The first six cases passed before the old
+        # 22-minute budget expired while preparing the fitness scenario.
+        timeout-minutes: 45
         run: python3 Scripts/ui_interactions.py --packages BuildOutput/Packages --derived UIPreview/derived --output UIInteractions
 
       - name: Native interaction test results
@@ -173,6 +176,7 @@ jobs:
             UIInteractions/*.log
             UIInteractions/*.xcresult
             UIInteractions/permission-denied/
+            UIInteractions/fitness-assessment/
           if-no-files-found: ignore
           retention-days: 7
 
