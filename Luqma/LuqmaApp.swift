@@ -238,12 +238,12 @@ struct RootView:View {
         HStack(alignment:.center,spacing:4){
             navigationButton(0,title:diary.t("اليوم","Today"),symbol:"house")
             navigationButton(1,title:diary.t("مطبخي","Kitchen"),symbol:"fork.knife")
-            Button{addingMeal=nil;adding=true}label:{Image(systemName:"plus").font(.system(size:27,weight:.medium)).foregroundStyle(Theme.onAccent).frame(width:54,height:54).background(Theme.accent,in:RoundedRectangle(cornerRadius:17,style:.continuous))}.buttonStyle(.plain).frame(maxWidth:.infinity,minHeight:54).accessibilityLabel(diary.t("إضافة طعام إلى اليوم","Add food to today")).accessibilityIdentifier("nav.add")
+            Button{addingMeal=nil;adding=true}label:{Image(systemName:"plus").font(.system(size:27,weight:.medium)).foregroundStyle(Theme.onAccent).frame(width:Theme.bottomBarItemHeight,height:Theme.bottomBarItemHeight).background(Theme.accent,in:RoundedRectangle(cornerRadius:17,style:.continuous))}.buttonStyle(.plain).frame(maxWidth:.infinity,minHeight:Theme.bottomBarItemHeight).accessibilityLabel(diary.t("إضافة طعام إلى اليوم","Add food to today")).accessibilityIdentifier("nav.add")
             navigationButton(2,title:diary.t("تقدّمي","Progress"),symbol:"chart.bar")
             navigationButton(3,title:diary.t("الإعدادات","Settings"),symbol:"gearshape")
-        }.padding(.horizontal,10).padding(.vertical,6)
+        }.padding(.horizontal,10).padding(.vertical,Theme.bottomBarPadding)
             .background(Theme.surface,in:RoundedRectangle(cornerRadius:24,style:.continuous))
-            .padding(.horizontal,16).padding(.top,6).padding(.bottom,4).background(Theme.background)
+            .padding(.horizontal,16).padding(.top,Theme.bottomBarTopGap).padding(.bottom,Theme.bottomBarBottomGap).background(Theme.background)
     }
     private func navigationButton(_ value:Int,title:String,symbol:String)->some View {
         Button{tab=value}label:{VStack(spacing:3){
@@ -251,7 +251,7 @@ struct RootView:View {
                 .foregroundStyle(tab == value ? Theme.text:Theme.muted).frame(width:44,height:34)
                 .background(tab == value ? Theme.background:Color.clear,in:RoundedRectangle(cornerRadius:12,style:.continuous))
             Capsule().fill(tab == value ? Theme.accent:Color.clear).frame(width:18,height:3)
-        }.frame(maxWidth:.infinity,minHeight:54).contentShape(Rectangle())}.buttonStyle(.plain).accessibilityLabel(title).accessibilityAddTraits(tab == value ? .isSelected:[])
+        }.frame(maxWidth:.infinity,minHeight:Theme.bottomBarItemHeight).contentShape(Rectangle())}.buttonStyle(.plain).accessibilityLabel(title).accessibilityAddTraits(tab == value ? .isSelected:[])
             .accessibilityIdentifier(["nav.today","nav.kitchen","nav.progress","nav.settings"][value])
     }
 }

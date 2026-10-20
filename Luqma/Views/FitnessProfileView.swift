@@ -39,6 +39,9 @@ struct FitnessProfileView: View {
                 }
                 if let error = diary.error { SandowStateAlert(text: error) }
             }.padding(16).padding(.vertical, 8)
+                // Pushed TabView destinations can extend behind the custom
+                // bar. Let the final control scroll above its actual height.
+                .padding(.bottom, Theme.bottomBarHeight)
         }.appBackground().accessibilityIdentifier("fitness.profile")
             .sandowNavigation(diary.t("ملف اللياقة", "Fitness profile"), backLabel: diary.t("رجوع", "Back"))
             .sheet(isPresented: $editing) { FitnessAssessmentView() }

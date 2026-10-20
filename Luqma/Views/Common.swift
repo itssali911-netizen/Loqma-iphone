@@ -29,6 +29,11 @@ enum Theme {
     // These values do not imply that the flattened target panels expose their child metrics.
     static let navigationHeight:CGFloat=48
     static let primaryButtonHeight:CGFloat=56
+    static let bottomBarItemHeight:CGFloat=54
+    static let bottomBarPadding:CGFloat=6
+    static let bottomBarTopGap:CGFloat=6
+    static let bottomBarBottomGap:CGFloat=4
+    static let bottomBarHeight:CGFloat=bottomBarItemHeight+2*bottomBarPadding+bottomBarTopGap+bottomBarBottomGap
 }
 extension View {
     func luqmaCard() -> some View {padding(16).frame(maxWidth:.infinity,alignment:.leading).background(Theme.card,in:RoundedRectangle(cornerRadius:Theme.cardRadius,style:.continuous))}
