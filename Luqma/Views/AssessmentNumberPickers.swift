@@ -151,9 +151,9 @@ struct AssessmentNumberPicker: View {
         }
         .frame(height: 124).clipped().contentShape(Rectangle())
         .environment(\.layoutDirection, .leftToRight)
-        .gesture(DragGesture(minimumDistance: 4)
+        .simultaneousGesture(DragGesture(minimumDistance: 14)
             .onChanged { gesture in
-                guard let value else { return }
+                guard abs(gesture.translation.width) > abs(gesture.translation.height), let value else { return }
                 if dragStart == nil { dragStart = value; focused = false }
                 let steps = (-Double(gesture.translation.width) / 14).rounded()
                 setValue((dragStart ?? value) + steps * increment)
