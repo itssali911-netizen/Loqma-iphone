@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// The original assessment's header, question hierarchy and selection surfaces.
 /// Additional questions reuse those patterns; see Docs/FitnessAssessmentDesign.
@@ -11,7 +12,6 @@ struct FitnessAssessmentView:View {
     @State private var validation:String?
     @State private var showingPlan=false
     @State private var reviewed=false
-    @FocusState private var fieldFocused:Bool
     private let previewPage:Int?
     private let total=17
 
@@ -40,6 +40,7 @@ struct FitnessAssessmentView:View {
                     if let validation{SandowStateAlert(text:validation).accessibilityIdentifier("assessment.validation").id("assessment.validation")}
                 }.padding(.horizontal,16).padding(.top,28).padding(.bottom,24)
               }.scrollDismissesKeyboard(.interactively).appBackground()
+                .accessibilityIdentifier("assessment.form")
                 .onChange(of:validation){_,message in
                     if message != nil{DispatchQueue.main.async{scroll.scrollTo("assessment.validation",anchor:.bottom)}}
                 }
@@ -47,6 +48,14 @@ struct FitnessAssessmentView:View {
                 .safeAreaInset(edge:.top,spacing:0){header}
                 .safeAreaInset(edge:.bottom,spacing:0){footer}
                 .toolbar(.hidden,for:.navigationBar)
+                .toolbar {
+                    ToolbarItemGroup(placement:.keyboard) {
+                        Spacer()
+                        Button(diary.t("تم","Done")){endEditing()}
+                            .luqmaFont(.button).foregroundStyle(Theme.accentText)
+                            .accessibilityIdentifier("assessment.keyboardDone")
+                    }
+                }
                 .navigationDestination(isPresented:$showingPlan){FitnessPlanReviewView()}
                 .onAppear{load()}
                 .onChange(of:answers){_,_ in reviewed=false}
@@ -83,7 +92,7 @@ struct FitnessAssessmentView:View {
                     .scaleEffect(x:diary.language == .ar ? -1:1,y:1)
             }}.buttonStyle(LuqmaPrimaryButtonStyle()).accessibilityIdentifier(page == 16 ? "assessment.review":"assessment.next")
             Button(diary.t("حفظ وإكمال لاحقًا","Save and finish later")){
-                fieldFocused=false
+                endEditing()
                 if persist(){_ = diary.deferFitnessAssessment();dismiss()}
             }.luqmaFont(.helper).foregroundStyle(Theme.muted).frame(minHeight:44).accessibilityIdentifier("assessment.saveDraft")
         }.padding(.horizontal,16).padding(.top,8).padding(.bottom,8).background(Theme.background)
@@ -283,11 +292,12 @@ struct FitnessAssessmentView:View {
         diary.error=nil
     }
     private func back(){
+        endEditing()
         if page>0{page-=1;validation=nil;_ = persist()}
         else if persist(){dismiss()}
     }
     private func next(){
-        fieldFocused=false;validation=nil
+        endEditing();validation=nil
         let valid:Bool
         switch page {
         case 0:valid=answers.goal != nil
@@ -308,7 +318,12 @@ struct FitnessAssessmentView:View {
             }
         }else{advance()}
     }
-    private func advance(){page=min(total-1,page+1);validation=nil;_ = persist()}
+    private func advance(){endEditing();page=min(total-1,page+1);validation=nil;_ = persist()}
+    private func endEditing(){
+        // Numeric fields own their focus. End the actual first responder so
+        // their keyboard cannot conceal the ruler controls or the next page.
+        _ = UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),to:nil,from:nil,for:nil)
+    }
     private func clearOptional(){
         switch page{case 5:answers.targetWeightKG=nil;case 6:answers.pace=nil;case 8:answers.experience=nil;case 9:answers.trainingDays=nil;answers.sessionMinutes=nil;answers.trainingPlace=nil;case 10:answers.exercise=[];case 11:answers.sleepHours=nil;answers.sleepQuality=nil;case 12:answers.bedtime=nil;answers.wakeTime=nil;answers.stress=nil;case 13:answers.diet=nil;case 14:answers.mealsPerDay=nil;answers.dislikedFoods="";answers.allergies="";answers.restrictions="";default:break}
     }

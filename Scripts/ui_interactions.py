@@ -18,7 +18,7 @@ import uuid
 
 from build_ios import BuildError, require_mac
 from simulator_support import prepare_created_simulator
-from ui_preview import DEVICE_TYPE, command, select_runtime
+from ui_preview import DEVICE_TYPE, command, select_runtime, validate_app
 from vision_compat import apply_vision_compat
 
 PRIMARY_TESTS = ('testFoodAddResizePersistenceAndDelete', 'testTabNavigationAndGoalsPersistAfterRelaunch',
@@ -30,7 +30,7 @@ TESTS = PRIMARY_TESTS + DENIED_TESTS + FITNESS_TESTS
 
 
 def run_scenario(output: Path, packages: Path, derived: Path, runtime: dict,
-                 methods: tuple[str, ...], report: dict) -> None:
+                 methods: tuple[str, ...], report: dict, build_number: str) -> None:
     """Use a separately created device for each OS notification permission choice.
 
     simctl has no supported notifications privacy reset. A denied permission is
@@ -55,7 +55,8 @@ def run_scenario(output: Path, packages: Path, derived: Path, runtime: dict,
                      '-destination','id='+device,'-configuration','Debug','-derivedDataPath',str(derived),
                      '-resultBundlePath',str(result),'-parallel-testing-enabled','NO',
                      *selection,'ARCHS=arm64','ONLY_ACTIVE_ARCH=YES',
-                     'CODE_SIGNING_ALLOWED=NO','test'],output,'native-interactions',1200)
+                     'CODE_SIGNING_ALLOWED=NO','CURRENT_PROJECT_VERSION='+build_number,
+                     'test'],output,'native-interactions',1500)
         # An empty XCTest run or successful rendering is not functional evidence.
         passed=[name for name in methods if re.search(r"Test Case '.*"+re.escape(name)+r".*' passed",log)]
         report['passed_cases']=passed
@@ -89,6 +90,12 @@ def run_tests(output: Path, packages: Path, derived: Path) -> None:
                 physical_notification_delivery_verified=False, permissions_pregranted=False,
                 scenarios=[], scenario_execution_order=[])
     try:
+        build_number=os.environ.get('BUILD_NUMBER','1') or '1'
+        if not re.fullmatch(r'[1-9][0-9]{0,8}',build_number):
+            raise BuildError('BUILD_NUMBER must be a positive integer with at most nine digits.')
+        bundle=os.environ.get('BUNDLE_ID','') or 'app.luqma.diary'
+        if not re.fullmatch(r'[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+',bundle):
+            raise BuildError('BUNDLE_ID is invalid.')
         inventory=json.loads(command(['xcrun','simctl','list','--json'],output,'inventory'))
         runtime=select_runtime(inventory)
         apply_vision_compat(packages)
@@ -100,7 +107,7 @@ def run_tests(output: Path, packages: Path, derived: Path) -> None:
             scenario=dict(name=name,status='running',fresh_simulator=False,required_cases=list(methods))
             report['scenarios'].append(scenario)
             report['scenario_execution_order'].append(name)
-            run_scenario(directory,packages,derived,runtime,methods,scenario)
+            run_scenario(directory,packages,derived,runtime,methods,scenario,build_number)
         # Successful evidence keeps the established consumer/schema order.
         # This reorders only actual completed scenarios, not their outcomes.
         completed={item['name']:item for item in report['scenarios']}
@@ -111,6 +118,12 @@ def run_tests(output: Path, packages: Path, derived: Path) -> None:
         if set(report['passed_cases'])!=set(TESTS):
             raise BuildError('Native runs did not report every required interaction case as passed.')
         apply_vision_compat(packages,verify_only=True)
+        # Capture can reuse the tested Debug Simulator app without recompiling.
+        # Its actual identity must match this run; no global bundle override is
+        # applied to xcodebuild test, which also builds the XCTest runner target.
+        report['app']=validate_app(derived/'Build/Products/Debug-iphonesimulator/Luqma.app',bundle,output)
+        if str(report['app'].get('build'))!=build_number:
+            raise BuildError('The tested Simulator application build does not match BUILD_NUMBER.')
         report['status']='passed'
     except BaseException as error:
         report['status']='failed'

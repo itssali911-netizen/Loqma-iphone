@@ -181,8 +181,14 @@ final class LuqmaInteractionTests:XCTestCase {
         XCTAssertEqual(app.textFields["assessment.age"].value as? String,"30","The typed age must survive a cold launch")
         advanceAssessment(to:4)
         replace(app.textFields["assessment.height"],with:"175")
+        let finishHeight=app.buttons["assessment.keyboardDone"]
+        XCTAssertTrue(finishHeight.waitForExistence(timeout:5) && finishHeight.isHittable,"Numeric entry must provide a real keyboard Done action")
+        finishHeight.tap()
+        let keyboardDismissed=XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == false"),object:app.keyboards.firstMatch)
+        XCTAssertEqual(XCTWaiter.wait(for:[keyboardDismissed],timeout:5),.completed,"Done must dismiss the actual numeric keyboard")
+        XCTAssertEqual(numeric(app.textFields["assessment.height"].value as? String ?? ""),175,"Closing the keyboard must preserve the typed measurement")
         let increaseHeight=app.buttons["assessment.height.increase"]
-        reveal(increaseHeight);increaseHeight.tap()
+        revealAssessmentControl(increaseHeight);increaseHeight.tap()
         XCTAssertEqual(numeric(app.textFields["assessment.height"].value as? String ?? ""),175.5,"The supplied ruler control must edit the actual assessment value")
         advanceAssessment(to:5)
         replace(app.textFields["assessment.weight"],with:"80")
@@ -338,6 +344,28 @@ final class LuqmaInteractionTests:XCTestCase {
         let option=app.buttons[identifier]
         reveal(option);option.tap()
         XCTAssertTrue(option.isSelected,"The real choice must become selected")
+    }
+
+    private func revealAssessmentControl(_ control:XCUIElement,file:StaticString=#filePath,line:UInt=#line) {
+        let form=app.scrollViews["assessment.form"]
+        XCTAssertTrue(form.exists,file:file,line:line)
+        for _ in 0..<10 {
+            let viewport=form.frame.intersection(app.frame)
+            let top=max(viewport.minY,app.buttons["assessment.back"].frame.maxY)+8
+            let bottom=min(viewport.maxY,app.buttons["assessment.next"].frame.minY)-8
+            if control.exists && control.isHittable && control.frame.minY>=top && control.frame.maxY<=bottom && control.frame.minX>=viewport.minX && control.frame.maxX<=viewport.maxX {return}
+            XCTAssertGreaterThan(bottom-top,80,file:file,line:line)
+            // AX can report controls behind a safe-area footer as hittable.
+            // Scroll only the actual foreground form, inside its visible area.
+            let upward = !control.exists || control.frame.maxY>bottom
+            let origin=app.coordinate(withNormalizedOffset:CGVector(dx:0,dy:0))
+            let x=viewport.midX-app.frame.minX
+            let start=upward ? bottom-20:top+20
+            let end=upward ? top+20:bottom-20
+            origin.withOffset(CGVector(dx:x,dy:start-app.frame.minY))
+                .press(forDuration:0.05,thenDragTo:origin.withOffset(CGVector(dx:x,dy:end-app.frame.minY)))
+        }
+        XCTFail("The real assessment control must be fully visible above its footer.\n"+app.debugDescription,file:file,line:line)
     }
 
     private func advanceAssessment(to step:Int) {
