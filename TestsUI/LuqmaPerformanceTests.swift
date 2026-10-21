@@ -151,7 +151,12 @@ final class LuqmaPerformanceTests: XCTestCase {
             } else {
                 details.tap()
             }
-            let actualEntry = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "diary.entry.")).firstMatch
+            // Native DisclosureGroup currently propagates its identifier to
+            // its row buttons. Check its real expanded state and actual stored
+            // fixture food rather than requiring an identifier AX overrides.
+            let expandedDetails = app.buttons.matching(NSPredicate(format: "identifier == %@ AND label BEGINSWITH %@", "diary.details.breakfast", "Food details")).firstMatch
+            XCTAssertTrue(expandedDetails.images["expanded"].waitForExistence(timeout: 5), "The actual breakfast disclosure must be expanded before measuring")
+            let actualEntry = app.buttons.matching(NSPredicate(format: "label == %@", "Luqma Performance Oats")).firstMatch
             XCTAssertTrue(actualEntry.waitForExistence(timeout: 5), "The expanded meal must expose real persisted diary rows before measuring")
             let scroll = app.scrollViews.firstMatch
             XCTAssertTrue(scroll.waitForExistence(timeout: 5))
@@ -169,7 +174,7 @@ final class LuqmaPerformanceTests: XCTestCase {
     private func options(iterations: Int = 3) -> XCTMeasureOptions {
         let result = XCTMeasureOptions()
         result.iterationCount = iterations
-        result.invocationOptions = [.manuallyStart]
+        result.invocationOptions = [.manuallyStart, .manuallyStop]
         return result
     }
 

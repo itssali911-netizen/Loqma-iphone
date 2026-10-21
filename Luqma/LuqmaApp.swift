@@ -169,7 +169,7 @@ struct RootView:View {
         Group{
             switch route {
             case .goals:GoalEditor()
-            case .portion:FoodPortionView(food:previewPortionFood){_,_,_,_ in false}
+            case .portion:FoodPortionView(food:previewPortionFood,initialMeal:ProcessInfo.processInfo.arguments.contains("-loqma-approved-capture") ? .lunch:nil){_,_,_,_ in false}
             case .recipe:RecipeEditor(recipe:previewRecipe)
             case .recipeDetail:RecipeDetailView(recipeID:previewRecipe.id,previewRecipe:previewRecipe)
             case .plan:NavigationStack{PlanView().navigationBarTitleDisplayMode(.inline)}
@@ -232,6 +232,13 @@ struct RootView:View {
         }.padding(16)}.appBackground().sandowNavigation(diary.t("معاينة الحالة","State preview"),backLabel:diary.t("إغلاق","Close"))}
     }
     private var previewPortionFood:Food {
+        if ProcessInfo.processInfo.arguments.contains("-loqma-approved-capture") {
+            // Read-only synthetic reference fixture; provenance is recorded in
+            // the capture JSON/gallery rather than appended to visible labels.
+            let serving=Nutrition(kcal:114,protein:2.4,carbs:24,fat:0.7)
+            return Food(catalogID:"preview:approved-cereal",name:"Gold Corn flakes",nameEn:"Gold Corn flakes",brand:"Nestlé, Fitness",unit:.g,
+                nutrition:serving.scaled(100.0/30.0),serving:"30.0 g",servingQuantity:30,servingUnit:"g",servingNutrition:serving,source:"Preview fixture")
+        }
         let serving=Nutrition(kcal:124,protein:17,carbs:8,fat:2.66)
         return Food(catalogID:"preview:serving",name:"زبادي يوناني — مثال للعرض فقط",nameEn:"Greek yogurt — display example only",unit:.g,
             nutrition:serving.scaled(100.0/150.0),serving:diary.t("حصة 150 جم · مثال للعرض فقط","150 g serving · display example only"),

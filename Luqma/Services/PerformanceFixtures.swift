@@ -21,8 +21,9 @@ import SwiftUI
             } catch { diary.report(error); return "fixture-seed-failed" }
         }
         let entries = diary.state.entries
+        let today = DayKey.today
         guard entries.count == 5000, Set(entries.map(\.day)).count == 7,
-              entries.filter({ $0.day == DayKey.today }).count == 800,
+              entries.filter({ $0.day == today }).count == 800,
               entries.allSatisfy({ $0.foodID == "custom:luqma-performance-oats" }),
               diary.state.fitnessProfile != nil, diary.state.appliedFitnessPlan != nil else { return "fixture-verification-failed" }
         return identity

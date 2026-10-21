@@ -40,7 +40,11 @@ struct FitnessAssessmentView: View {
                         pageContent.id(page.rawValue).disabled(actionBusy)
                             .frame(minHeight: max(0, geometry.size.height - 140), alignment: .top)
                         if let validation {
-                            SandowStateAlert(text: validation).accessibilityIdentifier("assessment.validation").id("assessment.validation")
+                            SandowStateAlert(text: validation).accessibilityIdentifier("assessment.validation")
+                                // Include clearance in the scroll target. The
+                                // alert's half-point stroke extends its AX
+                                // frame beyond the layout rect at the footer.
+                                .padding(.bottom,12).id("assessment.validation")
                         }
                     }.padding(.horizontal, 16).padding(.top, 28).padding(.bottom, 20)
                 }.scrollDismissesKeyboard(.interactively).scrollDisabled(pickerInteraction).appBackground()

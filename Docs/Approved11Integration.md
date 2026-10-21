@@ -112,3 +112,15 @@ A native screenshot comparison is still required before describing any of these 
 | 120 FPS | Not verified or forced. Simulator screenshots cannot establish physical ProMotion performance. |
 
 No service key, personal connection configuration, paid Apple membership or unrelated application feature is part of this UI integration.
+
+## Actual first integration build (94)
+
+Commit `f4d8cb9813d6fd786b1f7ac497f7fdb6c51700d2` compiled a real iPhoneOS arm64 IPA, version 2.9/build 94/minimum iOS 17. The unsigned artifact requires personal re-signing. Compilation is not functional acceptance.
+
+The isolated native fitness case ran for 191.365 seconds and failed at the early safety message, before exercising the later measurement pages. Its actual accessibility hierarchy puts the alert's bottom at 794.5pt and the safe content clearance at 794pt: the outline exceeds the visible region by half a point. The correction adds 12pt inside the error scroll target. Normal approved layouts and the strict assertions remain unchanged. All seven functional cases must pass on the corrected source before delivery.
+
+The first complete screenshot sets were skipped after that failed test. The workflow now permits independent native rendering capture after a failed interaction scenario, while preserving the failed test/job outcome. A captured image is never treated as a passed functional test.
+
+The approved portion fixture is corrected only in clean reference mode to coherent 30g cereal nutrition and Lunch; the ordinary capture retains its labeled yogurt example. Benchmark instrumentation now computes today's day key once rather than 5000 times during fixture verification. UI performance comparisons must use the corrected fixture on both revisions; build 94 UI timing must not be compared to a different fixture hash. Its separately measured Core encoding baseline remains actual evidence: three wall samples 1.4242641, 1.3210779, 1.3903015 seconds; median 1.3903015s. This is a macOS serialization experiment, not an iOS FPS result.
+
+A fresh corrected UI baseline is required. Performance production changes remain a subsequent, separate source stage.

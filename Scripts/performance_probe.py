@@ -131,6 +131,22 @@ def write_json(path: Path, value: object) -> None:
     path.write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 
 
+def export_result_bundle(bundle: Path, output: Path, report: dict) -> dict:
+    """Retain available raw evidence without masking a prior test failure."""
+    exported = {}
+    for kind in ('summary', 'metrics'):
+        label = 'xcresult-' + kind
+        try:
+            value = json.loads(execute(['xcrun', 'xcresulttool', 'get', 'test-results', kind,
+                                        '--path', str(bundle)], output, label))
+            write_json(output / (label + '.json'), value)
+            exported[kind] = value
+        except (BuildError, OSError, ValueError) as error:
+            report.setdefault('result_export_errors', {})[kind] = str(error)
+    report['exported_result_files'] = ['xcresult-' + kind + '.json' for kind in exported]
+    return exported
+
+
 def execute(args: list[str], output: Path, label: str, timeout: int = 120,
             allow_failure: bool = False) -> str:
     """No shell interpolation, secret arguments, global service restarts or deletes."""
@@ -365,17 +381,19 @@ def run_probe(args: argparse.Namespace) -> None:
                  'SWIFT_OPTIMIZATION_LEVEL=-O', 'SWIFT_COMPILATION_MODE=wholemodule',
                  'SWIFT_ACTIVE_COMPILATION_CONDITIONS=DEBUG', 'test']
         report['xcodebuild_arguments'] = build
-        log = execute(build, output, 'native-performance', args.timeout)
+        try:
+            log = execute(build, output, 'native-performance', args.timeout)
+        finally:
+            # Even a nonzero xcodebuild result can contain valid diagnostic
+            # metrics/schema data. Export it without swallowing that failure.
+            exported = export_result_bundle(bundle, output, report)
         passed = [name for name in TESTS if re.search(r"Test Case '.*" + re.escape(name) + r".*' passed", log)]
         report['passed_tests'] = passed
         if len(passed) != len(TESTS):
             raise BuildError('The actual performance run did not pass every required scenario.')
-        summary = json.loads(execute(['xcrun', 'xcresulttool', 'get', 'test-results', 'summary',
-                                      '--path', str(bundle)], output, 'xcresult-summary'))
-        write_json(output / 'xcresult-summary.json', summary)
-        raw = json.loads(execute(['xcrun', 'xcresulttool', 'get', 'test-results', 'metrics',
-                                  '--path', str(bundle)], output, 'xcresult-metrics'))
-        write_json(output / 'xcresult-metrics.json', raw)
+        if 'summary' not in exported or 'metrics' not in exported:
+            raise BuildError('Required result-bundle JSON could not be exported; see retained xcresult logs.')
+        raw = exported['metrics']
         report['normalized_metrics'] = normalize_metrics(raw)
         if not report['normalized_metrics']:
             raise BuildError('Raw metrics were retained, but this xcresult metric schema needs explicit review; no numbers were invented.')
