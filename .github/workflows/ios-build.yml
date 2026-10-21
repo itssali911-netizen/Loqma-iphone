@@ -50,7 +50,7 @@ permissions:
   actions: read
 
 concurrency:
-  group: luqma-ios-${{ github.ref }}
+  group: luqma-ios-${{ github.ref }}-${{ github.sha }}
   # Preserve measured baseline runs and their raw artifacts for exact comparisons.
   cancel-in-progress: false
 

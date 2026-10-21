@@ -86,5 +86,31 @@
       "path": "Luqma/Resources/Assets.xcassets/DNMVerticalProteinIcon.imageset/Contents.json",
       "sha256": "5cf2fdd18f665043344def658597912389cb60b7ce0bdcc1612539e53e611af9"
     }
-  ]
+  ],
+  "restored_original_assets": {
+    "source": "Previously supplied Loqmati-Sandow-UI-Integrated repository",
+    "source_revision": "2669a714522383d17126dd100b50c506ba9e0a74",
+    "files": [
+      {
+        "path": "Luqma/Resources/Assets.xcassets/CFAGoalRobot.imageset/Contents.json",
+        "sha256": "e6339405786eee35a8a6462fe18d06f2edc24dde50fe669e17541f3ad0d3ff52",
+        "matches_source_commit": true
+      },
+      {
+        "path": "Luqma/Resources/Assets.xcassets/CFAGoalRobot.imageset/source.svg",
+        "sha256": "b086733ee0bd5501373ae0413f117950ca924a1bfd77c05a360028d2992403bb",
+        "matches_source_commit": true
+      },
+      {
+        "path": "Luqma/Resources/Assets.xcassets/CFAGoalPhone.imageset/Contents.json",
+        "sha256": "e6339405786eee35a8a6462fe18d06f2edc24dde50fe669e17541f3ad0d3ff52",
+        "matches_source_commit": true
+      },
+      {
+        "path": "Luqma/Resources/Assets.xcassets/CFAGoalPhone.imageset/source.svg",
+        "sha256": "0a8eae37e2e5dd2416d24bd7339e6637a91fe8bdb3a0d813347f4db7bbca3e7a",
+        "matches_source_commit": true
+      }
+    ]
+  }
 }

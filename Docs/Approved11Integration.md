@@ -149,3 +149,10 @@ A remaining supplied-resource gap is explicit: `CFAGoalRobot` is referenced by t
 The regular 51-route capture collected all frames but correctly failed its final uniqueness audit because the dinner/snack carousel was below the visible dashboard. A DEBUG-only vertical scroll now reveals the actual carousel for those two routes; the duplicate-frame guard is unchanged. Approved captures and actual functional tests remain separate evidence.
 
 These corrections establish a new pre-optimization UI baseline. Do not compare a changed quantity-screen geometry directly with run95 as if only performance code changed. Native recapture, interaction rerun and the new baseline measurements are PENDING.
+
+
+## Original goal artwork recovered from the prior supplied project
+
+The two glyphs absent from the eleven-screen ZIP were found in the user's earlier `Loqmati-Sandow-UI-Integrated/Loqma-iphone` repository. `CFAGoalRobot.imageset` and `CFAGoalPhone.imageset` are restored byte-for-byte, with their original SVG geometry and vector/template catalog settings. `Approved11Assets.json` records the exact source revision and four file hashes separately from the 21 untouched ZIP assets. The source adapter again references the approved `CFAGoalPhone` name. No replacement icon or generated artwork is used.
+
+This supersedes the historical missing-glyph limitation above. Native SVG compilation/capture still requires verification in the new fully restored pre-optimization UI baseline. Commit-scoped workflow concurrency preserves older evidence while that source builds.
