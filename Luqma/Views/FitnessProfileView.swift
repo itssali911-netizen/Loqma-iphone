@@ -256,7 +256,7 @@ struct FitnessPlanReviewView: View {
             }}.padding(4).background(Color(hex:0x24262B),in:RoundedRectangle(cornerRadius:20))
                 .environment(\.layoutDirection,.leftToRight)
             Spacer(minLength:28)
-            Text(DisplayFormat.decimal(calorieUnit.value(for:goals.kcal),digits:0))
+            Text(calorieUnit.value(for:goals.kcal).formatted(.number.grouping(.automatic).precision(.fractionLength(0)).locale(Locale(identifier:"en_US"))))
                 .luqmaFont(size:96,weight:.heavy,relativeTo:.largeTitle).foregroundStyle(Color.white).monospacedDigit()
                 .lineLimit(1).minimumScaleFactor(0.4).frame(maxWidth:.infinity)
                 .accessibilityIdentifier("fitness.plan.calories")

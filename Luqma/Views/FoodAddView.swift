@@ -550,7 +550,8 @@ struct FoodPortionView:View {
             ViewThatFits(in:.horizontal) {
                 HStack(spacing:10){ foodName; Spacer(minLength:8); quantityInput }
                 VStack(alignment:.leading,spacing:12){foodName;quantityInput}
-            }.padding(16).frame(minHeight:52).background(sheetColor,in:RoundedRectangle(cornerRadius:18,style:.continuous))
+            }.padding(.horizontal,16).padding(.vertical,typeSize.isAccessibilitySize ? 12:4)
+                .frame(minHeight:52).background(sheetColor,in:RoundedRectangle(cornerRadius:18,style:.continuous))
         }
     }
     private var foodName:some View {
@@ -567,9 +568,10 @@ struct FoodPortionView:View {
     private var quantityInput:some View {
         HStack(spacing:4) {
             Text(diary.t(unit == .serving ? "عدد الحصص:":"الكمية:",unit == .serving ? "Servings:":"Amount:"))
+                .lineLimit(1).fixedSize(horizontal:true,vertical:false)
             TextField("1",text:$amount,prompt:Text("1").foregroundColor(Theme.muted))
                 .keyboardType(.decimalPad).multilineTextAlignment(.center)
-                .frame(minWidth:30,idealWidth:44,maxWidth:64,minHeight:44)
+                .frame(width:30).frame(minHeight:44)
                 .accessibilityIdentifier("portion.amount")
                 .accessibilityLabel(diary.t(unit == .serving ? "عدد الحصص":"الكمية المستهلكة",unit == .serving ? "Number of servings":"Consumed amount"))
         }.luqmaFont(size:13,weight:.bold,relativeTo:.caption).foregroundStyle(orange)
@@ -632,16 +634,19 @@ struct FoodPortionView:View {
                         .frame(width:22,height:22)
                         .overlay{RoundedRectangle(cornerRadius:7,style:.continuous).stroke(backgroundColor,lineWidth:3)}
                         .offset(x:width*CGFloat(fraction))
-                }.frame(maxHeight:.infinity).contentShape(Rectangle())
-                    // Keep the vertical diary/form scroll recognizer active.
-                    // A quantity change needs clear horizontal intent; touching
-                    // a track while scrolling must not alter the meal amount.
-                    .simultaneousGesture(DragGesture(minimumDistance:8).onChanged{value in
-                        let horizontal=abs(value.translation.width),vertical=abs(value.translation.height)
-                        guard horizontal>=8,horizontal>vertical*1.5 else{return}
-                        setTrackAmount(min(1,max(0,Double((value.location.x-11)/width)))*maximum,reference:reference)
-                    })
-            }.frame(height:44).environment(\.layoutDirection,.leftToRight)
+                }.frame(maxHeight:.infinity)
+                    .overlay {
+                        // Preserve the approved 22pt track layout while the
+                        // transparent gesture target remains 44pt tall.
+                        Rectangle().fill(Color.clear).frame(height:44).contentShape(Rectangle())
+                            // Vertical scrolling must not alter the meal amount.
+                            .simultaneousGesture(DragGesture(minimumDistance:8).onChanged{value in
+                                let horizontal=abs(value.translation.width),vertical=abs(value.translation.height)
+                                guard horizontal>=8,horizontal>vertical*1.5 else{return}
+                                setTrackAmount(min(1,max(0,Double((value.location.x-11)/width)))*maximum,reference:reference)
+                            })
+                    }
+            }.frame(height:22).environment(\.layoutDirection,.leftToRight)
                 .accessibilityElement(children:.ignore).accessibilityLabel(title)
                 .accessibilityValue(decimal(current,1)+" "+diary.t(key == nil ? "سعرة":"جم",key == nil ? "kcal":"g"))
                 .accessibilityAdjustableAction{direction in stepAmount(by:direction == .increment ? (unit == .serving ? 0.5:10):-(unit == .serving ? 0.5:10))}
@@ -674,7 +679,8 @@ struct FoodPortionView:View {
                 }.frame(minHeight:44)
             }.buttonStyle(.plain)
             if manual || editingNutrition {referenceInputs}
-        }.padding(16).background(sheetColor,in:RoundedRectangle(cornerRadius:18,style:.continuous))
+        }.padding(.horizontal,16).padding(.vertical,manual || editingNutrition ? 16:4)
+            .background(sheetColor,in:RoundedRectangle(cornerRadius:18,style:.continuous))
     }
     private var saveButton:some View {
         Button{save()}label:{

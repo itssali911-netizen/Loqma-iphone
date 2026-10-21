@@ -106,7 +106,7 @@ import AVFoundation
         HStack {
             Button{closeAnalysis()}label:{
                 CFACrescentChevron().stroke(Color.white,style:StrokeStyle(lineWidth:2.2,lineCap:.round,lineJoin:.round))
-                    .frame(width:10,height:18).frame(width:48,height:48)
+                    .frame(width:10,height:18).scaleEffect(x:-1,y:1).frame(width:48,height:48)
                     .background(Color(hex:0x393C43),in:RoundedRectangle(cornerRadius:18,style:.continuous))
             }.buttonStyle(.plain).accessibilityLabel(diary.t("رجوع","Back"))
             Spacer(minLength:12)
@@ -117,7 +117,7 @@ import AVFoundation
                 Image(systemName:"gearshape").font(.system(size:18,weight:.semibold)).foregroundStyle(.white)
                     .frame(width:48,height:48).background(Color(hex:0x393C43),in:RoundedRectangle(cornerRadius:18,style:.continuous))
             }.buttonStyle(.plain).accessibilityLabel(diary.t("إعدادات خدمة التحليل","Analysis Settings"))
-        }
+        }.environment(\.layoutDirection,.leftToRight)
     }
     private func closeAnalysis(){if let onClose{onClose()}else{dismiss()}}
     private var approvedScanPreview:Bool {
@@ -152,7 +152,7 @@ import AVFoundation
                     .accessibilityIdentifier("photo.shutter")
                 Button{showingSetup=true}label:{cameraControl("gearshape",size:68,radius:20)}
                     .buttonStyle(.plain).disabled(busy).accessibilityLabel(diary.t("إعدادات خدمة التحليل","Analysis Settings"))
-            }.frame(maxWidth:.infinity)
+            }.frame(maxWidth:.infinity).environment(\.layoutDirection,.leftToRight)
             if preview == nil && !approvedCapture {
                 Text(diary.t("صورة توضيحية — صوّر وجبتك أو اختر صورتها لبدء التحليل.","Illustration — take or choose your own meal photo to begin analysis."))
                     .luqmaFont(.caption).foregroundStyle(Theme.muted).fixedSize(horizontal:false,vertical:true)
@@ -180,32 +180,46 @@ import AVFoundation
     }
     private var scanViewfinder:some View {
         GeometryReader{geometry in
-            let width=min(geometry.size.width,360)
+            let width=geometry.size.width
+            let height=width*1540/1125
+            let illustration=(preview == nil && imageData == nil) || approvedScanPreview
             ZStack(alignment:.top) {
-                Group{
-                    if let preview,!approvedScanPreview{Image(uiImage:preview).resizable().scaledToFill()}
-                    else{Image("DNMMandarinScanHero").resizable().scaledToFill()}
-                }.frame(width:width,height:432).clipped()
-                CFAScanBracketsShape().stroke(Color.white,style:StrokeStyle(lineWidth:6,lineCap:.round,lineJoin:.round))
-                    .frame(width:width*0.78,height:310).padding(.top,76)
-                VStack(spacing:0) {
-                    Spacer().frame(height:224)
-                    RoundedRectangle(cornerRadius:2.5).fill(.white).frame(height:5)
-                    LinearGradient(colors:[Color.white.opacity(0.45),Color.white.opacity(0)],startPoint:.top,endPoint:.bottom).frame(height:110)
-                    Spacer(minLength:0)
-                }.frame(width:width*0.78,height:432)
-                VStack(spacing:-2) {
+                Group {
+                    if illustration {Image("DNMMandarinScanHero").resizable().scaledToFit()}
+                    else if let preview {Image(uiImage:preview).resizable().scaledToFill()}
+                    else {Color(hex:0x111214)}
+                }.frame(width:width,height:height).clipped()
+                if illustration {
+                    // This supplied raster already contains its brackets, beam
+                    // and bubble. Localize its text in place; do not draw a
+                    // second set of scanning chrome over the original artwork.
                     Text(busy || approvedScanPreview ? diary.t("جارٍ المسح...","Scanning..."):diary.t("جاهز للمسح","Ready to scan"))
-                        .luqmaFont(size:13,weight:.bold,relativeTo:.caption).foregroundStyle(.white)
-                        .padding(.horizontal,16).frame(height:34)
-                        .background(Color(hex:0xF97316),in:RoundedRectangle(cornerRadius:12,style:.continuous))
-                    Image(systemName:"arrowtriangle.down.fill").font(.system(size:9)).foregroundStyle(Color(hex:0xF97316))
-                }.padding(.top,34)
+                        .luqmaFont(size:12,weight:.bold,relativeTo:.caption).foregroundStyle(.white)
+                        .frame(width:width*0.25,height:width*0.075)
+                        .background(Color(hex:0xF97316),in:RoundedRectangle(cornerRadius:8))
+                        .position(x:width*0.5,y:height*0.11)
+                } else {
+                    CFAScanBracketsShape().stroke(Color.white,style:StrokeStyle(lineWidth:6,lineCap:.round,lineJoin:.round))
+                        .frame(width:width*0.78,height:height*0.69).padding(.top,height*0.16)
+                    VStack(spacing:0) {
+                        Spacer().frame(height:height*0.47)
+                        RoundedRectangle(cornerRadius:2.5).fill(.white).frame(height:5)
+                        LinearGradient(colors:[Color.white.opacity(0.45),Color.white.opacity(0)],startPoint:.top,endPoint:.bottom).frame(height:height*0.23)
+                        Spacer(minLength:0)
+                    }.frame(width:width*0.78,height:height)
+                    VStack(spacing:-2) {
+                        Text(busy ? diary.t("جارٍ المسح...","Scanning..."):diary.t("جاهز للمسح","Ready to scan"))
+                            .luqmaFont(size:13,weight:.bold,relativeTo:.caption).foregroundStyle(.white)
+                            .padding(.horizontal,16).frame(height:34)
+                            .background(Color(hex:0xF97316),in:RoundedRectangle(cornerRadius:12,style:.continuous))
+                        Image(systemName:"arrowtriangle.down.fill").font(.system(size:9)).foregroundStyle(Color(hex:0xF97316))
+                    }.padding(.top,height*0.08)
+                }
             }.frame(maxWidth:.infinity)
                 .accessibilityElement(children:.ignore)
-                .accessibilityLabel(diary.t(preview == nil ? "صورة توضيحية لإطار مسح الوجبة":"صورة وجبتك داخل إطار المسح",preview == nil ? "Illustrative meal scanning viewfinder":"Your meal photo in the viewfinder"))
+                .accessibilityLabel(diary.t(illustration ? "صورة توضيحية لإطار مسح الوجبة":preview == nil ? "تجهيز صورة الوجبة":"صورة وجبتك داخل إطار المسح",illustration ? "Illustrative meal scanning viewfinder":preview == nil ? "Preparing your meal photo":"Your meal photo in the viewfinder"))
                 .accessibilityAddTraits(.isImage)
-        }.frame(height:432)
+        }.aspectRatio(1125.0/1540.0,contentMode:.fit).padding(.horizontal,-16)
     }
     private var review:some View {
         let summary=total
@@ -243,11 +257,11 @@ import AVFoundation
                 }.frame(width:geometry.size.width,height:geometry.size.height).clipped()
                 Button{closeAnalysis()}label:{
                     CFACrescentChevron().stroke(Color.white,style:StrokeStyle(lineWidth:2.2,lineCap:.round,lineJoin:.round))
-                        .frame(width:10,height:18).frame(width:48,height:48)
+                        .frame(width:10,height:18).scaleEffect(x:-1,y:1).frame(width:48,height:48)
                         .background(Color(hex:0x393C43).opacity(0.6),in:RoundedRectangle(cornerRadius:18,style:.continuous))
                 }.buttonStyle(.plain).padding(16).accessibilityLabel(diary.t("رجوع","Back"))
             }
-        }.aspectRatio(preview == nil ? 2.6:1/0.85,contentMode:.fit)
+        }.environment(\.layoutDirection,.leftToRight).aspectRatio(preview == nil ? 2.6:1/0.85,contentMode:.fit)
             .accessibilityElement(children:.contain)
             .accessibilityLabel(diary.t(preview == nil ? "لا توجد صورة في هذه المعاينة":"صورة الوجبة",preview == nil ? "No photo in this preview":"Meal photo"))
     }
@@ -343,7 +357,7 @@ import AVFoundation
                 RoundedRectangle(cornerRadius:24,style:.continuous).fill(macroColor(key))
                     .frame(height:geometry.size.height*CGFloat(fraction))
                 VStack {
-                    Image(macroIcon(key)).renderingMode(.template).resizable().scaledToFit().frame(width:20,height:20)
+                    Image(macroIcon(key)).renderingMode(.original).resizable().scaledToFit().frame(width:20,height:20)
                         .foregroundStyle(Color(hex:0xD7D8D9)).padding(.top,16)
                     Spacer(minLength:0)
                 }.accessibilityHidden(true)
@@ -532,7 +546,12 @@ import AVFoundation
             let estimate=try MealPhotoEstimate(grams:250,low:200,high:300,nutrition:nutrition,kcalLow:150,kcalHigh:225,assumptions:"مثال للواجهة فقط.",assumptionsEn:"UI example only.")
             let food=PhotoFood(id:"approved-mandarin",name:"برتقال يوسفي",nameEn:"Mandarin orange",grams:250,kcal:74.8,protein:1.2,carbs:16.8,fat:0.28)
             let part=PhotoPart(food:food,grams:250,low:200,high:300,basis:"photo-estimate",tentative:true,mealEstimate:estimate)
-            preview=UIImage(named:"DNMMandarinPileHero")
+            if let artwork=UIImage(named:"DNMMandarinPileHero"),let source=artwork.cgImage,
+               let cropped=source.cropping(to:CGRect(x:0,y:330,width:CGFloat(source.width),height:CGFloat(min(600,source.height-330)))) {
+                // The supplied raster includes a status bar/back/handle. Use
+                // its food-only viewport below the live native system chrome.
+                preview=UIImage(cgImage:cropped)
+            }
             parts=[part]
             products=[part.id:(try estimate.food(name:food.name,nameEn:food.nameEn,identity:part.id,language:diary.language),1,.serving)]
         }catch{self.error=diary.t("تعذّر تجهيز المعاينة.","Preview could not be prepared.")}

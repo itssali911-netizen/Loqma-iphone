@@ -50,7 +50,7 @@ extension FitnessGoal {
         case .fatLoss: return "CFAGoalScale"
         case .muscleGain: return "CFAGoalDumbbell"
         case .recomposition: return "CFAGoalRobot"
-        case .maintenance: return "CFAGoalPhone"
+        case .maintenance: return "AssessmentGoalExplore"
         case .wellbeing: return "CFAGoalEndurance"
         }
     }

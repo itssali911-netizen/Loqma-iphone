@@ -15,14 +15,16 @@ struct AssessmentNumberPicker: View {
     @Binding var alternateText:String
     var onInteractionChanged:(Bool)->Void = {_ in}
     @Environment(\.layoutDirection) private var direction
+    @ScaledMetric(relativeTo:.body) private var promptPoints:CGFloat=22
     @FocusState private var focused: Bool
     @State private var dragStart: Double?
     private var value: Double? { field.parse(text) }
     private var arabic: Bool { direction == .rightToLeft }
     private var interactionValue: Double { value ?? field.suggestedValue }
     private var visibleUnit: String {
-        guard style != .age, displayUnit == .imperial else { return unit }
-        return style == .height ? "in" : "lbs"
+        guard style != .age else{return unit}
+        if displayUnit == .imperial{return style == .height ? "in":"lbs"}
+        return style == .weight ? "kg":unit
     }
     private var displayBinding: Binding<String> {
         Binding(get: {
@@ -90,7 +92,8 @@ struct AssessmentNumberPicker: View {
     }
 
     private func numericInput(size: CGFloat, color: Color) -> some View {
-        TextField("", text: displayBinding, prompt: Text(arabic ? "أدخل" : "Enter").foregroundColor(color.opacity(0.6)))
+        TextField("", text: displayBinding, prompt: Text(arabic ? "أدخل" : "Enter")
+            .font(LTypography.font(size:promptPoints,weight:.semibold,relativeTo:.body)).foregroundColor(color.opacity(0.6)))
             .keyboardType(field.integer ? .numberPad : .decimalPad).focused($focused)
             .luqmaFont(size: size, weight: .heavy, relativeTo: .largeTitle)
             .monospacedDigit().multilineTextAlignment(.center).minimumScaleFactor(0.4)
@@ -160,6 +163,10 @@ struct AssessmentNumberPicker: View {
                 let delta = (-Double(gesture.translation.height) / 36).rounded()
                 setValue((dragStart ?? interactionValue) + delta)
             }.onEnded { _ in dragStart = nil;onInteractionChanged(false) })
+            // Give the wheel its own accessibility container. Without this,
+            // SwiftUI propagates the container identifier onto every child,
+            // replacing the editable field and neighbour-button identifiers.
+            .accessibilityElement(children: .contain)
             .accessibilityIdentifier("\(identifier).slider")
     }
 

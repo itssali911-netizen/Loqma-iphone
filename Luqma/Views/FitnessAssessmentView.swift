@@ -175,7 +175,7 @@ struct FitnessAssessmentView: View {
         }
     }
     private var question: String {
-        let ar = ["ما هو هدفك\nالرياضي؟", "هل يناسبك هذا التقدير؟", "ما الجنس المستخدم في\nالحساب؟", "كم عمرك؟", "ما هو طولك الحالي؟", "ما هو وزنك الحالي؟", "هل تريد تخصيص هدف الوزن؟", "كيف تقيّم مستوى\nنشاطك الحالي؟", "ما التدريب الذي يناسبك؟", "هل تريد إضافة تفاصيل؟", "راجع إجاباتك"]
+        let ar = ["ما هو هدفك\nالرياضي الرئيسي؟", "هل يناسبك هذا التقدير؟", "ما الجنس المستخدم في\nالحساب؟", "كم عمرك؟", "ما هو طولك الحالي؟", "ما هو وزنك الحالي؟", "هل تريد تخصيص هدف الوزن؟", "كيف تقيّم مستوى\nنشاطك الحالي؟", "ما التدريب الذي يناسبك؟", "هل تريد إضافة تفاصيل؟", "راجع إجاباتك"]
         let en = ["What’s your fitness\ngoal/target?", "Is this estimate suitable?", "Which sex should the\nequation use?", "What is your age?", "What is your height?", "What is your weight?", "Would you like to customize your target weight?", "How would you rate\nyour daily activity?", "What training fits your routine?", "Would you like to add details?", "Review your answers"]
         return diary.t(ar[page.index], en[page.index])
     }
@@ -270,8 +270,9 @@ struct FitnessAssessmentView: View {
                 Text("?").luqmaFont(size:11,weight:.bold,relativeTo:.caption2).foregroundStyle(Color(hex:0x111214))
                     .frame(width:18,height:18).background(Color(hex:0x50535B),in:Circle())
                 Text(diary.t("اسحب للتعديل","Drag to adjust")).luqmaFont(size:14,weight:.medium,relativeTo:.subheadline).foregroundStyle(Color(hex:0xD7D8D9))
+                    .environment(\.layoutDirection,diary.language == .ar ? .rightToLeft:.leftToRight)
                 Spacer()
-            }
+            }.environment(\.layoutDirection,.leftToRight)
             SandowFitnessArcSlider(level:Binding(get:{answers.activity.flatMap{FitnessActivity.allCases.firstIndex(of:$0)}.map{$0+1} ?? 3},set:{level in
                 answers.activity=FitnessActivity.allCases[min(4,max(0,level-1))];validation=nil
             }),label:activityArcLabel,hasSelection:answers.activity != nil,onInteractionChanged:{pickerInteraction=$0})

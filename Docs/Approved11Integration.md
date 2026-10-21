@@ -124,3 +124,28 @@ The first complete screenshot sets were skipped after that failed test. The work
 The approved portion fixture is corrected only in clean reference mode to coherent 30g cereal nutrition and Lunch; the ordinary capture retains its labeled yogurt example. Benchmark instrumentation now computes today's day key once rather than 5000 times during fixture verification. UI performance comparisons must use the corrected fixture on both revisions; build 94 UI timing must not be compared to a different fixture hash. Its separately measured Core encoding baseline remains actual evidence: three wall samples 1.4242641, 1.3210779, 1.3903015 seconds; median 1.3903015s. This is a macOS serialization experiment, not an iOS FPS result.
 
 A fresh corrected UI baseline is required. Performance production changes remain a subsequent, separate source stage.
+
+
+## Actual native baseline 95 and focused visual corrections
+
+Commit `575f3e8202cf837fa1085caa938cb76ed3393df7`, [run 95](https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/39637212015): iPhoneOS IPA compiled, 236 Core tests and 68 BuildTests passed. All nine Release/-O performance scenarios passed and produced 59 attributable metric rows. This is a valid measurement run, not a physical FPS result.
+
+Thirteen approved Arabic native captures and 26 English captures completed with runtime font audits. The iPhone 13 mini framebuffer is actually 1080×2340; the original approved references are 1125×2436. Original native PNGs are retained without resampling. Separate age/height references are still absent from the ZIP.
+
+Functional acceptance remains incomplete: the isolated assessment regression stopped at the age step because the native wheel container propagated `assessment.age.slider` over its children. The wheel now explicitly contains its accessibility children. Existing assertions and identifiers are preserved; this requires a fresh native test.
+
+Actual capture comparison found and corrected these presentation defects, without changing nutritional data or the approved artwork bytes:
+
+- Quantity and collapsed reference rows were at least 76pt rather than the approved 52pt; tracks occupied 44pt instead of 22pt. Layout now follows the reference while transparent 44pt gesture targets retain the horizontal-intent guard.
+- The original scan raster already contains brackets, a scan beam and an English bubble. It now renders those once, with localized text in place. Real user photos retain the native overlay. The original raster aspect ratio and physical camera-control order are preserved.
+- Opaque RGB macro artwork was incorrectly rendered as a template and appeared as solid squares. It now uses the original pixel colors.
+- The explicitly synthetic result fixture's supplied raster includes a baked status bar, back button and handle. Its food-only viewport is composed below the live native chrome. Actual user photos are untouched; the source PNG is unchanged.
+- Calorie-chart geometry follows the reference's physical direction, and callout overflow is constrained to the chart. The actual selected day's calories and macro totals remain real.
+- The activity hint aligns physically left, the calorie-plan hero groups Western digits, the weight readout uses `kg`, and an unanswered numeric prompt uses the bundled font at 22pt instead of clipping at readout size.
+- The goal heading includes the reference's Arabic word “الرئيسي”. The phone glyph uses the original existing `AssessmentGoalExplore` SVG rather than an absent asset name.
+
+A remaining supplied-resource gap is explicit: `CFAGoalRobot` is referenced by the approved Swift file but is absent from both its ten image sets and the existing catalog. No unrelated replacement artwork is invented. Exact verification of that glyph requires the original asset. Goal selection itself remains functional.
+
+The regular 51-route capture collected all frames but correctly failed its final uniqueness audit because the dinner/snack carousel was below the visible dashboard. A DEBUG-only vertical scroll now reveals the actual carousel for those two routes; the duplicate-frame guard is unchanged. Approved captures and actual functional tests remain separate evidence.
+
+These corrections establish a new pre-optimization UI baseline. Do not compare a changed quantity-screen geometry directly with run95 as if only performance code changed. Native recapture, interaction rerun and the new baseline measurements are PENDING.

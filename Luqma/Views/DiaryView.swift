@@ -26,6 +26,22 @@ struct DiaryView:View {
     #endif
     private var day:String {DayKey.string(date)}
     var body:some View {
+        #if DEBUG
+        ScrollViewReader { scroll in
+            diaryScroll.task {
+                if routinePreviewMeal != nil {
+                    // Capture the real carousel after it moved below the meals.
+                    // Do not replace the native framebuffer or weaken its audit.
+                    await Task.yield()
+                    scroll.scrollTo("diary.routine",anchor:.top)
+                }
+            }
+        }
+        #else
+        diaryScroll
+        #endif
+    }
+    private var diaryScroll:some View {
         ScrollView{diaryContent.padding(.horizontal,16).padding(.bottom,24)}.appBackground()
             .navigationTitle(diary.t("اليوم","Today"))
             .toolbar(.hidden,for:.navigationBar)
@@ -75,7 +91,7 @@ struct DiaryView:View {
             summary
             mealList(meals)
             foodCategories
-            dailyRoutine(meals)
+            dailyRoutine(meals).id("diary.routine")
         }.padding(.top,16)
     }
     #if DEBUG
@@ -541,7 +557,7 @@ struct CalorieIntakeDetailView: View {
                                 .frame(width: 48, height: 48)
                             CFACrescentChevron()
                                 .stroke(Color.white, style: StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round))
-                                .frame(width: 10, height: 18)
+                                .frame(width: 10, height: 18).scaleEffect(x:-1,y:1)
                         }
                     }
                     .buttonStyle(.plain)
@@ -570,6 +586,7 @@ struct CalorieIntakeDetailView: View {
                     .buttonStyle(.plain)
                     .accessibilityLabel(diary.t("إعدادات هدف السعرات", "Calorie Goal Settings"))
                 }
+                .environment(\.layoutDirection,.leftToRight)
                 .padding(.horizontal, 16)
                 .padding(.top, 12)
 
@@ -584,10 +601,10 @@ struct CalorieIntakeDetailView: View {
                             .luqmaFont(size: 64, weight: .heavy, relativeTo: .largeTitle)
                             .monospacedDigit()
                             .foregroundStyle(Color.white)
-                        Text(diary.t("سعرة", "kcal"))
+                        Text("kcal")
                             .luqmaFont(size: 30, weight: .bold, relativeTo: .title2)
                             .foregroundStyle(Color(hex: 0x9EA0A5))
-                    }
+                    }.environment(\.layoutDirection,.leftToRight)
 
                     Text(
                         remaining >= 0
@@ -672,7 +689,7 @@ struct CalorieIntakeDetailView: View {
                                                 .frame(width: 12, height: 12)
                                         }
                                     }
-                                    .annotation(position: .top, spacing: 10) {
+                                    .annotation(position: .top, spacing: 10, overflowResolution: .init(x:.fit(to:.chart),y:.disabled)) {
                                         VStack(spacing: -2) {
                                             Text("\(decimal(point.kcal, 0))" + diary.t(" سعرة", "kcal"))
                                                 .luqmaFont(size: 13, weight: .bold, relativeTo: .caption)
@@ -692,6 +709,7 @@ struct CalorieIntakeDetailView: View {
                                 }
                             }
                         }
+                        .environment(\.layoutDirection,.leftToRight)
                         .chartLegend(.hidden)
                         .chartYAxis {
                             AxisMarks(position: .leading, values: .automatic(desiredCount: 5)) { axis in
