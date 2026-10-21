@@ -441,12 +441,13 @@ final class LuqmaInteractionTests:XCTestCase {
         XCTAssertTrue(form.exists,file:file,line:line)
         for _ in 0..<10 {
             let viewport=form.frame.intersection(app.frame)
-            let top=max(viewport.minY,app.buttons["assessment.back"].frame.maxY)+8
-            let bottom=min(viewport.maxY,app.buttons["assessment.next"].frame.minY)-8
-            if control.exists && control.isHittable && control.frame.minY>=top && control.frame.maxY<=bottom && control.frame.minX>=viewport.minX && control.frame.maxX<=viewport.maxX {return}
+            let visible=assessmentVisibleArea()
+            let top=visible.minY
+            let bottom=visible.maxY
+            if assessmentControlIsVisible(control,in:visible) {return}
             XCTAssertGreaterThan(bottom-top,80,file:file,line:line)
-            // AX can report controls behind a safe-area footer as hittable.
-            // Scroll only the actual foreground form, inside its visible area.
+            // AX can report fields behind Skip/Continue or the keyboard as
+            // hittable. Restrict every real gesture to the foreground form.
             let upward = !control.exists || control.frame.maxY>bottom
             let origin=app.coordinate(withNormalizedOffset:CGVector(dx:0,dy:0))
             let x=viewport.midX-app.frame.minX
@@ -455,7 +456,51 @@ final class LuqmaInteractionTests:XCTestCase {
             origin.withOffset(CGVector(dx:x,dy:start-app.frame.minY))
                 .press(forDuration:0.05,thenDragTo:origin.withOffset(CGVector(dx:x,dy:end-app.frame.minY)))
         }
-        XCTFail("The real assessment control must be fully visible above its footer.\n"+app.debugDescription,file:file,line:line)
+        XCTFail("The real assessment control must be fully visible between its header, first footer action and keyboard.\n"+app.debugDescription,file:file,line:line)
+    }
+
+    private func assessmentVisibleArea()->CGRect {
+        let viewport=app.scrollViews["assessment.form"].frame.intersection(app.frame)
+        let top=max(viewport.minY,app.buttons["assessment.back"].frame.maxY)+24
+        var lowerEdges=[viewport.maxY]
+        for identifier in ["assessment.skip","assessment.next","assessment.review","assessment.saveDraft"] {
+            let control=app.buttons[identifier]
+            if control.exists {lowerEdges.append(control.frame.minY)}
+        }
+        let keyboard=app.keyboards.firstMatch
+        if keyboard.exists {
+            lowerEdges.append(keyboard.frame.minY)
+            let done=app.buttons["assessment.keyboardDone"]
+            if done.exists {lowerEdges.append(done.frame.minY)}
+        }
+        let bottom=(lowerEdges.min() ?? viewport.maxY)-8
+        return CGRect(x:viewport.minX,y:top,width:viewport.width,height:max(0,bottom-top))
+    }
+
+    private func assessmentControlIsVisible(_ control:XCUIElement,in visible:CGRect)->Bool {
+        control.exists && control.isHittable && !control.frame.isEmpty && visible.contains(control.frame)
+    }
+
+    private func focusAssessmentField(_ field:XCUIElement,file:StaticString=#filePath,line:UInt=#line) {
+        // Switching from one numeric field to a lower field must not tap the
+        // pinned Continue action occupying its old off-screen AX coordinates.
+        if app.keyboards.firstMatch.exists {finishAssessmentEditing(file:file,line:line)}
+        for attempt in 0..<3 {
+            revealAssessmentControl(field,file:file,line:line)
+            waitUntilEnabled(field,file:file,line:line)
+            if attempt == 0 && field.identifier == "assessment.minutes" {
+                print("LUQMA_ASSESSMENT_INPUT_FRAME \(field.identifier) \(field.frame) visible \(assessmentVisibleArea())")
+                recordFitnessScreen("Fitness training minutes before real field focus")
+            }
+            field.tap()
+            // Opening the keyboard can move both the field and the footer.
+            // Recheck actual geometry before any caret tap or typing.
+            revealAssessmentControl(field,file:file,line:line)
+            if app.keyboards.firstMatch.exists && assessmentControlIsVisible(field,in:assessmentVisibleArea()) {return}
+            // Interactive scrolling may dismiss the keyboard while revealing
+            // a field. The next bounded attempt focuses that visible field.
+        }
+        XCTFail("The real assessment field must remain visible and focused after the keyboard opens.\n"+app.debugDescription,file:file,line:line)
     }
 
     private func advanceAssessment(to step:Int) {
@@ -688,12 +733,15 @@ final class LuqmaInteractionTests:XCTestCase {
 
     private func replace(_ field:XCUIElement,with text:String) {
         XCTAssertTrue(field.waitForExistence(timeout:5),app.debugDescription)
-        reveal(field)
-        field.tap()
+        if field.identifier.hasPrefix("assessment.") {focusAssessmentField(field)}
+        else {reveal(field);field.tap()}
         let previous=field.value as? String ?? ""
         if !previous.isEmpty {
             // These numeric fields are trailing aligned. A center tap may leave
             // the caret inside 2000, so backspacing alone can produce 21002000.
+            if field.identifier.hasPrefix("assessment.") {
+                XCTAssertTrue(assessmentControlIsVisible(field,in:assessmentVisibleArea()),"The actual caret target must remain clear of the pinned footer and keyboard.\n"+app.debugDescription)
+            }
             field.coordinate(withNormalizedOffset:CGVector(dx:0.98,dy:0.5)).tap()
             field.typeText(String(repeating:XCUIKeyboardKey.delete.rawValue,count:previous.count))
         }
