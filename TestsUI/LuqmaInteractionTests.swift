@@ -36,7 +36,7 @@ final class LuqmaInteractionTests:XCTestCase {
         manual.tap()
         XCTAssertTrue(app.textFields["portion.name"].waitForExistence(timeout:10),app.debugDescription)
         replace(app.textFields["portion.name"],with:"UI Test Oats")
-        XCTAssertTrue(app.segmentedControls.buttons["serving"].isSelected)
+        XCTAssertTrue(app.buttons["portion.unit.serving"].isSelected)
         XCTAssertEqual(app.textFields["portion.amount"].value as? String,"1")
         replace(app.textFields["portion.kcal"],with:"100")
         replace(app.textFields["portion.protein"],with:"10")
@@ -46,6 +46,24 @@ final class LuqmaInteractionTests:XCTestCase {
         XCTAssertTrue(save.isEnabled)
         save.tap()
         XCTAssertTrue(app.buttons["nav.today"].waitForExistence(timeout:10))
+        let target=try XCTUnwrap(numeric(readCalorieGoal()))
+        let details=app.buttons["diary.calorieDetails"]
+        reveal(details);details.tap()
+        let consumed=app.staticTexts["calorie.consumed"]
+        XCTAssertTrue(consumed.waitForExistence(timeout:10))
+        XCTAssertEqual(numeric(consumed.label),100)
+        XCTAssertTrue(app.staticTexts["calorie.remaining"].label.contains(String(Int(target-100))))
+        for (key,value) in [("carbs","15g"),("protein","10g"),("fat","0g")] {
+            let macro=app.staticTexts["calorie.macro."+key]
+            reveal(macro)
+            XCTAssertEqual(macro.label,value)
+        }
+        let date=app.buttons["calorie.date"]
+        reveal(date);date.tap()
+        XCTAssertTrue(app.datePickers["calorie.datePicker"].waitForExistence(timeout:5))
+        app.buttons["navigation.back"].tap()
+        XCTAssertEqual(numeric(consumed.label),100,"Dismissing the calendar must retain the chosen day")
+        app.buttons["calorie.back"].tap()
         openBreakfastEntry()
         replace(app.textFields["entry.amount"],with:"2")
         XCTAssertTrue(app.staticTexts["200"].waitForExistence(timeout:5),"Resizing must recalculate actual displayed energy")
@@ -174,7 +192,7 @@ final class LuqmaInteractionTests:XCTestCase {
         let increaseAge=app.buttons["assessment.age.increase"]
         revealAssessmentControl(increaseAge);increaseAge.tap()
         XCTAssertEqual(numeric(age.value as? String ?? ""),31,"The first + must bootstrap an empty age using the stated suggestion")
-        exerciseAssessmentSlider("assessment.age.slider",field:age,range:18...100)
+        exerciseAssessmentPicker("assessment.age.slider",field:age,range:18...100,vertical:true)
         replace(age,with:"17")
         tapAssessmentNextExpectingError(at:4)
         XCTAssertEqual(age.value as? String,"17","Invalid input must remain editable instead of disappearing")
@@ -194,7 +212,7 @@ final class LuqmaInteractionTests:XCTestCase {
         let decreaseHeight=app.buttons["assessment.height.decrease"]
         revealAssessmentControl(decreaseHeight);decreaseHeight.tap()
         XCTAssertEqual(numeric(height.value as? String ?? ""),170)
-        exerciseAssessmentSlider("assessment.height.slider",field:height,range:120...230)
+        exerciseAssessmentPicker("assessment.height.slider",field:height,range:120...230,vertical:false)
         replace(height,with:"999")
         tapAssessmentNextExpectingError(at:5)
         XCTAssertEqual(height.value as? String,"999","Out-of-range manual input must stay visible for correction")
@@ -215,6 +233,9 @@ final class LuqmaInteractionTests:XCTestCase {
         advanceAssessment(to:6)
         replace(app.textFields["assessment.weight"],with:"80")
         finishAssessmentEditing()
+        exerciseAssessmentPicker("assessment.weight.slider",field:app.textFields["assessment.weight"],range:35...300,vertical:false)
+        replace(app.textFields["assessment.weight"],with:"80")
+        finishAssessmentEditing()
         let repeatedNext=app.buttons["assessment.next"]
         reveal(repeatedNext);waitUntilEnabled(repeatedNext);repeatedNext.doubleTap()
         assertAssessmentStep(7)
@@ -227,6 +248,11 @@ final class LuqmaInteractionTests:XCTestCase {
         backAssessment(to:7)
         XCTAssertEqual(numeric(app.textFields["assessment.target"].value as? String ?? ""),70,"Optional skip must preserve an answer already supplied")
         advanceAssessment(to:8)
+        let activityDetails=app.descendants(matching:.any).matching(identifier:"assessment.activity.details").firstMatch
+        revealAssessmentControl(activityDetails)
+        let activityDisclosure=activityDetails.images["collapsed"]
+        XCTAssertTrue(activityDisclosure.waitForExistence(timeout:5) && activityDisclosure.isHittable,"The activity choices must open through their actual disclosure control")
+        activityDisclosure.tap()
         tapAssessmentOption("assessment.activity.light")
         advanceAssessment(to:9)
         tapAssessmentOption("assessment.experience.beginner")
@@ -400,21 +426,29 @@ final class LuqmaInteractionTests:XCTestCase {
         assertAssessmentStep(step,file:file,line:line)
     }
 
-    private func exerciseAssessmentSlider(_ identifier:String,field:XCUIElement,range:ClosedRange<Double>,file:StaticString=#filePath,line:UInt=#line) {
-        let slider=app.sliders[identifier]
-        revealAssessmentControl(slider,file:file,line:line)
+    private func exerciseAssessmentPicker(_ identifier:String,field:XCUIElement,range:ClosedRange<Double>,vertical:Bool,file:StaticString=#filePath,line:UInt=#line) {
+        let picker=app.descendants(matching:.any).matching(identifier:identifier).firstMatch
+        revealAssessmentControl(picker,file:file,line:line)
         let original=numeric(field.value as? String ?? "")
-        // These are real consecutive native thumb drags without app-wide swipes,
-        // injected values, private gesture APIs or a pause between adjustments.
-        for position in [CGFloat(0.8),CGFloat(0.2),CGFloat(0.6)] {
-            slider.adjust(toNormalizedSliderPosition:position)
+        var previous=original
+        // The approved controls are a five-row vertical wheel and horizontal
+        // ruler, not UISliders. Drag the visible real controls three times,
+        // without injected state, private gesture APIs or artificial waits.
+        for (from,to) in [(CGFloat(0.70),CGFloat(0.30)),(CGFloat(0.30),CGFloat(0.70)),(CGFloat(0.65),CGFloat(0.40))] {
+            XCTAssertTrue(assessmentControlIsVisible(picker,in:assessmentVisibleArea()),"The entire actual picker must remain in the foreground before each drag",file:file,line:line)
+            let start=picker.coordinate(withNormalizedOffset:CGVector(dx:vertical ? 0.5:from,dy:vertical ? from:0.5))
+            let end=picker.coordinate(withNormalizedOffset:CGVector(dx:vertical ? 0.5:to,dy:vertical ? to:0.5))
+            start.press(forDuration:0.05,thenDragTo:end)
             guard let displayed=numeric(field.value as? String ?? "") else {
                 XCTFail("Dragging must always leave a visible numeric measurement.\n"+app.debugDescription,file:file,line:line);return
             }
             XCTAssertTrue(displayed.isFinite && range.contains(displayed),"The actual value must remain in the displayed supported range",file:file,line:line)
+            XCTAssertTrue(assessmentControlIsVisible(field,in:assessmentVisibleArea()),"The value read after dragging must be visible above the footer",file:file,line:line)
+            XCTAssertNotEqual(displayed,previous,"Each real wheel/ruler drag must update the editable answer",file:file,line:line)
+            previous=displayed
         }
-        XCTAssertNotEqual(numeric(field.value as? String ?? ""),original,"Native dragging must update the actual editable answer",file:file,line:line)
-        recordFitnessScreen("Fitness native slider interaction "+identifier)
+        XCTAssertNotEqual(numeric(field.value as? String ?? ""),original,"Consecutive wheel/ruler drags must update the actual editable answer",file:file,line:line)
+        recordFitnessScreen("Fitness approved wheel/ruler interaction "+identifier)
     }
 
     private func finishAssessmentEditing(file:StaticString=#filePath,line:UInt=#line) {
@@ -443,7 +477,7 @@ final class LuqmaInteractionTests:XCTestCase {
 
     private func tapAssessmentOption(_ identifier:String) {
         let option=app.buttons[identifier]
-        reveal(option);option.tap()
+        revealAssessmentControl(option);waitUntilEnabled(option);option.tap()
         XCTAssertTrue(option.isSelected,"The real choice must become selected")
     }
 
@@ -461,7 +495,9 @@ final class LuqmaInteractionTests:XCTestCase {
             // hittable. Restrict every real gesture to the foreground form.
             let upward = !control.exists || control.frame.maxY>bottom
             let origin=app.coordinate(withNormalizedOffset:CGVector(dx:0,dy:0))
-            let x=viewport.midX-app.frame.minX
+            // The real 16pt outer gutter is outside the approved full-width
+            // ruler/wheel. Scrolling there must not change a measurement.
+            let x=viewport.minX+8-app.frame.minX
             let start=upward ? bottom-20:top+20
             let end=upward ? top+20:bottom-20
             origin.withOffset(CGVector(dx:x,dy:start-app.frame.minY))
@@ -745,6 +781,7 @@ final class LuqmaInteractionTests:XCTestCase {
     private func replace(_ field:XCUIElement,with text:String) {
         XCTAssertTrue(field.waitForExistence(timeout:5),app.debugDescription)
         if field.identifier.hasPrefix("assessment.") {focusAssessmentField(field)}
+        else if field.identifier.hasPrefix("portion."){focusPortionField(field)}
         else {reveal(field);field.tap()}
         let previous=field.value as? String ?? ""
         if !previous.isEmpty {
@@ -753,10 +790,51 @@ final class LuqmaInteractionTests:XCTestCase {
             if field.identifier.hasPrefix("assessment.") {
                 XCTAssertTrue(assessmentControlIsVisible(field,in:assessmentVisibleArea()),"The actual caret target must remain clear of the pinned footer and keyboard.\n"+app.debugDescription)
             }
+            if field.identifier.hasPrefix("portion."){
+                XCTAssertTrue(assessmentControlIsVisible(field,in:portionVisibleArea(containing:field)),"The actual portion caret target must remain inside its visible scroll area.\n"+app.debugDescription)
+            }
             field.coordinate(withNormalizedOffset:CGVector(dx:0.98,dy:0.5)).tap()
             field.typeText(String(repeating:XCUIKeyboardKey.delete.rawValue,count:previous.count))
         }
         field.typeText(text)
         XCTAssertEqual(field.value as? String,text,"The real field must contain the requested replacement before continuing.\n"+app.debugDescription)
+    }
+
+    private func portionVisibleArea(containing field:XCUIElement)->CGRect {
+        let content=app.scrollViews.containing(.textField,identifier:field.identifier).firstMatch
+        let viewport=content.frame.intersection(app.frame)
+        var bottom=viewport.maxY
+        let save=app.buttons["portion.save"]
+        if save.exists{bottom=min(bottom,save.frame.minY)}
+        let keyboard=app.keyboards.firstMatch
+        if keyboard.exists{bottom=min(bottom,keyboard.frame.minY)}
+        return CGRect(x:viewport.minX,y:viewport.minY+8,width:viewport.width,height:max(0,bottom-viewport.minY-16))
+    }
+
+    private func revealPortionField(_ field:XCUIElement,file:StaticString=#filePath,line:UInt=#line){
+        let content=app.scrollViews.containing(.textField,identifier:field.identifier).firstMatch
+        XCTAssertTrue(content.exists,"The actual portion editor must contain its numeric field",file:file,line:line)
+        for _ in 0..<12{
+            let visible=portionVisibleArea(containing:field)
+            if assessmentControlIsVisible(field,in:visible){return}
+            XCTAssertGreaterThan(visible.height,60,file:file,line:line)
+            let upward = !field.exists || field.frame.maxY>visible.maxY
+            let origin=app.coordinate(withNormalizedOffset:CGVector(dx:0,dy:0))
+            let x=visible.minX+8-app.frame.minX
+            let start=upward ? visible.maxY-12:visible.minY+12
+            let end=upward ? visible.minY+12:visible.maxY-12
+            origin.withOffset(CGVector(dx:x,dy:start-app.frame.minY))
+                .press(forDuration:0.05,thenDragTo:origin.withOffset(CGVector(dx:x,dy:end-app.frame.minY)))
+        }
+        XCTFail("The actual portion field must be fully visible above the pinned Add food action and keyboard.\n"+app.debugDescription,file:file,line:line)
+    }
+
+    private func focusPortionField(_ field:XCUIElement,file:StaticString=#filePath,line:UInt=#line){
+        for _ in 0..<3{
+            revealPortionField(field,file:file,line:line);waitUntilEnabled(field,file:file,line:line);field.tap()
+            revealPortionField(field,file:file,line:line)
+            if app.keyboards.firstMatch.exists && assessmentControlIsVisible(field,in:portionVisibleArea(containing:field)){return}
+        }
+        XCTFail("The actual portion field must remain visible and focused when its keyboard opens.\n"+app.debugDescription,file:file,line:line)
     }
 }

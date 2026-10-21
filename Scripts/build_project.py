@@ -67,8 +67,14 @@ infoplist=add('info','PBXFileReference',lastKnownFileType='text.plist.xml',path=
 entitlement=add('entitlements','PBXFileReference',lastKnownFileType='text.plist.entitlements',path='Luqma.entitlements',sourceTree='<group>')
 appgroup=add('group:app','PBXGroup',children=[rootfile,infoplist,entitlement]+groups,path='Luqma',sourceTree='<group>')
 product=add('product','PBXFileReference',explicitFileType='wrapper.application',includeInIndex=0,path='Luqma.app',sourceTree='BUILT_PRODUCTS_DIR')
-uitestfile=add('file:uitests','PBXFileReference',lastKnownFileType='sourcecode.swift',path='LuqmaInteractionTests.swift',sourceTree='<group>')
-uitestgroup=add('group:uitests','PBXGroup',children=[uitestfile],path='TestsUI',sourceTree='<group>')
+uitestfiles=[]
+uitestsources=[]
+for file in sorted((ROOT/'TestsUI').glob('*.swift')):
+    key=file.relative_to(ROOT).as_posix()
+    file_ref=add('file:'+key,'PBXFileReference',lastKnownFileType='sourcecode.swift',path=file.name,sourceTree='<group>')
+    uitestfiles.append(file_ref)
+    uitestsources.append(add('uitests:source:'+key,'PBXBuildFile',fileRef=file_ref))
+uitestgroup=add('group:uitests','PBXGroup',children=uitestfiles,path='TestsUI',sourceTree='<group>')
 uitestproduct=add('product:uitests','PBXFileReference',explicitFileType='wrapper.cfbundle',includeInIndex=0,path='LuqmaUITests.xctest',sourceTree='BUILT_PRODUCTS_DIR')
 productgroup=add('group:products','PBXGroup',children=[product,uitestproduct],name='Products',sourceTree='<group>')
 main=add('group:main','PBXGroup',children=[appgroup,uitestgroup,productgroup],sourceTree='<group>')
@@ -98,7 +104,7 @@ for name in ['Debug','Release']:
     targetconfigs.append(add('config:target:'+name,'XCBuildConfiguration',buildSettings=ts,name=name))
 pc=add('configs:project','XCConfigurationList',buildConfigurations=projectconfigs,defaultConfigurationIsVisible=0,defaultConfigurationName='Release')
 tc=add('configs:target','XCConfigurationList',buildConfigurations=targetconfigs,defaultConfigurationIsVisible=0,defaultConfigurationName='Release')
-for config in targetconfigs: objects[config]['buildSettings']['MARKETING_VERSION']='2.8'
+for config in targetconfigs: objects[config]['buildSettings']['MARKETING_VERSION']='2.9'
 target=add('target','PBXNativeTarget',buildConfigurationList=tc,buildPhases=phases,buildRules=[],dependencies=[],name='Luqma',packageProductDependencies=[ort]+mlxproducts,productName='Luqma',productReference=product,productType='com.apple.product-type.application')
 uitestconfigs=[]
 for name in ['Debug','Release']:
@@ -108,7 +114,7 @@ for name in ['Debug','Release']:
 uitestconfiglist=add('configs:uitests','XCConfigurationList',buildConfigurations=uitestconfigs,defaultConfigurationIsVisible=0,defaultConfigurationName='Debug')
 uitestproxy=add('uitests:proxy','PBXContainerItemProxy',containerPortal=ref('project'),proxyType=1,remoteGlobalIDString=target,remoteInfo='Luqma')
 uitestdependency=add('uitests:dependency','PBXTargetDependency',target=target,targetProxy=uitestproxy)
-uitestphases=[add('uitests:sources','PBXSourcesBuildPhase',buildActionMask=2147483647,files=[add('uitests:source-build','PBXBuildFile',fileRef=uitestfile)],runOnlyForDeploymentPostprocessing=0),add('uitests:frameworks','PBXFrameworksBuildPhase',buildActionMask=2147483647,files=[],runOnlyForDeploymentPostprocessing=0),add('uitests:resources','PBXResourcesBuildPhase',buildActionMask=2147483647,files=[],runOnlyForDeploymentPostprocessing=0)]
+uitestphases=[add('uitests:sources','PBXSourcesBuildPhase',buildActionMask=2147483647,files=uitestsources,runOnlyForDeploymentPostprocessing=0),add('uitests:frameworks','PBXFrameworksBuildPhase',buildActionMask=2147483647,files=[],runOnlyForDeploymentPostprocessing=0),add('uitests:resources','PBXResourcesBuildPhase',buildActionMask=2147483647,files=[],runOnlyForDeploymentPostprocessing=0)]
 uitarget=add('target:uitests','PBXNativeTarget',buildConfigurationList=uitestconfiglist,buildPhases=uitestphases,buildRules=[],dependencies=[uitestdependency],name='LuqmaUITests',productName='LuqmaUITests',productReference=uitestproduct,productType='com.apple.product-type.bundle.ui-testing')
 project=add('project','PBXProject',attributes=dict(BuildIndependentTargetsInParallel='YES',LastUpgradeCheck='1600',TargetAttributes={target:dict(CreatedOnToolsVersion='16.0',ProvisioningStyle='Automatic'),uitarget:dict(CreatedOnToolsVersion='16.0',TestTargetID=target)}),buildConfigurationList=pc,compatibilityVersion='Xcode 14.0',developmentRegion='ar',hasScannedForEncodings=0,knownRegions=['ar','en','Base'],mainGroup=main,packageReferences=[package,mlxpackage,mlxbase,transformers],productRefGroup=productgroup,projectDirPath='',projectRoot='',targets=[target,uitarget])
 payload=dict(archiveVersion=1,classes={},objectVersion=56,objects=objects,rootObject=project)

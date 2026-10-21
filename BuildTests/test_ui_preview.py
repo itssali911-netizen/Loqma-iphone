@@ -175,9 +175,11 @@ class CaptureRetryTests(unittest.TestCase):
         for screen, route in TEMPLATE_ROUTES:
             with self.subTest(route=route):
                 case = cases[screen]
-                self.assertEqual(case["arguments"], ["-loqma-preview-template", route])
+                self.assertEqual(case["arguments"], ["-loqma-preview-template", route,
+                    *(["-loqma-approved-photo-scan"] if route == "approvedPhotoScan" else
+                      ["-loqma-approved-photo-results"] if route == "approvedPhotoResults" else [])])
                 self.assertTrue(case["read_only_preview"])
-                self.assertEqual(case["synthetic_fixture"], route in {"portion", "recipe", "recipeDetail"} or route.startswith("state"))
+                self.assertEqual(case["synthetic_fixture"], route in {"portion", "recipe", "recipeDetail", "approvedHome", "calorieDetails", "approvedPhotoScan", "approvedPhotoResults"} or route.startswith("state"))
 
     def test_accessibility_dashboard_composes_the_same_read_only_overview(self):
         cases = {case["screen"]: case for case in preview_cases()}
@@ -197,7 +199,7 @@ class CaptureRetryTests(unittest.TestCase):
         extra = [case for case in cases.values() if "assessment_page" in case]
         self.assertEqual({case["assessment_page"] for case in extra} | {0,2,7,9,10}, set(range(11)))
         self.assertEqual(len(extra),9)
-        self.assertEqual(EXPECTED_SCREEN_COUNT,47)
+        self.assertEqual(EXPECTED_SCREEN_COUNT,51)
         self.assertEqual(dict(ASSESSMENT_EXTRA_ROUTES),{
             "assessment-age":3,"assessment-height":4,"assessment-weight":5,
             "assessment-target":6,"assessment-training":8,"assessment-safety":1})

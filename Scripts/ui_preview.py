@@ -64,7 +64,11 @@ TEMPLATE_ROUTES = (("macro-goals", "goals"),
                    ("state-error", "stateError"),
                    ("state-loading", "stateLoading"),
                    ("state-empty", "stateEmpty"),
-                   ("state-success", "stateSuccess"))
+                   ("state-success", "stateSuccess"),
+                   ("approved-home", "approvedHome"),
+                   ("approved-calorie", "calorieDetails"),
+                   ("approved-scan", "approvedPhotoScan"),
+                   ("approved-results", "approvedPhotoResults"))
 FITNESS_ROUTES = (("assessment-goal", "assessmentGoal"),
                   ("assessment-gender", "assessmentGender"),
                   ("assessment-activity", "assessmentActivity"),
@@ -96,9 +100,11 @@ def preview_cases() -> list[dict]:
     cases += [{"tab": None, "screen": screen, "arguments": [argument],
                "synthetic_fixture": screen in {PHOTO_SCREEN, RECIPE_SCREEN, "meal-macros", "daily-overview"}}
               for screen, argument in routes]
-    cases += [{"tab": None, "screen": screen, "arguments": ["-loqma-preview-template", route],
+    cases += [{"tab": None, "screen": screen, "arguments": ["-loqma-preview-template", route,
+                              *(["-loqma-approved-photo-scan"] if route == "approvedPhotoScan" else
+                                ["-loqma-approved-photo-results"] if route == "approvedPhotoResults" else [])],
                "template_route": route, "read_only_preview": True,
-               "synthetic_fixture": route in {"portion", "recipe", "recipeDetail"} or route.startswith("state")}
+               "synthetic_fixture": route in {"portion", "recipe", "recipeDetail", "approvedHome", "calorieDetails", "approvedPhotoScan", "approvedPhotoResults"} or route.startswith("state")}
               for screen, route in TEMPLATE_ROUTES]
     cases += [{"tab": None, "screen": screen, "arguments": list(arguments),
                "synthetic_fixture": screen in {"accessibility-today", "photo-components"},
@@ -480,7 +486,7 @@ def collect_failure_diagnostics(output: Path, device: str, report: dict) -> None
 
 def capture(output: Path, packages: Path, prebuilt: Path | None,
             bundle: str, settle_seconds: float, device_type: str=DEVICE_TYPE,
-            language: str='ar', screens: list[str] | None=None) -> None:
+            language: str='ar', screens: list[str] | None=None, approved_capture: bool=False) -> None:
     if output.exists():
         raise BuildError("Choose a new UI preview output directory to avoid mixing screenshots.")
     output.mkdir(parents=True)
@@ -493,6 +499,8 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
         "api_key_used": False, "physical_device_verified": False,
         "expected_screenshot_count": len(screens) if screens else EXPECTED_SCREEN_COUNT,
         "language": language,
+        "approved_reference_capture": approved_capture,
+        "fixture_labels_recorded_externally": approved_capture,
         "synthetic_photo_fixture": True,
         "synthetic_recipe_fixture": True,
         "synthetic_meal_fixture": True,
@@ -560,6 +568,7 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
             launched = command(["xcrun", "simctl", "launch", "--terminate-running-process",
                                 device, bundle, *arguments,
                                 "-loqma-preview-font-audit",
+                                *(["-loqma-approved-capture"] if approved_capture else []),
                                 *(["-loqma-ui-test-en"] if language=='en' else []),
                                 "-AppleLanguages", "("+language+")", "-AppleLocale", "en_US" if language=='en' else "ar_SA"],
                                output, "preview-launch-" + screen, 300 if number == 1 else 120)
@@ -618,6 +627,7 @@ def main() -> int:
     parser.add_argument("--device-type",choices=[DEVICE_TYPE,REFERENCE_DEVICE_TYPE],default=DEVICE_TYPE)
     parser.add_argument("--language",choices=['ar','en'],default='ar')
     parser.add_argument("--screens",nargs='+',help='Optional subset of named native routes')
+    parser.add_argument("--approved-capture",action="store_true",help="Clean native reference crop; synthetic fixture provenance remains in JSON")
     args = parser.parse_args()
     if not re.fullmatch(r"[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+", args.bundle_id):
         parser.error("Bundle identifier is invalid.")
@@ -628,7 +638,7 @@ def main() -> int:
     try:
         capture(args.output.resolve(), args.packages.resolve(),
                 args.app.resolve() if args.app else None, args.bundle_id, args.settle_seconds,
-                args.device_type,args.language,args.screens)
+                args.device_type,args.language,args.screens,args.approved_capture)
     except (BuildError, OSError, ValueError) as error:
         print("Luqma native UI preview:", str(error), file=sys.stderr)
         return 1

@@ -9,6 +9,8 @@ struct DiaryView:View {
     @State private var adding=false
     @State private var goals=false
     @State private var selectingDate=false
+    @State private var showingCalorieIntake=false
+    @State private var showingNotifications=false
     @State private var editing:DiaryEntry?
     @State private var chosenMeal:Meal?
     @State private var searchQuery=""
@@ -38,6 +40,10 @@ struct DiaryView:View {
             .fullScreenCover(isPresented:$adding){FoodAddView(initialQuery:searchQuery,initialMeal:chosenMeal,onPhotoCommit:{foods,meal in do{let entries=try foods.map{try DiaryEntry(food:$0.0,amount:$0.1,unit:$0.2,meal:meal,day:day,language:diary.language)};return diary.add(entries,foods:foods.map{$0.0})}catch{diary.report(error);return false}}){food,amount,unit,meal in do{let entry=try DiaryEntry(food:food,amount:amount,unit:unit,meal:meal,day:day,language:diary.language);return diary.add([entry],foods:[food])}catch{diary.report(error);return false}}}
             .sheet(item:$editing){EntryEditor(entry:$0)}
             .sheet(isPresented:$goals){GoalEditor()}
+            .sheet(isPresented:$showingCalorieIntake){
+                CalorieIntakeDetailView(selectedDate:$date)
+            }
+            .sheet(isPresented:$showingNotifications){NavigationStack{NotificationsView()}}
             .sheet(isPresented:$selectingDate){
                 NavigationStack{
                     VStack(spacing:12){
@@ -66,41 +72,11 @@ struct DiaryView:View {
     private var normalDiaryContent:some View {
         let meals=MealDiarySummary.forDay(day,entries:diary.state.entries)
         return VStack(alignment:.leading,spacing:20){
+            summary
+            mealList(meals)
             foodCategories
             dailyRoutine(meals)
-            summary
-            fitnessSummary
-            mealList(meals)
         }.padding(.top,16)
-    }
-    @ViewBuilder private var fitnessSummary:some View {
-        if diary.state.fitnessProfile != nil || diary.state.fitnessDraft != nil || diary.state.fitnessOnboardingDismissed != true {
-            VStack(alignment:.leading,spacing:12){
-                HStack{
-                    Text(diary.t("خطتك الشخصية","Your personal plan")).luqmaFont(.sectionTitle).accessibilityAddTraits(.isHeader)
-                    Spacer()
-                    if diary.state.fitnessProfile == nil && diary.state.fitnessDraft == nil{
-                        Button(diary.t("لاحقًا","Later")){_ = diary.deferFitnessAssessment()}.luqmaFont(.helper).foregroundStyle(Theme.link).frame(minHeight:44).accessibilityIdentifier("diary.deferFitness")
-                    }
-                }
-                if let plan=diary.state.appliedFitnessPlan,FitnessAssessmentState.hasAppliedGoals(diary.state){
-                    Text(diary.t("\(plan.activity.trainingDays) أيام تدريب أسبوعيًا · \(plan.activity.stepsPerDay) خطوة مقترحة يوميًا","\(plan.activity.trainingDays) training days / week · \(plan.activity.stepsPerDay) suggested daily steps"))
-                        .luqmaFont(.helper).foregroundStyle(Theme.muted).fixedSize(horizontal:false,vertical:true)
-                    if let current=diary.state.weights.max(by:{$0.day < $1.day})?.kg ?? diary.state.fitnessProfile?.answers.weightKG{
-                        Text(diary.t("الوزن الحالي: \(decimal(current)) كجم","Current weight: \(decimal(current)) kg")).luqmaFont(.helper).foregroundStyle(Theme.muted)
-                    }
-                    if let target=diary.state.fitnessProfile?.answers.targetWeightKG{
-                        Text(diary.t("وزن الهدف: \(decimal(target)) كجم","Target weight: \(decimal(target)) kg")).luqmaFont(.helper).foregroundStyle(Theme.muted)
-                    }
-                }else{
-                    Text(diary.t("تقديرات للتغذية والنشاط بحسب إجاباتك، مع مراجعة قبل اعتماد الأهداف.","Nutrition and activity estimates from your answers, with a review before you apply any targets.")).luqmaFont(.helper).foregroundStyle(Theme.muted).fixedSize(horizontal:false,vertical:true)
-                }
-                NavigationLink{FitnessProfileView()}label:{HStack{
-                    Text(diary.t(diary.state.fitnessDraft != nil ? "متابعة التقييم":"عرض ملف اللياقة",diary.state.fitnessDraft != nil ? "Continue assessment":"Open fitness profile"))
-                    Spacer();Image(systemName:"chevron.forward")
-                }.luqmaFont(.button).foregroundStyle(Theme.link).frame(minHeight:44)}.accessibilityIdentifier("diary.fitnessProfile")
-            }.luqmaCard()
-        }
     }
     #if DEBUG
     private var mealPreviewContent:some View {
@@ -132,18 +108,49 @@ struct DiaryView:View {
     #endif
     private var header:some View {
         VStack(alignment:.leading,spacing:12){
-            HStack(spacing:10){
-                Image("LuqmaMark").resizable().scaledToFit().frame(width:36,height:36)
-                    .padding(4).background(Theme.background,in:RoundedRectangle(cornerRadius:12,style:.continuous)).accessibilityHidden(true)
-                VStack(alignment:.leading,spacing:5){
-                    Button{selectingDate=true}label:{HStack(spacing:5){Text(localizedDate(date,"d MMMM yyyy")).luqmaFont(size:10,weight:.medium,relativeTo:.caption2);Image(systemName:"chevron.down").font(.system(size:8,weight:.semibold))}.foregroundStyle(Theme.text.opacity(0.8))}.buttonStyle(.plain).accessibilityLabel(diary.t("اختيار التاريخ","Choose date")).accessibilityValue(localizedDate(date,"EEEE, d MMMM yyyy"))
-                    Text(diary.t("يومك مع لُقمة","Your day with Luqma")).luqmaFont(size:18,weight:.bold,relativeTo:.headline).foregroundStyle(Theme.text).accessibilityAddTraits(.isHeader)
+            HStack(alignment:.top,spacing:12){
+                Image("LuqmaMark").resizable().scaledToFit().frame(width:38,height:38)
+                    .padding(4).background(Theme.background,in:RoundedRectangle(cornerRadius:12)).accessibilityHidden(true)
+                VStack(alignment:.leading,spacing:2){
+                    Button{selectingDate=true}label:{
+                        HStack(spacing:4){Text(localizedDate(date,"d MMMM yyyy")).luqmaFont(size:11,weight:.medium,relativeTo:.caption2);Image(systemName:"chevron.down").font(.system(size:8,weight:.semibold))}
+                            .foregroundStyle(Theme.text.opacity(0.82))
+                    }.buttonStyle(.plain).accessibilityLabel(diary.t("اختيار التاريخ","Choose date"))
+                        .accessibilityValue(localizedDate(date,"EEEE, d MMMM yyyy"))
+                    Text(diary.t("يومك مع لُقمة","Your day with Luqma"))
+                        .luqmaFont(size:19,weight:.bold,relativeTo:.headline).foregroundStyle(Theme.text).accessibilityAddTraits(.isHeader)
                 }
                 Spacer(minLength:0)
-                Button{goals=true}label:{Image(systemName:"gearshape").font(.system(size:17,weight:.medium)).frame(width:40,height:40).foregroundStyle(Theme.text).background(Theme.text.opacity(0.06),in:RoundedRectangle(cornerRadius:12,style:.continuous))}.buttonStyle(.plain).accessibilityLabel(diary.t("أهداف السعرات والماكروز","Calorie and macro goals")).accessibilityIdentifier("diary.goals")
+                HStack(spacing:8){
+                    Button{showingNotifications=true}label:{
+                        Image(systemName:"bell").font(.system(size:15,weight:.medium)).frame(width:38,height:38)
+                            .foregroundStyle(Theme.text).background(Theme.text.opacity(0.08),in:RoundedRectangle(cornerRadius:12))
+                    }.buttonStyle(.plain).accessibilityLabel(diary.t("الإشعارات","Notifications"))
+                    Button{goals=true}label:{
+                        Image(systemName:"gearshape").font(.system(size:16,weight:.medium)).frame(width:38,height:38)
+                            .foregroundStyle(Theme.text).background(Theme.text.opacity(0.08),in:RoundedRectangle(cornerRadius:12))
+                    }.buttonStyle(.plain).accessibilityLabel(diary.t("أهداف السعرات والماكروز","Calorie and macro goals")).accessibilityIdentifier("diary.goals")
+                }
             }
-            Button{openSearch()}label:{HStack(spacing:10){Text(diary.t("ابحث في قاعدة الطعام…","Search our food database…")).luqmaFont(size:13,relativeTo:.subheadline);Spacer(minLength:0);Image(systemName:"magnifyingglass").font(.system(size:16))}.foregroundStyle(Theme.text.opacity(0.85)).padding(.horizontal,14).frame(minHeight:44).background(Theme.background,in:RoundedRectangle(cornerRadius:12,style:.continuous))}.buttonStyle(.plain)
+            HStack{Spacer(minLength:0);compactPersonalizedPlanBadge}
+            Button{openSearch()}label:{
+                HStack(spacing:8){Text(diary.t("ابحث في قاعدة الطعام…","Search our food database…")).luqmaFont(size:13,relativeTo:.subheadline);Spacer(minLength:0);Image(systemName:"magnifyingglass").font(.system(size:16))}
+                    .foregroundStyle(Theme.text.opacity(0.85)).padding(.horizontal,16).frame(minHeight:46)
+                    .background(Theme.background,in:RoundedRectangle(cornerRadius:12))
+                    .overlay{RoundedRectangle(cornerRadius:12).strokeBorder(Theme.stroke,lineWidth:1)}
+            }.buttonStyle(.plain).accessibilityIdentifier("diary.search")
         }.padding(16).background{Theme.surface.clipShape(UnevenRoundedRectangle(bottomLeadingRadius:24,bottomTrailingRadius:24,style:.continuous)).ignoresSafeArea(edges:.top)}
+    }
+    private var compactPersonalizedPlanBadge:some View {
+        NavigationLink{FitnessProfileView()}label:{
+            HStack(spacing:6){
+                Image(systemName:diary.state.fitnessProfile == nil ? "sparkles":"checkmark.seal.fill").font(.system(size:11,weight:.bold)).foregroundStyle(Theme.accent)
+                Text(diary.t(diary.state.fitnessProfile == nil ? "خطتك الشخصية · التقييم":"خطتك الشخصية",diary.state.fitnessProfile == nil ? "Personal plan · Assessment":"Personal plan")).luqmaFont(size:11,weight:.bold,relativeTo:.caption2).foregroundStyle(Theme.text).lineLimit(1)
+                Image(systemName:"chevron.forward").font(.system(size:9,weight:.bold)).foregroundStyle(Theme.accent)
+            }.padding(.horizontal,10).padding(.vertical,6).background(Theme.background.opacity(0.88),in:Capsule())
+                .overlay{Capsule().strokeBorder(Theme.accent.opacity(0.55),lineWidth:1)}
+        }.buttonStyle(.plain).accessibilityIdentifier("diary.fitnessProfile")
+            .accessibilityLabel(diary.t("خطتك الشخصية — ملف اللياقة","Personal plan — Fitness profile"))
     }
     private func openSearch(_ query:String="",meal:Meal?=nil){searchQuery=query;chosenMeal=meal;adding=true}
     private var foodCategories:some View {
@@ -306,18 +313,17 @@ struct DiaryView:View {
         dailySummary(diary.total(day),diary.dailyGoals(day))
     }
     private func dailySummary(_ consumed:Nutrition,_ goals:Nutrition,showHistory:Bool=true)->some View {
-        let history=showHistory ? intakeHistory:[]
-        return VStack(alignment:.leading,spacing:12){
+        VStack(alignment:.leading,spacing:12){
             VStack(alignment:.leading,spacing:10){
-                Text(diary.t("هدف السعرات","Calorie goal")).luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline).foregroundStyle(Theme.text)
+                HStack{
+                    Text(diary.t("هدف السعرات","Calorie goal")).luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline).foregroundStyle(Theme.text)
+                    Spacer(minLength:8)
+                    Button{showingCalorieIntake=true}label:{Text(diary.t("اضغط لعرض آخر 7 أيام ›","View the last 7 days ›")).luqmaFont(size:12,weight:.semibold,relativeTo:.caption).foregroundStyle(Theme.accent)}
+                        .buttonStyle(.plain).accessibilityIdentifier("diary.calorieDetails")
+                }
                 calorieGoal(consumed:consumed.kcal,goal:goals.kcal)
             }
             macroSummary(consumed,goals).padding(16).background(Theme.card,in:RoundedRectangle(cornerRadius:20,style:.continuous))
-            if history.count>=2{
-                DisclosureGroup(diary.t("السعرات خلال آخر 7 أيام","Calories over the last 7 days")){
-                    intakeChart(history).padding(.top,12)
-                }.luqmaFont(.caption).foregroundStyle(Theme.muted).padding(16).background(Theme.card,in:RoundedRectangle(cornerRadius:20,style:.continuous))
-            }
         }
     }
     @ViewBuilder private func macroSummary(_ consumed:Nutrition,_ goals:Nutrition)->some View {
@@ -382,33 +388,6 @@ struct DiaryView:View {
             ProgressView(value:progress).tint(color)
                 .accessibilityLabel(key.label(diary.language)+" "+diary.t("التقدّم اليومي","daily progress"))
         }.frame(maxWidth:.infinity,alignment:.leading).accessibilityElement(children:.combine)
-    }
-    private struct IntakePoint:Identifiable{var day:String;var date:Date;var kcal:Double;var id:String{day}}
-    private var intakeHistory:[IntakePoint]{
-        let calendar=DisplayFormat.calendar(diary.language),end=calendar.startOfDay(for:min(date,Date()))
-        let dates=(0..<7).compactMap{offset -> (String,Date)? in
-            guard let value=calendar.date(byAdding:.day,value:offset-6,to:end) else{return nil}
-            return (DayKey.string(value),value)
-        }
-        let days=Set(dates.map{$0.0})
-        var calories:[String:Double]=[:]
-        // One pass over the diary, retaining each day's original addition order.
-        for entry in diary.state.entries where days.contains(entry.day){calories[entry.day,default:0]+=entry.kcal}
-        return dates.compactMap{key,value in calories[key].map{IntakePoint(day:key,date:value,kcal:$0)}}
-    }
-    @ViewBuilder private func intakeChart(_ points:[IntakePoint])->some View {
-        if points.count>=2{
-            Chart(points){point in
-                AreaMark(x:.value("Day",point.date),y:.value("Logged calories",point.kcal)).foregroundStyle(LinearGradient(colors:[Theme.accent.opacity(0.35),Theme.accent.opacity(0.025)],startPoint:.top,endPoint:.bottom))
-                LineMark(x:.value("Day",point.date),y:.value("Logged calories",point.kcal)).lineStyle(StrokeStyle(lineWidth:2.5)).foregroundStyle(Theme.accent)
-                PointMark(x:.value("Day",point.date),y:.value("Logged calories",point.kcal)).symbolSize(20).foregroundStyle(Theme.accent)
-            }.chartLegend(.hidden).chartYAxis{AxisMarks(values:.automatic(desiredCount:3)){axis in
-                AxisGridLine().foregroundStyle(Theme.stroke)
-                AxisValueLabel{if let value=axis.as(Double.self){Text(decimal(value,0)).luqmaFont(.caption2)}}.foregroundStyle(Theme.muted)
-            }}.chartXAxis{AxisMarks(values:.automatic(desiredCount:4)){axis in
-                AxisValueLabel{if let value=axis.as(Date.self){Text(localizedDate(value,"d MMM")).luqmaFont(.caption2)}}.foregroundStyle(Theme.muted)
-            }}.frame(height:135).accessibilityLabel(diary.t("السعرات المسجلة خلال آخر سبعة أيام","Calories logged over the last seven days"))
-        }
     }
     private func mealList(_ summaries:[MealDiarySummary],showEntries:Bool=true)->some View {
         VStack(alignment:.leading,spacing:12){
@@ -484,6 +463,330 @@ struct DiaryView:View {
         return formatted.hasSuffix(".0") ? String(formatted.dropLast(2)):formatted
     }
 }
+struct CalorieIntakeDetailView: View {
+    @Binding var selectedDate: Date
+    @EnvironmentObject var diary: DiaryStore
+    @Environment(\.dismiss) private var dismiss
+    @State private var activeDayKey: String?
+    @State private var windowEnd: Date?
+    @State private var showingGoals = false
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @State private var showingMonthPicker: Bool = false
+
+    private struct DayIntakeItem: Identifiable {
+        let dayKey: String
+        let date: Date
+        let kcal: Double
+        let protein: Double
+        let carbs: Double
+        let fat: Double
+        let targetKcal: Double
+        var id: String { dayKey }
+    }
+
+    private var sevenDayItems: [DayIntakeItem] {
+        let calendar = DisplayFormat.calendar(diary.language)
+        let end = calendar.startOfDay(for: min(windowEnd ?? selectedDate, Date()))
+        return (0..<7).compactMap { offset -> DayIntakeItem? in
+            guard let dateValue = calendar.date(byAdding: .day, value: offset - 6, to: end) else { return nil }
+            let key = DayKey.string(dateValue)
+            let totals = diary.total(key)
+            let target = diary.dailyGoals(key)
+            return DayIntakeItem(
+                dayKey: key,
+                date: dateValue,
+                kcal: totals.kcal,
+                protein: totals.protein,
+                carbs: totals.carbs,
+                fat: totals.fat,
+                targetKcal: target.kcal
+            )
+        }
+    }
+
+    private var selectedItem: DayIntakeItem {
+        if let found = sevenDayItems.first(where: { $0.dayKey == (activeDayKey ?? DayKey.string(selectedDate)) }) {
+            return found
+        }
+        return sevenDayItems.last ?? DayIntakeItem(
+            dayKey: DayKey.string(selectedDate),
+            date: selectedDate,
+            kcal: diary.total(DayKey.string(selectedDate)).kcal,
+            protein: diary.total(DayKey.string(selectedDate)).protein,
+            carbs: diary.total(DayKey.string(selectedDate)).carbs,
+            fat: diary.total(DayKey.string(selectedDate)).fat,
+            targetKcal: diary.dailyGoals(DayKey.string(selectedDate)).kcal
+        )
+    }
+
+    var body: some View {
+        let item = selectedItem
+        let goals = diary.dailyGoals(item.dayKey)
+        let remaining = goals.kcal - item.kcal
+
+        GeometryReader { geometry in
+            ScrollView {
+        ZStack {
+            Color(hex: 0x111214).ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                // 1:1 Reference Top Bar (48x48 #393C43 rounded-18 buttons + centered "Calorie Intake")
+                HStack {
+                    Button {
+                        dismiss()
+                    } label: {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .fill(Color(hex: 0x393C43))
+                                .frame(width: 48, height: 48)
+                            CFACrescentChevron()
+                                .stroke(Color.white, style: StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round))
+                                .frame(width: 10, height: 18)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(diary.t("رجوع", "Back")).accessibilityIdentifier("calorie.back")
+
+                    Spacer()
+
+                    Text(diary.t("استهلاك السعرات", "Calorie Intake"))
+                        .luqmaFont(size: 18, weight: .bold, relativeTo: .headline)
+                        .foregroundStyle(Color.white)
+
+                    Spacer()
+
+                    Button {
+                        showingGoals = true
+                    } label: {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .fill(Color(hex: 0x393C43))
+                                .frame(width: 48, height: 48)
+                            Image(systemName: "gearshape")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundStyle(Color.white)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(diary.t("إعدادات هدف السعرات", "Calorie Goal Settings"))
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
+
+                // Hero Calorie Readout + Subtitle + Date Pill (Exact dnm_03.png Hierarchy)
+                VStack(spacing: 8) {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Image(systemName: "flame.fill")
+                            .font(.system(size: 24, weight: .bold))
+                            .foregroundStyle(Color(hex: 0xF97316))
+                        Text(decimal(item.kcal, 0))
+                            .accessibilityIdentifier("calorie.consumed")
+                            .luqmaFont(size: 64, weight: .heavy, relativeTo: .largeTitle)
+                            .monospacedDigit()
+                            .foregroundStyle(Color.white)
+                        Text(diary.t("سعرة", "kcal"))
+                            .luqmaFont(size: 30, weight: .bold, relativeTo: .title2)
+                            .foregroundStyle(Color(hex: 0x9EA0A5))
+                    }
+
+                    Text(
+                        remaining >= 0
+                        ? diary.t("متبقي \(decimal(remaining, 0)) سعرة لهدف اليوم.", "Eat \(decimal(remaining, 0)) calorie left.")
+                        : diary.t("أعلى من الهدف بـ \(decimal(abs(remaining), 0)) سعرة.", "\(decimal(abs(remaining), 0)) calorie above goal.")
+                    )
+                    .luqmaFont(size: 16, weight: .semibold, relativeTo: .body)
+                    .accessibilityIdentifier("calorie.remaining")
+                    .foregroundStyle(Color(hex: 0xD7D8D9))
+
+                    Button {
+                        showingMonthPicker.toggle()
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "calendar")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(Color(hex: 0x9EA0A5))
+                            Text(DisplayFormat.date(item.date, template: "MMMM yyyy", language: diary.language))
+                                .luqmaFont(size: 14, weight: .semibold, relativeTo: .subheadline)
+                                .foregroundStyle(Color(hex: 0xD7D8D9))
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundStyle(Color(hex: 0x9EA0A5))
+                        }
+                        .padding(.horizontal, 16)
+                        .frame(height: 38)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .fill(Color(hex: 0x24262B))
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("calorie.date")
+                    .padding(.top, 6)
+                }
+                .padding(.top, 24)
+
+                Spacer(minLength: 12)
+
+                // Full-Bleed Chart + Overlapping Bottom 3-Column Macro Card (Exact dnm_03.png Layout)
+                ZStack(alignment: .bottom) {
+                    VStack(spacing: 0) {
+                        Chart {
+                            ForEach(sevenDayItems) { point in
+                                AreaMark(
+                                    x: .value("Day", point.dayKey),
+                                    y: .value("Calories", point.kcal)
+                                )
+                                .interpolationMethod(.catmullRom)
+                                .foregroundStyle(
+                                    LinearGradient(
+                                        colors: [Color(hex: 0xF97316).opacity(0.45), Color(hex: 0xF97316).opacity(0.05)],
+                                        startPoint: .top,
+                                        endPoint: .bottom
+                                    )
+                                )
+
+                                LineMark(
+                                    x: .value("Day", point.dayKey),
+                                    y: .value("Calories", point.kcal)
+                                )
+                                .interpolationMethod(.catmullRom)
+                                .lineStyle(StrokeStyle(lineWidth: 3.5, lineCap: .round, lineJoin: .round))
+                                .foregroundStyle(Color(hex: 0xF97316))
+
+                                if point.dayKey == item.dayKey {
+                                    RuleMark(x: .value("Selected", point.dayKey))
+                                        .lineStyle(StrokeStyle(lineWidth: 1.5))
+                                        .foregroundStyle(Color(hex: 0xF97316))
+
+                                    PointMark(
+                                        x: .value("Day", point.dayKey),
+                                        y: .value("Calories", point.kcal)
+                                    )
+                                    .symbol {
+                                        ZStack {
+                                            Circle()
+                                                .fill(Color(hex: 0x111214))
+                                                .frame(width: 20, height: 20)
+                                            Circle()
+                                                .fill(Color(hex: 0xF97316))
+                                                .frame(width: 12, height: 12)
+                                        }
+                                    }
+                                    .annotation(position: .top, spacing: 10) {
+                                        VStack(spacing: -2) {
+                                            Text("\(decimal(point.kcal, 0))" + diary.t(" سعرة", "kcal"))
+                                                .luqmaFont(size: 13, weight: .bold, relativeTo: .caption)
+                                                .monospacedDigit()
+                                                .foregroundStyle(Color.white)
+                                                .padding(.horizontal, 14)
+                                                .frame(height: 34)
+                                                .background(
+                                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                                        .fill(Color(hex: 0xF97316))
+                                                )
+                                            Image(systemName: "arrowtriangle.down.fill")
+                                                .font(.system(size: 9))
+                                                .foregroundStyle(Color(hex: 0xF97316))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        .chartLegend(.hidden)
+                        .chartYAxis {
+                            AxisMarks(position: .leading, values: .automatic(desiredCount: 5)) { axis in
+                                AxisGridLine()
+                                    .foregroundStyle(Color(hex: 0x24262B))
+                                AxisValueLabel {
+                                    if let v = axis.as(Double.self) {
+                                        Text(decimal(v, 0))
+                                            .luqmaFont(size: 11, weight: .semibold, relativeTo: .caption2)
+                                            .foregroundStyle(Color(hex: 0x676C75))
+                                    }
+                                }
+                            }
+                        }
+                        .chartXAxis(.hidden)
+                        .frame(height: 360)
+                        .contentShape(Rectangle())
+                        .chartXSelection(value: $activeDayKey)
+                        .accessibilityIdentifier("calorie.chart")
+                    }
+                    .padding(.bottom, 54)
+
+                    // Bottom Floating 3-Column Macro Card (Carbs | Protein | Fat) Matching dnm_03.png 1:1
+                    HStack(spacing: 0) {
+                        intakeMacroColumn(
+                            iconName: "DNMCarbsToastIcon",
+                            systemFallback: "takeoutbag.and.cup.and.straw.fill",
+                            iconColor: Color(hex: 0xF97316),
+                            grams: item.carbs,
+                            title: diary.t("الكارب", "Carbs")
+                        )
+                        intakeMacroColumn(
+                            iconName: "DNMProteinBlueIcon",
+                            systemFallback: "drop.fill",
+                            iconColor: Color(hex: 0x2563EB),
+                            grams: item.protein,
+                            title: diary.t("البروتين", "Protein")
+                        )
+                        intakeMacroColumn(
+                            iconName: "DNMFatBoneIcon",
+                            systemFallback: "circle.hexagongrid.fill",
+                            iconColor: Color(hex: 0xD7D8D9),
+                            grams: item.fat,
+                            title: diary.t("الدهون", "Fat")
+                        )
+                    }
+                    .environment(\.layoutDirection,.leftToRight)
+                    .frame(height: 138)
+                    .background(
+                        RoundedRectangle(cornerRadius: 28, style: .continuous)
+                            .fill(Color(hex: 0x24262B))
+                    )
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 22)
+                }
+            }
+        }
+        .frame(minHeight:geometry.size.height)
+            }.scrollBounceBehavior(.basedOnSize)
+        }
+        .accessibilityIdentifier("diary.calorieHistory")
+        .toolbar(.hidden, for: .navigationBar)
+        .onAppear {
+            if windowEnd == nil {windowEnd = selectedDate}
+            activeDayKey = DayKey.string(selectedDate)
+        }
+        .onChange(of:activeDayKey){_,key in
+            if let key,let point=sevenDayItems.first(where:{$0.dayKey==key}){selectedDate=point.date}
+        }
+        .sheet(isPresented:$showingGoals){GoalEditor()}
+        .sheet(isPresented:$showingMonthPicker,onDismiss:{windowEnd=selectedDate;activeDayKey=DayKey.string(selectedDate)}){
+            NavigationStack{
+                DatePicker(diary.t("اختيار التاريخ","Choose date"),selection:$selectedDate,in:...Date(),displayedComponents:.date)
+                    .datePickerStyle(.graphical).accessibilityIdentifier("calorie.datePicker").padding(16).appBackground()
+                    .sandowNavigation(diary.t("اختيار التاريخ","Choose date"),backLabel:diary.t("تم","Done"),onBack:{windowEnd=selectedDate;activeDayKey=DayKey.string(selectedDate);showingMonthPicker=false})
+            }.presentationDetents([.medium,.large])
+        }
+    }
+
+    private func intakeMacroColumn(iconName: String, systemFallback: String, iconColor: Color, grams: Double, title: String) -> some View {
+        VStack(spacing: 6) {
+            Image(iconName).renderingMode(.original).resizable().scaledToFit().frame(width:22,height:22)
+            Text("\(decimal(grams, 0))" + diary.t("جم", "g"))
+                .luqmaFont(size: 28, weight: .heavy, relativeTo: .title)
+                .accessibilityIdentifier("calorie.macro." + (iconName == "DNMCarbsToastIcon" ? "carbs" : iconName == "DNMProteinBlueIcon" ? "protein" : "fat"))
+                .monospacedDigit()
+                .foregroundStyle(Color.white)
+            Text(title)
+                .luqmaFont(size: 13, weight: .medium, relativeTo: .caption)
+                .foregroundStyle(Color(hex: 0x9EA0A5))
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
 struct EntryEditor:View {
     var entry:DiaryEntry
     @EnvironmentObject var diary:DiaryStore

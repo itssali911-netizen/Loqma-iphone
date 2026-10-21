@@ -174,9 +174,22 @@ import UIKit
         do { var next = state; try FitnessAssessmentState.preview(answers, in: &next); try commit(next); return true }
         catch { report(error); return false }
     }
-    @discardableResult func applyFitnessPlan() -> Bool {
+    @discardableResult func applyFitnessPlan(calorieOverride: Double? = nil) -> Bool {
         fitnessDraftSaveGeneration += 1
-        do { var next = state; try FitnessAssessmentState.apply(in: &next); try commit(next); adaptiveMessage = nil; return true }
+        do {
+            var next = state
+            try FitnessAssessmentState.apply(in: &next)
+            if let calorieOverride, let plan = next.appliedFitnessPlan {
+                // The approved +/- control is an explicit manual goal choice.
+                // Keep the reproducible calculated plan intact and commit both
+                // its application and the chosen targets in one atomic save.
+                next.goals = try ApprovedPlanGoals.scaledGoals(for: plan, calorieOverride: calorieOverride)
+                next.adaptive = false
+            }
+            try commit(next)
+            adaptiveMessage = nil
+            return true
+        }
         catch { report(error); return false }
     }
     @discardableResult func discardFitnessDraft() -> Bool {

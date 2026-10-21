@@ -5,10 +5,16 @@ import UIKit
     static let shared = AppServices()
     let diary = DiaryStore()
     let reminders = ReminderService()
+    #if DEBUG && targetEnvironment(simulator)
+    private(set) var performanceFixtureIdentity: String?
+    #endif
     init(){
         #if DEBUG
         // Only the isolated UI-test Simulator uses this flag; it is absent from Release.
-        if CommandLine.arguments.contains("-loqma-ui-test-en") {diary.change{$0.language = .en}}
+        if CommandLine.arguments.contains("-loqma-ui-test-en"), diary.language != .en {diary.change{$0.language = .en}}
+        #if targetEnvironment(simulator)
+        performanceFixtureIdentity = LuqmaPerformanceFixture.prepare(diary)
+        #endif
         #endif
     }
 }
@@ -73,10 +79,13 @@ struct RootView:View {
     private enum TemplatePreviewRoute:String,Identifiable {
         case goals,portion,recipe,recipeDetail,plan,weight,connection,backup,about,barcode,language,notifications,reminders,stateError,stateLoading,stateEmpty,stateSuccess
         case assessmentGoal,assessmentGender,assessmentActivity,assessmentDetails,assessmentReview,fitnessProfile,fitnessPlan
+        case approvedHome,calorieDetails,approvedPhotoScan,approvedPhotoResults
         var id:String{rawValue}
     }
     @State private var templatePreview:TemplatePreviewRoute?
     @StateObject private var fitnessPreviewStore=DiaryStore(previewSnapshot:FitnessPreviewData.snapshot)
+    @StateObject private var approvedPreviewStore=DiaryStore(previewSnapshot:ApprovedScreenPreviewData.snapshot)
+    @State private var approvedDate=Date()
     #endif
     init(){
         var selected=0
@@ -100,6 +109,9 @@ struct RootView:View {
             NavigationStack{ProgressViewScreen().toolbar(.hidden,for:.tabBar)}.tabItem{Label(diary.t("تقدّمي","Progress"),systemImage:"chart.bar")}.tag(2)
             NavigationStack{SettingsView(onBack:{tab=0}).toolbar(.hidden,for:.tabBar)}.tabItem{Label(diary.t("الإعدادات","Settings"),systemImage:"gearshape")}.tag(3)
         }.toolbar(.hidden,for:.tabBar)
+            #if DEBUG && targetEnvironment(simulator)
+            .modifier(LuqmaPerformanceMarker())
+            #endif
             .safeAreaInset(edge:.bottom,spacing:0){bottomNavigation}
             .fullScreenCover(isPresented:$adding,onDismiss:{addingMeal=nil;consumeReminderRoute()}){FoodAddView(initialMeal:addingMeal,onPhotoCommit:{foods,meal in
                 do{let entries=try foods.map{try DiaryEntry(food:$0.0,amount:$0.1,unit:$0.2,meal:meal,day:DayKey.today,language:diary.language)};return diary.add(entries,foods:foods.map{$0.0})}catch{diary.report(error);return false}
@@ -175,6 +187,10 @@ struct RootView:View {
             case .assessmentReview:FitnessAssessmentView(previewPage:10)
             case .fitnessProfile:fitnessFixture{FitnessProfileView()}
             case .fitnessPlan:fitnessFixture{FitnessPlanReviewView()}
+            case .approvedHome:approvedDiaryFixture{DiaryView().safeAreaInset(edge:.bottom,spacing:0){bottomNavigation}}
+            case .calorieDetails:approvedDiaryFixture{CalorieIntakeDetailView(selectedDate:$approvedDate)}
+            case .approvedPhotoScan:ScrollView(showsIndicators:false){PhotoMealView{_,_ in false}.padding(.horizontal,16)}.appBackground()
+            case .approvedPhotoResults:ScrollView(showsIndicators:false){PhotoMealView{_,_ in false}.padding(.horizontal,16)}.appBackground().ignoresSafeArea(.container,edges:.top)
             case .stateError:statePreview{SandowStateAlert(text:diary.t("تعذّر إكمال الطلب. تحقق من الاتصال وحاول مجددًا.","The request could not be completed. Check your connection and retry."))}
             case .stateLoading:statePreview{SandowOperationState(title:diary.t("تقدير المكونات والسعرات…","Estimating components and calories…"),cancelLabel:diary.t("إلغاء","Cancel"),onCancel:{})}
             case .stateEmpty:statePreview{SandowEmptyState(title:diary.t("لا توجد نتائج","No results"),message:diary.t("جرّب اسمًا آخر أو غيّر كلمات البحث.","Try another name or change your search words."))}
@@ -189,10 +205,16 @@ struct RootView:View {
     }
     private func fitnessFixture<Content:View>(@ViewBuilder content:()->Content)->some View {
         NavigationStack{VStack(spacing:0){
-            Notice(text:diary.t("مثال للعرض فقط؛ لا يُحفظ هذا الملف في سجلّك.","Display example only; this profile is not saved to your diary.")).padding(16)
+            if !ProcessInfo.processInfo.arguments.contains("-loqma-approved-capture") {
+                Notice(text:diary.t("مثال للعرض فقط؛ لا يُحفظ هذا الملف في سجلّك.","Display example only; this profile is not saved to your diary.")).padding(16)
+            }
             content()
         }}.environmentObject(fitnessPreviewStore)
             .onAppear{fitnessPreviewStore.change{$0.language=diary.language}}
+    }
+    private func approvedDiaryFixture<Content:View>(@ViewBuilder content:()->Content)->some View {
+        NavigationStack{content()}.environmentObject(approvedPreviewStore)
+            .onAppear{approvedPreviewStore.change{$0.language=diary.language}}
     }
     private var assessmentPreviewPage:Int {
         let arguments=ProcessInfo.processInfo.arguments
@@ -254,6 +276,25 @@ struct RootView:View {
             .accessibilityIdentifier(["nav.today","nav.kitchen","nav.progress","nav.settings"][value])
     }
 }
+
+#if DEBUG
+/// Disposable read-only capture data; never a real meal or remote analysis.
+private enum ApprovedScreenPreviewData {
+    static var snapshot:DiarySnapshot {
+        var result=FitnessPreviewData.snapshot
+        let food=Food(catalogID:"preview:approved-diary",name:"وجبة توضيحية",nameEn:"Display meal",unit:.serving,
+                      nutrition:Nutrition(kcal:100,protein:10,carbs:15,fat:0),serving:"1 serving",source:"Preview fixture")
+        let calendar=DisplayFormat.calendar(.en)
+        for offset in 0..<7 {
+            if let date=calendar.date(byAdding:.day,value:-offset,to:Date()),
+               let entry=try? DiaryEntry(food:food,amount:Double(429-offset*31)/100,unit:.serving,meal:.breakfast,day:DayKey.string(date),language:.ar) {
+                result.entries.append(entry)
+            }
+        }
+        return result
+    }
+}
+#endif
 
 #if DEBUG
 /// Read from the rendered subtree, including presentation boundaries. Command

@@ -5,6 +5,7 @@ import SwiftUI
 // evidence has no dedicated profile-summary or review-before-apply frame.
 struct FitnessProfileView: View {
     @EnvironmentObject private var diary: DiaryStore
+    @Environment(\.dismiss) private var dismiss
     @State private var editing = false
     @State private var confirmingDelete = false
     @State private var deleted = false
@@ -28,6 +29,9 @@ struct FitnessProfileView: View {
                         message: diary.t("أكمل تقييمًا قصيرًا للحصول على تقديرات للتغذية والنشاط. يبقى سجل الطعام وأهدافك الحالية محفوظين.", "Complete a short assessment for nutrition and activity estimates. Your diary and current goals stay saved."))
                     Button(diary.t("بدء تقييم اللياقة", "Start fitness assessment")) { editing = true }
                         .buttonStyle(LuqmaPrimaryButtonStyle()).accessibilityIdentifier("fitness.edit")
+                    Button(diary.t("لاحقًا","Later")){
+                        if diary.deferFitnessAssessment(){dismiss()}
+                    }.luqmaFont(.helper).foregroundStyle(Theme.link).frame(minHeight:44).accessibilityIdentifier("diary.deferFitness")
                     if diary.state.fitnessDraft != nil {
                         Notice(text: diary.t("لديك إجابات محفوظة؛ يمكنك المتابعة من حيث توقفت.", "Your answers are saved. Continue where you left off."))
                     }
@@ -158,8 +162,12 @@ struct FitnessProfileView: View {
 
 struct FitnessPlanReviewView: View {
     @EnvironmentObject private var diary: DiaryStore
+    @Environment(\.dismiss) private var dismiss
     @State private var applied = false
     @State private var assumptionsExpanded = false
+    @State private var calorieOverride:Double?
+    @State private var calorieUnit:ApprovedCalorieUnit = .kcal
+    @State private var applyBusy = false
     private var plan: FitnessPlan? { diary.state.proposedFitnessPlan ?? diary.state.appliedFitnessPlan }
     private var canApply: Bool {
         guard let proposed = diary.state.proposedFitnessPlan, let profile = diary.state.fitnessProfile else { return false }
@@ -168,14 +176,15 @@ struct FitnessPlanReviewView: View {
     }
 
     var body: some View {
-        ScrollView {
+        GeometryReader { geometry in
+          ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 if let plan {
+                    planHeading(plan).frame(minHeight:max(540,geometry.size.height-40))
                     if applied {
                         SandowSavedConfirmation(text: diary.t("حُفظت الخطة واعتُمدت أهدافها في سجل الطعام دون حذف أي سجل سابق.", "Plan saved. Its targets are now used in your food diary, with all previous entries preserved."))
                             .accessibilityIdentifier("fitness.appliedConfirmation")
                     }
-                    planHeading(plan)
                     if plan.calorieFloorApplied {
                         SandowStateAlert(text: diary.t("رُفع اقتراح السعرات إلى حد التطبيق الاحتياطي؛ قد لا ينتج عجزًا لخسارة الوزن. راجع تفاصيل الحساب قبل الاعتماد.", "The calorie suggestion was raised to the app's precautionary floor and may not produce a weight-loss deficit. Review the calculation details before applying."))
                     }
@@ -195,38 +204,105 @@ struct FitnessPlanReviewView: View {
                 }
                 if let error = diary.error { SandowStateAlert(text: error) }
             }.padding(16).padding(.vertical, 8)
-        }.appBackground().accessibilityIdentifier("fitness.review")
-            .sandowNavigation(diary.t("مراجعة الخطة", "Plan review"), backLabel: diary.t("رجوع", "Back"),
-                actionLabel: diary.state.proposedFitnessPlan != nil ? diary.t("اعتماد هذه الأهداف", "Apply these targets") : nil,
-                actionEnabled: canApply, actionIdentifier: "fitness.apply", onAction: { applied = diary.applyFitnessPlan() })
+          }.appBackground().accessibilityIdentifier("fitness.review")
+        }.background(Color(hex:0x111214).ignoresSafeArea())
+            .toolbar(.hidden,for:.navigationBar)
+            .safeAreaInset(edge:.top,spacing:0){approvedPlanHeader}
+            .safeAreaInset(edge:.bottom,spacing:0){
+                if diary.state.proposedFitnessPlan != nil {
+                    Button {
+                        guard !applyBusy,canApply else{return}
+                        applyBusy=true
+                        applied=diary.applyFitnessPlan(calorieOverride:calorieOverride)
+                        Task{@MainActor in try? await Task.sleep(for:.milliseconds(250));applyBusy=false}
+                    } label:{
+                        HStack(spacing:12){Text(diary.t("اعتماد الخطة والبدء","Apply plan and start"));Image(systemName:"checkmark").font(.system(size:16,weight:.bold))}
+                    }.buttonStyle(ApprovedAssessmentButtonStyle()).disabled(!canApply || applyBusy)
+                        .accessibilityIdentifier("fitness.apply").padding(.horizontal,16).padding(.top,8).padding(.bottom,16)
+                        .background(Color(hex:0x111214))
+                }
+            }
+            .onChange(of:plan?.id){_,_ in calorieOverride=nil}
+    }
+    private var approvedPlanHeader:some View {
+        HStack(spacing:12){
+            Button{dismiss()}label:{
+                CFACrescentChevron().stroke(Color.white,style:StrokeStyle(lineWidth:2.2,lineCap:.round,lineJoin:.round))
+                    .frame(width:10,height:18).scaleEffect(x:diary.language == .ar ? 1:-1,y:1)
+                    .frame(width:48,height:48).background(Color(hex:0x393C43),in:RoundedRectangle(cornerRadius:18))
+            }.buttonStyle(.plain).accessibilityLabel(diary.t("رجوع","Back")).accessibilityIdentifier("navigation.back")
+            Text(diary.t("تقييم اللياقة","Assessment")).luqmaFont(size:20,weight:.bold,relativeTo:.title3)
+            Spacer(minLength:0)
+            Text(diary.t("11 من 11","11 of 11")).luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline)
+                .foregroundStyle(Color(hex:0x2563EB)).padding(.horizontal,12).frame(height:32)
+                .background(Color(hex:0x172554),in:RoundedRectangle(cornerRadius:11))
+        }.foregroundStyle(Color.white).padding(.horizontal,16).padding(.top,12).padding(.bottom,8).background(Color(hex:0x111214))
     }
     private func planHeading(_ plan: FitnessPlan) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(diary.state.proposedFitnessPlan != nil ? diary.t("تقديراتك المقترحة", "Your proposed estimates") : diary.t("الخطة المحفوظة", "Saved plan"))
-                .luqmaFont(.footnote).foregroundStyle(Theme.muted)
-            Text(plan.answers.goal?.title(diary.language) ?? "—").luqmaFont(size: 28, weight: .bold, relativeTo: .title)
-                .foregroundStyle(Theme.text).accessibilityAddTraits(.isHeader)
-            Text(DisplayFormat.decimal(plan.goals.kcal, digits: 0) + " " + diary.t("سعرة / يوم", "kcal / day"))
-                .luqmaFont(size: 36, weight: .bold, relativeTo: .largeTitle).foregroundStyle(Theme.text).monospacedDigit()
+        let goals=displayedGoals(plan)
+        return VStack(spacing:0){
+            Text(diary.t("ما هو هدفك اليومي\nمن السعرات؟","What’s Your Calorie\nGoal per day?"))
+                .luqmaFont(size:30,weight:.heavy,relativeTo:.largeTitle).foregroundStyle(Color.white)
+                .multilineTextAlignment(.center).lineSpacing(4).fixedSize(horizontal:false,vertical:true)
+                .padding(.top,28).padding(.bottom,34)
+            HStack(spacing:0){ForEach(ApprovedCalorieUnit.allCases){unit in
+                Button{calorieUnit=unit}label:{
+                    Text(unit.title(diary.language)).luqmaFont(size:16,weight:.bold,relativeTo:.body)
+                        .foregroundStyle(calorieUnit == unit ? Color.white:Color(hex:0x9EA0A5))
+                        .frame(maxWidth:.infinity,minHeight:56)
+                        .background(calorieUnit == unit ? Color(hex:0x676C75):Color.clear,in:RoundedRectangle(cornerRadius:16))
+                }.buttonStyle(.plain).accessibilityAddTraits(calorieUnit == unit ? .isSelected:[])
+                    .accessibilityIdentifier("fitness.plan.unit.\(unit.rawValue)")
+            }}.padding(4).background(Color(hex:0x24262B),in:RoundedRectangle(cornerRadius:20))
+                .environment(\.layoutDirection,.leftToRight)
+            Spacer(minLength:28)
+            Text(DisplayFormat.decimal(calorieUnit.value(for:goals.kcal),digits:0))
+                .luqmaFont(size:96,weight:.heavy,relativeTo:.largeTitle).foregroundStyle(Color.white).monospacedDigit()
+                .lineLimit(1).minimumScaleFactor(0.4).frame(maxWidth:.infinity)
                 .accessibilityIdentifier("fitness.plan.calories")
-            Text(diary.state.proposedFitnessPlan != nil
-                 ? diary.t("تُحسب من بياناتك ونشاطك، ولا تُعتمد قبل موافقتك.", "Calculated from your inputs and activity. A preview needs your approval to become your targets.")
-                 : diary.t("قيم محفوظة من آخر خطة اعتمدتها. تبقى الأهداف اليدوية أو أي خطة أحدث مستقلة عنها.", "Saved values from your last applied plan. Manual targets or a newer plan remain separate."))
-                .luqmaFont(.footnote).foregroundStyle(Theme.muted)
-        }.luqmaCard()
+            Text(calorieUnit == .kcal ? diary.t("سعرة حرارية يومياً","calories daily"):diary.t("جول يومياً","joules daily"))
+                .luqmaFont(size:22,weight:.medium,relativeTo:.title3).foregroundStyle(Color(hex:0xD7D8D9)).padding(.top,4)
+            if diary.state.proposedFitnessPlan != nil {
+                HStack(spacing:12){calorieAdjustment(plan,increasing:false);calorieAdjustment(plan,increasing:true)}
+                    .padding(.top,28).environment(\.layoutDirection,.leftToRight)
+            }
+            Spacer(minLength:28)
+            if calorieOverride != nil {
+                Text(diary.t("هدف معدل يدويًا؛ تبقى نسب الماكروز نفسها. لن يُحفظ قبل الاعتماد.","Manually adjusted target; macro shares stay the same. It is saved only when you apply."))
+                    .luqmaFont(size:12,relativeTo:.caption).foregroundStyle(Color(hex:0x9EA0A5)).multilineTextAlignment(.center)
+            }
+        }
+    }
+    private func calorieAdjustment(_ plan:FitnessPlan,increasing:Bool)->some View {
+        let target=displayedGoals(plan).kcal
+        return Button {
+            let next=min(10000,max(ApprovedPlanGoals.minimumCalories(for:plan),target+(increasing ? 50:-50)))
+            calorieOverride=abs(next-plan.goals.kcal)<0.000001 ? nil:next
+        }label:{
+            Text(increasing ? "+":"—").font(.system(size:increasing ? 26:22,weight:.bold))
+                .foregroundStyle(increasing ? Color.white:Color(hex:0xD7D8D9)).frame(width:114,height:72)
+                .background(increasing ? Color(hex:0xF97316):Color(hex:0x393C43),in:RoundedRectangle(cornerRadius:20))
+                .overlay{RoundedRectangle(cornerRadius:23).stroke(increasing ? Color(hex:0x7C2D12).opacity(0.65):Color.clear,lineWidth:4).padding(-2)}
+        }.buttonStyle(.plain).disabled(increasing ? target>=10000:target<=ApprovedPlanGoals.minimumCalories(for:plan))
+            .accessibilityLabel(diary.t(increasing ? "زيادة هدف السعرات 50 سعرة":"تقليل هدف السعرات 50 سعرة",increasing ? "Increase calorie target by 50 kcal":"Decrease calorie target by 50 kcal"))
+            .accessibilityIdentifier("fitness.plan.\(increasing ? "increase":"decrease")")
+    }
+    private func displayedGoals(_ plan:FitnessPlan)->Nutrition {
+        (try? ApprovedPlanGoals.scaledGoals(for:plan,calorieOverride:calorieOverride)) ?? plan.goals
     }
     private func changes(_ plan: FitnessPlan) -> some View {
-        VStack(alignment: .leading, spacing: 14) {
+        let goals=displayedGoals(plan)
+        return VStack(alignment: .leading, spacing: 14) {
             Text(diary.t("قبل الاعتماد", "Before applying")).luqmaFont(.headline).accessibilityAddTraits(.isHeader)
             HStack {
                 Text(diary.t("الهدف اليومي", "Daily target"))
                 Spacer(minLength: 8)
                 Text(diary.t("الحالي ← المقترح", "Current → Proposed"))
             }.luqmaFont(.footnote).foregroundStyle(Theme.muted)
-            difference(diary.t("السعرات", "Calories"), key: "calories", current: diary.state.goals.kcal, proposed: plan.goals.kcal, unit: diary.t("سعرة", "kcal"), digits: 0)
-            difference(diary.t("البروتين", "Protein"), key: "protein", current: diary.state.goals.protein, proposed: plan.goals.protein, unit: diary.t("جم", "g"))
-            difference(diary.t("الكارب", "Carbs"), key: "carbs", current: diary.state.goals.carbs, proposed: plan.goals.carbs, unit: diary.t("جم", "g"))
-            difference(diary.t("الدهون", "Fat"), key: "fat", current: diary.state.goals.fat, proposed: plan.goals.fat, unit: diary.t("جم", "g"))
+            difference(diary.t("السعرات", "Calories"), key: "calories", current: diary.state.goals.kcal, proposed: goals.kcal, unit: diary.t("سعرة", "kcal"), digits: 0)
+            difference(diary.t("البروتين", "Protein"), key: "protein", current: diary.state.goals.protein, proposed: goals.protein, unit: diary.t("جم", "g"))
+            difference(diary.t("الكارب", "Carbs"), key: "carbs", current: diary.state.goals.carbs, proposed: goals.carbs, unit: diary.t("جم", "g"))
+            difference(diary.t("الدهون", "Fat"), key: "fat", current: diary.state.goals.fat, proposed: goals.fat, unit: diary.t("جم", "g"))
         }.luqmaCard()
     }
     private func difference(_ label: String, key: String, current: Double, proposed: Double, unit: String, digits: Int = 1) -> some View {

@@ -1,0 +1,5 @@
+{
+  "label": "baseline",
+  "baseline_run_id": null,
+  "purpose": "Approved UI integration before production performance changes; actual measurements required."
+}

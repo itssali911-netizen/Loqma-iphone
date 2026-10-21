@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-/// A shorter assessment using the existing Sandow surfaces and bilingual tokens.
+/// Approved assessment visuals over the existing eleven-page, saved flow.
 struct FitnessAssessmentView: View {
     @EnvironmentObject private var diary: DiaryStore
     @Environment(\.dismiss) private var dismiss
@@ -14,6 +14,7 @@ struct FitnessAssessmentView: View {
     @State private var reviewed = false
     @State private var actionBusy = false
     @State private var leaving = false
+    @State private var pickerInteraction = false
     private let previewPage: Int?
 
     init(previewPage: Int? = nil) {
@@ -26,25 +27,29 @@ struct FitnessAssessmentView: View {
     private var optional: Bool { [.targetPace, .training, .details].contains(page) }
     var body: some View {
         NavigationStack {
-            ScrollViewReader { scroll in
+            GeometryReader { geometry in
+              ScrollViewReader { scroll in
                 ScrollView {
-                    VStack(spacing: 24) {
-                        if previewPage != nil { Notice(text: diary.t("مثال للعرض فقط؛ لا تُحفظ هذه الإجابات في ملفك.", "Display example only; these answers are not saved to your profile.")) }
-                        Text(question).luqmaFont(size: 30, weight: .heavy, relativeTo: .title)
+                    VStack(spacing: 0) {
+                        if previewPage != nil && !ProcessInfo.processInfo.arguments.contains("-loqma-approved-capture") { Notice(text: diary.t("مثال للعرض فقط؛ لا تُحفظ هذه الإجابات في ملفك.", "Display example only; these answers are not saved to your profile.")) }
+                        Text(question).luqmaFont(size: page == .targetPace || page == .height ? 28 : 30, weight: .heavy, relativeTo: .largeTitle)
                             .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: .infinity).accessibilityAddTraits(.isHeader)
                             .accessibilityIdentifier("assessment.question").id("assessment.top")
+                            .padding(.bottom, page == .goal ? 34 : 28)
                         pageContent.id(page.rawValue).disabled(actionBusy)
+                            .frame(minHeight: max(0, geometry.size.height - 140), alignment: .top)
                         if let validation {
                             SandowStateAlert(text: validation).accessibilityIdentifier("assessment.validation").id("assessment.validation")
                         }
-                    }.padding(.horizontal, 16).padding(.top, 24).padding(.bottom, 24)
-                }.scrollDismissesKeyboard(.interactively).appBackground()
+                    }.padding(.horizontal, 16).padding(.top, 28).padding(.bottom, 20)
+                }.scrollDismissesKeyboard(.interactively).scrollDisabled(pickerInteraction).appBackground()
                     .accessibilityIdentifier("assessment.form")
                     .onChange(of: validation) { _, message in
                         if message != nil { DispatchQueue.main.async { scroll.scrollTo("assessment.validation", anchor: .bottom) } }
                     }
-                    .onChange(of: page) { _, _ in scroll.scrollTo("assessment.top", anchor: .top) }
+                    .onChange(of: page) { _, _ in pickerInteraction = false; scroll.scrollTo("assessment.top", anchor: .top) }
+              }
             }
             .safeAreaInset(edge: .top, spacing: 0) { header }
             .safeAreaInset(edge: .bottom, spacing: 0) { footer }
@@ -67,16 +72,16 @@ struct FitnessAssessmentView: View {
                 let snapshot = draft
                 Task { await diary.saveFitnessDraftInBackground(snapshot) }
             }
-        }.foregroundStyle(Theme.text).interactiveDismissDisabled(actionBusy)
+        }.foregroundStyle(Color.white).interactiveDismissDisabled(actionBusy)
     }
     private var header: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 0) {
             HStack(spacing: 12) {
                 Button { perform { await back() } } label: {
-                    Image("AssessmentBack").renderingMode(.template).frame(width: 24, height: 24)
-                        .scaleEffect(x: diary.language == .ar ? -1 : 1, y: 1)
-                        .foregroundStyle(Theme.text).frame(width: 48, height: 48)
-                        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 18))
+                    CFACrescentChevron().stroke(Color.white, style: StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round))
+                        .frame(width: 10, height: 18).scaleEffect(x: diary.language == .ar ? 1 : -1, y: 1)
+                        .frame(width: 48, height: 48)
+                        .background(Color(hex: 0x393C43), in: RoundedRectangle(cornerRadius: 18))
                 }.buttonStyle(.plain).disabled(actionBusy)
                     .accessibilityLabel(diary.t(page == .goal ? "إغلاق وحفظ المسودة" : "السابق", page == .goal ? "Close and save draft" : "Back"))
                     .accessibilityIdentifier("assessment.back")
@@ -85,13 +90,11 @@ struct FitnessAssessmentView: View {
                 Spacer(minLength: 0)
                 Text(diary.t("\(page.index + 1) من \(FitnessAssessmentPage.allCases.count)", "\(page.index + 1) of \(FitnessAssessmentPage.allCases.count)"))
                     .luqmaFont(size: 14, weight: .semibold, relativeTo: .subheadline).monospacedDigit()
-                    .foregroundStyle(Theme.secondaryAccentText).padding(.horizontal, 12).padding(.vertical, 8)
-                    .background(Theme.secondaryAccent.opacity(0.22), in: RoundedRectangle(cornerRadius: 11))
+                    .foregroundStyle(Color(hex: 0x2563EB)).padding(.horizontal, 12).frame(height: 32)
+                    .background(Color(hex: 0x172554), in: RoundedRectangle(cornerRadius: 11))
                     .accessibilityIdentifier("assessment.step")
             }
-            ProgressView(value: Double(page.index + 1), total: Double(FitnessAssessmentPage.allCases.count))
-                .tint(Theme.secondaryAccent).accessibilityHidden(true)
-        }.padding(.horizontal, 16).padding(.top, 16).padding(.bottom, 8).background(Theme.background)
+        }.padding(.horizontal, 16).padding(.top, 12).padding(.bottom, 8).background(Color(hex: 0x111214))
     }
     private var footer: some View {
         VStack(spacing: 8) {
@@ -104,22 +107,21 @@ struct FitnessAssessmentView: View {
                 HStack(spacing: 12) {
                     if actionBusy { ProgressView().tint(Theme.onAccent).accessibilityLabel(diary.t("جارٍ الحفظ", "Saving")) }
                     Text(diary.t(page == .review ? "معاينة الخطة" : "متابعة", page == .review ? "Preview plan" : "Continue"))
-                    Image("AssessmentNext").renderingMode(.template).frame(width: 24, height: 24)
-                        .scaleEffect(x: diary.language == .ar ? -1 : 1, y: 1)
+                    Image(systemName: diary.language == .ar ? "arrow.left" : "arrow.right").font(.system(size: 16, weight: .bold))
                 }
-            }.buttonStyle(LuqmaPrimaryButtonStyle()).accessibilityIdentifier(page == .review ? "assessment.review" : "assessment.next")
+            }.buttonStyle(ApprovedAssessmentButtonStyle()).accessibilityIdentifier(page == .review ? "assessment.review" : "assessment.next")
             Button(diary.t("حفظ وإكمال لاحقًا", "Save and finish later")) {
                 perform {
                     endEditing()
                     if await persist(deferAssessment: true) { leaving = true; dismiss() }
                 }
             }.luqmaFont(.helper).foregroundStyle(Theme.muted).frame(minHeight: 44).accessibilityIdentifier("assessment.saveDraft")
-        }.disabled(actionBusy).padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 8).background(Theme.background)
+        }.disabled(actionBusy).padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 12).background(Color(hex: 0x111214))
     }
     @ViewBuilder private var pageContent: some View {
         switch page {
         case .goal:
-            choices(FitnessGoal.allCases, selection: $answers.goal, prefix: "goal", icons: ["CFAGoalScale", "CFAGoalDumbbell", "CFAGoalDumbbell", "CFAGoalScale", "CFAGoalEndurance"])
+            choices(FitnessGoal.approvedPresentationOrder, selection: $answers.goal, prefix: "goal", icons: FitnessGoal.approvedPresentationOrder.map(\.approvedIconName))
         case .suitability:
             VStack(spacing: 16) {
                 choices(FitnessSafety.allCases, selection: $answers.safety, prefix: "safety")
@@ -129,31 +131,19 @@ struct FitnessAssessmentView: View {
         case .age:
             VStack(spacing: 16) {
                 number(.age, title: diary.t("العمر بالسنوات", "Age in years"), suffix: diary.t("سنة", "years"), id: "age", style: .age)
-                helper("يُستخدم العمر لحساب احتياج الطاقة. هذه الحاسبة للبالغين من 18 إلى 100 سنة.", "Age is used in the energy equation. This estimator supports adults aged 18 to 100.")
             }
         case .height:
             VStack(spacing: 16) {
                 number(.height, title: diary.t("الطول", "Height"), suffix: diary.t("سم", "cm"), id: "height", style: .height)
-                helper("أدخل طولك بالسنتيمتر من 120 إلى 230 سم.", "Enter your height in centimetres, from 120 to 230 cm.")
             }
         case .weight:
             VStack(spacing: 16) {
                 number(.weight, title: diary.t("الوزن الحالي", "Current weight"), suffix: diary.t("كجم", "kg"), id: "weight", style: .weight)
-                helper("من 35 إلى 300 كجم. هذه القيمة للحساب؛ سجل أوزانك السابق محفوظ.", "From 35 to 300 kg. This value is for the estimate; your weight history is preserved.")
             }
         case .targetPace:
-            VStack(spacing: 20) {
-                number(.targetWeight, title: diary.t("وزن الهدف — اختياري", "Target weight — optional"), suffix: diary.t("كجم", "kg"), id: "target")
-                Text(diary.t("كيف تفضل تعديل السعرات؟", "How would you like to adjust calories?")).luqmaFont(.label)
-                choices(FitnessPace.allCases, selection: $answers.pace, prefix: "pace")
-                helper("التعديل التدريجي هو الافتراضي. يمكنك ترك وزن الهدف فارغًا؛ لا نحدد موعدًا مضمونًا للوصول إليه.", "Gentle adjustment is the default. You may leave target weight blank; no completion date is promised.")
-            }
+            targetAndPace
         case .activity:
-            VStack(spacing: 16) {
-                choices(FitnessActivity.allCases, selection: $answers.activity, prefix: "activity")
-                number(.steps, title: diary.t("متوسط الخطوات — اختياري", "Average daily steps — optional"), suffix: diary.t("خطوة", "steps"), id: "steps")
-                helper("اختر الحركة خلال يومك المعتاد. أدخل الخطوات فقط إن كنت تعرف متوسطها.", "Choose the movement in your usual day. Enter steps only if you know your average.")
-            }
+            activityArc
         case .training:
             VStack(spacing: 20) {
                 Text(diary.t("ما خبرتك في التدريب؟", "What is your training experience?")).luqmaFont(.label)
@@ -181,44 +171,122 @@ struct FitnessAssessmentView: View {
         }
     }
     private var question: String {
-        let ar = ["ما هدفك الأساسي؟", "هل يناسبك هذا التقدير؟", "ما الجنس المستخدم في الحساب؟", "كم عمرك؟", "كم طولك؟", "كم وزنك الحالي؟", "هل تريد تخصيص هدف الوزن؟", "كيف يبدو نشاط يومك؟", "ما التدريب الذي يناسبك؟", "هل تريد إضافة تفاصيل؟", "راجع إجاباتك"]
-        let en = ["What is your main goal?", "Is this estimate suitable?", "Which sex should the equation use?", "How old are you?", "What is your height?", "What is your current weight?", "Personalise your weight goal?", "How active is your usual day?", "What training fits your routine?", "Would you like to add details?", "Review your answers"]
+        let ar = ["ما هو هدفك\nالرياضي؟", "هل يناسبك هذا التقدير؟", "ما الجنس المستخدم في\nالحساب؟", "كم عمرك؟", "ما هو طولك الحالي؟", "ما هو وزنك الحالي؟", "هل تريد تخصيص هدف الوزن؟", "كيف تقيّم مستوى\nنشاطك الحالي؟", "ما التدريب الذي يناسبك؟", "هل تريد إضافة تفاصيل؟", "راجع إجاباتك"]
+        let en = ["What’s your fitness\ngoal/target?", "Is this estimate suitable?", "Which sex should the\nequation use?", "What is your age?", "What is your height?", "What is your weight?", "Would you like to customize your target weight?", "How would you rate\nyour daily activity?", "What training fits your routine?", "Would you like to add details?", "Review your answers"]
         return diary.t(ar[page.index], en[page.index])
     }
     private func choices<T:FitnessOption & Equatable>(_ options:[T],selection:Binding<T?>,prefix:String,icons:[String]=[])->some View {
         VStack(spacing:8){ForEach(Array(options.enumerated()),id:\.element.id){index,option in
-            Button{selection.wrappedValue=option;validation=nil}label:{HStack(spacing:8){
+            Button{selection.wrappedValue=option;validation=nil}label:{HStack(spacing:12){
                 if icons.indices.contains(index){Image(icons[index]).renderingMode(.template).resizable().scaledToFit().frame(width:20,height:20).foregroundStyle(selection.wrappedValue == option ? Theme.text:Theme.muted).frame(width:28,height:28).accessibilityHidden(true)}
-                Text(option.title(diary.language)).luqmaFont(.button).fixedSize(horizontal:false,vertical:true).frame(maxWidth:.infinity,alignment:.leading)
-                Image(selection.wrappedValue == option ? "AssessmentChecked":"AssessmentUnchecked").frame(width:24,height:24).accessibilityHidden(true)
-            }.padding(16).frame(minHeight:56).background(selection.wrappedValue == option ? Theme.surface:Theme.card,in:RoundedRectangle(cornerRadius:19))
-                .overlay{RoundedRectangle(cornerRadius:19).stroke(selection.wrappedValue == option ? Theme.controlBorder:Color.clear,lineWidth:2)}}
+                Text(option.title(diary.language)).luqmaFont(size:16,weight:.semibold,relativeTo:.body).fixedSize(horizontal:false,vertical:true).frame(maxWidth:.infinity,alignment:.leading)
+                CFARadioIndicator(isSelected: selection.wrappedValue == option)
+            }.padding(.horizontal,18).padding(.vertical, prefix == "goal" ? 0 : 12).frame(minHeight:56)
+                .background(selection.wrappedValue == option ? Color(hex:0x393C43):Color(hex:0x24262B),in:RoundedRectangle(cornerRadius:18))
+                .overlay{RoundedRectangle(cornerRadius:20).stroke(selection.wrappedValue == option ? Color(hex:0x81858D).opacity(0.28):Color.clear,lineWidth:4).padding(-2)}}
                 .buttonStyle(.plain).accessibilityAddTraits(selection.wrappedValue == option ? .isSelected:[])
                 .accessibilityIdentifier("assessment.\(prefix).\(option.rawValue)")
         }}
     }
     private var gender:some View {
-        VStack(spacing:8){ForEach(FitnessSex.allCases){sex in
+        VStack(spacing:12){ForEach(FitnessSex.allCases){sex in
             Button{answers.sex=sex;validation=nil}label:{
                 ZStack(alignment:.leading){
-                    Theme.card
-                    // The supplied 2669a71 card uses a 220×140 photo slot.
-                    // HStack mirrors the slot in RTL; the portrait stays natural.
+                    Color(hex:0x24262B)
                     HStack(spacing:0){Spacer(minLength:0)
-                        Image(sex == .male ? "CFAMaleAthlete":"CFAFemaleAthlete").resizable().scaledToFill()
-                            .frame(width:220,height:140).clipped().blendMode(.lighten).allowsHitTesting(false).accessibilityHidden(true)
+                        Image(sex == .male ? "CFAMaleFitnessIllustration":"CFAFemaleFitnessIllustration").resizable().scaledToFill()
+                            .frame(width:220,height:140).scaleEffect(x:diary.language == .ar ? -1:1,y:1).clipped()
+                            .allowsHitTesting(false).accessibilityHidden(true)
                     }.allowsHitTesting(false)
-                    VStack(alignment:.leading,spacing:32){
-                        Text(sex.title(diary.language)).luqmaFont(.button).padding(.horizontal,4).background(Theme.card.opacity(0.9),in:Capsule())
-                        Image(answers.sex == sex ? "AssessmentChecked":"AssessmentUnchecked").frame(width:24,height:24).accessibilityHidden(true)
-                    }.padding(16)
-                }.frame(minHeight:140).clipShape(RoundedRectangle(cornerRadius:24))
+                    VStack(alignment:.leading){
+                        HStack(spacing:8){
+                            Text(sex == .male ? "♂":"♀").font(.system(size:18,weight:.bold))
+                            Text(sex.title(diary.language)).luqmaFont(size:16,weight:.bold,relativeTo:.body)
+                        }
+                        Spacer()
+                        CFARadioIndicator(isSelected:answers.sex == sex)
+                    }.padding(18)
+                }.frame(height:140).clipShape(RoundedRectangle(cornerRadius:24))
                     .contentShape(RoundedRectangle(cornerRadius:24))
-                    .overlay{RoundedRectangle(cornerRadius:24).stroke(answers.sex == sex ? Theme.accent:Color.clear,lineWidth:1.5)}
+                    .overlay{RoundedRectangle(cornerRadius:24).stroke(answers.sex == sex ? Color(hex:0xF97316):Color.clear,lineWidth:1.5)}
+                    .overlay{RoundedRectangle(cornerRadius:27).stroke(answers.sex == sex ? Color(hex:0x7C2D12).opacity(0.65):Color.clear,lineWidth:4).padding(-2)}
             }.buttonStyle(.plain).accessibilityLabel(sex.title(diary.language))
                 .accessibilityIdentifier("assessment.sex.\(sex.rawValue)").accessibilityAddTraits(answers.sex == sex ? .isSelected:[])
         }
-        helper("تحتاج معادلة الطاقة هذا الاختيار ولا يُستخدم لإثبات هويتك. لا نطلب اسمك أو تاريخ ميلادك الكامل.","The energy equation needs this input; it is not an identity check. We do not ask for your name or full date of birth.")}
+            Spacer(minLength:20)
+            Button {
+                if answers.sex != nil { perform { await next() } }
+                else { validation = diary.t("تحتاج معادلة الطاقة اختيار الجنس للحساب. يمكنك حفظ التقييم وإكماله لاحقًا؛ لن نفترض إجابة بدلاً منك.", "The energy equation requires a sex input. You can save and finish later; an answer will not be assumed for you.") }
+            } label: {
+                HStack(spacing:10){Text(diary.t("أفضل التخطي، شكراً!","Prefer to skip, thanks!"));Image(systemName:"xmark").font(.system(size:13,weight:.bold))}
+                    .luqmaFont(size:16,weight:.semibold,relativeTo:.body).foregroundStyle(Color(hex:0xF97316))
+                    .frame(maxWidth:.infinity,minHeight:52).background(Color(hex:0x431407),in:RoundedRectangle(cornerRadius:18))
+            }.buttonStyle(.plain).accessibilityIdentifier("assessment.sex.skip")
+        }
+    }
+
+    private var targetAndPace: some View {
+        VStack(alignment:.leading,spacing:18){
+            Text(diary.t("وزن الهدف — اختياري","Target weight — optional")).luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline)
+                .foregroundStyle(Color(hex:0xD7D8D9)).frame(maxWidth:.infinity,alignment:.leading)
+            HStack(spacing:12){
+                TextField("",text:input(.targetWeight),prompt:Text("—").foregroundColor(Color(hex:0x9EA0A5)))
+                    .keyboardType(.decimalPad).luqmaFont(size:36,weight:.heavy,relativeTo:.title)
+                    .multilineTextAlignment(diary.language == .ar ? .trailing:.leading).monospacedDigit().environment(\.layoutDirection,.leftToRight)
+                    .accessibilityLabel(diary.t("وزن الهدف — اختياري","Target weight — optional")).accessibilityIdentifier("assessment.target")
+                Text(diary.t("كجم","kg")).luqmaFont(size:15,weight:.semibold,relativeTo:.subheadline).foregroundStyle(Color(hex:0x9EA0A5))
+            }.padding(.horizontal,16).frame(minHeight:74)
+                .background(Color(hex:0x24262B),in:RoundedRectangle(cornerRadius:20))
+                .overlay{RoundedRectangle(cornerRadius:20).stroke(Color.white.opacity(0.08),lineWidth:1)}
+            Text(diary.t("كيف تفضل تعديل السعرات؟","How do you prefer to adjust your daily calories?"))
+                .luqmaFont(size:15,weight:.bold,relativeTo:.subheadline).frame(maxWidth:.infinity).padding(.top,6)
+            VStack(spacing:12){ForEach(FitnessPace.allCases){pace in
+                let selected = (answers.pace ?? .gentle) == pace
+                Button{answers.pace=pace;validation=nil}label:{
+                    HStack(alignment:.top,spacing:14){
+                        VStack(alignment:.leading,spacing:6){
+                            Text(pace.approvedTitle(diary.language)).luqmaFont(size:17,weight:.bold,relativeTo:.headline)
+                            Text(pace.approvedSubtitle(diary.language)).luqmaFont(size:13,relativeTo:.caption)
+                                .foregroundStyle(Color(hex:0x9EA0A5)).fixedSize(horizontal:false,vertical:true)
+                        }.frame(maxWidth:.infinity,alignment:.leading)
+                        CFARadioIndicator(isSelected:selected).padding(.top,4)
+                    }.padding(18).frame(minHeight:90)
+                        .background(selected ? Color(hex:0x393C43):Color(hex:0x24262B),in:RoundedRectangle(cornerRadius:20))
+                        .overlay{RoundedRectangle(cornerRadius:20).stroke(selected ? Color.white:Color.clear,lineWidth:2)}
+                        .overlay{RoundedRectangle(cornerRadius:22).stroke(selected ? Color(hex:0x81858D).opacity(0.5):Color.clear,lineWidth:3).padding(-2)}
+                }.buttonStyle(.plain).accessibilityIdentifier("assessment.pace.\(pace.rawValue)").accessibilityAddTraits(selected ? .isSelected:[])
+            }}
+            Text(diary.t("التعديل البسيط هو الافتراضي. يمكنك ترك وزن الهدف فارغًا؛ لا نحدد موعدًا مضمونًا للوصول إليه.","Smaller adjustment is the default. You can leave target weight blank; we do not promise a date to reach it."))
+                .luqmaFont(size:12,relativeTo:.caption).foregroundStyle(Color(hex:0x9EA0A5)).fixedSize(horizontal:false,vertical:true)
+        }
+    }
+    private var activityArc:some View {
+        VStack(spacing:16){
+            HStack(spacing:8){
+                Text("?").luqmaFont(size:11,weight:.bold,relativeTo:.caption2).foregroundStyle(Color(hex:0x111214))
+                    .frame(width:18,height:18).background(Color(hex:0x50535B),in:Circle())
+                Text(diary.t("اسحب للتعديل","Drag to adjust")).luqmaFont(size:14,weight:.medium,relativeTo:.subheadline).foregroundStyle(Color(hex:0xD7D8D9))
+                Spacer()
+            }
+            SandowFitnessArcSlider(level:Binding(get:{answers.activity.flatMap{FitnessActivity.allCases.firstIndex(of:$0)}.map{$0+1} ?? 3},set:{level in
+                answers.activity=FitnessActivity.allCases[min(4,max(0,level-1))];validation=nil
+            }),label:activityArcLabel,hasSelection:answers.activity != nil,onInteractionChanged:{pickerInteraction=$0})
+                .frame(height:360)
+            DisclosureGroup(diary.t("تفاصيل النشاط والخطوات — اختياري","Activity details and steps — optional")){
+                VStack(spacing:16){
+                    choices(FitnessActivity.allCases,selection:$answers.activity,prefix:"activity")
+                    number(.steps,title:diary.t("متوسط الخطوات — اختياري","Average daily steps — optional"),suffix:diary.t("خطوة","steps"),id:"steps")
+                    helper("اختر الحركة خلال يومك المعتاد. أدخل الخطوات فقط إن كنت تعرف متوسطها.","Choose the movement in your usual day. Enter steps only if you know your average.")
+                }.padding(.top,12)
+            }.luqmaFont(size:13,relativeTo:.caption).tint(Color(hex:0xF97316)).accessibilityIdentifier("assessment.activity.details")
+        }
+    }
+    private var activityArcLabel:String {
+        guard let activity=answers.activity else { return diary.t("اختر مستوى نشاطك","Choose your activity") }
+        let index=FitnessActivity.allCases.firstIndex(of:activity) ?? 0
+        let ar=["نشاط قليل","نشاط خفيف","نشاط متوسط","نشاط مرتفع","نشاط مكثف"]
+        let en=["Sedentary","Lightly active","Moderately active","Very active","Highly active"]
+        return diary.t(ar[index],en[index])
     }
     private var diet:some View {
         LazyVGrid(columns:[GridItem(.flexible()),GridItem(.flexible())],spacing:8){ForEach(Array(FitnessDietPreference.allCases.enumerated()),id:\.element.id){index,option in
@@ -277,7 +345,10 @@ struct FitnessAssessmentView: View {
             .accessibilityIdentifier("assessment.edit.\(target.rawValue)")
     }
     private func number(_ field: FitnessAssessmentNumberField, title: String, suffix: String, id: String, style: AssessmentNumberPicker.Style? = nil) -> some View {
-        FitnessNumberField(title: title, text: input(field), suffix: suffix, identifier: "assessment.\(id)", field: field, pickerStyle: style)
+        FitnessNumberField(title: title, text: input(field), suffix: suffix, identifier: "assessment.\(id)", field: field, pickerStyle: style,
+            displayUnit:Binding(get:{ApprovedMeasurementUnit(rawValue:inputs["unit.\(field.rawValue)"] ?? "") ?? .metric},set:{inputs["unit.\(field.rawValue)"]=$0.rawValue}),
+            alternateText:Binding(get:{inputs["input.imperial.\(field.rawValue)"] ?? ""},set:{inputs["input.imperial.\(field.rawValue)"]=$0}),
+            onInteractionChanged:{pickerInteraction=$0})
     }
     private func raw(_ field: FitnessAssessmentNumberField) -> String { inputs[field.rawValue] ?? "" }
     private func optionalValue(_ field: FitnessAssessmentNumberField) -> String {
@@ -424,10 +495,13 @@ private struct FitnessNumberField: View {
     let identifier: String
     let field: FitnessAssessmentNumberField
     var pickerStyle: AssessmentNumberPicker.Style?
+    @Binding var displayUnit: ApprovedMeasurementUnit
+    @Binding var alternateText:String
+    var onInteractionChanged:(Bool)->Void = {_ in}
     @FocusState private var focused: Bool
     var body: some View {
         if let pickerStyle {
-            AssessmentNumberPicker(title: title, text: $text, unit: suffix, field: field, identifier: identifier, style: pickerStyle)
+            AssessmentNumberPicker(title: title, text: $text, unit: suffix, field: field, identifier: identifier, style: pickerStyle, displayUnit:$displayUnit,alternateText:$alternateText,onInteractionChanged:onInteractionChanged)
         } else {
             VStack(alignment: .leading, spacing: 12) {
                 Text(title).luqmaFont(.label).fixedSize(horizontal: false, vertical: true)

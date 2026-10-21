@@ -1,0 +1,90 @@
+{
+  "source_zip_sha256": "04e16d971768470ab4eaf42a26eb0eaef3b8b980e131f4dd1b458af6b3339924",
+  "image_set_count": 10,
+  "files": [
+    {
+      "path": "Luqma/Resources/Assets.xcassets/CFAFemaleFitnessIllustration.imageset/Contents.json",
+      "sha256": "43b866333634d2909ba434979a914cdeeb2d790acaedbadfb643d2051f1aefbe"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/CFAFemaleFitnessIllustration.imageset/illustration.png",
+      "sha256": "142499a9dba3ad05d025e50f57ee7bb12c6b2cb4651a1011316b65a94d4c0ee2"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/CFAMaleFitnessIllustration.imageset/Contents.json",
+      "sha256": "43b866333634d2909ba434979a914cdeeb2d790acaedbadfb643d2051f1aefbe"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/CFAMaleFitnessIllustration.imageset/illustration.png",
+      "sha256": "bc1748fa4bfd660d98c238dba7f7f4fedbfd0681c4ec0fa8c1bd6682f03bad6b"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/CFAMaleFitnessIllustration.imageset/source.svg",
+      "sha256": "ea3094f125e81e773f8020bdddaeb3f51ac6073cfb932a91f32030874e379e44"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/DNMCarbsToastIcon.imageset/artwork.png",
+      "sha256": "1871142cd29977c901fb3dd142bcf0c1f31a6900e5013c36b35cbf228b06057e"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/DNMCarbsToastIcon.imageset/Contents.json",
+      "sha256": "5cf2fdd18f665043344def658597912389cb60b7ce0bdcc1612539e53e611af9"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/DNMFatBoneIcon.imageset/artwork.png",
+      "sha256": "038ae924d6fb11619461fab19e0054fb236601c36f7b17edbacf2dcc6ab7b40b"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/DNMFatBoneIcon.imageset/Contents.json",
+      "sha256": "5cf2fdd18f665043344def658597912389cb60b7ce0bdcc1612539e53e611af9"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/DNMMandarinPileHero.imageset/artwork.png",
+      "sha256": "24100c66396836310b2cb07d6a14f1ae54a854cede50a73b7a4be0378cd7eb14"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/DNMMandarinPileHero.imageset/Contents.json",
+      "sha256": "5cf2fdd18f665043344def658597912389cb60b7ce0bdcc1612539e53e611af9"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/DNMMandarinScanHero.imageset/artwork.png",
+      "sha256": "4939401d079f196bd43b5270df342eac40cd89a05267050232d37f378b519355"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/DNMMandarinScanHero.imageset/Contents.json",
+      "sha256": "5cf2fdd18f665043344def658597912389cb60b7ce0bdcc1612539e53e611af9"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/DNMProteinBlueIcon.imageset/artwork.png",
+      "sha256": "cf2de46e22e319717fde22d3894dca521768b87505205fc5056bc1f37f75a728"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/DNMProteinBlueIcon.imageset/Contents.json",
+      "sha256": "5cf2fdd18f665043344def658597912389cb60b7ce0bdcc1612539e53e611af9"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/DNMVerticalCarbsIcon.imageset/artwork.png",
+      "sha256": "4d8b2b6684c72b7d65469c6d7f75fa8616b8b18946ada3dda9d25a49de40f2ee"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/DNMVerticalCarbsIcon.imageset/Contents.json",
+      "sha256": "5cf2fdd18f665043344def658597912389cb60b7ce0bdcc1612539e53e611af9"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/DNMVerticalFatIcon.imageset/artwork.png",
+      "sha256": "1de108a47ee64a6ccd01a425dafd5d730f13b14289e1001228cc25feebc22558"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/DNMVerticalFatIcon.imageset/Contents.json",
+      "sha256": "5cf2fdd18f665043344def658597912389cb60b7ce0bdcc1612539e53e611af9"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/DNMVerticalProteinIcon.imageset/artwork.png",
+      "sha256": "0851ceddba8be757a26a1e3a4d17af19e1ed8d53e41d0d6f575fca072ab6132a"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/DNMVerticalProteinIcon.imageset/Contents.json",
+      "sha256": "5cf2fdd18f665043344def658597912389cb60b7ce0bdcc1612539e53e611af9"
+    }
+  ]
+}

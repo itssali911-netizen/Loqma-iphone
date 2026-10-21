@@ -355,8 +355,8 @@ struct FitnessAssessmentDraft: Codable, Equatable {
                   // Loading a future draft preserves its unknown fields and
                   // adds the current controls. Reserve their capacity so that
                   // a readable draft does not become impossible to save.
-                  inputs.count <= 32 + FitnessAssessmentNumberField.allCases.count &&
-                  inputs.keys.filter { FitnessAssessmentNumberField(rawValue: $0) == nil }.count <= 32 &&
+                  inputs.count <= 32 + FitnessAssessmentNumberField.allCases.count + ApprovedAssessmentMetadata.keys.count &&
+                  inputs.keys.filter { FitnessAssessmentNumberField(rawValue: $0) == nil && !ApprovedAssessmentMetadata.keys.contains($0) }.count <= 32 &&
                   inputs.allSatisfy {
                       !$0.key.isEmpty && $0.key.count <= 64 && $0.value.count <= 64
                   }
