@@ -388,7 +388,14 @@ final class LuqmaInteractionTests:XCTestCase {
         let next=app.buttons["assessment.next"]
         reveal(next);waitUntilEnabled(next);next.tap()
         let error=app.descendants(matching:.any).matching(identifier:"assessment.validation").firstMatch
-        let visible=XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == true AND hittable == true"),object:error)
+        // SandowStateAlert combines static text for accessibility; it has no
+        // tap action. Require a readable message fully in the foreground form,
+        // rather than a hit target that iOS need not expose for StaticText.
+        let visible=XCTNSPredicateExpectation(predicate:NSPredicate { _,_ in
+            guard error.exists,!error.label.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty else {return false}
+            let frame=error.frame
+            return !frame.isEmpty && self.assessmentVisibleArea().contains(frame)
+        },object:error)
         XCTAssertEqual(XCTWaiter.wait(for:[visible],timeout:5),.completed,"The rejected step must bring its reason into view.\n"+app.debugDescription,file:file,line:line)
         assertAssessmentStep(step,file:file,line:line)
     }
@@ -421,6 +428,10 @@ final class LuqmaInteractionTests:XCTestCase {
     private func saveAndResumeFitnessDraft(expectedStep:Int) {
         let save=app.buttons["assessment.saveDraft"]
         reveal(save);waitUntilEnabled(save);save.tap()
+        // The profile remains underneath the sheet throughout assessment, so
+        // its existence alone cannot establish that async saving has finished.
+        let dismissed=XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == false"),object:app.scrollViews["assessment.form"])
+        XCTAssertEqual(XCTWaiter.wait(for:[dismissed],timeout:10),.completed,"Save-and-later must finish and dismiss the actual assessment before terminating the app.\n"+app.debugDescription)
         XCTAssertTrue(app.scrollViews["fitness.profile"].waitForExistence(timeout:10),app.debugDescription)
         app.terminate();app.launch()
         XCTAssertTrue(app.buttons["nav.today"].waitForExistence(timeout:15))
