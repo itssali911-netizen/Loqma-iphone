@@ -169,7 +169,8 @@ struct FitnessAssessmentView: View {
                         notes(diary.t("قيود أو تفضيلات أخرى", "Other restrictions or preferences"), text: $answers.restrictions, id: "restrictions")
                         helper("ملاحظات محفوظة للرجوع إليها. لا تُصفّى المنتجات والوصفات تلقائيًا بحسبها.", "Saved notes for reference. Products and recipes are not automatically filtered by them.")
                     }.padding(.top, 16)
-                }.luqmaFont(.label).tint(Theme.secondaryAccent).accessibilityIdentifier("assessment.foodPreferences")
+                }.luqmaFont(.label).tint(Theme.secondaryAccent)
+                    .accessibilityElement(children:.contain).accessibilityIdentifier("assessment.foodPreferences")
             }
         case .review: review
         }
@@ -283,7 +284,10 @@ struct FitnessAssessmentView: View {
                     number(.steps,title:diary.t("متوسط الخطوات — اختياري","Average daily steps — optional"),suffix:diary.t("خطوة","steps"),id:"steps")
                     helper("اختر الحركة خلال يومك المعتاد. أدخل الخطوات فقط إن كنت تعرف متوسطها.","Choose the movement in your usual day. Enter steps only if you know your average.")
                 }.padding(.top,12)
-            }.luqmaFont(size:13,relativeTo:.caption).tint(Color(hex:0xF97316)).accessibilityIdentifier("assessment.activity.details")
+            }.luqmaFont(size:13,relativeTo:.caption).tint(Color(hex:0xF97316))
+                // Keep the disclosure's identifier on its own AX container;
+                // its choices and manual steps field retain their own IDs.
+                .accessibilityElement(children:.contain).accessibilityIdentifier("assessment.activity.details")
         }
     }
     private var activityArcLabel:String {
