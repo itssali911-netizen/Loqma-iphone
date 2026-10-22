@@ -1,5 +1,5 @@
 {
-  "label": "baseline",
-  "baseline_run_id": null,
-  "purpose": "Approved UI integration before production performance changes; actual measurements required."
+  "label": "optimized",
+  "baseline_run_id": 39861550376,
+  "baseline_attempt": 1
 }

@@ -35,6 +35,8 @@ import AVFoundation
     @State private var initialized=false
     @State private var analysisTask:Task<Void,Never>?
     @State private var photoLoadTask:Task<Void,Never>?
+    @State private var previewTask:Task<Void,Never>?
+    @State private var previewGeneration=UUID()
     @State private var photoGeneration=UUID()
     @State private var analysisGeneration=UUID()
     @State private var loadingPhoto=false
@@ -86,7 +88,7 @@ import AVFoundation
             };products[request.id]=(food,amount,unit);selection=nil;return true
         })}
         .onChange(of:item){_,value in loadPhoto(value)}
-        .onChange(of:imageData){_,data in analysisGeneration=UUID();analysisTask?.cancel();analysisTask=nil;busy=false;parts=[];products.removeAll();detailedComponents=false;showingPhotoInput=false;preview=data.flatMap{try? PhotoAnalyzer.image($0,maxPixels:640)}.map{UIImage(cgImage:$0)}}
+        .onChange(of:imageData){_,data in analysisGeneration=UUID();analysisTask?.cancel();analysisTask=nil;busy=false;parts=[];products.removeAll();detailedComponents=false;showingPhotoInput=false;preparePhotoPreview(data)}
         .onChange(of:phase){_,value in
             if value != .active,busy{cancellationMessage=diary.t("توقف التحليل عند مغادرة الشاشة. افتح التطبيق وحاول مجددًا.","Analysis stopped when the app left the foreground. Reopen the app and retry.");analysisTask?.cancel()}
             if value == .active,cameraAccessBlocked,AVCaptureDevice.authorizationStatus(for:.video) == .authorized{cameraAccessBlocked=false;cameraMessage=nil}
@@ -99,8 +101,9 @@ import AVFoundation
             if ProcessInfo.processInfo.arguments.contains("-loqma-approved-photo-results"),parts.isEmpty{prepareApprovedPreview()}
             else if ProcessInfo.processInfo.arguments.contains("-loqma-preview-photo"),parts.isEmpty{preparePreview()}
             #endif
+            if let data=imageData,preview==nil,previewTask==nil{preparePhotoPreview(data)}
         }
-        .onDisappear{photoGeneration=UUID();analysisGeneration=UUID();photoLoadTask?.cancel();analysisTask?.cancel()}
+        .onDisappear{photoGeneration=UUID();analysisGeneration=UUID();previewGeneration=UUID();photoLoadTask?.cancel();analysisTask?.cancel();previewTask?.cancel();previewTask=nil}
     }
     private var analysisHeader:some View {
         HStack {
@@ -153,7 +156,7 @@ import AVFoundation
                 Button{showingSetup=true}label:{cameraControl("gearshape",size:68,radius:20)}
                     .buttonStyle(.plain).disabled(busy).accessibilityLabel(diary.t("إعدادات خدمة التحليل","Analysis Settings"))
             }.frame(maxWidth:.infinity).environment(\.layoutDirection,.leftToRight)
-            if preview == nil && !approvedCapture {
+            if preview == nil && imageData == nil && !approvedCapture {
                 Text(diary.t("صورة توضيحية — صوّر وجبتك أو اختر صورتها لبدء التحليل.","Illustration — take or choose your own meal photo to begin analysis."))
                     .luqmaFont(.caption).foregroundStyle(Theme.muted).fixedSize(horizontal:false,vertical:true)
             }
@@ -528,6 +531,23 @@ import AVFoundation
             guard photoGeneration==token else{return};imageData=data
         }catch{guard photoGeneration==token,!Task.isCancelled else{return};self.error=diary.t("تعذّر فتح الصورة. اختر صورة أخرى.","The photo could not be opened. Choose another photo.")}
             if photoGeneration==token{loadingPhoto=false;photoLoadTask=nil}
+        }
+    }
+    private func preparePhotoPreview(_ data:Data?) {
+        previewTask?.cancel();previewTask=nil;previewGeneration=UUID();preview=nil
+        guard let data else{return}
+        let token=previewGeneration
+        previewTask=Task{
+            do {
+                let image=try await PhotoPreparationWorker.shared.preview(data)
+                guard !Task.isCancelled,previewGeneration==token else{return}
+                preview=image;previewTask=nil
+            }catch is CancellationError{return}
+            catch {
+                guard !Task.isCancelled,previewGeneration==token else{return}
+                previewTask=nil;imageData=nil
+                self.error=(error as? AppError)?.message(diary.language) ?? diary.t("تعذّر فتح الصورة. اختر صورة أخرى.","The photo could not be opened. Choose another photo.")
+            }
         }
     }
     private func analyze(){guard let imageData,!loadingPhoto else{return};descriptionFocused=false;busy=true;error=nil;cancellationMessage=nil;parts=[];products=[:]

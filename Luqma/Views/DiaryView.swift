@@ -442,7 +442,10 @@ struct DiaryView:View {
     }
     private func mealEntryDetails(_ summary:MealDiarySummary)->some View {
         DisclosureGroup(isExpanded:Binding(get:{expandedMeals.contains(summary.meal)},set:{if $0{expandedMeals.insert(summary.meal)}else{expandedMeals.remove(summary.meal)}})){
-            VStack(spacing:0){
+            // CI95's expanded meal exposes 200 eagerly created row buttons.
+            // Keep stable entry identities and identical row layout, but build
+            // offscreen rows on demand in the containing diary ScrollView.
+            LazyVStack(spacing:0){
                 ForEach(summary.entries){entry in
                     Button{editing=entry}label:{HStack(spacing:12){
                         VStack(alignment:.leading,spacing:5){Text(DisplayFormat.westernDigits(entry.name)).luqmaFont(.subheadline).foregroundStyle(Theme.text);Text("\(decimal(entry.amount)) × \(entry.unitLabel(diary.language))").luqmaFont(.caption).foregroundStyle(Theme.muted)}
