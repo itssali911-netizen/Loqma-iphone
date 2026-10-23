@@ -393,6 +393,12 @@ final class LuqmaInteractionTests:XCTestCase {
         XCTAssertNotNil(numeric(value))
         finishCalorieEditing()
         app.buttons["goals.save"].tap()
+        let dismissed=XCTNSPredicateExpectation(predicate:NSPredicate { _,_ in
+            guard let nodes=self.applicationSnapshotNodes() else{return false}
+            return !nodes.contains{$0.identifier == "goals.save" || $0.identifier == "goals.editCalories"}
+                && nodes.contains{$0.identifier == "nav.today" && !$0.frame.isEmpty}
+        },object:app)
+        XCTAssertEqual(XCTWaiter.wait(for:[dismissed],timeout:5),.completed,"Saving must dismiss the actual goal sheet before the next diary action.\n"+app.debugDescription)
         XCTAssertTrue(app.buttons["nav.today"].waitForExistence(timeout:10))
         return value
     }
@@ -429,10 +435,7 @@ final class LuqmaInteractionTests:XCTestCase {
         // in the same frame. CI100's separate remote queries consumed most
         // of the five-second waiter before geometry could be evaluated.
         // Preserve that deadline and the exact full-containment requirement.
-        guard let snapshot=try? app.snapshot() else{return false}
-        var pending:[any XCUIElementSnapshot]=[snapshot]
-        var nodes:[any XCUIElementSnapshot]=[]
-        while let node=pending.popLast(){nodes.append(node);pending.append(contentsOf:node.children)}
+        guard let nodes=applicationSnapshotNodes(),let snapshot=nodes.first else{return false}
         guard let form=nodes.first(where:{$0.identifier == "assessment.form"}),
               let back=nodes.first(where:{$0.identifier == "assessment.back"}),
               let message=nodes.first(where:{$0.identifier == "assessment.validation"}),
@@ -450,6 +453,14 @@ final class LuqmaInteractionTests:XCTestCase {
         let bottom=(lowerEdges.min() ?? viewport.maxY)-8
         let visible=CGRect(x:viewport.minX,y:top,width:viewport.width,height:max(0,bottom-top))
         return visible.contains(message.frame)
+    }
+
+    private func applicationSnapshotNodes()->[any XCUIElementSnapshot]? {
+        guard let snapshot=try? app.snapshot() else{return nil}
+        var pending:[any XCUIElementSnapshot]=[snapshot]
+        var nodes:[any XCUIElementSnapshot]=[]
+        while let node=pending.popLast(){nodes.append(node);pending.append(contentsOf:node.children)}
+        return nodes
     }
 
     private func exerciseAssessmentPicker(_ identifier:String,field:XCUIElement,range:ClosedRange<Double>,vertical:Bool,file:StaticString=#filePath,line:UInt=#line) {
@@ -759,8 +770,17 @@ final class LuqmaInteractionTests:XCTestCase {
             .matching(NSPredicate(format:"label == %@","Done")).firstMatch
         XCTAssertTrue(done.waitForExistence(timeout:5))
         done.tap()
-        let dismissed=XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == false"),object:done)
-        XCTAssertEqual(XCTWaiter.wait(for:[dismissed],timeout:5),.completed,app.debugDescription)
+        // Both nested sheets use navigation.back. CI101's retained native
+        // image/tree prove Done and its field were dismissed, while the
+        // cached element continued to exist as the parent's Cancel button.
+        // Inspect one fresh public tree for the actual dismissal effects.
+        let dismissed=XCTNSPredicateExpectation(predicate:NSPredicate { _,_ in
+            guard let nodes=self.applicationSnapshotNodes() else{return false}
+            return !nodes.contains{$0.identifier == "goals.calories" || ($0.identifier == "navigation.back" && $0.label == "Done")}
+                && nodes.contains{$0.identifier == "goals.editCalories" && !$0.frame.isEmpty}
+                && nodes.contains{$0.identifier == "goals.save" && !$0.frame.isEmpty}
+        },object:app)
+        XCTAssertEqual(XCTWaiter.wait(for:[dismissed],timeout:5),.completed,"Done must dismiss the calorie input and reveal the actual parent goal controls.\n"+app.debugDescription)
     }
 
     private func openBreakfastEntry(named name:String="UI Test Oats") {
