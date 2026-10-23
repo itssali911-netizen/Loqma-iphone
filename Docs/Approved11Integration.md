@@ -176,3 +176,20 @@ The isolated functional assessment test proceeded through the real age/height/we
 The follow-up adds an explicit accessibility containment boundary to that disclosure and the identically structured optional food-preference disclosure. Child identifiers, layout, gestures, validation and the strict tests are preserved. Native validation of the correction is pending.
 
 The nine measured performance workloads never construct either changed step: the assessment scenario opens only its initial goal page and immediately returns. It does not advance to activity or food preferences, and its normal fixture has no saved assessment draft. Thus checkpoint98 remains the explicitly identified baseline for those unchanged workloads, provided the frozen harness, fixture, runtime, build settings, device and UTC-day gates match. The accessibility follow-up is a separate functional correction, not a measured performance improvement or a new baseline run.
+
+
+## Native checkpoint99 and bounded verification follow-up
+
+Revision `32d204114a9a51bb95d6fc87ef933beafed9b6f0` compiled the actual arm64 iPhoneOS2.9/build99 IPA, passed240Core/75BuildTests, and all nine native performance scenarios. Its59raw metric rows and same-day98→99comparison are independently audited; results and regressions are in [Approved11Performance.md](Approved11Performance.md).
+
+All13approved Arabic captures and26English captures completed with runtime font audits. Original25asset bytes still match. Robot/phone glyphs render, scan brackets/beam appear once, and result icons are no longer solid template blocks. Native frame1080×2340 and reference1125×2436 are different sizes; original PNG bytes are retained. No separate approved age/height PNG exists.
+
+The functional case now progressed through all11assessment steps, manual/swipe/invalid/save-resume inputs, plan review/apply/delete and relaunch. It failed later because the test's generic reveal helper overshot a breakfast row and only swiped upward. The follow-up changes only that helper: bounded real foreground scrolling follows target geometry, excludes pinned header/footer/keyboard, and preserves exact existence/hittability/real-tap assertions. No production input or assertion is bypassed. Native rerun is pending.
+
+The independent general capture stopped4/51 at a90-second `simctl screenshot` timeout. A leftover fifth normal PNG remains diagnostic rather than accepted; logs do not establish an app crash or main-thread hang. Fresh general capture remains required.
+
+The follow-up matches the calorie-footer background to original#393C43 so the supplied opaque icon artwork blends into its intended slot. It gives the DEBUG-only weekly capture seven varied valid daily totals instead of seven collinear values; the real chart already received seven points, not two. Frozen performance fixture and users' diary values remain unchanged. The synthetic result uses more of its original full-width photo viewport and its actual aspect ratio; the opaque live back control covers the raster's baked button. Real user-photo framing/processing and source-artwork bytes remain unchanged.
+
+Known visual limits still requiring native review: the per-serving reference card requires scrolling on the smaller iPhone13mini viewport; compression would change approved sizes. Source fruit artwork bakes system chrome into the raster, so exact full-bleed/photo-behind-status matching needs a clean original photo. No invented substitute or altered raster is supplied. Reference nutrition illustrations contain inconsistent example macro/calorie values; real arithmetic remains authoritative. These limits prevent a100%pixel-match claim.
+
+The next run starts a new performance baseline on its actual UTC day. Accepted98→99observations remain source-pinned; no cross-day guard is relaxed. This follow-up changes no navigation destination, nutritional calculation, schema, remote API or excluded swipe action.

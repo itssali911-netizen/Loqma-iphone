@@ -763,7 +763,7 @@ struct CalorieIntakeDetailView: View {
                     .frame(height: 138)
                     .background(
                         RoundedRectangle(cornerRadius: 28, style: .continuous)
-                            .fill(Color(hex: 0x24262B))
+                            .fill(Color(hex: 0x393C43))
                     )
                     .padding(.horizontal, 16)
                     .padding(.bottom, 22)

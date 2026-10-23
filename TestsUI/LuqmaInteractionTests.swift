@@ -753,28 +753,49 @@ final class LuqmaInteractionTests:XCTestCase {
     }
 
     private func reveal(_ element:XCUIElement,file:StaticString=#filePath,line:UInt=#line) {
+        XCTAssertEqual(app.state,.runningForeground,"Reveal gestures must stay in the foreground application",file:file,line:line)
+        guard app.state == .runningForeground else{return}
         for _ in 0..<8 {
             if element.exists && element.isHittable {return}
-            scrollVisibleContentUp()
+            scrollVisibleContent(toward:element)
         }
         XCTAssertTrue(element.exists && element.isHittable,"Required real control is unreachable\n\(app.debugDescription)",file:file,line:line)
     }
 
-    private func scrollVisibleContentUp() {
-        // An app-wide swipe starts over the keyboard while editing a field.
-        // Drag inside the actual visible form/scroll frame above that keyboard.
-        let collection=app.collectionViews.firstMatch
-        let content=collection.exists ? collection:app.scrollViews.firstMatch
-        guard content.exists else{app.swipeUp();return}
-        let frame=content.frame
+    private func scrollVisibleContent(toward element:XCUIElement) {
+        guard app.state == .runningForeground else{return}
+        // Scope to a hittable foreground container, rather than a form still
+        // exposed underneath a sheet. Only real scroll gestures reveal rows.
+        let content=app.collectionViews.allElementsBoundByIndex.first{$0.isHittable}
+            ?? app.scrollViews.allElementsBoundByIndex.first{$0.isHittable}
+        guard let content else{return}
+        let frame=content.frame.intersection(app.frame)
         let keyboard=app.keyboards.firstMatch
-        let top=max(frame.minY,app.frame.minY)
-        let bottom=min(frame.maxY,keyboard.exists ? keyboard.frame.minY:app.frame.maxY)
-        guard bottom-top>60 else{app.swipeUp();return}
+        var top=frame.minY,bottom=min(frame.maxY,keyboard.exists ? keyboard.frame.minY:app.frame.maxY)
+        // A diary row may exist behind its pinned header after expansion or
+        // after a large swipe. Exclude live header/footer controls when
+        // choosing direction; another upward swipe would move it farther away.
+        for identifier in ["diary.search","navigation.back"] {
+            if let header=app.buttons.matching(identifier:identifier).allElementsBoundByIndex.first(where:{$0.isHittable}),header.frame.maxY<frame.midY {
+                top=max(top,header.frame.maxY+12)
+            }
+        }
+        for identifier in ["nav.today","fitness.apply","portion.save","assessment.next","assessment.skip","assessment.review"] {
+            if let footer=app.buttons.matching(identifier:identifier).allElementsBoundByIndex.first(where:{$0.isHittable}),footer.frame.minY>frame.midY {
+                bottom=min(bottom,footer.frame.minY-12)
+            }
+        }
+        guard bottom-top>60 else{return}
+        let middle=(top+bottom)/2
+        let target=element.exists ? element.frame:CGRect.null
+        let upward=target.isNull || target.isEmpty || target.midY>=middle
+        let distance=min((bottom-top)*0.5,max(80,target.isNull || target.isEmpty ? (bottom-top)*0.5:abs(target.midY-middle)))
         let origin=app.coordinate(withNormalizedOffset:CGVector(dx:0,dy:0))
         let x=frame.midX-app.frame.minX
-        let start=origin.withOffset(CGVector(dx:x,dy:top+(bottom-top)*0.8-app.frame.minY))
-        let end=origin.withOffset(CGVector(dx:x,dy:top+(bottom-top)*0.2-app.frame.minY))
+        let startY=upward ? bottom-12:top+12
+        let endY=upward ? startY-distance:startY+distance
+        let start=origin.withOffset(CGVector(dx:x,dy:startY-app.frame.minY))
+        let end=origin.withOffset(CGVector(dx:x,dy:endY-app.frame.minY))
         start.press(forDuration:0.05,thenDragTo:end)
     }
 

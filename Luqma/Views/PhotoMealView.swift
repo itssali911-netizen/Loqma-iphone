@@ -261,12 +261,25 @@ import AVFoundation
                 Button{closeAnalysis()}label:{
                     CFACrescentChevron().stroke(Color.white,style:StrokeStyle(lineWidth:2.2,lineCap:.round,lineJoin:.round))
                         .frame(width:10,height:18).scaleEffect(x:-1,y:1).frame(width:48,height:48)
-                        .background(Color(hex:0x393C43).opacity(0.6),in:RoundedRectangle(cornerRadius:18,style:.continuous))
+                        .background(Color(hex:0x393C43).opacity(approvedResultPreview ? 1:0.6),in:RoundedRectangle(cornerRadius:18,style:.continuous))
                 }.buttonStyle(.plain).padding(16).accessibilityLabel(diary.t("رجوع","Back"))
             }
-        }.environment(\.layoutDirection,.leftToRight).aspectRatio(preview == nil ? 2.6:1/0.85,contentMode:.fit)
+        }.environment(\.layoutDirection,.leftToRight).aspectRatio(resultHeroAspect,contentMode:.fit)
             .accessibilityElement(children:.contain)
             .accessibilityLabel(diary.t(preview == nil ? "لا توجد صورة في هذه المعاينة":"صورة الوجبة",preview == nil ? "No photo in this preview":"Meal photo"))
+    }
+    private var approvedResultPreview:Bool {
+        #if DEBUG
+        return ProcessInfo.processInfo.arguments.contains("-loqma-approved-photo-results") && imageData == nil
+        #else
+        return false
+        #endif
+    }
+    private var resultHeroAspect:CGFloat {
+        // Only the explicitly synthetic capture uses its supplied artwork's
+        // visible aspect; real meal photos retain their existing presentation.
+        if approvedResultPreview,let preview,preview.size.height>0{return preview.size.width/preview.size.height}
+        return preview == nil ? 2.6:1/0.85
     }
     private var resultTitle:some View {
         VStack(alignment:.center,spacing:14) {
@@ -567,9 +580,10 @@ import AVFoundation
             let food=PhotoFood(id:"approved-mandarin",name:"برتقال يوسفي",nameEn:"Mandarin orange",grams:250,kcal:74.8,protein:1.2,carbs:16.8,fat:0.28)
             let part=PhotoPart(food:food,grams:250,low:200,high:300,basis:"photo-estimate",tentative:true,mealEstimate:estimate)
             if let artwork=UIImage(named:"DNMMandarinPileHero"),let source=artwork.cgImage,
-               let cropped=source.cropping(to:CGRect(x:0,y:330,width:CGFloat(source.width),height:CGFloat(min(600,source.height-330)))) {
-                // The supplied raster includes a status bar/back/handle. Use
-                // its food-only viewport below the live native system chrome.
+               let cropped=source.cropping(to:CGRect(x:0,y:132,width:CGFloat(source.width),height:CGFloat(min(808,source.height-132)))) {
+                // Preserve the original full-width food composition between
+                // the baked status bar and panel handle. The opaque live back
+                // control covers the baked button in the same design slot.
                 preview=UIImage(cgImage:cropped)
             }
             parts=[part]

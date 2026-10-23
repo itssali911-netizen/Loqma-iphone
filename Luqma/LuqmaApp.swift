@@ -292,9 +292,13 @@ private enum ApprovedScreenPreviewData {
         let food=Food(catalogID:"preview:approved-diary",name:"وجبة توضيحية",nameEn:"Display meal",unit:.serving,
                       nutrition:Nutrition(kcal:100,protein:10,carbs:15,fat:0),serving:"1 serving",source:"Preview fixture")
         let calendar=DisplayFormat.calendar(.en)
-        for offset in 0..<7 {
+        // Seven distinct illustrative daily totals exercise the real curved
+        // chart. These DEBUG-only values never enter a user's saved diary or
+        // the separately frozen performance fixture.
+        let calories=[429,310,475,285,390,220,350]
+        for offset in 0..<calories.count {
             if let date=calendar.date(byAdding:.day,value:-offset,to:Date()),
-               let entry=try? DiaryEntry(food:food,amount:Double(429-offset*31)/100,unit:.serving,meal:.breakfast,day:DayKey.string(date),language:.ar) {
+               let entry=try? DiaryEntry(food:food,amount:Double(calories[offset])/100,unit:.serving,meal:.breakfast,day:DayKey.string(date),language:.ar) {
                 result.entries.append(entry)
             }
         }

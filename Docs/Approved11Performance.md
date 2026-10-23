@@ -1,166 +1,107 @@
-# Approved 11 screens — performance evidence
+# Approved 11 screens — measured performance and limits
 
-**Status:** CI98 provides an audited nine-scenario Simulator baseline. The seven-file performance candidate is prepared; its build, four new Core tests and matched after measurements are pending.
-No application-wide functional acceptance, measured improvement, verified 60/120 FPS or battery saving is claimed.
+## Current evidence
 
-The approved UI remains the visual baseline. This pass changes no approved artwork, font, color, dimensions, nutritional arithmetic or remote-analysis contract.
-Excluded Food Swipe Actions remain excluded. Visual verification belongs in [Approved11Integration.md](Approved11Integration.md).
+The isolated performance commit is `32d204114a9a51bb95d6fc87ef933beafed9b6f0`.
+[CI99, attempt1](https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/39867846285) compiled the actual iPhoneOS arm64 2.9/build99 IPA (minimum iOS17), passed **240 Core tests**, **75 BuildTests** and **all nine native performance scenarios**. Compilation and performance success do not establish functional or visual acceptance.
 
-## Selected baseline and history
+The same-day comparator is [CI98, attempt1](https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/39861550376), revision `67e050686ad0de33c1125ff1e40b937c26b04bba`. All **59 metric rows** and all comparison rows were independently checked against raw xcresult samples, identifiers, units and statistics. The separate AX containment follow-up `16c8961` does not appear in any of the nine timed routes: the assessment case stops at its first goal screen.
 
-Selected baseline: **CI98, attempt 1**, revision `67e050686ad0de33c1125ff1e40b937c26b04bba`.
-[Run 39861550376](https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/39861550376) has actual successful native performance artifacts.
-`Docs/PerformancePhase.json` selects `optimized`, baseline run `39861550376`, attempt `1`; this is configuration, not an after result.
-The separate accessibility follow-up is `16c89615dc8ffd83b13750f15fc72446c1104e57`, parent `67e0506`; its native validation is pending.
+The following verification revision corrects only test scrolling, the approved calorie-footer color and DEBUG capture composition/data. It has **not yet passed native validation**. Its `PerformancePhase.json` starts a **new baseline** because it runs on another UTC day. This neither removes nor replaces the accepted98→99 comparison. No later-day result will be compared to98 by waiving the day/hash guard.
 
-| Earlier evidence | Outcome / retained limitation |
+## Actual comparable configuration
+
+- Xcode26.6 (17F113), Swift6.3.3, macOS26.6.2 arm64; different shared CI hosts.
+- Fresh iPhone16ProMax Simulator, iOS26.5; Release `-O`, whole-module compilation, sequential tests, no coverage.
+- Explicit DEBUG compilation only enables the isolated synthetic fixture. Shipped Release has no fixture flag.
+- Fixture `v1|entries=5000|days=7|today=800|seed=20261021`: normal protected diary file seeded once, then ordinary production decoding/views.
+- Frozen benchmark/fixture hashes, scenario identities, sample counts, runtime, build settings, architecture and **2026-10-22 UTC** match.
+- Launch: five recorded samples. Other scenarios: three, after a discarded warm-up.
+
+## Actual before/after medians
+
+Clock windows include XCUITest/accessibility synchronization and multiple actions. They are **not pure tap/transition latency**. CPU is exactly XCTest-reported process CPU seconds, **not utilization**; do not divide CPU by clock. Peak memory is physical kB, distinct from memory growth.
+
+| Scenario | Clock before→after (s) | CPU before→after (s) | Peak memory before→after (kB) |
+| --- | ---: | ---: | ---: |
+| Process launch | 8.913445 → 7.319005 | Not Measured | Not Measured |
+| Foreground resume | 2.138562 → 1.900572 | 0.965421 → 0.772676 | 73,488.576 → 77,076.608 |
+| Four-tab round trip | 10.479581 → 10.243052 | 2.129698 → 1.968469 | 94,066.944 → 93,411.520 |
+| Food logging round trip | 9.134373 → 8.622484 | 5.490686 → 5.273579 | 72,980.672 → 85,072.128 |
+| Personal search → quantity | 4.197977 → 2.782742 | 21.168700 → 18.619755 | 85,678.272 → 85,678.336 |
+| Seven-day calorie details | 2.030606 → 2.102880 | 11.180874 → 8.641269 | 75,503.808 → 76,536.000 |
+| Profile → assessment entry | 8.947383 → 8.037260 | 14.577171 → 11.293384 | 76,044.544 → 76,961.984 |
+| Profile → personalized plan | 3.109723 → 3.002412 | 13.851488 → 9.851743 | 74,963.136 → 76,241.088 |
+| Expanded diary / four swipes | 18.060578 → 11.979547 | 21.592607 → 12.716939 | 113,088.768 → 81,795.200 |
+
+System responsive-launch duration is separate from the launch test-clock window: **5.743439→3.982745s**, 30.66% lower (five samples). This is terminated-process launch after warm-up, **not reboot-cold/file-cache-cold launch**.
+
+Expanded diary: clock **33.67% lower**, CPU seconds **41.11% lower**, peak memory **27.67% lower**. This supports the targeted lazy-row change in that workload. Search→quantity clock was33.71% lower. Shared-host scheduling remains a limitation; these are observations, not universal speed guarantees.
+
+**Regressions are retained:** calorie-details clock **+3.56%**; food-logging peak memory **+16.57%**; foreground-resume peak **+4.88%**; assessment, plan and calorie peaks rose roughly1–2%. Therefore no application-wide memory reduction or blanket improvement is claimed. See the retained raw report/audit for sample dispersion and all59rows.
+
+System scroll drag/deceleration duration was2.583001→2.582740s, essentially unchanged; it is not FPS. Sixteen zero-valued cycle/instruction rows are unavailable Simulator counters, not zero CPU work.
+
+| Requested metric | Result |
 | --- | --- |
-| [CI94](https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/39628492866) | 236 Core/68 BuildTests passed; assessment failed. Nine performance cases failed through collector/selector issues. Rejected UI baseline. |
-| [CI95](https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/39637212015) | Nine performance cases passed; assessment failed. Approved Arabic13/English26 collections captured; broader Arabic51 collection failed for identical offscreen dinner/snack frames. Superseded after visual corrections. |
-| [CI96](https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/39674125464) | UI corrections preceded complete asset recovery. Performance job canceled; not the selected final visual-workload comparator. |
-| [CI97](https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/39676292580) | Original assets recovered. Performance failed before app build/test: Simulator boot exit149/error405, followed by recovery-shutdown timeout. No accepted UI measurements. |
-| [CI98](https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/39861550376) | Same production UI and performance workload as CI97. Bounded infrastructure correction; build, 236 Core, 75 BuildTests and nine performance cases passed. Separate assessment failed. Selected baseline. |
+| Reboot-cold launch / exact transition latency | Not Measured |
+| Observed FPS /60Hz/120Hz / dropped frames / frame-time distribution | Not Measured |
+| Animation hitches / main-thread hang trace | Not Measured |
+| CPU utilization percentage | Not Measured; process CPU seconds above |
+| Battery / energy / thermal impact / leak freedom | Not Measured |
+| Physical ProMotion / physical camera / remote AI acceleration | Not Measured |
 
-No failed run is substituted for valid measurements. Differences among unchanged earlier Core timings are CI variation, not optimization results.
+No hitch/frame data is present in the unfiltered metrics export, result database or attachments. Do not infer it from screenshots or elapsed duration. Apple's [xcresult export documentation](https://developer.apple.com/documentation/xcode-release-notes/xcode-16_3-release-notes) says unfiltered metrics include all available metrics.
 
-## Actual CI98 configuration
+## Matched full-probe Core microbenchmark
 
-| Item | Recorded value |
+This is actual macOS Core serialization, **not iOS UI/FPS**. Actual `Backup.encode` is compiled `swiftc -O` over5000 entries/seven days, one warm-up and three samples. Fixture construction, equality checks and invalid-date checks are outside timing.
+
+| Metric | CI98 | CI99 | Reduction |
+| --- | ---: | ---: | ---: |
+| Median wall seconds |1.521089708|0.040115333|97.36%|
+| Median process CPU seconds |1.486871|0.039154|97.37%|
+| Process-lifetime peak RSS bytes |66,060,288|29,622,272|55.16%|
+| Encoded JSON bytes |2,016,610|2,016,610|Identical|
+| Strict invalid-day checks |2 rejected|2 rejected|Unchanged|
+
+Encoded SHA-256 on both: `05f7611da103a904a7bf36d5f52b52abf73abefad9c4e00741e462d06d88cbca`.
+RSS is process lifetime high-water memory, not per-sample allocations or iPhone memory. The separate early Core-only98→99 run observed95.80% wall reduction; it is retained independently and is not mixed into this full-probe table.
+
+## Focused production changes, isolated in32d2041
+
+| Exact path | Purpose / compatibility |
 | --- | --- |
-| App target | iOS **17.0**; Swift language mode **5**, tools version **5.9** |
-| Toolchain | Xcode **26.6**, build **17F113**; Apple Swift **6.3.3** |
-| Host / destination | macOS **26.6.2 arm64**, shared runner; fresh **iPhone16ProMax Simulator, iOS26.5** |
-| Build / execution | Release **`-O`**, whole-module compilation, no coverage; sequential tests |
-| Fixture compilation | Explicit `DEBUG` only for the isolated Simulator fixture hook |
-| Fixture identity | `v1\|entries=5000\|days=7\|today=800\|seed=20261021` |
-| Persistence | Real diary file seeded once; ordinary production decoding/views on relaunch |
-| Recorded day / timezone | **2026-10-22 UTC** |
-| Full probe start / finish | **22:01:59–22:39:48 UTC**; includes compilation/setup, not pure app runtime |
-| Native performance | **9 passed, 0 failed, 0 skipped**; all required scenario identities present |
-| Audit | **59 rows** checked against raw identities, samples, units, mean/median/stddev/min/max |
+| `Luqma/Core/Backup.swift` | Reuse successfully strict-validated day strings within one snapshot check, cap512; retain all per-record nutrition/amount/weight checks, schema and invalid-day parsing. No shared mutable formatter. |
+| `Luqma/Services/PhotoPreparationWorker.swift` | Serial actor for the same640px ImageIO thumbnail/display preparation and JPEG0.85 encoding; cancellation checks and local privacy-safe signposts. No persistent image cache. |
+| `Luqma/Services/Camera.swift` | Await encoding with owned task/generation and weak coordinator; reject stale results on teardown/cancel. |
+| `Luqma/Views/PhotoMealView.swift` | Owned preview task/generation, asynchronous publication, cancellation/reopening/error handling; preserve original photo and1280px remote preprocessing/API/model. |
+| `Luqma/Views/DiaryView.swift` | Eager expanded-meal rows → `LazyVStack`; stable UUIDs/order/spacing/tap-edit unchanged. Baseline exposes200eager rows. |
+| `Luqma.xcodeproj/project.pbxproj` | Register worker in the real application build phase; no target/flag change. |
+| `Tests/BackupValidationSafetyTests.swift` | Four native-passed tests: long history/round trip, invalid day, amount/nutrition and weight validation despite repeated keys. |
 
-Archived source, asset, harness and fixture identities remain in `performance-report.json`; frozen harness/fixture hashes match main.
-Only generated untracked `CorePerformance/` and `Luqma.xcodeproj/project.xcworkspace/` were recorded at measurement time.
-Readiness succeeded on attempt1 with a real Settings PID; no reboot or boot handoff occurred in CI98.
+Report/phase/checksum files are additional non-runtime bookkeeping. No third-party performance library, database schema change or unrelated refactor. Codec cancellation cannot interrupt a running codec; input may remain retained until it returns. Remote AI speed and physical camera responsiveness remain unverified.
 
-## Nine-scenario baseline
+## Current Apple techniques and deployment support
 
-Medians below retain actual XCTest units. Clock σ is population standard deviation.
-Launch has **five** recorded samples; every other case has **three**, excluding XCTest's first warm-up.
+- Swift actors/structured cancellation: supported by Swift5.9/iOS17; a MainActor-inheriting task alone would not move codec work away. [Apple responsiveness](https://developer.apple.com/documentation/xcode/improving-app-responsiveness).
+- `UIImage.preparingForDisplay()` (iOS15+) prepares the existing thumbnail with fallback. [API](https://developer.apple.com/documentation/uikit/uiimage/preparingfordisplay()).
+- `OSSignposter` (iOS15+) records PreviewPreparation/CameraJPEG intervals without photos, descriptions or credentials. [API](https://developer.apple.com/documentation/os/ossignposter).
+- `LazyVStack` (iOS14+) targets the measured eager rows. [API](https://developer.apple.com/documentation/swiftui/lazyvstack).
+- [WWDC25 SwiftUI profiling](https://developer.apple.com/videos/play/wwdc2025/306/) and [WWDC26 responsiveness](https://developer.apple.com/videos/play/wwdc2026/268/) inform the pass; no Instruments27-only capability is claimed on installed Xcode26.6.
 
-| Scenario | Clock (s) | Clock σ (s) | App CPU time (s) | Peak physical memory (kB) |
-| --- | ---: | ---: | ---: | ---: |
-| Terminated-process launch | 8.913445 | 0.338390 | Not collected | Not collected |
-| Warm foreground resume | 2.138562 | 0.381390 | 0.965421 | 73,488.576 |
-| Four-tab round trip | 10.479581 | 0.168839 | 2.129698 | 94,066.944 |
-| Home → food logging → Home | 9.134373 | 0.406236 | 5.490686 | 72,980.672 |
-| Food search → quantity | 4.197977 | 0.424179 | 21.168700 | 85,678.272 |
-| Home → seven-day calorie details | 2.030606 | 0.229596 | 11.180874 | 75,503.808 |
-| Home → profile → assessment entry | 8.947383 | 0.268110 | 14.577171 | 76,044.544 |
-| Profile → personalized plan | 3.109723 | 0.020582 | 13.851488 | 74,963.136 |
-| Expanded diary, four fast swipes | 18.060578 | 0.801980 | 21.592607 | 113,088.768 |
+Standard SwiftUI/UIKit/Charts retain system-managed frame pacing. No custom synchronized renderer justifies `CADisplayLink`, `preferredFrameRateRange` or `CADisableMinimumFrameDurationOnPhone` here. No flag, continuous timer or artificial loop was added. Apple's [ProMotion guidance](https://developer.apple.com/documentation/quartzcore/optimizing-iphone-and-ipad-apps-to-support-promotion-displays) and [frame-range API](https://developer.apple.com/documentation/quartzcore/cadisplaylink/preferredframeraterange) do not guarantee120Hz: hardware, Low Power Mode, thermals and scheduling control it. Energy and refresh must be checked on actual hardware.
 
-**System responsive-launch duration is separate:** `ApplicationFirstFramePresentationResponsive.duration` median **5.743439s**, σ **0.312836s**, n=5.
-The 8.913445s test-clock window includes synchronization/assertions. Relaunch after warm-up is not reboot-cold or cold-file-cache launch.
-System scroll dragging/deceleration duration is **2.583001s** median, σ **0.018020s**, n=3; it is not FPS or a hitch rate.
+## Functional/capture outcomes are independent
 
-Clock windows include XCUITest/accessibility overhead and sometimes several actions; they do not measure pure transition latency or critical tap response.
-CPU seconds are exactly XCTest-reported app-scoped values, **not CPU%**. Aggregate work/window semantics can differ; no host-core-count explanation is assumed.
-Do not derive CPU utilization by dividing the CPU and clock columns. The strongest bounded CPU comparison here is the Core rusage span below.
-Peak memory retains raw **kB** units; memory-growth rows, which can be negative, are different metrics.
-Sixteen zero-valued cycle/instruction rows are non-informative Simulator counters, not evidence of zero CPU work.
+CI99's assessment case passed the input/rapid-drag/invalid-value/save-resume/back-forward stages, review/application/deletion and relaunch, then failed revealing the saved breakfast entry. Its helper swiped only upward even though the row was above the pinned header. The pending test-only correction retains eight bounded real gestures, foreground scope, exact existence/hittability assertions and actual taps; direction follows the target's live frame. No assertion is removed.
 
-**Hitches, FPS, dropped frames and frame-time distribution: Not Measured.**
-None appears in the raw export/result database despite the requested iOS26-gated hitch metric; no attachment or Instruments trace supplies them.
-Apple documents that unfiltered metrics export includes all available metrics: [xcresulttool reference](https://developer.apple.com/documentation/xcode-release-notes/xcode-16_3-release-notes).
-Thus no additional hitch values are invented from absent rows, screenshots or scroll duration.
+CI99 approved Arabic captures completed **13/13**, including all11 reference screens plus age/height, with actual runtime font audits. All26English captures completed. Regular capture completed4/51 before `simctl screenshot` exceeded90seconds. Its leftover fifth PNG is diagnostic only; no crash/main-thread app hang was established. The failure remains visible, and fresh capture is required.
 
-## Full-probe Core benchmark
+CI98's earlier activity-disclosure ID propagation was corrected separately in16c8961 and progressed past in99. All25 supplied/recovered asset files remain byte-identical. Excluded design-series Screen8 Food Swipe Actions remains excluded. No physical FPS or total functional acceptance is inferred from screenshots.
 
-These values belong to the Core benchmark inside the **same full CI98 probe**, not its separate earlier Core-only artifact.
-Actual Core sources compile with `swiftc -O`; 5,000 entries/seven days are encoded after one warm-up, with three recorded samples.
-Fixture construction, byte checks and invalid-date checks are outside the timed spans.
+## Retained evidence and history
 
-| Metric | Actual before | Optimized after |
-| --- | --- | --- |
-| Median wall time | **1.521089708s** | Pending |
-| Median process CPU time | **1.486871s** | Pending |
-| Wall samples (s) | `1.521089708, 1.558765917, 1.464224708` | Pending |
-| CPU samples (s) | `1.498647, 1.486871, 1.430028` | Pending |
-| Highest process lifetime peak RSS | **66,060,288 bytes** | Pending |
-| Encoded JSON size | **2,016,610 bytes** | Pending equality check |
-| Encoded SHA-256 | `05f7611da103a904a7bf36d5f52b52abf73abefad9c4e00741e462d06d88cbca` | Pending equality check |
-| Deliberately invalid dates | **2 rejected**, as required | Pending |
+Local immutable evidence: `work/approved29-build98-performance-baseline/`, `work/approved29-build99-performance-optimized/` (report/rawxcresult/normalized59rows/audit), corresponding `-ipa`, `-interactions`, `-approved`, `-reference`, `-ui` artifact directories. Original failed evidence is never overwritten.
 
-Encoded bytes/hash match CI95. RSS is the macOS benchmark process's lifetime high-water value, not per-sample allocations or iPhone memory.
-A Core microbenchmark does not establish faster launch, navigation, photo analysis or display FPS.
-
-## Focused implementation
-
-Repeated day keys currently repeat strict formatter/date round trips during snapshot validation.
-The candidate reuses successfully validated days **within one validation call**, capped at **512 strings**; uncached/invalid days keep the original check.
-Per-record nutrition, quantity and weight checks remain. No shared mutable formatter, persistent date cache or schema change is added.
-
-The benchmark's expanded breakfast exposes **200 eagerly created row buttons**.
-The candidate uses `LazyVStack` for those existing rows, preserving stable IDs, spacing, appearance and editing.
-The frozen four-swipe scenario will measure the candidate; improvement remains pending.
-
-Selected-photo thumbnail/display preparation and camera JPEG encoding currently perform synchronous MainActor work.
-A new actor owns that processing; UI-owned tasks use cancellation/generations to reject stale results after replacement or dismissal.
-The **640-pixel preview**, **0.85 JPEG quality**, original image and existing **1280-pixel** remote preprocessing/contract remain unchanged.
-Cancellation cannot interrupt a running codec call; its input can remain retained until completion. No permanent image cache is added.
-
-## Exact seven production/test/project files
-
-| Path | Reason |
-| --- | --- |
-| [Luqma/Core/Backup.swift](../Luqma/Core/Backup.swift) | Bounded reuse of strict day validation per snapshot check. |
-| [Luqma/Services/PhotoPreparationWorker.swift](../Luqma/Services/PhotoPreparationWorker.swift) | New actor for thumbnail/display preparation and JPEG encoding, with local diagnostic intervals. |
-| [Luqma/Services/Camera.swift](../Luqma/Services/Camera.swift) | Await encoding; cancel/reject stale delegate results during cancellation/teardown. |
-| [Luqma/Views/PhotoMealView.swift](../Luqma/Views/PhotoMealView.swift) | Own preview tasks/generations; publish current results and preserve preparation/error behavior. |
-| [Luqma/Views/DiaryView.swift](../Luqma/Views/DiaryView.swift) | Lazy expanded-meal rows with unchanged design and identity. |
-| [Luqma.xcodeproj/project.pbxproj](../Luqma.xcodeproj/project.pbxproj) | Include the new worker in the actual app build phase. |
-| [Tests/BackupValidationSafetyTests.swift](../Tests/BackupValidationSafetyTests.swift) | Four tests: long-history round trip, invalid dates, invalid entry nutrition/quantity and invalid weights. **Native execution pending.** |
-
-This is the performance candidate inventory, not the full approved-UI integration.
-Report/phase/checksum bookkeeping is additional non-runtime work. Measurement harness and fixture remain frozen; no new third-party library is added.
-
-## Apple techniques and platform support
-
-| Technique | Applicability / limits |
-| --- | --- |
-| Swift actors and `Task.checkCancellation()` | Supported by Swift5.9/iOS17. Identified codec work moves off MainActor; a MainActor-inheriting Task alone would not. [Responsiveness guidance](https://developer.apple.com/documentation/xcode/improving-app-responsiveness). |
-| `UIImage.preparingForDisplay()` | iOS15+; prepares the existing thumbnail, retaining an image fallback. [Apple API](https://developer.apple.com/documentation/uikit/uiimage/preparingfordisplay()). |
-| `OSSignposter` | iOS15+; local PreviewPreparation/CameraJPEG spans record no photos/keys/descriptions. Timing comparison pending. [Apple API](https://developer.apple.com/documentation/os/ossignposter). |
-| `LazyVStack` | iOS14+; justified by the actual eager row collection, not a blanket rewrite. [Apple API](https://developer.apple.com/documentation/swiftui/lazyvstack). |
-| SwiftUI/CPU profiling | Use installed Instruments26 capabilities. [WWDC25 SwiftUI profiling](https://developer.apple.com/videos/play/wwdc2025/306/) and [WWDC26 responsiveness workflow](https://developer.apple.com/videos/play/wwdc2026/268/). No Instruments27-only capability is claimed on this runner. |
-
-No broad Observation migration, unrelated database refactor, speculative rasterization or decorative animation loop is included.
-No `CADisplayLink` or `CADisableMinimumFrameDurationOnPhone` is added; ordinary SwiftUI/UIKit/Charts motion stays system managed.
-Apple's opt-in/hints cannot guarantee120Hz. No custom renderer justifies a display link; omission of the flag does not prove high-refresh eligibility.
-Review [Apple ProMotion guidance](https://developer.apple.com/documentation/quartzcore/optimizing-iphone-and-ipad-apps-to-support-promotion-displays) and [preferredFrameRateRange](https://developer.apple.com/documentation/quartzcore/cadisplaylink/preferredframeraterange) on physical hardware before accepting frame-rate or energy claims.
-
-## Functional validation and comparison gates
-
-CI98's device build succeeded; **236 Core tests** and **75 BuildTests** passed, including native font checks.
-The separate assessment regression failed at **step8 of11 after508.023s**: an actual input could not be fully revealed between header/footer/keyboard.
-The runner stopped before its remaining scenarios. Nine passing performance cases do not establish a passing seven-case functional regression.
-The four new Core safety tests and optimized-source compilation/regression remain **Pending**.
-
-The separate UI-only follow-up adds `.accessibilityElement(children: .contain)` to activity/food-preference disclosures, preserving child identifiers; native verification is pending.
-Frozen benchmarks **never construct those changed activity/food-preference steps**: assessment measurement stops at initial goal entry, while the plan case opens the existing plan directly.
-Their controls, measured UI, fixture and calculations remain unchanged; CI98 remains the legitimate baseline for this isolated accessibility follow-up.
-Any subsequent measured-screen/fixture/scenario change requires reassessing comparability and, where needed, a fresh pre-optimization baseline.
-
-Strict comparison preserves fixture/harness hashes, scenario identities/iterations, Release settings, toolchain, runtime/model, architecture, timezone and **same UTC calendar day**.
-CI98 records **2026-10-22 UTC**. Do not waive this guard: a later-day candidate needs a fresh matched baseline. Shared-host timing noise remains.
-Candidate source SHA, after results, percentage changes and regressions are **Pending**.
-
-Physical camera, photo replacement/cancellation/reopening, allocations/retention, battery/thermals and ProMotion behavior remain unverified.
-No remote-AI acceleration, photographic accuracy, leak freedom, battery saving or guaranteed frame rate is claimed.
-
-## Evidence
-
-Local artifacts outside Git: `work/approved29-build98-performance-baseline/` contains the report, raw metrics/summary, native log, Core benchmark and complete xcresult.
-Functional failure is retained in `work/approved29-build98-interactions/`; corresponding CI98 artifacts retain compilation/Core/BuildTests/IPA evidence.
-No screenshot, Simulator model name or elapsed test duration verifies physical60/120FPS.
+CI94/95 compiled but failed assessment assertions;95performance is historical because corrected96UI changed its workload. CI96/97 native readiness failed before application validation, and other jobs were cancelled for unavailable hosted macOS capacity. CI98 is the first fully restored, measured pre-optimization baseline; its functional failure is not concealed by the successful performance job. Full integration/file inventory and visual limits are documented in [Approved11Integration.md](Approved11Integration.md).
