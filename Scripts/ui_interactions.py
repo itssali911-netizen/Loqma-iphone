@@ -99,15 +99,25 @@ def run_tests(output: Path, packages: Path, derived: Path) -> None:
         inventory=json.loads(command(['xcrun','simctl','list','--json'],output,'inventory'))
         runtime=select_runtime(inventory)
         apply_vision_compat(packages)
-        # Exercise the assessment first, before the longer existing scenarios.
-        # Failed reports retain the actual partial execution order and evidence.
+        # Exercise the assessment first, but retain independent evidence for
+        # every scenario even if one real test fails. Each owns a fresh device;
+        # any failure still makes the entire workflow fail. Cancellation must
+        # propagate immediately rather than starting another scenario.
+        failures=[]
         for name,directory,methods in [('fitness-assessment',output/'fitness-assessment',FITNESS_TESTS),
                                         ('permission-allowed',output,PRIMARY_TESTS),
                                         ('permission-denied',output/'permission-denied',DENIED_TESTS)]:
             scenario=dict(name=name,status='running',fresh_simulator=False,required_cases=list(methods))
             report['scenarios'].append(scenario)
             report['scenario_execution_order'].append(name)
-            run_scenario(directory,packages,derived,runtime,methods,scenario,build_number)
+            try:
+                run_scenario(directory,packages,derived,runtime,methods,scenario,build_number)
+            except (BuildError,OSError,ValueError) as error:
+                scenario['status']='failed'
+                scenario['error']=str(error)
+                failures.append(name+': '+str(error))
+        if failures:
+            raise BuildError('Native interaction scenarios failed: '+'; '.join(failures))
         # Successful evidence keeps the established consumer/schema order.
         # This reorders only actual completed scenarios, not their outcomes.
         completed={item['name']:item for item in report['scenarios']}

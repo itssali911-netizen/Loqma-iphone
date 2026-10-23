@@ -151,10 +151,10 @@ final class LuqmaPerformanceTests: XCTestCase {
             } else {
                 details.tap()
             }
-            // Native DisclosureGroup currently propagates its identifier to
-            // its row buttons. Check its real expanded state and actual stored
-            // fixture food rather than requiring an identifier AX overrides.
-            let expandedDetails = app.buttons.matching(NSPredicate(format: "identifier == %@ AND label BEGINSWITH %@", "diary.details.breakfast", "Food details")).firstMatch
+            // The disclosure owns an AX container; its row buttons retain
+            // independent actions. Require the real expanded state and actual
+            // stored fixture food before measuring the same scrolling block.
+            let expandedDetails = app.descendants(matching: .any).matching(identifier: "diary.details.breakfast").firstMatch
             XCTAssertTrue(expandedDetails.images["expanded"].waitForExistence(timeout: 5), "The actual breakfast disclosure must be expanded before measuring")
             let actualEntry = app.buttons.matching(NSPredicate(format: "label == %@", "Luqma Performance Oats")).firstMatch
             XCTAssertTrue(actualEntry.waitForExistence(timeout: 5), "The expanded meal must expose real persisted diary rows before measuring")

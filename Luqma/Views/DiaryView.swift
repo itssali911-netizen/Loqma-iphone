@@ -460,7 +460,12 @@ struct DiaryView:View {
         }label:{
             HStack(spacing:8){Text(diary.t("تفاصيل الأطعمة","Food details")).luqmaFont(size:13,weight:.medium,relativeTo:.subheadline);Spacer(minLength:0);Text(decimal(Double(summary.entries.count),0)).luqmaFont(.caption).monospacedDigit().foregroundStyle(Theme.muted)}
                 .foregroundStyle(Theme.text).frame(minHeight:30)
-        }.tint(Theme.accent).accessibilityIdentifier("diary.details."+summary.meal.rawValue)
+        }.tint(Theme.accent)
+            // Keep the disclosure and each real row as separate AX actions.
+            // Without containment the expanded header's AX button includes
+            // the lazy rows, obscuring otherwise visible entry hit targets.
+            .accessibilityElement(children:.contain)
+            .accessibilityIdentifier("diary.details."+summary.meal.rawValue)
     }
     private func mealMacros(_ total:Nutrition)->some View {
         Group{
