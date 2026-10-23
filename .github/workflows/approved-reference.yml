@@ -1,0 +1,45 @@
+name: Approved UI exact reference capture
+
+on:
+  push:
+    branches: [verification/approved11-reference-375]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reference:
+    runs-on: macos-26
+    timeout-minutes: 55
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out exact reference verification source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Select the application Xcode
+        env:
+          DEVELOPER_DIR: ${{ vars.XCODE_DEVELOPER_DIR || '/Applications/Xcode_26.6.app/Contents/Developer' }}
+        run: |
+          test -d "$DEVELOPER_DIR"
+          xcodebuild -version
+          printf 'DEVELOPER_DIR=%s\n' "$DEVELOPER_DIR" >> "$GITHUB_ENV"
+      - name: Capture original native frames and font evidence at reference dimensions
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: python3 Scripts/approved_reference_capture.py --output UIExactReference
+      - name: Retain native frames and evidence independently of outcome
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: Luqma-exact-reference-${{ github.run_number }}-attempt-${{ github.run_attempt }}
+          path: |
+            UIExactReference/*.png
+            UIExactReference/*.json
+            UIExactReference/*.log
+            UIExactReference/font-audits/
+          if-no-files-found: error
+          retention-days: 7

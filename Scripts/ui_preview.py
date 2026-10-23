@@ -534,7 +534,8 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
         inventory = json.loads(command(["xcrun", "simctl", "list", "--json"],
                                        output, "preview-inventory"))
         types = inventory.get("devicetypes", inventory.get("deviceTypes", []))
-        if not any(item.get("identifier") == device_type for item in types):
+        selected_type = next((item for item in types if item.get("identifier") == device_type), None)
+        if selected_type is None:
             raise BuildError("The selected Xcode lacks the requested Simulator device type: "+device_type)
         runtime = select_runtime(inventory)
         name = "Luqma UI Preview " + uuid.uuid4().hex[:8]
@@ -543,7 +544,7 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
         if not re.fullmatch(r"[0-9A-Fa-f-]{36}", device):
             device = None
             raise BuildError("Simulator creation did not return a valid device identifier.")
-        report["simulator"] = {"udid": device, "device": "iPhone 13 mini" if device_type==REFERENCE_DEVICE_TYPE else "iPhone 16 Pro Max",
+        report["simulator"] = {"udid": device, "device": selected_type.get("name", device_type), "device_type": device_type,
                                "runtime": runtime["name"], "runtime_id": runtime["identifier"]}
         report["fresh_simulator"] = True
         try:
