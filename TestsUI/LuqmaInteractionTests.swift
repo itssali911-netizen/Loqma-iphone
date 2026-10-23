@@ -418,12 +418,38 @@ final class LuqmaInteractionTests:XCTestCase {
         // tap action. Require a readable message fully in the foreground form,
         // rather than a hit target that iOS need not expose for StaticText.
         let visible=XCTNSPredicateExpectation(predicate:NSPredicate { _,_ in
-            guard error.exists,!error.label.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty else {return false}
-            let frame=error.frame
-            return !frame.isEmpty && self.assessmentVisibleArea().contains(frame)
+            self.assessmentValidationIsVisible()
         },object:error)
         XCTAssertEqual(XCTWaiter.wait(for:[visible],timeout:5),.completed,"The rejected step must bring its reason into view.\n"+app.debugDescription,file:file,line:line)
         assertAssessmentStep(step,file:file,line:line)
+    }
+
+    private func assessmentValidationIsVisible()->Bool {
+        // One public AX snapshot keeps the message and all occlusion bounds
+        // in the same frame. CI100's separate remote queries consumed most
+        // of the five-second waiter before geometry could be evaluated.
+        // Preserve that deadline and the exact full-containment requirement.
+        guard let snapshot=try? app.snapshot() else{return false}
+        var pending:[any XCUIElementSnapshot]=[snapshot]
+        var nodes:[any XCUIElementSnapshot]=[]
+        while let node=pending.popLast(){nodes.append(node);pending.append(contentsOf:node.children)}
+        guard let form=nodes.first(where:{$0.identifier == "assessment.form"}),
+              let back=nodes.first(where:{$0.identifier == "assessment.back"}),
+              let message=nodes.first(where:{$0.identifier == "assessment.validation"}),
+              !form.frame.isEmpty,!back.frame.isEmpty,!message.frame.isEmpty,
+              !message.label.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty else{return false}
+        let window=nodes.first(where:{$0.elementType == .window && !$0.frame.isEmpty && $0.frame.contains(form.frame)})
+        let viewport=form.frame.intersection(window?.frame ?? snapshot.frame)
+        guard !viewport.isNull,!viewport.isEmpty else{return false}
+        let top=max(viewport.minY,back.frame.maxY)+24
+        let footers=Set(["assessment.skip","assessment.next","assessment.review","assessment.saveDraft","assessment.keyboardDone"])
+        var lowerEdges=[viewport.maxY]
+        for node in nodes where !node.frame.isEmpty {
+            if footers.contains(node.identifier) || node.elementType == .keyboard{lowerEdges.append(node.frame.minY)}
+        }
+        let bottom=(lowerEdges.min() ?? viewport.maxY)-8
+        let visible=CGRect(x:viewport.minX,y:top,width:viewport.width,height:max(0,bottom-top))
+        return visible.contains(message.frame)
     }
 
     private func exerciseAssessmentPicker(_ identifier:String,field:XCUIElement,range:ClosedRange<Double>,vertical:Bool,file:StaticString=#filePath,line:UInt=#line) {

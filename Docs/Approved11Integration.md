@@ -1,6 +1,6 @@
-# Approved eleven-screen integration — validation pending
+# Approved eleven-screen integration — native validation in progress
 
-This document records the source integration pass, not a completed release or a performance result. Native compilation, fresh application captures, functional validation and performance comparisons remain **PENDING** until corresponding evidence is produced. The previous 2.8 build does not validate these changes.
+Current verified build: revision `e378e449b68dbd81f7e4551d55ef0d963c5f7962`, iPhoneOS2.9/build100, **240 Core and75 BuildTests passed**. Full functional acceptance remains pending. CI99 independently supplied13approved native captures and measured performance; its native-source comparison and limits are recorded below. The initial-integration tables and earlier run notes are historical source checkpoints, not the current build result. The previous2.8build does not validate this work.
 
 ## Source and recoverable baseline
 
@@ -193,3 +193,9 @@ The follow-up matches the calorie-footer background to original#393C43 so the su
 Known visual limits still requiring native review: the per-serving reference card requires scrolling on the smaller iPhone13mini viewport; compression would change approved sizes. Source fruit artwork bakes system chrome into the raster, so exact full-bleed/photo-behind-status matching needs a clean original photo. No invented substitute or altered raster is supplied. Reference nutrition illustrations contain inconsistent example macro/calorie values; real arithmetic remains authoritative. These limits prevent a100%pixel-match claim.
 
 The next run starts a new performance baseline on its actual UTC day. Accepted98→99observations remain source-pinned; no cross-day guard is relaxed. This follow-up changes no navigation destination, nutritional calculation, schema, remote API or excluded swipe action.
+
+## Native checkpoint100: consistent accessibility inspection
+
+[CI100](https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/39916689761) compiled the real arm64 iPhoneOS2.9/build100 IPA and passed240Core/75BuildTests. Its isolated fitness case failed at an empty-age validation after175.783seconds. The retained native PNG and final hierarchy show the complete message at y737.5…782.5, above Continue at y802, within the test's y146…794 readable bounds. The log records slow individual accessibility lookups during the five-second expectation. No later assessment or diary assertions ran in this case; capture/performance jobs remain independent evidence.
+
+The test-only follow-up uses Apple's public `XCUIElement.snapshot()` and `XCUIElementSnapshot.children` to inspect the actual message, form, header, first footer action and keyboard in one consistent accessibility tree. It retains the five-second deadline, nonempty message, exact full-containment bounds, all seven cases, real inputs and taps. No production source, approved geometry, nutrition or performance harness changes. Native execution of the follow-up is pending; the prior failure is retained.

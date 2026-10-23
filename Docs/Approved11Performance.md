@@ -7,7 +7,9 @@ The isolated performance commit is `32d204114a9a51bb95d6fc87ef933beafed9b6f0`.
 
 The same-day comparator is [CI98, attempt1](https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/39861550376), revision `67e050686ad0de33c1125ff1e40b937c26b04bba`. All **59 metric rows** and all comparison rows were independently checked against raw xcresult samples, identifiers, units and statistics. The separate AX containment follow-up `16c8961` does not appear in any of the nine timed routes: the assessment case stops at its first goal screen.
 
-The following verification revision corrects only test scrolling, the approved calorie-footer color and DEBUG capture composition/data. It has **not yet passed native validation**. Its `PerformancePhase.json` starts a **new baseline** because it runs on another UTC day. This neither removes nor replaces the accepted98→99 comparison. No later-day result will be compared to98 by waiving the day/hash guard.
+Verification revision `e378e449b68dbd81f7e4551d55ef0d963c5f7962` compiled the actual2.9/build100 IPA and passed240Core/75BuildTests. It corrects test scrolling, the approved calorie-footer color and DEBUG capture composition/data. Full native acceptance remains pending: its fitness case failed a five-second empty-age message expectation after175.783seconds, although the retained final native image/hierarchy shows the entire message above Continue. The test-only follow-up inspects one public accessibility snapshot, keeping the deadline and exact visibility assertion. No runtime or frozen performance source changes in that follow-up.
+
+`PerformancePhase.json` starts a **new baseline** because CI100 runs on another UTC day. This neither removes nor replaces the accepted98→99 comparison. No later-day result will be compared to98 by waiving the day/hash guard. CI100's new native performance collection is still running at this documentation checkpoint.
 
 ## Actual comparable configuration
 
