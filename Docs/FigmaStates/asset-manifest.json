@@ -1,0 +1,88 @@
+{
+  "figma_file": "HBIa4HlRoHRjxZWJfqyrUG",
+  "reference_original": "IfMCdTI3FcvXpNFy79PRUA",
+  "assets": [
+    {
+      "name": "SandowNotification",
+      "node": "2:12035",
+      "original": "Docs/FigmaStates/svg/notification.svg",
+      "production": "Luqma/Resources/Assets.xcassets/SandowNotification.imageset/source.svg",
+      "width": "24",
+      "height": "24",
+      "sha256": "f0e00b5e4085c3211933eca2d715823cae0d1a4a8e11a87652ce3fad154f20cc"
+    },
+    {
+      "name": "SandowDinner",
+      "node": "2:11835",
+      "original": "Docs/FigmaStates/svg/dinner.svg",
+      "production": "Luqma/Resources/Assets.xcassets/SandowDinner.imageset/source.svg",
+      "width": "24",
+      "height": "24",
+      "sha256": "67e829ee9faae263e561f42380644a4841a5bd42fe10447c1fc8e1d9ab73071b"
+    },
+    {
+      "name": "SandowClock",
+      "node": "2:12061",
+      "original": "Docs/FigmaStates/svg/clock.svg",
+      "production": "Luqma/Resources/Assets.xcassets/SandowClock.imageset/source.svg",
+      "width": "24",
+      "height": "24",
+      "sha256": "49025180206b085c2940f6c91499dcf8b2cd1c3577fd5890163d90860cf5e019"
+    },
+    {
+      "name": "SandowWarning",
+      "node": "2:9631",
+      "original": "Docs/FigmaStates/svg/warning.svg",
+      "production": "Luqma/Resources/Assets.xcassets/SandowWarning.imageset/source.svg",
+      "width": "20",
+      "height": "20",
+      "sha256": "c8ce855331b10a4661524b9d59669d30309e5cd4625b966ea396d8e898ed9f3f"
+    },
+    {
+      "name": "SandowLoadingDots",
+      "node": "2:12151",
+      "original": "Docs/FigmaStates/svg/loading-dots.svg",
+      "production": "Luqma/Resources/Assets.xcassets/SandowLoadingDots.imageset/source.svg",
+      "width": "24",
+      "height": "24",
+      "sha256": "6a00ae73cada402e7e2ba7935b9c79e626ed22da0dccc01e2d8f7b41f27413a7"
+    },
+    {
+      "name": "SandowCheck",
+      "node": "2:11880",
+      "original": "Docs/FigmaStates/svg/check.svg",
+      "production": "Luqma/Resources/Assets.xcassets/SandowCheck.imageset/source.svg",
+      "width": "24",
+      "height": "24",
+      "sha256": "b8f790717fa36b0f4e873bea8227e769f903acaa79d97f8cb1a2db7979342f77"
+    },
+    {
+      "name": "notifications",
+      "node": "2:10119",
+      "reference_only": true,
+      "original": "Docs/FigmaStates/reference/notifications.png",
+      "sha256": "cbea5535a9db090398e148a7790eeed5e9d48ff4a83cc5508e7a10219dfa1192"
+    },
+    {
+      "name": "utilities",
+      "node": "2:10115",
+      "reference_only": true,
+      "original": "Docs/FigmaStates/reference/utilities.png",
+      "sha256": "8040a29a1c165eb6de2d25786059f0bcab94a945fbc86d819d2f5ff5a4397311"
+    },
+    {
+      "name": "alerts",
+      "node": "2:14361",
+      "reference_only": true,
+      "original": "Docs/FigmaStates/reference/alerts.png",
+      "sha256": "5941eb0ba60dcca084267a972b9a735f2e60aaaa262f383ed3b47bd1fe9675b0"
+    },
+    {
+      "name": "loaders",
+      "node": "2:14365",
+      "reference_only": true,
+      "original": "Docs/FigmaStates/reference/loaders.png",
+      "sha256": "e44134548d87be59ff4a69135748dbc7a12d0bcddd99623d39cdf722717e975b"
+    }
+  ]
+}

@@ -1,0 +1,186 @@
+{
+  "original_file": "IfMCdTI3FcvXpNFy79PRUA",
+  "accessible_copy": "HBIa4HlRoHRjxZWJfqyrUG",
+  "section": "2:9664",
+  "section_size": [
+    8533,
+    1344
+  ],
+  "phone_size": [
+    375,
+    812
+  ],
+  "numbered_steps": 17,
+  "total_phone_frames": 19,
+  "full_context_count": 12,
+  "steps": [
+    {
+      "node": "2:9667",
+      "step": 1,
+      "rendered_question": "What’s your fitness goal/target?",
+      "pattern": "Goal selection",
+      "evidence": "full",
+      "limitation": null
+    },
+    {
+      "node": "2:9680",
+      "step": 2,
+      "rendered_question": "What is your gender?",
+      "pattern": "Two illustrated selectable cards + optional skip",
+      "evidence": "full",
+      "limitation": null
+    },
+    {
+      "node": "2:9692",
+      "step": 3,
+      "rendered_question": "What is your weight?",
+      "pattern": "kg/lb tabs + numeric ruler",
+      "evidence": "metadata_and_board",
+      "limitation": "Quota blocked high-fidelity child context; do not treat metadata as complete implementation specification."
+    },
+    {
+      "node": "2:9749",
+      "step": 4,
+      "rendered_question": "What is your age?",
+      "pattern": "Vertical numeric wheel with selected white rounded card",
+      "evidence": "full",
+      "limitation": null
+    },
+    {
+      "node": "2:9763",
+      "step": 5,
+      "rendered_question": "Do you have previous fitness experience?",
+      "pattern": "Gym equipment image + No/Yes",
+      "evidence": "metadata_and_board",
+      "limitation": "Original standalone equipment photo not returned before quota."
+    },
+    {
+      "node": "2:9776",
+      "step": 6,
+      "rendered_question": "How would you rate your fitness level?",
+      "pattern": "Original gray arcs/orange partial arc + draggable control + large number",
+      "evidence": "full",
+      "limitation": null
+    },
+    {
+      "node": "2:9795",
+      "step": 7,
+      "rendered_question": "Do you have any physical limitations?",
+      "pattern": "Wheelchair photo + multi-tag text input",
+      "evidence": "metadata_and_board",
+      "limitation": "Original standalone wheelchair photo not returned before quota."
+    },
+    {
+      "node": "2:9824",
+      "step": 8,
+      "rendered_question": "Do you have a specific diet preference?",
+      "pattern": "2×2 selectable cards",
+      "evidence": "full",
+      "limitation": null
+    },
+    {
+      "node": "2:9838",
+      "step": 9,
+      "rendered_question": "How many days/wk will you commit?",
+      "pattern": "Large 5x + selectable day tiles 1…5",
+      "evidence": "full",
+      "limitation": "Layer name falsely says stress level; displayed content is training frequency."
+    },
+    {
+      "node": "2:9855",
+      "step": 10,
+      "rendered_question": "Do you have a specific Exercise Prefrence?",
+      "pattern": "3×3 selectable exercise tiles",
+      "evidence": "full",
+      "limitation": null
+    },
+    {
+      "node": "2:9875",
+      "step": 11,
+      "rendered_question": "Are you taking any supplements?",
+      "pattern": "Original supplement photo + No/Yes",
+      "evidence": "full",
+      "limitation": "Layer name falsely says previous fitness experience."
+    },
+    {
+      "node": "2:9890",
+      "step": 12,
+      "rendered_question": "Specify Supplement",
+      "pattern": "Supplement tags with selected chips",
+      "evidence": "full",
+      "limitation": "Layer names falsely say Allergies. Does not prove a dedicated allergy screen exists."
+    },
+    {
+      "node": "2:9938",
+      "step": null,
+      "rendered_question": "All Supplements",
+      "pattern": "Search/list sheet with selected chips and Apply",
+      "evidence": "full",
+      "limitation": "Layer names falsely say All Allergies. This is an extra sheet, not another numbered step."
+    },
+    {
+      "node": "2:9964",
+      "step": 13,
+      "rendered_question": "What’s Your Calorie Goal per day?",
+      "pattern": "Kcal/Joule tabs + large numeric value + minus/plus",
+      "evidence": "full",
+      "limitation": "Layer names falsely say blood type. Does not prove a dedicated blood type screen exists."
+    },
+    {
+      "node": "2:9979",
+      "step": 14,
+      "rendered_question": "What’s your sleep quality like?",
+      "pattern": "Five mood/clock selection rows",
+      "evidence": "full",
+      "limitation": null
+    },
+    {
+      "node": "2:9992",
+      "step": 15,
+      "rendered_question": "Body Analysis",
+      "pattern": "Anatomy illustration + camera-preparation checklist",
+      "evidence": "metadata_and_board",
+      "limitation": "Standalone illustration not returned; unrelated camera/body analysis is not an existing Luqma feature."
+    },
+    {
+      "node": "2:10016",
+      "step": null,
+      "rendered_question": "Body camera preview",
+      "pattern": "Illustrative person with fabricated example sensor figures in design",
+      "evidence": "metadata_and_board",
+      "limitation": "Extra prototype state. Do not use prototype BPM/weight figures as actual measurements or fabricate a scanner."
+    },
+    {
+      "node": "2:10037",
+      "step": 16,
+      "rendered_question": "AI Vocal Analysis",
+      "pattern": "Voice waveform and example transcription",
+      "evidence": "metadata_and_board",
+      "limitation": "No functional voice-analysis integration or motion data provided."
+    },
+    {
+      "node": "2:10065",
+      "step": 17,
+      "rendered_question": "AI Textual Analysis",
+      "pattern": "Text editor + optional voice button",
+      "evidence": "metadata_and_board",
+      "limitation": "Layer text is stale and contains irrelevant template example copy; use actual user purpose, never copy diagnostic claims."
+    }
+  ],
+  "user_required_without_dedicated_frame_evidence": [
+    "height_cm",
+    "target_weight",
+    "daily_activity",
+    "average_steps",
+    "session_duration",
+    "training_location",
+    "sleep_hours_separate",
+    "bedtime_and_waketime",
+    "stress",
+    "meal_count",
+    "disliked_foods",
+    "food_allergies",
+    "review_before_apply",
+    "personalized_plan_summary"
+  ]
+}

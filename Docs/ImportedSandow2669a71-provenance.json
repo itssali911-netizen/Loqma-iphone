@@ -1,0 +1,313 @@
+{
+  "schema_version": 1,
+  "source": {
+    "kind": "user_supplied_repository",
+    "repository_directory": "Loqmati-Sandow-UI-Integrated/Loqma-iphone",
+    "branch": "gemini/ui-improvements",
+    "commit": "2669a714522383d17126dd100b50c506ba9e0a74",
+    "independently_fetched_from_figma": false
+  },
+  "scope": "Visual assets only; current app models, saved data and behavior remain the integration target.",
+  "provided_cfa_asset_sets": 33,
+  "imported_asset_sets": 21,
+  "imported_image_bytes": 843233,
+  "existing_assets_modified": false,
+  "byte_identical_duplicates_of_existing_app_assets": 0,
+  "excluded_unsupported_demo_screens": [
+    "Body camera scan with static photograph and sample heart-rate/weight values",
+    "Vocal analysis with static waveform and completion flag",
+    "Textual analysis with static example text and counter"
+  ],
+  "test_evidence": {
+    "provided_local_buildtests_count": 61,
+    "proves_current_integrated_build": false,
+    "note": "The supplied local logs are prior evidence only; this asset import needs the active project build and UI verification."
+  },
+  "assets": [
+    {
+      "asset_name": "CFAMaleAthlete",
+      "source_path": "Luqma/Resources/Assets.xcassets/CFAMaleAthlete.imageset",
+      "destination_path": "Luqma/Resources/Assets.xcassets/ImportedAssessment/CFAMaleAthlete.imageset",
+      "image_file": "male-athlete.jpg",
+      "source_sha256": "9e925530f1119917d448921e05d73b645400f582496d499531d4c81053250dea",
+      "destination_sha256": "9e925530f1119917d448921e05d73b645400f582496d499531d4c81053250dea",
+      "image_bytes": 231706,
+      "contents_json_sha256": "ac7c86278e8b724e4b8efce76be953d31998b3d5cfabb768fb2772cfb605cc6d",
+      "byte_identical_to_user_supplied_asset": true,
+      "matches_existing_app_asset_sha256": false,
+      "pixel_dimensions": {
+        "width": 2048,
+        "height": 1366
+      }
+    },
+    {
+      "asset_name": "CFAFemaleAthlete",
+      "source_path": "Luqma/Resources/Assets.xcassets/CFAFemaleAthlete.imageset",
+      "destination_path": "Luqma/Resources/Assets.xcassets/ImportedAssessment/CFAFemaleAthlete.imageset",
+      "image_file": "female-athlete.jpg",
+      "source_sha256": "644ed14b3e2328699d48076cde57e26eebd14ed3b6bd5ed93c8bc7fb167c6172",
+      "destination_sha256": "644ed14b3e2328699d48076cde57e26eebd14ed3b6bd5ed93c8bc7fb167c6172",
+      "image_bytes": 494203,
+      "contents_json_sha256": "3372771c5a4d9e5705fb68ef81a961bdf0969ee60ffad5a2f90ba713b304d81f",
+      "byte_identical_to_user_supplied_asset": true,
+      "matches_existing_app_asset_sha256": false,
+      "pixel_dimensions": {
+        "width": 2048,
+        "height": 1543
+      }
+    },
+    {
+      "asset_name": "CFAWeightGlow",
+      "source_path": "Luqma/Resources/Assets.xcassets/CFAWeightGlow.imageset",
+      "destination_path": "Luqma/Resources/Assets.xcassets/ImportedAssessment/CFAWeightGlow.imageset",
+      "image_file": "weight-glow.png",
+      "source_sha256": "5838760eab26a9eb4cd85ddb4c190be3b8f85fcf8f03d9ed1b626d119bc49d25",
+      "destination_sha256": "5838760eab26a9eb4cd85ddb4c190be3b8f85fcf8f03d9ed1b626d119bc49d25",
+      "image_bytes": 36891,
+      "contents_json_sha256": "efbdc88272694afd64731566769a44c0598bc68428de7f52dd97c4a2d4da82c8",
+      "byte_identical_to_user_supplied_asset": true,
+      "matches_existing_app_asset_sha256": false,
+      "pixel_dimensions": {
+        "width": 71,
+        "height": 269
+      }
+    },
+    {
+      "asset_name": "CFAGymEquipment",
+      "source_path": "Luqma/Resources/Assets.xcassets/CFAGymEquipment.imageset",
+      "destination_path": "Luqma/Resources/Assets.xcassets/ImportedAssessment/CFAGymEquipment.imageset",
+      "image_file": "gym-equipment.jpg",
+      "source_sha256": "5a1ccb6e19f38271c5493b2bdf689e09f2cc66021fc66ef33017afa20fd7fc57",
+      "destination_sha256": "5a1ccb6e19f38271c5493b2bdf689e09f2cc66021fc66ef33017afa20fd7fc57",
+      "image_bytes": 42694,
+      "contents_json_sha256": "932c497ed6fcbf83a67e25e1c32527939c8f48a7f78b017d059f1a81dc28a825",
+      "byte_identical_to_user_supplied_asset": true,
+      "matches_existing_app_asset_sha256": false,
+      "pixel_dimensions": {
+        "width": 626,
+        "height": 626
+      }
+    },
+    {
+      "asset_name": "CFAGoalScale",
+      "source_path": "Luqma/Resources/Assets.xcassets/CFAGoalScale.imageset",
+      "destination_path": "Luqma/Resources/Assets.xcassets/ImportedAssessment/CFAGoalScale.imageset",
+      "image_file": "source.svg",
+      "source_sha256": "de06649c8fc22ec972e9622aa8790cd3fd9b1ba344fb1f4914757cbb8c0e9f9b",
+      "destination_sha256": "de06649c8fc22ec972e9622aa8790cd3fd9b1ba344fb1f4914757cbb8c0e9f9b",
+      "image_bytes": 2678,
+      "contents_json_sha256": "e6339405786eee35a8a6462fe18d06f2edc24dde50fe669e17541f3ad0d3ff52",
+      "byte_identical_to_user_supplied_asset": true,
+      "matches_existing_app_asset_sha256": false,
+      "format": "svg"
+    },
+    {
+      "asset_name": "CFAGoalDumbbell",
+      "source_path": "Luqma/Resources/Assets.xcassets/CFAGoalDumbbell.imageset",
+      "destination_path": "Luqma/Resources/Assets.xcassets/ImportedAssessment/CFAGoalDumbbell.imageset",
+      "image_file": "source.svg",
+      "source_sha256": "554552d2576a70cd5b6e2fb43ce5503544030cda2a511d06363a926bb83fa456",
+      "destination_sha256": "554552d2576a70cd5b6e2fb43ce5503544030cda2a511d06363a926bb83fa456",
+      "image_bytes": 1887,
+      "contents_json_sha256": "e6339405786eee35a8a6462fe18d06f2edc24dde50fe669e17541f3ad0d3ff52",
+      "byte_identical_to_user_supplied_asset": true,
+      "matches_existing_app_asset_sha256": false,
+      "format": "svg"
+    },
+    {
+      "asset_name": "CFAGoalEndurance",
+      "source_path": "Luqma/Resources/Assets.xcassets/CFAGoalEndurance.imageset",
+      "destination_path": "Luqma/Resources/Assets.xcassets/ImportedAssessment/CFAGoalEndurance.imageset",
+      "image_file": "source.svg",
+      "source_sha256": "84f1f7c4bc4e953497f88e241114c501824401964360cf2d3778b8d803ab1469",
+      "destination_sha256": "84f1f7c4bc4e953497f88e241114c501824401964360cf2d3778b8d803ab1469",
+      "image_bytes": 1660,
+      "contents_json_sha256": "e6339405786eee35a8a6462fe18d06f2edc24dde50fe669e17541f3ad0d3ff52",
+      "byte_identical_to_user_supplied_asset": true,
+      "matches_existing_app_asset_sha256": false,
+      "format": "svg"
+    },
+    {
+      "asset_name": "CFAExWalking",
+      "source_path": "Luqma/Resources/Assets.xcassets/CFAExWalking.imageset",
+      "destination_path": "Luqma/Resources/Assets.xcassets/ImportedAssessment/CFAExWalking.imageset",
+      "image_file": "source.svg",
+      "source_sha256": "0a3ba679002afc679c0fa4d539e1ecf1c003711d0c87d8537997f939db5f64ee",
+      "destination_sha256": "0a3ba679002afc679c0fa4d539e1ecf1c003711d0c87d8537997f939db5f64ee",
+      "image_bytes": 2904,
+      "contents_json_sha256": "e6339405786eee35a8a6462fe18d06f2edc24dde50fe669e17541f3ad0d3ff52",
+      "byte_identical_to_user_supplied_asset": true,
+      "matches_existing_app_asset_sha256": false,
+      "format": "svg"
+    },
+    {
+      "asset_name": "CFAExWeightlift",
+      "source_path": "Luqma/Resources/Assets.xcassets/CFAExWeightlift.imageset",
+      "destination_path": "Luqma/Resources/Assets.xcassets/ImportedAssessment/CFAExWeightlift.imageset",
+      "image_file": "source.svg",
+      "source_sha256": "f2ae50dd321fecb758272a3e4ee526d59e32344bf2f16415a60a95b737fcc6e6",
+      "destination_sha256": "f2ae50dd321fecb758272a3e4ee526d59e32344bf2f16415a60a95b737fcc6e6",
+      "image_bytes": 1946,
+      "contents_json_sha256": "e6339405786eee35a8a6462fe18d06f2edc24dde50fe669e17541f3ad0d3ff52",
+      "byte_identical_to_user_supplied_asset": true,
+      "matches_existing_app_asset_sha256": false,
+      "format": "svg"
+    },
+    {
+      "asset_name": "CFAExCardio",
+      "source_path": "Luqma/Resources/Assets.xcassets/CFAExCardio.imageset",
+      "destination_path": "Luqma/Resources/Assets.xcassets/ImportedAssessment/CFAExCardio.imageset",
+      "image_file": "source.svg",
+      "source_sha256": "0e385e779bdd435e796aabf8f098d0ec0f8234575b325f6cb095ac7809890e0a",
+      "destination_sha256": "0e385e779bdd435e796aabf8f098d0ec0f8234575b325f6cb095ac7809890e0a",
+      "image_bytes": 1756,
+      "contents_json_sha256": "e6339405786eee35a8a6462fe18d06f2edc24dde50fe669e17541f3ad0d3ff52",
+      "byte_identical_to_user_supplied_asset": true,
+      "matches_existing_app_asset_sha256": false,
+      "format": "svg"
+    },
+    {
+      "asset_name": "CFAExYoga",
+      "source_path": "Luqma/Resources/Assets.xcassets/CFAExYoga.imageset",
+      "destination_path": "Luqma/Resources/Assets.xcassets/ImportedAssessment/CFAExYoga.imageset",
+      "image_file": "source.svg",
+      "source_sha256": "3b7aa784b76c7e6b77775cfcde585f85ce6f41e73d2a72da44db58462e2cd8c9",
+      "destination_sha256": "3b7aa784b76c7e6b77775cfcde585f85ce6f41e73d2a72da44db58462e2cd8c9",
+      "image_bytes": 2211,
+      "contents_json_sha256": "e6339405786eee35a8a6462fe18d06f2edc24dde50fe669e17541f3ad0d3ff52",
+      "byte_identical_to_user_supplied_asset": true,
+      "matches_existing_app_asset_sha256": false,
+      "format": "svg"
+    },
+    {
+      "asset_name": "CFAExBiking",
+      "source_path": "Luqma/Resources/Assets.xcassets/CFAExBiking.imageset",
+      "destination_path": "Luqma/Resources/Assets.xcassets/ImportedAssessment/CFAExBiking.imageset",
+      "image_file": "source.svg",
+      "source_sha256": "7657e3d7235a06e41d99f7bd1a1272ed0fd2836a51d0c8deb994d6b2736dab45",
+      "destination_sha256": "7657e3d7235a06e41d99f7bd1a1272ed0fd2836a51d0c8deb994d6b2736dab45",
+      "image_bytes": 5103,
+      "contents_json_sha256": "e6339405786eee35a8a6462fe18d06f2edc24dde50fe669e17541f3ad0d3ff52",
+      "byte_identical_to_user_supplied_asset": true,
+      "matches_existing_app_asset_sha256": false,
+      "format": "svg"
+    },
+    {
+      "asset_name": "CFASleepExcellent",
+      "source_path": "Luqma/Resources/Assets.xcassets/CFASleepExcellent.imageset",
+      "destination_path": "Luqma/Resources/Assets.xcassets/ImportedAssessment/CFASleepExcellent.imageset",
+      "image_file": "source.svg",
+      "source_sha256": "789953ae7978bffa824772b63a911273b15d3fff4818a62d05ee78bcbea84f66",
+      "destination_sha256": "789953ae7978bffa824772b63a911273b15d3fff4818a62d05ee78bcbea84f66",
+      "image_bytes": 1669,
+      "contents_json_sha256": "e6339405786eee35a8a6462fe18d06f2edc24dde50fe669e17541f3ad0d3ff52",
+      "byte_identical_to_user_supplied_asset": true,
+      "matches_existing_app_asset_sha256": false,
+      "format": "svg"
+    },
+    {
+      "asset_name": "CFASleepGreat",
+      "source_path": "Luqma/Resources/Assets.xcassets/CFASleepGreat.imageset",
+      "destination_path": "Luqma/Resources/Assets.xcassets/ImportedAssessment/CFASleepGreat.imageset",
+      "image_file": "source.svg",
+      "source_sha256": "be5f073395c213a9f77b1a4bc6cd36881283750691b9d165cb5d7de269b39d3b",
+      "destination_sha256": "be5f073395c213a9f77b1a4bc6cd36881283750691b9d165cb5d7de269b39d3b",
+      "image_bytes": 3008,
+      "contents_json_sha256": "e6339405786eee35a8a6462fe18d06f2edc24dde50fe669e17541f3ad0d3ff52",
+      "byte_identical_to_user_supplied_asset": true,
+      "matches_existing_app_asset_sha256": false,
+      "format": "svg"
+    },
+    {
+      "asset_name": "CFASleepNormal",
+      "source_path": "Luqma/Resources/Assets.xcassets/CFASleepNormal.imageset",
+      "destination_path": "Luqma/Resources/Assets.xcassets/ImportedAssessment/CFASleepNormal.imageset",
+      "image_file": "source.svg",
+      "source_sha256": "7057e09b79231ce7cb30e9f25af37c380b0f96870c6b49dc8c4be199c5e8a74e",
+      "destination_sha256": "7057e09b79231ce7cb30e9f25af37c380b0f96870c6b49dc8c4be199c5e8a74e",
+      "image_bytes": 1815,
+      "contents_json_sha256": "e6339405786eee35a8a6462fe18d06f2edc24dde50fe669e17541f3ad0d3ff52",
+      "byte_identical_to_user_supplied_asset": true,
+      "matches_existing_app_asset_sha256": false,
+      "format": "svg"
+    },
+    {
+      "asset_name": "CFASleepBad",
+      "source_path": "Luqma/Resources/Assets.xcassets/CFASleepBad.imageset",
+      "destination_path": "Luqma/Resources/Assets.xcassets/ImportedAssessment/CFASleepBad.imageset",
+      "image_file": "source.svg",
+      "source_sha256": "7a3b214bfb4affce5edf2c28553240d9f5af73306d3f680dc75ad30cecd56fd6",
+      "destination_sha256": "7a3b214bfb4affce5edf2c28553240d9f5af73306d3f680dc75ad30cecd56fd6",
+      "image_bytes": 3008,
+      "contents_json_sha256": "e6339405786eee35a8a6462fe18d06f2edc24dde50fe669e17541f3ad0d3ff52",
+      "byte_identical_to_user_supplied_asset": true,
+      "matches_existing_app_asset_sha256": false,
+      "format": "svg"
+    },
+    {
+      "asset_name": "CFASleepInsomniac",
+      "source_path": "Luqma/Resources/Assets.xcassets/CFASleepInsomniac.imageset",
+      "destination_path": "Luqma/Resources/Assets.xcassets/ImportedAssessment/CFASleepInsomniac.imageset",
+      "image_file": "source.svg",
+      "source_sha256": "e840dddf612ab37b0ca9d9d58a4c8dda77925f49ab726d69ccff958157501330",
+      "destination_sha256": "e840dddf612ab37b0ca9d9d58a4c8dda77925f49ab726d69ccff958157501330",
+      "image_bytes": 1732,
+      "contents_json_sha256": "e6339405786eee35a8a6462fe18d06f2edc24dde50fe669e17541f3ad0d3ff52",
+      "byte_identical_to_user_supplied_asset": true,
+      "matches_existing_app_asset_sha256": false,
+      "format": "svg"
+    },
+    {
+      "asset_name": "CFADietVegan",
+      "source_path": "Luqma/Resources/Assets.xcassets/CFADietVegan.imageset",
+      "destination_path": "Luqma/Resources/Assets.xcassets/ImportedAssessment/CFADietVegan.imageset",
+      "image_file": "source.svg",
+      "source_sha256": "d61c3e88bcb229d31f9a2c262860e02b86ca59bd3e100aba7b98e64cc1bab558",
+      "destination_sha256": "d61c3e88bcb229d31f9a2c262860e02b86ca59bd3e100aba7b98e64cc1bab558",
+      "image_bytes": 1403,
+      "contents_json_sha256": "e6339405786eee35a8a6462fe18d06f2edc24dde50fe669e17541f3ad0d3ff52",
+      "byte_identical_to_user_supplied_asset": true,
+      "matches_existing_app_asset_sha256": false,
+      "format": "svg"
+    },
+    {
+      "asset_name": "CFADietCarbo",
+      "source_path": "Luqma/Resources/Assets.xcassets/CFADietCarbo.imageset",
+      "destination_path": "Luqma/Resources/Assets.xcassets/ImportedAssessment/CFADietCarbo.imageset",
+      "image_file": "source.svg",
+      "source_sha256": "bcf43763993ef246b345df4794a4dde13a207116042b17b1d0696f3b8f96d950",
+      "destination_sha256": "bcf43763993ef246b345df4794a4dde13a207116042b17b1d0696f3b8f96d950",
+      "image_bytes": 2055,
+      "contents_json_sha256": "e6339405786eee35a8a6462fe18d06f2edc24dde50fe669e17541f3ad0d3ff52",
+      "byte_identical_to_user_supplied_asset": true,
+      "matches_existing_app_asset_sha256": false,
+      "format": "svg"
+    },
+    {
+      "asset_name": "CFADietSpecialized",
+      "source_path": "Luqma/Resources/Assets.xcassets/CFADietSpecialized.imageset",
+      "destination_path": "Luqma/Resources/Assets.xcassets/ImportedAssessment/CFADietSpecialized.imageset",
+      "image_file": "source.svg",
+      "source_sha256": "536e6e8dcc4cc43c79e2a1e47004ba1d313ae34c424dfde39d9593fc6fafa8a8",
+      "destination_sha256": "536e6e8dcc4cc43c79e2a1e47004ba1d313ae34c424dfde39d9593fc6fafa8a8",
+      "image_bytes": 1468,
+      "contents_json_sha256": "e6339405786eee35a8a6462fe18d06f2edc24dde50fe669e17541f3ad0d3ff52",
+      "byte_identical_to_user_supplied_asset": true,
+      "matches_existing_app_asset_sha256": false,
+      "format": "svg"
+    },
+    {
+      "asset_name": "CFADietTraditional",
+      "source_path": "Luqma/Resources/Assets.xcassets/CFADietTraditional.imageset",
+      "destination_path": "Luqma/Resources/Assets.xcassets/ImportedAssessment/CFADietTraditional.imageset",
+      "image_file": "source.svg",
+      "source_sha256": "335acf46e0dbe4310e0dd6312482cb2a5386be8e09db044e5eb062d431393565",
+      "destination_sha256": "335acf46e0dbe4310e0dd6312482cb2a5386be8e09db044e5eb062d431393565",
+      "image_bytes": 1436,
+      "contents_json_sha256": "e6339405786eee35a8a6462fe18d06f2edc24dde50fe669e17541f3ad0d3ff52",
+      "byte_identical_to_user_supplied_asset": true,
+      "matches_existing_app_asset_sha256": false,
+      "format": "svg"
+    }
+  ]
+}

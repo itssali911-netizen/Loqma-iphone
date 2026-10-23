@@ -137,6 +137,11 @@ struct WeightReading: Codable, Identifiable, Equatable { var day:String;var kg:D
 }
 struct DiarySnapshot: Codable {
     var version=2;var app="luqma";var entries:[DiaryEntry]=[];var goals:Nutrition = .initial;var recipes:[Recipe]=[];var weights:[WeightReading]=[];var products:[Food]=[];var searchHistory:[Food]=[];var barcodeHistory:[Food]=[];var customFoods:[Food]?;var weightPlan:WeightPlan?;var adaptive=false;var language:AppLanguage = .ar;var healthEnabled=false;var healthSync:HealthSyncState?
+    var fitnessDraft: FitnessAssessmentDraft?
+    var fitnessProfile: FitnessProfile?
+    var proposedFitnessPlan: FitnessPlan?
+    var appliedFitnessPlan: FitnessPlan?
+    var fitnessOnboardingDismissed: Bool?
 }
 enum DayKey {
     static func string(_ date:Date) -> String { let f=DateFormatter();f.locale=Locale(identifier:"en_US_POSIX");f.calendar=Calendar(identifier:.gregorian);f.dateFormat="yyyy-MM-dd";return f.string(from:date) }

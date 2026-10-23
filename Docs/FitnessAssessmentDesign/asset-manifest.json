@@ -1,0 +1,1101 @@
+{
+  "original_file": "IfMCdTI3FcvXpNFy79PRUA",
+  "accessible_copy": "HBIa4HlRoHRjxZWJfqyrUG",
+  "section": "2:9664",
+  "reference_only_board": {
+    "width": 8533,
+    "height": 1344,
+    "format": "png",
+    "original_width": 8533,
+    "original_height": 1344
+  },
+  "contexts": [
+    {
+      "node": "2:9667",
+      "reference": "reference/2-9667.png",
+      "context": "contexts/2-9667.txt",
+      "assets": [
+        {
+          "variable": "imgIsBlackFalse",
+          "file": "assets/49b57.svg",
+          "device_chrome": true
+        },
+        {
+          "variable": "imgIPhoneXOrNewer",
+          "file": "assets/72f5b.svg",
+          "device_chrome": true
+        },
+        {
+          "variable": "imgSolidHeadHeart",
+          "file": "assets/d7eee.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgMonotoneCheckboxEmpty",
+          "file": "assets/34b5e.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgSolidHeadHeart1",
+          "file": "assets/af08c.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgMonotoneCheckboxEmpty1",
+          "file": "assets/3ee61.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgSolidHeadHeart2",
+          "file": "assets/9e577.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgSolidHeadHeart3",
+          "file": "assets/17630.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgSolidHeadHeart4",
+          "file": "assets/e89cf.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgMonotoneArrowRight",
+          "file": "assets/c1a83.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgMonotoneChevronLeft",
+          "file": "assets/7c9b3.svg",
+          "device_chrome": false
+        }
+      ]
+    },
+    {
+      "node": "2:9680",
+      "reference": "reference/2-9680.png",
+      "context": "contexts/2-9680.txt",
+      "assets": [
+        {
+          "variable": "imgIsBlackFalse",
+          "file": "assets/49b57.svg",
+          "device_chrome": true
+        },
+        {
+          "variable": "imgBlackManStudioPortraitFitnessStrengthPowerDarkLightPhotography",
+          "file": "assets/a5378.png",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgDynamicPhotographFemaleAthlete",
+          "file": "assets/46d16.png",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgIPhoneXOrNewer",
+          "file": "assets/72f5b.svg",
+          "device_chrome": true
+        },
+        {
+          "variable": "imgMonotoneChevronLeft",
+          "file": "assets/7c9b3.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgSolidHeadHeart",
+          "file": "assets/08c29.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgMonotoneCheckboxEmpty",
+          "file": "assets/34b5e.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgSolidHeadHeart1",
+          "file": "assets/640e5.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgMonotoneCheckboxEmpty1",
+          "file": "assets/3ee61.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgSolidCloseX",
+          "file": "assets/a32a1.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgMonotoneArrowRight",
+          "file": "assets/c1a83.svg",
+          "device_chrome": false
+        }
+      ]
+    },
+    {
+      "node": "2:9749",
+      "reference": "reference/2-9749.png",
+      "context": "contexts/2-9749.txt",
+      "assets": [
+        {
+          "variable": "imgIsBlackFalse",
+          "file": "assets/49b57.svg",
+          "device_chrome": true
+        },
+        {
+          "variable": "imgIPhoneXOrNewer",
+          "file": "assets/72f5b.svg",
+          "device_chrome": true
+        },
+        {
+          "variable": "imgMonotoneArrowRight",
+          "file": "assets/c1a83.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgMonotoneChevronLeft",
+          "file": "assets/7c9b3.svg",
+          "device_chrome": false
+        }
+      ]
+    },
+    {
+      "node": "2:9776",
+      "reference": "reference/2-9776.png",
+      "context": "contexts/2-9776.txt",
+      "assets": [
+        {
+          "variable": "imgIsBlackFalse",
+          "file": "assets/49b57.svg",
+          "device_chrome": true
+        },
+        {
+          "variable": "imgIPhoneXOrNewer",
+          "file": "assets/14254.svg",
+          "device_chrome": true
+        },
+        {
+          "variable": "imgMonotoneChevronLeft",
+          "file": "assets/7c9b3.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgVector",
+          "file": "assets/7462f.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgVector1",
+          "file": "assets/1c1b8.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgVector2",
+          "file": "assets/eb515.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgSandowCore",
+          "file": "assets/5bb05.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgSolidArrowRightSm",
+          "file": "assets/50b92.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgSolidQuestionSquare",
+          "file": "assets/45a03.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgMonotoneArrowRight",
+          "file": "assets/c1a83.svg",
+          "device_chrome": false
+        }
+      ]
+    },
+    {
+      "node": "2:9824",
+      "reference": "reference/2-9824.png",
+      "context": "contexts/2-9824.txt",
+      "assets": [
+        {
+          "variable": "imgIsBlackFalse",
+          "file": "assets/49b57.svg",
+          "device_chrome": true
+        },
+        {
+          "variable": "imgIPhoneXOrNewer",
+          "file": "assets/14254.svg",
+          "device_chrome": true
+        },
+        {
+          "variable": "imgSolidHeadHeart",
+          "file": "assets/d7c07.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgSolidHeadHeart1",
+          "file": "assets/0d586.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgSolidHeadHeart2",
+          "file": "assets/bcfb7.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgSolidHeadHeart3",
+          "file": "assets/34d19.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgMonotoneArrowRight",
+          "file": "assets/c1a83.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgMonotoneChevronLeft",
+          "file": "assets/7c9b3.svg",
+          "device_chrome": false
+        }
+      ]
+    },
+    {
+      "node": "2:9838",
+      "reference": "reference/2-9838.png",
+      "context": "contexts/2-9838.txt",
+      "assets": [
+        {
+          "variable": "imgIsBlackFalse",
+          "file": "assets/49b57.svg",
+          "device_chrome": true
+        },
+        {
+          "variable": "imgIPhoneXOrNewer",
+          "file": "assets/0ccee.svg",
+          "device_chrome": true
+        },
+        {
+          "variable": "imgMonotoneArrowRight",
+          "file": "assets/c1a83.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgMonotoneChevronLeft",
+          "file": "assets/7c9b3.svg",
+          "device_chrome": false
+        }
+      ]
+    },
+    {
+      "node": "2:9855",
+      "reference": "reference/2-9855.png",
+      "context": "contexts/2-9855.txt",
+      "assets": [
+        {
+          "variable": "imgIsBlackFalse",
+          "file": "assets/49b57.svg",
+          "device_chrome": true
+        },
+        {
+          "variable": "imgIPhoneXOrNewer",
+          "file": "assets/14254.svg",
+          "device_chrome": true
+        },
+        {
+          "variable": "imgSolidHeadHeart",
+          "file": "assets/c3b30.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgSolidHeadHeart1",
+          "file": "assets/d2138.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgSolidHeadHeart2",
+          "file": "assets/a664e.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgSolidHeadHeart3",
+          "file": "assets/1318f.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgSolidHeadHeart4",
+          "file": "assets/6e49f.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgSolidHeadHeart5",
+          "file": "assets/23a45.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgSolidHeadHeart6",
+          "file": "assets/d8664.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgSolidHeadHeart7",
+          "file": "assets/a929c.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgSolidHeadHeart8",
+          "file": "assets/fcba4.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgMonotoneArrowRight",
+          "file": "assets/c1a83.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgMonotoneChevronLeft",
+          "file": "assets/7c9b3.svg",
+          "device_chrome": false
+        }
+      ]
+    },
+    {
+      "node": "2:9875",
+      "reference": "reference/2-9875.png",
+      "context": "contexts/2-9875.txt",
+      "assets": [
+        {
+          "variable": "imgIsBlackTrue",
+          "file": "assets/b37ef.svg",
+          "device_chrome": true
+        },
+        {
+          "variable": "imgRectangle",
+          "file": "assets/f80bc.png",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgIPhoneXOrNewer",
+          "file": "assets/72f5b.svg",
+          "device_chrome": true
+        },
+        {
+          "variable": "imgSolidCloseX",
+          "file": "assets/5e3a1.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgSolidCheck",
+          "file": "assets/a7ec5.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgMonotoneChevronLeft",
+          "file": "assets/7c9b3.svg",
+          "device_chrome": false
+        }
+      ]
+    },
+    {
+      "node": "2:9890",
+      "reference": "reference/2-9890.png",
+      "context": "contexts/2-9890.txt",
+      "assets": [
+        {
+          "variable": "imgIsBlackTrue",
+          "file": "assets/b37ef.svg",
+          "device_chrome": true
+        },
+        {
+          "variable": "imgIPhoneXOrNewer",
+          "file": "assets/72f5b.svg",
+          "device_chrome": true
+        },
+        {
+          "variable": "imgMonotoneChevronLeft",
+          "file": "assets/7c9b3.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgSolidCloseX",
+          "file": "assets/53587.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgMonotoneArrowRight",
+          "file": "assets/c1a83.svg",
+          "device_chrome": false
+        }
+      ]
+    },
+    {
+      "node": "2:9938",
+      "reference": "reference/2-9938.png",
+      "context": "contexts/2-9938.txt",
+      "assets": [
+        {
+          "variable": "imgIsBlackTrue",
+          "file": "assets/857e2.svg",
+          "device_chrome": true
+        },
+        {
+          "variable": "imgSolidSearch",
+          "file": "assets/bc11f.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgMonotoneRadioFilled",
+          "file": "assets/7d629.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgMonotoneRadioFilled1",
+          "file": "assets/34b5e.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgSolidCloseX",
+          "file": "assets/53587.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgMonotoneArrowRight",
+          "file": "assets/f24f8.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgIPhoneXOrNewer",
+          "file": "assets/72f5b.svg",
+          "device_chrome": true
+        }
+      ]
+    },
+    {
+      "node": "2:9964",
+      "reference": "reference/2-9964.png",
+      "context": "contexts/2-9964.txt",
+      "assets": [
+        {
+          "variable": "imgIsBlackFalse",
+          "file": "assets/49b57.svg",
+          "device_chrome": true
+        },
+        {
+          "variable": "imgIPhoneXOrNewer",
+          "file": "assets/14254.svg",
+          "device_chrome": true
+        },
+        {
+          "variable": "imgMonotoneChevronLeft",
+          "file": "assets/7c9b3.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgSolidArrowRightSm",
+          "file": "assets/e196a.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgSolidArrowRightSm1",
+          "file": "assets/231db.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgMonotoneArrowRight",
+          "file": "assets/f24f8.svg",
+          "device_chrome": false
+        }
+      ]
+    },
+    {
+      "node": "2:9979",
+      "reference": "reference/2-9979.png",
+      "context": "contexts/2-9979.txt",
+      "assets": [
+        {
+          "variable": "imgIsBlackFalse",
+          "file": "assets/49b57.svg",
+          "device_chrome": true
+        },
+        {
+          "variable": "imgIPhoneXOrNewer",
+          "file": "assets/14254.svg",
+          "device_chrome": true
+        },
+        {
+          "variable": "imgSolidMoodOverjoyed",
+          "file": "assets/4b6ce.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgMonotoneClock",
+          "file": "assets/8acb7.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgSolidMoodOverjoyed1",
+          "file": "assets/3cf2d.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgMonotoneClock1",
+          "file": "assets/cced2.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgSolidMoodOverjoyed2",
+          "file": "assets/7828a.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgSolidMoodOverjoyed3",
+          "file": "assets/0eec0.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgSolidMoodOverjoyed4",
+          "file": "assets/44a0b.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgMonotoneArrowRight",
+          "file": "assets/c1a83.svg",
+          "device_chrome": false
+        },
+        {
+          "variable": "imgMonotoneChevronLeft",
+          "file": "assets/7c9b3.svg",
+          "device_chrome": false
+        }
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "file": "assets/08c29.svg",
+      "bytes": 1033,
+      "sha256": "f3997a6ef43d8dab2cd22e741aab5ae8861227b673afec83902d121be4dffe85",
+      "width": "24",
+      "height": "24",
+      "viewBox": "0 0 24 24"
+    },
+    {
+      "file": "assets/0ccee.svg",
+      "bytes": 4449,
+      "sha256": "edbfbe426e16e5ad7ceb73b38e60929dc14418b46185f1d179d7eee6c3c77479",
+      "width": "375",
+      "height": "44",
+      "viewBox": "0 0 375 44"
+    },
+    {
+      "file": "assets/0d586.svg",
+      "bytes": 1558,
+      "sha256": "aba8974ff36698b86ad5232a47b10ff6ce7f99e4feff66c9f86afdef9aa571f4",
+      "width": "24",
+      "height": "24",
+      "viewBox": "0 0 24 24"
+    },
+    {
+      "file": "assets/0eec0.svg",
+      "bytes": 2263,
+      "sha256": "1f4d81ce3f901ec98b2cda298519f2eb8358b77306c9a5e308aa12d94b28cf26",
+      "width": "48",
+      "height": "48",
+      "viewBox": "0 0 48 48"
+    },
+    {
+      "file": "assets/1318f.svg",
+      "bytes": 2786,
+      "sha256": "4282090299869c533011d1ae7aa34ba3f63e6880037bd940f39953dc6aded770",
+      "width": "48",
+      "height": "48",
+      "viewBox": "0 0 48 48"
+    },
+    {
+      "file": "assets/14254.svg",
+      "bytes": 8024,
+      "sha256": "9fed2d0af2e8c8f4da959ff27e3bb395107e0eadf79af3bb4686ae1746a9a001",
+      "width": "375",
+      "height": "44",
+      "viewBox": "0 0 375 44"
+    },
+    {
+      "file": "assets/17630.svg",
+      "bytes": 1353,
+      "sha256": "01f12b0ae013eb2d760c59c77f29a57ff5385f188076274b083f187a669aa6dd",
+      "width": "24",
+      "height": "24",
+      "viewBox": "0 0 24 24"
+    },
+    {
+      "file": "assets/1c1b8.svg",
+      "bytes": 340,
+      "sha256": "453e4477998efe5d223473f568d2485e777b18917dfcfe4b79aba65d45351327",
+      "width": "336.883",
+      "height": "336.883",
+      "viewBox": "0 0 336.883 336.883"
+    },
+    {
+      "file": "assets/231db.svg",
+      "bytes": 334,
+      "sha256": "a564ddc7188e4b9757c48756d1c844b3e2c98bdcf5010355630a85eac26fa261",
+      "width": "24",
+      "height": "24",
+      "viewBox": "0 0 24 24"
+    },
+    {
+      "file": "assets/23a45.svg",
+      "bytes": 1460,
+      "sha256": "4755a310de29b5ce602837959abf6700bd0872eb42978102959847c3a73e9951",
+      "width": "48",
+      "height": "48",
+      "viewBox": "0 0 48 48"
+    },
+    {
+      "file": "assets/34b5e.svg",
+      "bytes": 648,
+      "sha256": "4821b277e54a2e02b21acbb4e31fe40685c41bdd19ec12b7ec69be984c2c9486",
+      "width": "24",
+      "height": "24",
+      "viewBox": "0 0 24 24"
+    },
+    {
+      "file": "assets/34d19.svg",
+      "bytes": 1079,
+      "sha256": "ddbbc3f3d1f3c6b6c62de44fe7ef503a61431c53fcdd2479647cd87c24c3541c",
+      "width": "24",
+      "height": "24",
+      "viewBox": "0 0 24 24"
+    },
+    {
+      "file": "assets/3cf2d.svg",
+      "bytes": 2223,
+      "sha256": "937eea8cdb2cccd8414ee06a28094a3407308395bfa89e68744d39af21b13fa6",
+      "width": "48",
+      "height": "48",
+      "viewBox": "0 0 48 48"
+    },
+    {
+      "file": "assets/3ee61.svg",
+      "bytes": 1507,
+      "sha256": "c6d1761b08c079b1880a60079cedb66c41a2b902a7f544a09af66e0a2e46664b",
+      "width": "24",
+      "height": "24",
+      "viewBox": "0 0 24 24"
+    },
+    {
+      "file": "assets/44a0b.svg",
+      "bytes": 1330,
+      "sha256": "fce3bfdc00b62ef53c8aaa482b3e83e31f2b33265545ba7b2deca4013f41813e",
+      "width": "48",
+      "height": "48",
+      "viewBox": "0 0 48 48"
+    },
+    {
+      "file": "assets/45a03.svg",
+      "bytes": 2110,
+      "sha256": "6b22d951d1ec171d6153c57e3418b4611361169301b48fbee9b5da842ba2a187",
+      "width": "20",
+      "height": "20",
+      "viewBox": "0 0 20 20"
+    },
+    {
+      "file": "assets/46d16.png",
+      "bytes": 1339849,
+      "sha256": "7a24a7a0af4a66981c95a841e2a6cd126e759706187fb78a2672d61276d74909",
+      "width": 3080,
+      "height": 2320,
+      "format": "JPEG"
+    },
+    {
+      "file": "assets/49b57.svg",
+      "bytes": 447,
+      "sha256": "130e1885e7905ad5860ed0f06bf025b83295ce9b05b824471c00ba3a3b45b05a",
+      "width": "375",
+      "height": "34",
+      "viewBox": "0 0 375 34"
+    },
+    {
+      "file": "assets/4b6ce.svg",
+      "bytes": 1290,
+      "sha256": "43a50d03af6c3edb44681a931297cf175ea674b886e2b68c4925f59124227a7e",
+      "width": "48",
+      "height": "48",
+      "viewBox": "0 0 48 48"
+    },
+    {
+      "file": "assets/50b92.svg",
+      "bytes": 1071,
+      "sha256": "5086730faa62307b700ab20214a335e4b2e94e238c7df6d1832416f579226190",
+      "width": "24",
+      "height": "24",
+      "viewBox": "0 0 24 24"
+    },
+    {
+      "file": "assets/53587.svg",
+      "bytes": 416,
+      "sha256": "154fdd26a0c03f4f3b6e2861a87a77a0bb7ad52c408f956e276036a3d1b19c8e",
+      "width": "16",
+      "height": "16",
+      "viewBox": "0 0 16 16"
+    },
+    {
+      "file": "assets/5bb05.svg",
+      "bytes": 636,
+      "sha256": "721f52745f6d7a843e00f23a381adb2b0562fc1f93ed7b39c30dabb98850a1ce",
+      "width": "32",
+      "height": "32",
+      "viewBox": "0 0 32 32"
+    },
+    {
+      "file": "assets/5e3a1.svg",
+      "bytes": 423,
+      "sha256": "2358c5ed0c97137c081ae033cac0e23b8315e365c1914acf20453d5e56719b35",
+      "width": "24",
+      "height": "24",
+      "viewBox": "0 0 24 24"
+    },
+    {
+      "file": "assets/640e5.svg",
+      "bytes": 872,
+      "sha256": "97ba497f99a43f156aafdf0041418797ac02055466a8cc880f5ed8718573fb55",
+      "width": "24",
+      "height": "24",
+      "viewBox": "0 0 24 24"
+    },
+    {
+      "file": "assets/6e49f.svg",
+      "bytes": 3519,
+      "sha256": "14d26116b5c0c6047501e4a55b5fa3ac6396f0418c0097b388215172642bc4d0",
+      "width": "48",
+      "height": "48",
+      "viewBox": "0 0 48 48"
+    },
+    {
+      "file": "assets/72f5b.svg",
+      "bytes": 8026,
+      "sha256": "4c8fe59b9e192344fae55a1fb4bd76755817c2869512cb4ee31c66d7474c7336",
+      "width": "375",
+      "height": "44",
+      "viewBox": "0 0 375 44"
+    },
+    {
+      "file": "assets/7462f.svg",
+      "bytes": 677,
+      "sha256": "87ae714d3ddeed80e72ead90d791773eb592afbd99fcb4905d554d66134a6587",
+      "width": "351.533",
+      "height": "351.533",
+      "viewBox": "0 0 351.533 351.533"
+    },
+    {
+      "file": "assets/7828a.svg",
+      "bytes": 1379,
+      "sha256": "47ea56c030daf12a459da54f2cd1b2bb50d5611fb0980a1dca5eee5e5b5190fa",
+      "width": "48",
+      "height": "48",
+      "viewBox": "0 0 48 48"
+    },
+    {
+      "file": "assets/7c9b3.svg",
+      "bytes": 460,
+      "sha256": "874f17f81fece4236c693d1afc62ba642dd459f190bb10535e6daa2f9b0f4bdf",
+      "width": "24",
+      "height": "24",
+      "viewBox": "0 0 24 24"
+    },
+    {
+      "file": "assets/7d629.svg",
+      "bytes": 1083,
+      "sha256": "8d73296163ba2429cf1222ac3a0f046a9d7a6ad1484d307abb0d522035aa28ec",
+      "width": "24",
+      "height": "24",
+      "viewBox": "0 0 24 24"
+    },
+    {
+      "file": "assets/857e2.svg",
+      "bytes": 749,
+      "sha256": "c6ba2189f8da8ade97160c57933b89cc7c5beeef13a09ba598f0e95ed2481199",
+      "width": "375",
+      "height": "24",
+      "viewBox": "0 0 375 24"
+    },
+    {
+      "file": "assets/8acb7.svg",
+      "bytes": 952,
+      "sha256": "a83b230290c1277ccd61d917f1e36ee01608b65844fbf2be7d6bec678f067d43",
+      "width": "16",
+      "height": "16",
+      "viewBox": "0 0 16 16"
+    },
+    {
+      "file": "assets/9e577.svg",
+      "bytes": 1455,
+      "sha256": "f7d1027ecea2a4a654b0825fcfd7c5a4fd6edf06d8d78ad6d68d8e6a2ed70521",
+      "width": "24",
+      "height": "24",
+      "viewBox": "0 0 24 24"
+    },
+    {
+      "file": "assets/a32a1.svg",
+      "bytes": 425,
+      "sha256": "5c93e7345dc2b76b7f54b940fa0b3e4b9a567f114363b79d5871d5887d855f06",
+      "width": "24",
+      "height": "24",
+      "viewBox": "0 0 24 24"
+    },
+    {
+      "file": "assets/a5378.png",
+      "bytes": 2171787,
+      "sha256": "029c953ebb1bd43eaa3b139eb74226d5f75b2b593312dbe279c220b10143cfd4",
+      "width": 4096,
+      "height": 2731,
+      "format": "JPEG"
+    },
+    {
+      "file": "assets/a664e.svg",
+      "bytes": 2029,
+      "sha256": "cb279fa38edeefd1424240655e1f89fa5828e730e85724ba43aa86ec6f8698c0",
+      "width": "48",
+      "height": "48",
+      "viewBox": "0 0 48 48"
+    },
+    {
+      "file": "assets/a7ec5.svg",
+      "bytes": 712,
+      "sha256": "4d4c3c91f80fe200e808c903c30c994c46e9fe06356a806bddcc3fff447d3734",
+      "width": "24",
+      "height": "24",
+      "viewBox": "0 0 24 24"
+    },
+    {
+      "file": "assets/a929c.svg",
+      "bytes": 1699,
+      "sha256": "2156ef1beb7284b6a1e16dc9539257b3210272eb299f6d56e2096701bb98a9fd",
+      "width": "48",
+      "height": "48",
+      "viewBox": "0 0 48 48"
+    },
+    {
+      "file": "assets/af08c.svg",
+      "bytes": 2111,
+      "sha256": "1d3dca5e3b32eb462e758838ba4f1406d6836eeccb39811a43f8094430d628b7",
+      "width": "24",
+      "height": "24",
+      "viewBox": "0 0 24 24"
+    },
+    {
+      "file": "assets/b37ef.svg",
+      "bytes": 449,
+      "sha256": "67b6123096d8538c1c45b7d3fc476a04ab39fe87f95f952cfb3184ac7fa2cbc3",
+      "width": "375",
+      "height": "34",
+      "viewBox": "0 0 375 34"
+    },
+    {
+      "file": "assets/bc11f.svg",
+      "bytes": 1165,
+      "sha256": "a582cdc7d32d04c00dfa166b03f5a292d14a949ee89588eca21c16a66e3d3a2f",
+      "width": "24",
+      "height": "24",
+      "viewBox": "0 0 24 24"
+    },
+    {
+      "file": "assets/bcfb7.svg",
+      "bytes": 1012,
+      "sha256": "57f411fff3dbdbfd3f992a49917e5433afe03ee36dfc1709b0ef038497506d10",
+      "width": "24",
+      "height": "24",
+      "viewBox": "0 0 24 24"
+    },
+    {
+      "file": "assets/c1a83.svg",
+      "bytes": 549,
+      "sha256": "f35284a840f55e660952ed989a65ca59b00701508e421925da419b53b5faf53f",
+      "width": "24",
+      "height": "24",
+      "viewBox": "0 0 24 24"
+    },
+    {
+      "file": "assets/c3b30.svg",
+      "bytes": 2269,
+      "sha256": "cceef4e9674b21a94acb484071570575d9e6002b61a756a7e15f762a837c2602",
+      "width": "48",
+      "height": "48",
+      "viewBox": "0 0 48 48"
+    },
+    {
+      "file": "assets/cced2.svg",
+      "bytes": 950,
+      "sha256": "3810050043c1add513b8581681f96d12a06f2aea41fa97739a2970885791bf15",
+      "width": "16",
+      "height": "16",
+      "viewBox": "0 0 16 16"
+    },
+    {
+      "file": "assets/d2138.svg",
+      "bytes": 2045,
+      "sha256": "02467433c4b23d61a810f299a3a97270fc80ad82086747b70a9331134048558c",
+      "width": "48",
+      "height": "48",
+      "viewBox": "0 0 48 48"
+    },
+    {
+      "file": "assets/d7c07.svg",
+      "bytes": 1068,
+      "sha256": "4fa8a95a71bbe54d89502b802502027ddf9d577284f3cdaf390d593b4870c5b1",
+      "width": "24",
+      "height": "24",
+      "viewBox": "0 0 24 24"
+    },
+    {
+      "file": "assets/d7eee.svg",
+      "bytes": 2035,
+      "sha256": "986a04b61d6b35a1daace96825ee537f0b8e2a69583296eed552336bf8add3ab",
+      "width": "24",
+      "height": "24",
+      "viewBox": "0 0 24 24"
+    },
+    {
+      "file": "assets/d8664.svg",
+      "bytes": 1357,
+      "sha256": "95bfa5c7a8b8c0efd83d9ed262e576e5b08ff241e758f95bf7332ccf1b5d8099",
+      "width": "48",
+      "height": "48",
+      "viewBox": "0 0 48 48"
+    },
+    {
+      "file": "assets/e196a.svg",
+      "bytes": 315,
+      "sha256": "68e28029c281cae62f05cded182db7f8cae8b13a119b20ec24a6551a459e81da",
+      "width": "24",
+      "height": "24",
+      "viewBox": "0 0 24 24"
+    },
+    {
+      "file": "assets/e89cf.svg",
+      "bytes": 1308,
+      "sha256": "bcf5f310a821e1b26a363bf994858a4b00117d64407255d238521e5c8118e17a",
+      "width": "24",
+      "height": "24",
+      "viewBox": "0 0 24 24"
+    },
+    {
+      "file": "assets/eb515.svg",
+      "bytes": 340,
+      "sha256": "6e47eebeb57d7b2582954fe07fda63a026f9735aa23f6f95db332a5629697a93",
+      "width": "126.211",
+      "height": "213.272",
+      "viewBox": "0 0 126.211 213.272"
+    },
+    {
+      "file": "assets/f24f8.svg",
+      "bytes": 465,
+      "sha256": "e7fee96ffe5190e34cf2b841cc443a4fb6b605f98d92b46383fa90e687ad7384",
+      "width": "24",
+      "height": "24",
+      "viewBox": "0 0 24 24"
+    },
+    {
+      "file": "assets/f80bc.png",
+      "bytes": 276597,
+      "sha256": "cd098dd354e91c44ad6e28a6771d84848085840c0b04c1cd97752fddf283ee3e",
+      "width": 1000,
+      "height": 1000,
+      "format": "JPEG"
+    },
+    {
+      "file": "assets/fcba4.svg",
+      "bytes": 1685,
+      "sha256": "478555278155988a5a40ff5f8e67b26f0919e47b604b1e32a504b859be3df2b6",
+      "width": "48",
+      "height": "48",
+      "viewBox": "0 0 48 48"
+    },
+    {
+      "file": "reference/2-9667.png",
+      "reference_only": true,
+      "bytes": 39528,
+      "sha256": "3091f05aa3d14629fe7f26efec072eddeb44893148b4d5a9dccb2e4852fff8a4"
+    },
+    {
+      "file": "reference/2-9680.png",
+      "reference_only": true,
+      "bytes": 92568,
+      "sha256": "9e7b342668b52b1ed6e6f0924eb14eb3d334d7e7fb910e3a9c049f2ccddf7b91"
+    },
+    {
+      "file": "reference/2-9749.png",
+      "reference_only": true,
+      "bytes": 26081,
+      "sha256": "96d910df6c43fb21aa7313fb87f894cd1071e2e0d47709ae6b14743adff2ff65"
+    },
+    {
+      "file": "reference/2-9776.png",
+      "reference_only": true,
+      "bytes": 32586,
+      "sha256": "db51440375b4db50023a9de7711fd40852d835959241163c87ac9b1c7f78f0ae"
+    },
+    {
+      "file": "reference/2-9824.png",
+      "reference_only": true,
+      "bytes": 35492,
+      "sha256": "552b4c5a3a3206f7e726e7f29e84db9519ce7feb802204e13431230449a85023"
+    },
+    {
+      "file": "reference/2-9838.png",
+      "reference_only": true,
+      "bytes": 28565,
+      "sha256": "9f7019434483cb631a534e47eb669c603380d90601c251f08e37938ee68ad8fb"
+    },
+    {
+      "file": "reference/2-9855.png",
+      "reference_only": true,
+      "bytes": 40445,
+      "sha256": "55c38816b73f49385e1cc06fa935b5a16f5177dede5568326ced609c163e3211"
+    },
+    {
+      "file": "reference/2-9875.png",
+      "reference_only": true,
+      "bytes": 132014,
+      "sha256": "95260ec2bc68dc45f0d3afb416953962c2c152c572e44c7f58efe573a8d0602f"
+    },
+    {
+      "file": "reference/2-9890.png",
+      "reference_only": true,
+      "bytes": 48995,
+      "sha256": "65de5f1ee6642997eb52f6e3ba1168861022678d7885940115dd1f2f1851ff21"
+    },
+    {
+      "file": "reference/2-9938.png",
+      "reference_only": true,
+      "bytes": 36187,
+      "sha256": "8a5695821d9e356f8113ee9098ce77f0aff9c44a24dda10096aa21d86466363d"
+    },
+    {
+      "file": "reference/2-9964.png",
+      "reference_only": true,
+      "bytes": 31282,
+      "sha256": "38639084c9966972ff2044f8129bee9b8404ec3d5491f98eae0ee866d0b1361b"
+    },
+    {
+      "file": "reference/2-9979.png",
+      "reference_only": true,
+      "bytes": 38042,
+      "sha256": "109869bfccbd0ebcdc1c78eccec6da4b3257159d6654e1d8cd7027a78b34472c"
+    },
+    {
+      "file": "reference/assessment-board.png",
+      "bytes": 1364338,
+      "sha256": "7af286092cac7cc713c553d5aef6e7f4ff4d2031cbca37dbb32274f561c1d341",
+      "width": 8533,
+      "height": 1344,
+      "format": "PNG"
+    }
+  ],
+  "limit": "Starter plan MCP tool call limit reached; no further MCP reads after response."
+}
