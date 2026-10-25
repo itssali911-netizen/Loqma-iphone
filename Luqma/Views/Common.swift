@@ -25,10 +25,12 @@ enum Theme {
     static let controlBorder=color(VisualDesignTokens.controlBorder)
     static let stroke=color(VisualDesignTokens.divider)
     static let cardRadius:CGFloat=20
+    static let pageInset:CGFloat=CGFloat(SandowLayoutTokens.margin)
+    static let sectionGap:CGFloat=CGFloat(SandowLayoutTokens.gutter)
     // Directly read instance heights: Top Nav 2:10015; Button Primary Icon 2:10013.
     // These values do not imply that the flattened target panels expose their child metrics.
     static let navigationHeight:CGFloat=48
-    static let primaryButtonHeight:CGFloat=56
+    static let primaryButtonHeight:CGFloat=CGFloat(SandowLayoutTokens.PrimaryButton.height)
     static let bottomBarItemHeight:CGFloat=54
     static let bottomBarPadding:CGFloat=6
     static let bottomBarTopGap:CGFloat=6
@@ -36,10 +38,10 @@ enum Theme {
     static let bottomBarHeight:CGFloat=bottomBarItemHeight+2*bottomBarPadding+bottomBarTopGap+bottomBarBottomGap
 }
 extension View {
-    func luqmaCard() -> some View {padding(16).frame(maxWidth:.infinity,alignment:.leading).background(Theme.card,in:RoundedRectangle(cornerRadius:Theme.cardRadius,style:.continuous))}
+    func luqmaCard() -> some View {padding(Theme.pageInset).frame(maxWidth:.infinity,alignment:.leading).background(Theme.card,in:RoundedRectangle(cornerRadius:Theme.cardRadius,style:.continuous))}
     func appBackground() -> some View {background(Theme.background.ignoresSafeArea()).scrollContentBackground(.hidden).luqmaFont(.body)}
     func sandowForm() -> some View {
-        appBackground().listStyle(.insetGrouped).listSectionSpacing(16)
+        appBackground().listStyle(.insetGrouped).listSectionSpacing(Theme.sectionGap)
             .listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
     }
 }
@@ -77,11 +79,17 @@ struct LuqmaSectionHeader:View {
 struct LuqmaPrimaryButtonStyle:ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
     func makeBody(configuration:Configuration)->some View {
-        configuration.label.luqmaFont(.headline).foregroundStyle(Theme.onAccent)
+        configuration.label.luqmaFont(.button)
+            .foregroundStyle(Color(isEnabled ? SandowLayoutTokens.PrimaryButton.foreground:SandowLayoutTokens.PrimaryButton.disabledForeground))
+            .padding(.horizontal,CGFloat(SandowLayoutTokens.PrimaryButton.horizontalPadding))
             .frame(maxWidth:.infinity,minHeight:Theme.primaryButtonHeight)
-            .background(Theme.accent,in:RoundedRectangle(cornerRadius:16,style:.continuous))
-            .opacity(!isEnabled ? 0.4:configuration.isPressed ? 0.8:1)
+            .background(isEnabled ? Theme.accent:Color(SandowLayoutTokens.PrimaryButton.disabledBackground),in:RoundedRectangle(cornerRadius:CGFloat(SandowLayoutTokens.PrimaryButton.radius)))
+            // Preserve existing press feedback; its exact Figma value is unavailable.
+            .opacity(isEnabled && configuration.isPressed ? 0.8:1)
     }
+}
+private extension Color {
+    init(_ rgb:VisualRGB){self.init(.sRGB,red:rgb.red,green:rgb.green,blue:rgb.blue,opacity:1)}
 }
 
 struct LuqmaSecondaryButtonStyle:ButtonStyle {

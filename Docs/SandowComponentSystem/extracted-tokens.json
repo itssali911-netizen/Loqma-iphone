@@ -1,0 +1,872 @@
+{
+  "source": "User-supplied Sandow Design System v1.2 PNG, identity confirmed by user",
+  "source_png": {
+    "name": "codex-clipboard-4ac10b6c-bb4c-4ecc-8ded-884dcdb96754.png",
+    "dimensions": [
+      18304,
+      7064
+    ],
+    "sha256": "53fc43e894b81658c8797240ae508c272f8e589c7298722bab2b724d9299ced3"
+  },
+  "cached_page": "2:4502",
+  "palette_crop_frame": "2:14368",
+  "palette_crop_origin_in_source": [
+    1504,
+    0
+  ],
+  "palette": [
+    {
+      "name": "gray100",
+      "hex": "#111214",
+      "sample_in_palette_crop": [
+        190,
+        610
+      ]
+    },
+    {
+      "name": "gray90",
+      "hex": "#24262B",
+      "sample_in_palette_crop": [
+        308,
+        610
+      ]
+    },
+    {
+      "name": "gray80",
+      "hex": "#393C43",
+      "sample_in_palette_crop": [
+        426,
+        610
+      ]
+    },
+    {
+      "name": "gray70",
+      "hex": "#50535B",
+      "sample_in_palette_crop": [
+        544,
+        610
+      ]
+    },
+    {
+      "name": "gray60",
+      "hex": "#676C75",
+      "sample_in_palette_crop": [
+        662,
+        610
+      ]
+    },
+    {
+      "name": "gray50",
+      "hex": "#81858D",
+      "sample_in_palette_crop": [
+        780,
+        610
+      ]
+    },
+    {
+      "name": "gray40",
+      "hex": "#9EA0A5",
+      "sample_in_palette_crop": [
+        898,
+        610
+      ]
+    },
+    {
+      "name": "gray30",
+      "hex": "#BABBBE",
+      "sample_in_palette_crop": [
+        1016,
+        610
+      ]
+    },
+    {
+      "name": "gray20",
+      "hex": "#D7D8D9",
+      "sample_in_palette_crop": [
+        1134,
+        610
+      ]
+    },
+    {
+      "name": "gray10",
+      "hex": "#F3F3F4",
+      "sample_in_palette_crop": [
+        1252,
+        610
+      ]
+    },
+    {
+      "name": "orange100",
+      "hex": "#431407",
+      "sample_in_palette_crop": [
+        190,
+        1030
+      ]
+    },
+    {
+      "name": "orange90",
+      "hex": "#7C2D12",
+      "sample_in_palette_crop": [
+        308,
+        1030
+      ]
+    },
+    {
+      "name": "orange80",
+      "hex": "#9A3412",
+      "sample_in_palette_crop": [
+        426,
+        1030
+      ]
+    },
+    {
+      "name": "orange70",
+      "hex": "#C2410C",
+      "sample_in_palette_crop": [
+        544,
+        1030
+      ]
+    },
+    {
+      "name": "orange60",
+      "hex": "#EA580C",
+      "sample_in_palette_crop": [
+        662,
+        1030
+      ]
+    },
+    {
+      "name": "orange50",
+      "hex": "#F97316",
+      "sample_in_palette_crop": [
+        780,
+        1030
+      ]
+    },
+    {
+      "name": "orange40",
+      "hex": "#FB923C",
+      "sample_in_palette_crop": [
+        898,
+        1030
+      ]
+    },
+    {
+      "name": "orange30",
+      "hex": "#FDBA74",
+      "sample_in_palette_crop": [
+        1016,
+        1030
+      ]
+    },
+    {
+      "name": "orange20",
+      "hex": "#FED7AA",
+      "sample_in_palette_crop": [
+        1134,
+        1030
+      ]
+    },
+    {
+      "name": "orange10",
+      "hex": "#FFEDD5",
+      "sample_in_palette_crop": [
+        1252,
+        1030
+      ]
+    },
+    {
+      "name": "yellow100",
+      "hex": "#422006",
+      "sample_in_palette_crop": [
+        190,
+        1450
+      ]
+    },
+    {
+      "name": "yellow90",
+      "hex": "#713F12",
+      "sample_in_palette_crop": [
+        308,
+        1450
+      ]
+    },
+    {
+      "name": "yellow80",
+      "hex": "#854D0E",
+      "sample_in_palette_crop": [
+        426,
+        1450
+      ]
+    },
+    {
+      "name": "yellow70",
+      "hex": "#A16207",
+      "sample_in_palette_crop": [
+        544,
+        1450
+      ]
+    },
+    {
+      "name": "yellow60",
+      "hex": "#CA8A04",
+      "sample_in_palette_crop": [
+        662,
+        1450
+      ]
+    },
+    {
+      "name": "yellow50",
+      "hex": "#EAB308",
+      "sample_in_palette_crop": [
+        780,
+        1450
+      ]
+    },
+    {
+      "name": "yellow40",
+      "hex": "#FACC15",
+      "sample_in_palette_crop": [
+        898,
+        1450
+      ]
+    },
+    {
+      "name": "yellow30",
+      "hex": "#FDE047",
+      "sample_in_palette_crop": [
+        1016,
+        1450
+      ]
+    },
+    {
+      "name": "yellow20",
+      "hex": "#FEF08A",
+      "sample_in_palette_crop": [
+        1134,
+        1450
+      ]
+    },
+    {
+      "name": "yellow10",
+      "hex": "#FEF9C3",
+      "sample_in_palette_crop": [
+        1252,
+        1450
+      ]
+    },
+    {
+      "name": "blue100",
+      "hex": "#172554",
+      "sample_in_palette_crop": [
+        190,
+        1865
+      ]
+    },
+    {
+      "name": "blue90",
+      "hex": "#1E3A8A",
+      "sample_in_palette_crop": [
+        308,
+        1865
+      ]
+    },
+    {
+      "name": "blue80",
+      "hex": "#1E40AF",
+      "sample_in_palette_crop": [
+        426,
+        1865
+      ]
+    },
+    {
+      "name": "blue70",
+      "hex": "#1D4ED8",
+      "sample_in_palette_crop": [
+        544,
+        1865
+      ]
+    },
+    {
+      "name": "blue60",
+      "hex": "#2563EB",
+      "sample_in_palette_crop": [
+        662,
+        1865
+      ]
+    },
+    {
+      "name": "blue50",
+      "hex": "#3B82F6",
+      "sample_in_palette_crop": [
+        780,
+        1865
+      ]
+    },
+    {
+      "name": "blue40",
+      "hex": "#60A5FA",
+      "sample_in_palette_crop": [
+        898,
+        1865
+      ]
+    },
+    {
+      "name": "blue30",
+      "hex": "#93C5FD",
+      "sample_in_palette_crop": [
+        1016,
+        1865
+      ]
+    },
+    {
+      "name": "blue20",
+      "hex": "#BFDBFE",
+      "sample_in_palette_crop": [
+        1134,
+        1865
+      ]
+    },
+    {
+      "name": "blue10",
+      "hex": "#DBEAFE",
+      "sample_in_palette_crop": [
+        1252,
+        1865
+      ]
+    },
+    {
+      "name": "red100",
+      "hex": "#450A0A",
+      "sample_in_palette_crop": [
+        190,
+        2285
+      ]
+    },
+    {
+      "name": "red90",
+      "hex": "#7F1D1D",
+      "sample_in_palette_crop": [
+        308,
+        2285
+      ]
+    },
+    {
+      "name": "red80",
+      "hex": "#991B1B",
+      "sample_in_palette_crop": [
+        426,
+        2285
+      ]
+    },
+    {
+      "name": "red70",
+      "hex": "#B91C1C",
+      "sample_in_palette_crop": [
+        544,
+        2285
+      ]
+    },
+    {
+      "name": "red60",
+      "hex": "#DC2626",
+      "sample_in_palette_crop": [
+        662,
+        2285
+      ]
+    },
+    {
+      "name": "red50",
+      "hex": "#EF4444",
+      "sample_in_palette_crop": [
+        780,
+        2285
+      ]
+    },
+    {
+      "name": "red40",
+      "hex": "#F87171",
+      "sample_in_palette_crop": [
+        898,
+        2285
+      ]
+    },
+    {
+      "name": "red30",
+      "hex": "#FCA5A5",
+      "sample_in_palette_crop": [
+        1016,
+        2285
+      ]
+    },
+    {
+      "name": "red20",
+      "hex": "#FECACA",
+      "sample_in_palette_crop": [
+        1134,
+        2285
+      ]
+    },
+    {
+      "name": "red10",
+      "hex": "#FEE2E2",
+      "sample_in_palette_crop": [
+        1252,
+        2285
+      ]
+    },
+    {
+      "name": "green100",
+      "hex": "#1A2E05",
+      "sample_in_palette_crop": [
+        190,
+        2700
+      ]
+    },
+    {
+      "name": "green90",
+      "hex": "#365314",
+      "sample_in_palette_crop": [
+        308,
+        2700
+      ]
+    },
+    {
+      "name": "green80",
+      "hex": "#3F6212",
+      "sample_in_palette_crop": [
+        426,
+        2700
+      ]
+    },
+    {
+      "name": "green70",
+      "hex": "#4D7C0F",
+      "sample_in_palette_crop": [
+        544,
+        2700
+      ]
+    },
+    {
+      "name": "green60",
+      "hex": "#65A30D",
+      "sample_in_palette_crop": [
+        662,
+        2700
+      ]
+    },
+    {
+      "name": "green50",
+      "hex": "#84CC16",
+      "sample_in_palette_crop": [
+        780,
+        2700
+      ]
+    },
+    {
+      "name": "green40",
+      "hex": "#A3E635",
+      "sample_in_palette_crop": [
+        898,
+        2700
+      ]
+    },
+    {
+      "name": "green30",
+      "hex": "#BEF264",
+      "sample_in_palette_crop": [
+        1016,
+        2700
+      ]
+    },
+    {
+      "name": "green20",
+      "hex": "#D9F99D",
+      "sample_in_palette_crop": [
+        1134,
+        2700
+      ]
+    },
+    {
+      "name": "green10",
+      "hex": "#ECFCCB",
+      "sample_in_palette_crop": [
+        1252,
+        2700
+      ]
+    },
+    {
+      "name": "purple100",
+      "hex": "#3B0764",
+      "sample_in_palette_crop": [
+        190,
+        3115
+      ]
+    },
+    {
+      "name": "purple90",
+      "hex": "#581C87",
+      "sample_in_palette_crop": [
+        308,
+        3115
+      ]
+    },
+    {
+      "name": "purple80",
+      "hex": "#6B21A8",
+      "sample_in_palette_crop": [
+        426,
+        3115
+      ]
+    },
+    {
+      "name": "purple70",
+      "hex": "#7E22CE",
+      "sample_in_palette_crop": [
+        544,
+        3115
+      ]
+    },
+    {
+      "name": "purple60",
+      "hex": "#9333EA",
+      "sample_in_palette_crop": [
+        662,
+        3115
+      ]
+    },
+    {
+      "name": "purple50",
+      "hex": "#A855F7",
+      "sample_in_palette_crop": [
+        780,
+        3115
+      ]
+    },
+    {
+      "name": "purple40",
+      "hex": "#C084FC",
+      "sample_in_palette_crop": [
+        898,
+        3115
+      ]
+    },
+    {
+      "name": "purple30",
+      "hex": "#D8B4FE",
+      "sample_in_palette_crop": [
+        1016,
+        3115
+      ]
+    },
+    {
+      "name": "purple20",
+      "hex": "#E9D5FF",
+      "sample_in_palette_crop": [
+        1134,
+        3115
+      ]
+    },
+    {
+      "name": "purple10",
+      "hex": "#F3E8FF",
+      "sample_in_palette_crop": [
+        1252,
+        3115
+      ]
+    }
+  ],
+  "font_family": "Work Sans",
+  "arabic_extension": "Existing Tajawal cascade; Work Sans has no Arabic glyphs",
+  "grid": {
+    "viewport": [
+      375,
+      812
+    ],
+    "columns_visible": 3,
+    "margin": 16,
+    "gutter": 16,
+    "spacing": [
+      2,
+      4,
+      6,
+      8,
+      16,
+      32,
+      64,
+      128
+    ],
+    "basis": "Printed labels and visible grid; adaptive width formula is an implementation extension"
+  },
+  "primary_button": {
+    "height": 56,
+    "corner_radius": 16,
+    "horizontal_padding": 28,
+    "content_gap": 12,
+    "label_size": 16,
+    "label_weight": 600,
+    "latin_tracking": -0.048,
+    "foreground": "#FFFFFF",
+    "background": "#F97316",
+    "basis": "Cached actual Figma context 2:9760 in Docs/FitnessAssessmentDesign/contexts/2-9749.txt; applies to this variant, not all button variants"
+  },
+  "unavailable": [
+    "Individual children, instances, component variants and hidden layers in the supplied PNG",
+    "Exact hover/focus/pressed/loading timings and opacity for every component",
+    "Numerical shadow, blur, blend-mode parameters",
+    "Table column/row constraints and responsive rules",
+    "Numerical typography sizes/line heights not printed in the Typography panel"
+  ],
+  "panels": [
+    {
+      "id": "2:14348",
+      "name": "🔒 Typography",
+      "type": "FRAME",
+      "x": -9152,
+      "y": -3533,
+      "width": 1440.74560546875,
+      "height": 6258,
+      "children": 1
+    },
+    {
+      "id": "2:14350",
+      "name": "🔒 Inputs 1",
+      "type": "FRAME",
+      "x": -4640,
+      "y": -3533,
+      "width": 1440,
+      "height": 3482,
+      "children": 1
+    },
+    {
+      "id": "2:14352",
+      "name": "🔒 Chat System",
+      "type": "FRAME",
+      "x": 2880,
+      "y": -1757,
+      "width": 1440,
+      "height": 3343,
+      "children": 1
+    },
+    {
+      "id": "2:14354",
+      "name": "🔒 Misc & Helper",
+      "type": "FRAME",
+      "x": 7712,
+      "y": -3533,
+      "width": 1440,
+      "height": 3319,
+      "children": 1
+    },
+    {
+      "id": "2:14356",
+      "name": "🔒 Cards & Lists 1",
+      "type": "FRAME",
+      "x": 4384,
+      "y": -3533,
+      "width": 1600.53271484375,
+      "height": 5378,
+      "children": 1
+    },
+    {
+      "id": "2:14358",
+      "name": "🔒 Cards & Lists 2",
+      "type": "FRAME",
+      "x": 6048,
+      "y": -3533,
+      "width": 1599.890625,
+      "height": 5952,
+      "children": 1
+    },
+    {
+      "id": "2:14360",
+      "name": "🔒 Alerts & Notifications",
+      "type": "FRAME",
+      "x": -3136,
+      "y": -3533,
+      "width": 1440,
+      "height": 2131,
+      "children": 1
+    },
+    {
+      "id": "2:14362",
+      "name": "🔒 Dropdowns",
+      "type": "FRAME",
+      "x": -3136,
+      "y": -1338,
+      "width": 1440,
+      "height": 1946,
+      "children": 1
+    },
+    {
+      "id": "2:14364",
+      "name": "🔒 Loaders",
+      "type": "FRAME",
+      "x": -3136,
+      "y": 672,
+      "width": 1440,
+      "height": 1142,
+      "children": 1
+    },
+    {
+      "id": "2:14366",
+      "name": "🔒 Inputs 2",
+      "type": "FRAME",
+      "x": -4640,
+      "y": 13,
+      "width": 1440,
+      "height": 2033,
+      "children": 1
+    },
+    {
+      "id": "2:14368",
+      "name": "🔒 Color Palette",
+      "type": "FRAME",
+      "x": -7648,
+      "y": -3533,
+      "width": 1440,
+      "height": 3330,
+      "children": 1
+    },
+    {
+      "id": "2:14370",
+      "name": "🔒 Navigations",
+      "type": "FRAME",
+      "x": -7648,
+      "y": -139,
+      "width": 1440,
+      "height": 1241,
+      "children": 1
+    },
+    {
+      "id": "2:14372",
+      "name": "🔒 Profile Pics & Avatars",
+      "type": "FRAME",
+      "x": -7648,
+      "y": 1166,
+      "width": 1440,
+      "height": 2365,
+      "children": 1
+    },
+    {
+      "id": "2:14374",
+      "name": "🔒 Progress & Indicators 2",
+      "type": "FRAME",
+      "x": -1632,
+      "y": -1062,
+      "width": 1440,
+      "height": 2613,
+      "children": 1
+    },
+    {
+      "id": "2:14376",
+      "name": "🔒 Tooltips",
+      "type": "FRAME",
+      "x": 2880,
+      "y": -3512,
+      "width": 1440,
+      "height": 1691,
+      "children": 1
+    },
+    {
+      "id": "2:14378",
+      "name": "🔒 Tabs",
+      "type": "FRAME",
+      "x": -128,
+      "y": -3533,
+      "width": 1440,
+      "height": 1734,
+      "children": 1
+    },
+    {
+      "id": "2:14380",
+      "name": "🔒 Progress & Indicators 1",
+      "type": "FRAME",
+      "x": -1632,
+      "y": -3512,
+      "width": 1440,
+      "height": 2386,
+      "children": 1
+    },
+    {
+      "id": "2:14382",
+      "name": "🔒 Tags & Chips",
+      "type": "FRAME",
+      "x": -128,
+      "y": -1735,
+      "width": 1440,
+      "height": 1601,
+      "children": 1
+    },
+    {
+      "id": "2:14384",
+      "name": "🔒 Checkboxes & Radios",
+      "type": "FRAME",
+      "x": -128,
+      "y": -70,
+      "width": 1440,
+      "height": 1402,
+      "children": 1
+    },
+    {
+      "id": "2:14386",
+      "name": "🔒 Effects",
+      "type": "FRAME",
+      "x": 1376,
+      "y": -3512,
+      "width": 1440,
+      "height": 1698,
+      "children": 1
+    },
+    {
+      "id": "2:14388",
+      "name": "🔒 Tables",
+      "type": "FRAME",
+      "x": 1376,
+      "y": -1750,
+      "width": 1440,
+      "height": 1786,
+      "children": 1
+    },
+    {
+      "id": "2:14390",
+      "name": "🔒 Grids & Spacing",
+      "type": "FRAME",
+      "x": 1376,
+      "y": 100,
+      "width": 1440,
+      "height": 1506,
+      "children": 1
+    },
+    {
+      "id": "2:14392",
+      "name": "🔒 Buttons 1",
+      "type": "FRAME",
+      "x": -6144,
+      "y": -3533,
+      "width": 1440,
+      "height": 2017,
+      "children": 1
+    },
+    {
+      "id": "2:14394",
+      "name": "🔒 Buttons 2",
+      "type": "FRAME",
+      "x": -6144,
+      "y": -1452,
+      "width": 1440,
+      "height": 2817,
+      "children": 1
+    },
+    {
+      "id": "2:14396",
+      "name": "🔒 Logo",
+      "type": "FRAME",
+      "x": -6144,
+      "y": 1429,
+      "width": 1440,
+      "height": 825,
+      "children": 1
+    }
+  ]
+}

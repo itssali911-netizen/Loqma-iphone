@@ -69,6 +69,7 @@ struct RootView:View {
     @State private var tab:Int
     @State private var adding=false
     @State private var addingMeal:Meal?
+    @State private var homeAdding=false
     @State private var todayRouteID=0
     @State private var photoPreview=false
     @State private var recipePreview=false
@@ -104,7 +105,7 @@ struct RootView:View {
     }
     var body:some View {
         TabView(selection:$tab) {
-            NavigationStack{DiaryView().id(todayRouteID).toolbar(.hidden,for:.tabBar)}.tabItem{Label(diary.t("اليوم","Today"),systemImage:"house")}.tag(0)
+            NavigationStack{DiaryView(newMealRequest:$homeAdding).id(todayRouteID).toolbar(.hidden,for:.tabBar)}.tabItem{Label(diary.t("اليوم","Today"),systemImage:"house")}.tag(0)
             NavigationStack{KitchenView().toolbar(.hidden,for:.tabBar)}.tabItem{Label(diary.t("مطبخي","Kitchen"),systemImage:"fork.knife")}.tag(1)
             NavigationStack{ProgressViewScreen().toolbar(.hidden,for:.tabBar)}.tabItem{Label(diary.t("تقدّمي","Progress"),systemImage:"chart.bar")}.tag(2)
             NavigationStack{SettingsView(onBack:{tab=0}).toolbar(.hidden,for:.tabBar)}.tabItem{Label(diary.t("الإعدادات","Settings"),systemImage:"gearshape")}.tag(3)
@@ -266,19 +267,24 @@ struct RootView:View {
         HStack(alignment:.center,spacing:4){
             navigationButton(0,title:diary.t("اليوم","Today"),symbol:"house")
             navigationButton(1,title:diary.t("مطبخي","Kitchen"),symbol:"fork.knife")
-            Button{addingMeal=nil;adding=true}label:{Image(systemName:"plus").font(.system(size:27,weight:.medium)).foregroundStyle(Theme.onAccent).frame(width:Theme.bottomBarItemHeight,height:Theme.bottomBarItemHeight).background(Theme.accent,in:RoundedRectangle(cornerRadius:17,style:.continuous))}.buttonStyle(.plain).frame(maxWidth:.infinity,minHeight:Theme.bottomBarItemHeight).accessibilityLabel(diary.t("إضافة طعام إلى اليوم","Add food to today")).accessibilityIdentifier("nav.add")
+            Button{if tab==0{homeAdding=true}else{addingMeal=nil;adding=true}}label:{
+                Group{
+                    if tab==0{NutritionExactIcon(name:"PlusBold",size:20).frame(width:54,height:44).background(NutritionExactTheme.orange,in:UnevenRoundedRectangle(topLeadingRadius:18,topTrailingRadius:18))}
+                    else{Image(systemName:"plus").font(.system(size:27,weight:.medium)).foregroundStyle(Theme.onAccent).frame(width:Theme.bottomBarItemHeight,height:Theme.bottomBarItemHeight).background(Theme.accent,in:RoundedRectangle(cornerRadius:17,style:.continuous))}
+                }
+            }.buttonStyle(.plain).frame(maxWidth:.infinity,minHeight:Theme.bottomBarItemHeight).accessibilityLabel(diary.t("إضافة طعام إلى اليوم","Add food to today")).accessibilityIdentifier("nav.add")
             navigationButton(2,title:diary.t("تقدّمي","Progress"),symbol:"chart.bar")
             navigationButton(3,title:diary.t("الإعدادات","Settings"),symbol:"gearshape")
         }.padding(.horizontal,10).padding(.vertical,Theme.bottomBarPadding)
-            .background(Theme.surface,in:RoundedRectangle(cornerRadius:24,style:.continuous))
-            .padding(.horizontal,16).padding(.top,Theme.bottomBarTopGap).padding(.bottom,Theme.bottomBarBottomGap).background(Theme.background)
+            .background(tab==0 ? NutritionExactTheme.background:Theme.surface,in:RoundedRectangle(cornerRadius:24,style:.continuous))
+            .padding(.horizontal,16).padding(.top,Theme.bottomBarTopGap).padding(.bottom,Theme.bottomBarBottomGap).background(tab==0 ? NutritionExactTheme.background:Theme.background)
     }
     private func navigationButton(_ value:Int,title:String,symbol:String)->some View {
         Button{tab=value}label:{VStack(spacing:3){
             Image(systemName:tab == value && value == 0 ? "house.fill":symbol).font(.system(size:21,weight:.regular))
-                .foregroundStyle(tab == value ? Theme.text:Theme.muted).frame(width:44,height:34)
-                .background(tab == value ? Theme.background:Color.clear,in:RoundedRectangle(cornerRadius:12,style:.continuous))
-            Capsule().fill(tab == value ? Theme.accent:Color.clear).frame(width:18,height:3)
+                .foregroundStyle(tab == value ? (tab==0 ? NutritionExactTheme.primary:Theme.text):(tab==0 ? NutritionExactTheme.muted:Theme.muted)).frame(width:44,height:34)
+                .background(tab == value ? (tab==0 ? NutritionExactTheme.card:Theme.background):Color.clear,in:RoundedRectangle(cornerRadius:12,style:.continuous))
+            Capsule().fill(tab == value ? (tab==0 ? NutritionExactTheme.orange:Theme.accent):Color.clear).frame(width:18,height:3)
         }.frame(maxWidth:.infinity,minHeight:Theme.bottomBarItemHeight).contentShape(Rectangle())}.buttonStyle(.plain).accessibilityLabel(title).accessibilityAddTraits(tab == value ? .isSelected:[])
             .accessibilityIdentifier(["nav.today","nav.kitchen","nav.progress","nav.settings"][value])
     }

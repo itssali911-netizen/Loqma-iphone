@@ -3,20 +3,28 @@ import Charts
 import UIKit
 
 struct DiaryView:View {
+    var newMealRequest:Binding<Bool>?=nil
+    var showDetailedDiary=false
     @EnvironmentObject var diary:DiaryStore
     @Environment(\.dynamicTypeSize) private var typeSize
-    @State private var date=Date()
+    @State private var date:Date
     @State private var adding=false
     @State private var goals=false
     @State private var selectingDate=false
     @State private var showingCalorieIntake=false
     @State private var showingNotifications=false
     @State private var editing:DiaryEntry?
+    @State private var homeFood:Food?
+    @State private var homeFoodCommitted=false
     @State private var chosenMeal:Meal?
     @State private var searchQuery=""
     @State private var category="meat"
     @State private var expandedMeals:Set<Meal>=[]
     @State private var expandedRoutine=false
+    init(newMealRequest:Binding<Bool>?=nil,initialDate:Date=Date(),showDetailedDiary:Bool=false){
+        self.newMealRequest=newMealRequest;self.showDetailedDiary=showDetailedDiary
+        _date=State(initialValue:initialDate)
+    }
     #if DEBUG
     @State private var routineCapturePosition:Meal? = {
         if CommandLine.arguments.contains("-loqma-preview-routine-dinner"){return .dinner}
@@ -42,19 +50,39 @@ struct DiaryView:View {
         #endif
     }
     private var diaryScroll:some View {
-        ScrollView{diaryContent.padding(.horizontal,16).padding(.bottom,24)}.appBackground()
+        Group{
+            if useLegacyPreview{ScrollView{diaryContent.padding(.horizontal,16).padding(.bottom,24)}}
+            else{NutritionHomeView(date:$date,externalAdd:newMealRequest,
+                onSearch:{openSearch($0)},onChooseDate:{selectingDate=true},
+                onNotifications:{showingNotifications=true},
+                onFood:{homeFoodCommitted=false;homeFood=$0},onEdit:{editing=$0},
+                onFullGoals:{goals=true},onHistory:{showingCalorieIntake=true})}
+        }.appBackground()
             .navigationTitle(diary.t("اليوم","Today"))
-            .toolbar(.hidden,for:.navigationBar)
+            .toolbar(showDetailedDiary ? .visible:.hidden,for:.navigationBar)
+            .navigationBarTitleDisplayMode(.inline)
             .safeAreaInset(edge:.top,spacing:0){
                 // Keep the header outside ScrollView clipping, like Settings.
-                #if DEBUG
-                if !CommandLine.arguments.contains("-loqma-preview-meals"){header}
-                #else
-                header
-                #endif
+                if useLegacyPreview {
+                    if showDetailedDiary{header}
+                    else{
+                        #if DEBUG
+                        if !CommandLine.arguments.contains("-loqma-preview-meals"){header}
+                        #endif
+                    }
+                }
             }
             .fullScreenCover(isPresented:$adding){FoodAddView(initialQuery:searchQuery,initialMeal:chosenMeal,onPhotoCommit:{foods,meal in do{let entries=try foods.map{try DiaryEntry(food:$0.0,amount:$0.1,unit:$0.2,meal:meal,day:day,language:diary.language)};return diary.add(entries,foods:foods.map{$0.0})}catch{diary.report(error);return false}}){food,amount,unit,meal in do{let entry=try DiaryEntry(food:food,amount:amount,unit:unit,meal:meal,day:day,language:diary.language);return diary.add([entry],foods:[food])}catch{diary.report(error);return false}}}
             .sheet(item:$editing){EntryEditor(entry:$0)}
+            .sheet(item:$homeFood,onDismiss:{homeFoodCommitted=false}){food in
+                FoodPortionView(food:food){food,amount,unit,meal in
+                    guard !homeFoodCommitted else{return false}
+                    do{
+                        let entry=try DiaryEntry(food:food,amount:amount,unit:unit,meal:meal,day:day,language:diary.language)
+                        let saved=diary.add([entry],foods:[food]);if saved{homeFoodCommitted=true};return saved
+                    }catch{diary.report(error);return false}
+                }
+            }
             .sheet(isPresented:$goals){GoalEditor()}
             .sheet(isPresented:$showingCalorieIntake){
                 CalorieIntakeDetailView(selectedDate:$date)
@@ -73,6 +101,14 @@ struct DiaryView:View {
             #if DEBUG
             .allowsHitTesting(routinePreviewMeal == nil)
             #endif
+    }
+    private var useLegacyPreview:Bool {
+        if showDetailedDiary{return true}
+        #if DEBUG
+        return CommandLine.arguments.contains("-loqma-preview-meals") || CommandLine.arguments.contains("-loqma-preview-overview") || routinePreviewMeal != nil
+        #else
+        return false
+        #endif
     }
     @ViewBuilder private var diaryContent:some View {
         #if DEBUG

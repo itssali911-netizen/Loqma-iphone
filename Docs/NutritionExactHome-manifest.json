@@ -1,0 +1,552 @@
+{
+  "base_commit": "7007dfc72ddb622bb5bb0b4ea5ba6643b9494d39",
+  "branch": "feature/nutrition-exact-home",
+  "checkpoint": "checkpoint/pre-nutrition-exact-home-20261025",
+  "theme": "exactReferenceTheme",
+  "uploaded": false,
+  "committed": false,
+  "original_reference_files": [
+    {
+      "path": "DESIGN_SYSTEM_SPEC.md",
+      "sha256": "387bdc37d7bab48b8bcde680c5bd0cda6aafe0b15163551babde2db42dcac33f"
+    },
+    {
+      "path": "README.md",
+      "sha256": "572b70954e00d03153586ad4504ca058f013a20cac54efa320c994c17814e9c2"
+    },
+    {
+      "path": "src/App.jsx",
+      "sha256": "3f4c5e62d463044047098f236b86ac8d42caff4c66b10905e8cc7a8aafa69beb"
+    },
+    {
+      "path": "src/styles/variables.css",
+      "sha256": "582ec429af099aaafe72cf5aee5d4b05f262f6aa9b39522fd69fc451bfc88b97"
+    },
+    {
+      "path": "tailwind.config.js",
+      "sha256": "59658d3d4959a8749493e5fc80ca85cedbdcd4f23a44e9ccf46810b4cb8d5a58"
+    },
+    {
+      "path": "tokens/design-tokens.json",
+      "sha256": "bed4514e263689614bbbfddd66837270804f00c85fbad99183a2adcab22bd298"
+    }
+  ],
+  "modified_files": [
+    {
+      "path": "Docs/NutritionExactHome-manifest.json",
+      "status": "new",
+      "sha256": null,
+      "note": "self hash omitted to avoid recursive manifest hash"
+    },
+    {
+      "path": "Docs/NutritionExactHome.md",
+      "status": "new",
+      "sha256": "24d17c1dff2a2bf649aaf6cbc7e5528a799e4325c0f3343503c0fa05039024d9",
+      "note": null
+    },
+    {
+      "path": "Luqma.xcodeproj/project.pbxproj",
+      "status": "modified",
+      "sha256": "5be65cef4ce4a372aa300e3bfd3a879236c640ee20e2ab947c86b761136e8727",
+      "note": null
+    },
+    {
+      "path": "Luqma/Core/NutritionHomeData.swift",
+      "status": "new",
+      "sha256": "0e3f2ff0c789fa894573f7c689268e5942ea7fe4b00b4d51bde1983057ed2153",
+      "note": null
+    },
+    {
+      "path": "Luqma/LuqmaApp.swift",
+      "status": "modified",
+      "sha256": "3b63d010598a3b2678f19694b913ec384c92e678e98c2b91bf0668ce5df69e43",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactBell.imageset/Contents.json",
+      "status": "new",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactBell.imageset/icon.svg",
+      "status": "new",
+      "sha256": "d43271c70b3fb82524248fa69ca78e7af0b82356006bf7db9718e76e2128e4c1",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactBrowseClock.imageset/Contents.json",
+      "status": "new",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactBrowseClock.imageset/icon.svg",
+      "status": "new",
+      "sha256": "56b5db5ff0587655f91017ee6214afb71ab36e01f6e712d959a9a61708e39237",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactBrowseFlame.imageset/Contents.json",
+      "status": "new",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactBrowseFlame.imageset/icon.svg",
+      "status": "new",
+      "sha256": "9fd5a409f37448993761b89f7f96b31231a346f438b62caacc321de40b296ee9",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactBrowseStar.imageset/Contents.json",
+      "status": "new",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactBrowseStar.imageset/icon.svg",
+      "status": "new",
+      "sha256": "9621c6c1a1aa736c6141d08ad684ca72a87ccf75d610847f4512225726f1c9e0",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactCheck.imageset/Contents.json",
+      "status": "new",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactCheck.imageset/icon.svg",
+      "status": "new",
+      "sha256": "ff5cbf7a2d39ca9048d5d1c90289c29cb100362806990b9311aee4451334532f",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactCheckBold.imageset/Contents.json",
+      "status": "new",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactCheckBold.imageset/icon.svg",
+      "status": "new",
+      "sha256": "68caa5d8ebfa338de3de6a8b9c039e4f01ed7eb66fdea2c04a250f17e7a07c99",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactChevronLeft.imageset/Contents.json",
+      "status": "new",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactChevronLeft.imageset/icon.svg",
+      "status": "new",
+      "sha256": "c0724fd812b4ef9364dfa820b4d034b2be2515f099760af6446b3e8126e883eb",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactChevronRight.imageset/Contents.json",
+      "status": "new",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactChevronRight.imageset/icon.svg",
+      "status": "new",
+      "sha256": "8bb0ef533603fdf98dcf45c2348299ec40d0e8883917e3c3e947edbd5e53e924",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactClock.imageset/Contents.json",
+      "status": "new",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactClock.imageset/icon.svg",
+      "status": "new",
+      "sha256": "76bd1b88a57744d1edf0d15d9b0dc17b29ad7adb9b31cc3f0f118d652a284b2f",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactFlame.imageset/Contents.json",
+      "status": "new",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactFlame.imageset/icon.svg",
+      "status": "new",
+      "sha256": "4678a8890ea5a8f4a028c60566e7a1f28d06a83bfd86c4e71c84c590682fdadb",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactHeaderFlame.imageset/Contents.json",
+      "status": "new",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactHeaderFlame.imageset/icon.svg",
+      "status": "new",
+      "sha256": "9ac0d8b19f7d40a5ec640ae375b14b1bd1af4e72b7fcfd44e780dba55e91c5c0",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactHeart.imageset/Contents.json",
+      "status": "new",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactHeart.imageset/icon.svg",
+      "status": "new",
+      "sha256": "663ac77c8526b01d36655ecce49115957dadaa561f7c1a1563c9e5cc9f8ea0fe",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactMoreVertical.imageset/Contents.json",
+      "status": "new",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactMoreVertical.imageset/icon.svg",
+      "status": "new",
+      "sha256": "c39b908f02c1c11e7746001f5efbed6a5d5ba06f168c924c245510dab88578f9",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactPlus.imageset/Contents.json",
+      "status": "new",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactPlus.imageset/icon.svg",
+      "status": "new",
+      "sha256": "faa78a75aa5b72aa60612d6bc887456b7a11f2af6ea304a89b354ecb0c81caab",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactPlusBold.imageset/Contents.json",
+      "status": "new",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactPlusBold.imageset/icon.svg",
+      "status": "new",
+      "sha256": "ac32ea62bdbfa0eadec8538652f00b7b3627d5a9edaef5a1cf8b4404a360808c",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactSearch.imageset/Contents.json",
+      "status": "new",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactSearch.imageset/icon.svg",
+      "status": "new",
+      "sha256": "cc8b6e2fbd3bf56532b09b5938b57e9570b36c506c8c22080fffdfbafdb3d291",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactSettings.imageset/Contents.json",
+      "status": "new",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactSettings.imageset/icon.svg",
+      "status": "new",
+      "sha256": "c8fab4164e95f88f23b57688b631163392cf36a89124935af1b86048358dddd8",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactStar.imageset/Contents.json",
+      "status": "new",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactStar.imageset/icon.svg",
+      "status": "new",
+      "sha256": "bd12360704e803da04aae61cdb31d0c3b38326126ec14b4fca44d3f56c1e20ce",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactUtensils.imageset/Contents.json",
+      "status": "new",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactUtensils.imageset/icon.svg",
+      "status": "new",
+      "sha256": "263e3d3567df1632c6996462e18f1add7b8ae47945323b0115261f7800c9fca1",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactWifi.imageset/Contents.json",
+      "status": "new",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactWifi.imageset/icon.svg",
+      "status": "new",
+      "sha256": "aca73c6feea5ede70e20fc585f81c616caa0ef6b1179b870b8037aea0c8cf6de",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactX.imageset/Contents.json",
+      "status": "new",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactX.imageset/icon.svg",
+      "status": "new",
+      "sha256": "d291fb22afcf3164a801957b55d7474a4a77721e5b3cab3c29cc45d3adc4322b",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactZap.imageset/Contents.json",
+      "status": "new",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactZap.imageset/icon.svg",
+      "status": "new",
+      "sha256": "e876fcea44ab886dfafa2870faf52714a841aa7fdc8e1678233acbae4c4e8783",
+      "note": null
+    },
+    {
+      "path": "Luqma/Resources/Lucide-LICENSE.txt",
+      "status": "new",
+      "sha256": "b495047bd93a9b06913511076f504daba17d5bbeb3e0650f3bb53a4220329c57",
+      "note": null
+    },
+    {
+      "path": "Luqma/Views/DiaryView.swift",
+      "status": "modified",
+      "sha256": "de84a901ad79a79f90ae5b2b7759915ad27be78b7dd686912cadacf09ad4a575",
+      "note": null
+    },
+    {
+      "path": "Luqma/Views/NutritionExactTheme.swift",
+      "status": "new",
+      "sha256": "0c80f7954c9a5dd81e711ca04db9bd9808d753d8b7961214fc31d80aecd5d168",
+      "note": null
+    },
+    {
+      "path": "Luqma/Views/NutritionHomeSheets.swift",
+      "status": "new",
+      "sha256": "69dd60d27bd10f9c7a3b5014254452a8ae59673ef6c86070325bd2e0a4869539",
+      "note": null
+    },
+    {
+      "path": "Luqma/Views/NutritionHomeView.swift",
+      "status": "new",
+      "sha256": "a48370cdf6862422e04fc95d56e864489d9de9d5eb2e2b9347c8aef506a18cdb",
+      "note": null
+    },
+    {
+      "path": "Scripts/ui_interactions.py",
+      "status": "modified",
+      "sha256": "e711382cc627d45a5ef7d84a4807bd1241b36cb8c0705c12fdc3716986deab7d",
+      "note": null
+    },
+    {
+      "path": "Tests/NutritionHomeDataTests.swift",
+      "status": "new",
+      "sha256": "e0bf66d5beaec07b7546a7e352ac83b705adc63710835adc4a2c1320a6dee570",
+      "note": null
+    },
+    {
+      "path": "TestsUI/LuqmaInteractionTests.swift",
+      "status": "modified",
+      "sha256": "4313b2be300d31147476a793057d7ee7094164ec0aeff4d35e0ef2250bd9bb77",
+      "note": null
+    },
+    {
+      "path": "TestsUI/LuqmaPerformanceTests.swift",
+      "status": "modified",
+      "sha256": "e7577fcd1cba39b3eb4bab56e3d1fd6db222c673b218984a9b641f9b3c7c1e13",
+      "note": null
+    }
+  ],
+  "new_vectors": [
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactBell.imageset/icon.svg",
+      "bytes": 394,
+      "sha256": "d43271c70b3fb82524248fa69ca78e7af0b82356006bf7db9718e76e2128e4c1"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactBrowseClock.imageset/icon.svg",
+      "bytes": 293,
+      "sha256": "56b5db5ff0587655f91017ee6214afb71ab36e01f6e712d959a9a61708e39237"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactBrowseFlame.imageset/icon.svg",
+      "bytes": 313,
+      "sha256": "9fd5a409f37448993761b89f7f96b31231a346f438b62caacc321de40b296ee9"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactBrowseStar.imageset/icon.svg",
+      "bytes": 587,
+      "sha256": "9621c6c1a1aa736c6141d08ad684ca72a87ccf75d610847f4512225726f1c9e0"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactCheck.imageset/icon.svg",
+      "bytes": 235,
+      "sha256": "ff5cbf7a2d39ca9048d5d1c90289c29cb100362806990b9311aee4451334532f"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactCheckBold.imageset/icon.svg",
+      "bytes": 235,
+      "sha256": "68caa5d8ebfa338de3de6a8b9c039e4f01ed7eb66fdea2c04a250f17e7a07c99"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactChevronLeft.imageset/icon.svg",
+      "bytes": 234,
+      "sha256": "c0724fd812b4ef9364dfa820b4d034b2be2515f099760af6446b3e8126e883eb"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactChevronRight.imageset/icon.svg",
+      "bytes": 233,
+      "sha256": "8bb0ef533603fdf98dcf45c2348299ec40d0e8883917e3c3e947edbd5e53e924"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactClock.imageset/icon.svg",
+      "bytes": 271,
+      "sha256": "76bd1b88a57744d1edf0d15d9b0dc17b29ad7adb9b31cc3f0f118d652a284b2f"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactFlame.imageset/icon.svg",
+      "bytes": 313,
+      "sha256": "4678a8890ea5a8f4a028c60566e7a1f28d06a83bfd86c4e71c84c590682fdadb"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactHeaderFlame.imageset/icon.svg",
+      "bytes": 313,
+      "sha256": "9ac0d8b19f7d40a5ec640ae375b14b1bd1af4e72b7fcfd44e780dba55e91c5c0"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactHeart.imageset/icon.svg",
+      "bytes": 372,
+      "sha256": "663ac77c8526b01d36655ecce49115957dadaa561f7c1a1563c9e5cc9f8ea0fe"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactMoreVertical.imageset/icon.svg",
+      "bytes": 318,
+      "sha256": "c39b908f02c1c11e7746001f5efbed6a5d5ba06f168c924c245510dab88578f9"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactPlus.imageset/icon.svg",
+      "bytes": 254,
+      "sha256": "faa78a75aa5b72aa60612d6bc887456b7a11f2af6ea304a89b354ecb0c81caab"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactPlusBold.imageset/icon.svg",
+      "bytes": 256,
+      "sha256": "ac32ea62bdbfa0eadec8538652f00b7b3627d5a9edaef5a1cf8b4404a360808c"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactSearch.imageset/icon.svg",
+      "bytes": 277,
+      "sha256": "cc8b6e2fbd3bf56532b09b5938b57e9570b36c506c8c22080fffdfbafdb3d291"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactSettings.imageset/icon.svg",
+      "bytes": 586,
+      "sha256": "c8fab4164e95f88f23b57688b631163392cf36a89124935af1b86048358dddd8"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactStar.imageset/icon.svg",
+      "bytes": 587,
+      "sha256": "bd12360704e803da04aae61cdb31d0c3b38326126ec14b4fca44d3f56c1e20ce"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactUtensils.imageset/icon.svg",
+      "bytes": 348,
+      "sha256": "263e3d3567df1632c6996462e18f1add7b8ae47945323b0115261f7800c9fca1"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactWifi.imageset/icon.svg",
+      "bytes": 359,
+      "sha256": "aca73c6feea5ede70e20fc585f81c616caa0ef6b1179b870b8037aea0c8cf6de"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactX.imageset/icon.svg",
+      "bytes": 258,
+      "sha256": "d291fb22afcf3164a801957b55d7474a4a77721e5b3cab3c29cc45d3adc4322b"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactZap.imageset/icon.svg",
+      "bytes": 389,
+      "sha256": "e876fcea44ab886dfafa2870faf52714a841aa7fdc8e1678233acbae4c4e8783"
+    }
+  ],
+  "validation": {
+    "platform": "win32",
+    "native_tools": {
+      "swift": null,
+      "xcodebuild": null,
+      "xcrun": null
+    },
+    "native_execution_verified": false,
+    "project_generation": {
+      "exit_code": 0,
+      "log": "project-generation.log"
+    },
+    "native_build_attempt": {
+      "exit_code": 1,
+      "log": "native-build-attempt.log"
+    },
+    "swift_grammar": {
+      "exit_code": 0,
+      "log": "swift-grammar.log"
+    },
+    "python_buildtests": {
+      "total": 77,
+      "passed": 73,
+      "failures": [
+        "test_signing_cleanup_runs_after_build_failure_and_restores_existing_profiles (test_signing.SigningTests.test_signing_cleanup_runs_after_build_failure_and_restores_existing_profiles)",
+        "test_strict_base64_private_permissions_and_no_overwrite (test_signing.SigningTests.test_strict_base64_private_permissions_and_no_overwrite)"
+      ],
+      "errors": [],
+      "skipped": [
+        {
+          "test": "test_actual_native_mixed_script_runs_use_declared_faces_and_emoji_fallback (test_bundled_fonts.NativeBundledFontTests.test_actual_native_mixed_script_runs_use_declared_faces_and_emoji_fallback)",
+          "reason": "Native iPhone font probe requires macOS/Xcode"
+        },
+        {
+          "test": "test_swiftui_cascaded_font_modifier_scales_on_iphone (test_bundled_fonts.NativeBundledFontTests.test_swiftui_cascaded_font_modifier_scales_on_iphone)",
+          "reason": "Native iPhone font probe requires macOS/Xcode"
+        }
+      ]
+    },
+    "vector_assets": {
+      "count": 22,
+      "total_svg_bytes": 7425,
+      "all_local_xml_valid": true
+    },
+    "diff_whitespace": {
+      "exit_code": 0,
+      "log": "git-diff-check.log"
+    },
+    "original_worktree_status": "",
+    "native_tests": {
+      "core_home_cases_written": 12,
+      "ui_cases_registered": 8,
+      "performance_selectors": 9,
+      "execution": "NOT RUN: no Apple SDK/compiler/simulator"
+    }
+  }
+}

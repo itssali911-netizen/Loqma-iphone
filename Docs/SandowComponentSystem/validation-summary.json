@@ -1,0 +1,59 @@
+{
+  "project_generation": {
+    "exit_code": 0,
+    "log": "project-generation.log"
+  },
+  "syntax_only": {
+    "exit_code": 0,
+    "log": "swift-grammar.log"
+  },
+  "native_build": {
+    "exit_code": 1,
+    "log": "native-build.log"
+  },
+  "native_tools": {
+    "swift": null,
+    "xcodebuild": null,
+    "xcrun": null
+  },
+  "native_build_verified": false,
+  "native_screenshots": [],
+  "buildtests": {
+    "total": 78,
+    "passed": 74,
+    "failures": [
+      "test_signing_cleanup_runs_after_build_failure_and_restores_existing_profiles (test_signing.SigningTests.test_signing_cleanup_runs_after_build_failure_and_restores_existing_profiles)",
+      "test_strict_base64_private_permissions_and_no_overwrite (test_signing.SigningTests.test_strict_base64_private_permissions_and_no_overwrite)"
+    ],
+    "errors": [],
+    "skipped": [
+      {
+        "test": "test_actual_native_mixed_script_runs_use_declared_faces_and_emoji_fallback (test_bundled_fonts.NativeBundledFontTests.test_actual_native_mixed_script_runs_use_declared_faces_and_emoji_fallback)",
+        "reason": "Native iPhone font probe requires macOS/Xcode"
+      },
+      {
+        "test": "test_swiftui_cascaded_font_modifier_scales_on_iphone (test_bundled_fonts.NativeBundledFontTests.test_swiftui_cascaded_font_modifier_scales_on_iphone)",
+        "reason": "Native iPhone font probe requires macOS/Xcode"
+      }
+    ]
+  },
+  "new_core_cases_written_not_run": 4,
+  "source_pixel_test": "70 swatches match supplied PNG, JSON and Swift literals; not a native UI comparison",
+  "original_svg_payloads_unchanged_lf_normalized": 6,
+  "reference_button_contrast": {
+    "foreground": "#FFFFFF",
+    "fill": "#F97316",
+    "ratio": 2.8030548103399218,
+    "wcag_aa_normal_text": false,
+    "reason": "Latest request preserves reference foreground; documented exception, not an AA success"
+  },
+  "diff_whitespace": {
+    "exit_code": 0,
+    "log": "diff-check.log"
+  },
+  "original_checkout_unchanged": true,
+  "previous_delivery_checkpoint": {
+    "path": "Luqma-Nutrition-Exact-Home-2026-10-25.zip",
+    "sha256": "6f216074c8e2764792c50a0a024b2dc2d64a35c64837d819e39d3115698a62c0"
+  }
+}

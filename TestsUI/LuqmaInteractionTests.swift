@@ -25,6 +25,7 @@ final class LuqmaInteractionTests:XCTestCase {
 
     func testFoodAddResizePersistenceAndDelete() throws {
         app.buttons["nav.add"].tap()
+        openHomeFoodSearch()
         // The initial catalog load can move rows. Use the real empty personal list
         // before opening manual entry rather than tapping a moving results footer.
         let personal=app.buttons["search.filter.3"]
@@ -86,10 +87,42 @@ final class LuqmaInteractionTests:XCTestCase {
         app.terminate()
         app.launch()
         XCTAssertTrue(app.buttons["nav.today"].waitForExistence(timeout:15))
-        let breakfastCount=app.staticTexts["diary.mealCount.breakfast"]
-        reveal(breakfastCount)
-        XCTAssertEqual(breakfastCount.label,"Add your first food","The actual persisted meal count must be empty after deletion")
-        XCTAssertFalse(app.buttons["UI Test Oats"].exists,"Deleted entry must remain absent after relaunch")
+        let consumedAfterDelete=app.staticTexts["exact.home.consumed"]
+        reveal(consumedAfterDelete)
+        XCTAssertEqual(consumedAfterDelete.label,"0kcal","Deleting the recorded entry must leave zero daily consumption after relaunch")
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format:"identifier BEGINSWITH %@ AND label CONTAINS %@","exact.meal.entry:","UI Test Oats")).firstMatch.exists,"A saved food suggestion is allowed; the deleted diary entry must remain absent")
+    }
+
+    func testExactHomeMealValidationAndGoalCancellation() throws {
+        let originalGoal=app.staticTexts["exact.home.goal"]
+        reveal(originalGoal)
+        let target=originalGoal.label
+        app.buttons["diary.goals"].tap()
+        let goal=app.textFields["exact.goal.value"]
+        XCTAssertTrue(goal.waitForExistence(timeout:5))
+        replace(goal,with:"2300")
+        app.buttons["exact.sheet.close"].tap()
+        XCTAssertEqual(originalGoal.label,target,"Closing a draft must not save a new goal")
+
+        app.buttons["nav.add"].tap()
+        let name="Exact Home "+UUID().uuidString
+        replace(app.textFields["exact.add.name"],with:name)
+        replace(app.textFields["exact.add.kcal"],with:"100")
+        let save=app.buttons["exact.add.save"]
+        reveal(save)
+        XCTAssertFalse(save.isEnabled,"Unknown macros must not be saved as zero")
+        replace(app.textFields["exact.add.protein"],with:"10")
+        replace(app.textFields["exact.add.carbs"],with:"15")
+        replace(app.textFields["exact.add.fat"],with:"0")
+        reveal(save);XCTAssertTrue(save.isEnabled);save.tap()
+        let dismissed=XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == false"),object:save)
+        XCTAssertEqual(XCTWaiter.wait(for:[dismissed],timeout:5),.completed)
+        let consumed=app.staticTexts["exact.home.consumed"]
+        reveal(consumed);XCTAssertEqual(consumed.label,"100kcal","Only the actual saved serving contributes to daily energy")
+        openBreakfastEntry(named:name) // selects the actual entry regardless of meal
+        let remove=app.buttons["entry.delete"]
+        reveal(remove);remove.tap()
+        XCTAssertTrue(app.buttons["Delete"].waitForExistence(timeout:5));app.buttons["Delete"].tap()
     }
 
     func testRecipeDraftSurvivesIngredientSearch() throws {
@@ -143,6 +176,7 @@ final class LuqmaInteractionTests:XCTestCase {
             XCTAssertTrue(app.buttons[identifier].isSelected)
         }
         app.buttons["diary.goals"].tap()
+        openFullHomeGoals()
         app.buttons["goals.editCalories"].tap()
         let calorieField=goalCalories()
         replace(calorieField,with:"2100")
@@ -155,6 +189,7 @@ final class LuqmaInteractionTests:XCTestCase {
         app.launch()
         XCTAssertTrue(app.buttons["diary.goals"].waitForExistence(timeout:15))
         app.buttons["diary.goals"].tap()
+        openFullHomeGoals()
         app.buttons["goals.editCalories"].tap()
         XCTAssertEqual(goalCalories().value as? String,"2100")
         replace(goalCalories(),with:"2000")
@@ -328,6 +363,7 @@ final class LuqmaInteractionTests:XCTestCase {
         app.buttons["Delete"].tap()
         XCTAssertTrue(app.buttons["nav.today"].waitForExistence(timeout:10))
         app.buttons["diary.goals"].tap()
+        openFullHomeGoals()
         app.buttons["goals.editCalories"].tap()
         replace(goalCalories(),with:originalGoal)
         finishCalorieEditing()
@@ -371,6 +407,7 @@ final class LuqmaInteractionTests:XCTestCase {
 
     private func addFitnessHistoryFood(named name:String) {
         app.buttons["nav.add"].tap()
+        openHomeFoodSearch()
         let personal=app.buttons["search.filter.3"]
         XCTAssertTrue(personal.waitForExistence(timeout:10));personal.tap()
         let manual=app.buttons["search.manual"]
@@ -388,6 +425,7 @@ final class LuqmaInteractionTests:XCTestCase {
     private func readCalorieGoal()->String {
         let goals=app.buttons["diary.goals"]
         reveal(goals);goals.tap()
+        openFullHomeGoals()
         app.buttons["goals.editCalories"].tap()
         let value=goalCalories().value as? String ?? ""
         XCTAssertNotNil(numeric(value))
@@ -784,18 +822,26 @@ final class LuqmaInteractionTests:XCTestCase {
     }
 
     private func openBreakfastEntry(named name:String="UI Test Oats") {
-        let details=app.descendants(matching:.any).matching(identifier:"diary.details.breakfast").firstMatch
-        reveal(details)
-        // The real DisclosureGroup chevron is the hit target. The button's
-        // combined accessibility frame also includes the label's Spacer.
-        let disclosure=details.images["collapsed"]
-        reveal(disclosure)
-        disclosure.tap()
-        let entry=app.buttons[name]
+        let all=app.buttons["exact.category.all"]
+        reveal(all);all.tap()
+        let entry=app.buttons.matching(NSPredicate(format:"identifier BEGINSWITH %@ AND label CONTAINS %@","exact.meal.entry:",name)).firstMatch
         XCTAssertTrue(entry.waitForExistence(timeout:5),app.debugDescription)
         reveal(entry)
-        entry.tap()
+        entry.press(forDuration:1)
+        let edit=app.buttons["Edit quantity"]
+        XCTAssertTrue(edit.waitForExistence(timeout:5));edit.tap()
         XCTAssertTrue(app.textFields["entry.amount"].waitForExistence(timeout:5))
+    }
+
+    private func openHomeFoodSearch(){
+        let search=app.buttons["exact.add.search"]
+        XCTAssertTrue(search.waitForExistence(timeout:5));reveal(search);search.tap()
+        XCTAssertTrue(app.textFields["search.query"].waitForExistence(timeout:10))
+    }
+    private func openFullHomeGoals(){
+        let settings=app.buttons["exact.goal.fullSettings"]
+        XCTAssertTrue(settings.waitForExistence(timeout:5));reveal(settings);settings.tap()
+        XCTAssertTrue(app.buttons["goals.editCalories"].waitForExistence(timeout:10))
     }
 
     private func reveal(_ element:XCUIElement,file:StaticString=#filePath,line:UInt=#line) {

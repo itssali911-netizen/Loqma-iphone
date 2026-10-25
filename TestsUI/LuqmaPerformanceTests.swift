@@ -75,6 +75,8 @@ final class LuqmaPerformanceTests: XCTestCase {
         measure(metrics: resourceMetrics(), options: options()) {
             startMeasuring()
             tap("nav.add")
+            let search=app.buttons["exact.add.search"]
+            reveal(search);search.tap()
             XCTAssertTrue(app.textFields["search.query"].waitForExistence(timeout: 10))
             tap("search.close")
             XCTAssertTrue(app.buttons["nav.today"].waitForExistence(timeout: 10))
@@ -86,6 +88,9 @@ final class LuqmaPerformanceTests: XCTestCase {
         measure(metrics: resourceMetrics(), options: options()) {
             launchFixture()
             tap("nav.add")
+            let search=app.buttons["exact.add.search"]
+            reveal(search);search.tap()
+            XCTAssertTrue(app.textFields["search.query"].waitForExistence(timeout:10))
             tap("search.filter.3")
             let product = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Luqma Performance Oats")).firstMatch
             reveal(product)
@@ -142,22 +147,13 @@ final class LuqmaPerformanceTests: XCTestCase {
         metrics.append(XCTOSSignpostMetric.scrollingAndDecelerationMetric)
         measure(metrics: metrics, options: options()) {
             launchFixture()
-            let details = app.descendants(matching: .any).matching(identifier: "diary.details.breakfast").firstMatch
-            reveal(details)
-            let chevron = details.images["collapsed"]
-            if chevron.exists {
-                XCTAssertTrue(chevron.isHittable)
-                chevron.tap()
-            } else {
-                details.tap()
-            }
-            // The disclosure owns an AX container; its row buttons retain
-            // independent actions. Require the real expanded state and actual
-            // stored fixture food before measuring the same scrolling block.
-            let expandedDetails = app.descendants(matching: .any).matching(identifier: "diary.details.breakfast").firstMatch
-            XCTAssertTrue(expandedDetails.images["expanded"].waitForExistence(timeout: 5), "The actual breakfast disclosure must be expanded before measuring")
-            let actualEntry = app.buttons.matching(NSPredicate(format: "label == %@", "Luqma Performance Oats")).firstMatch
-            XCTAssertTrue(actualEntry.waitForExistence(timeout: 5), "The expanded meal must expose real persisted diary rows before measuring")
+            // New approved Home has a lazy browse list, not a disclosure.
+            // Retain the runner selector but establish a NEW baseline for this
+            // scenario; its measurements are not comparable to the old UI.
+            tap("exact.category.all")
+            let actualEntry = app.buttons.matching(NSPredicate(format:"identifier BEGINSWITH %@ AND label CONTAINS %@","exact.meal.entry:","Luqma Performance Oats")).firstMatch
+            reveal(actualEntry)
+            XCTAssertTrue(actualEntry.waitForExistence(timeout:5),"Require an actual persisted fixture entry before measuring the new Home")
             let scroll = app.scrollViews.firstMatch
             XCTAssertTrue(scroll.waitForExistence(timeout: 5))
             startMeasuring()

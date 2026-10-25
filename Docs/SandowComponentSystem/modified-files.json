@@ -1,0 +1,287 @@
+{
+  "scope": "Current full delta from 7007dfc; includes preserved previous Home integration",
+  "base": "7007dfc72ddb622bb5bb0b4ea5ba6643b9494d39",
+  "files": [
+    {
+      "path": "BuildTests/test_sandow_reference.py",
+      "sha256": "3e807e6a61c61eee6a8a3c62e0837033683d415c8faace1ba2f2b9e46448d525"
+    },
+    {
+      "path": "Docs/NutritionExactHome-manifest.json",
+      "sha256": "4349b3e9fb08a46124b4231967501f630b02d4bf082425dc36446366f044f13f"
+    },
+    {
+      "path": "Docs/NutritionExactHome.md",
+      "sha256": "636a3831c0052c07f1348c35d8f7b9be1ef8ca9bad40f457178b0392b8d635e3"
+    },
+    {
+      "path": "Docs/SandowComponentSystem/README-AR.md",
+      "sha256": "c0a3b03926eb47d57c7ea84caf3ada28a91b4f51674e6aa186b71565bc2200ec"
+    },
+    {
+      "path": "Docs/SandowComponentSystem/extracted-tokens.json",
+      "sha256": "fedc686542a9a246282229053ffe3cb479750b74ca340b77020a4df4a1043d84"
+    },
+    {
+      "path": "Docs/SandowComponentSystem/modified-files.json",
+      "sha256": null
+    },
+    {
+      "path": "Docs/SandowComponentSystem/reference/grid-spacing.png",
+      "sha256": "87642361da78220f2c16b006376864ecfa98c5b6af4013c13817fb3d075ffda3"
+    },
+    {
+      "path": "Docs/SandowComponentSystem/reference/palette.png",
+      "sha256": "69224b4a52db72d48bca3577c78f6e4693d33c9bbf68b9323fe0cd82e82a3325"
+    },
+    {
+      "path": "Docs/SandowComponentSystem/validation-summary.json",
+      "sha256": "75ef224d164d758120be58e4c1fdddc51d04cea3a949b0865e3e8c557384a577"
+    },
+    {
+      "path": "Luqma.xcodeproj/project.pbxproj",
+      "sha256": "57ce896024425ecbf8f9c849a0852b9021901388a6b262110096251220eaedad"
+    },
+    {
+      "path": "Luqma/Core/NutritionHomeData.swift",
+      "sha256": "0e3f2ff0c789fa894573f7c689268e5942ea7fe4b00b4d51bde1983057ed2153"
+    },
+    {
+      "path": "Luqma/Core/SandowDesignSystem.swift",
+      "sha256": "c055c45e9557b5a0f33da553e6c94882fc9306225a805f1fc04dc850b1269364"
+    },
+    {
+      "path": "Luqma/Core/VisualDesignTokens.swift",
+      "sha256": "86a2e652d9e74f99988af5f6b951e5367941d8922b6552dd222ac98cde2d45fd"
+    },
+    {
+      "path": "Luqma/LuqmaApp.swift",
+      "sha256": "3b63d010598a3b2678f19694b913ec384c92e678e98c2b91bf0668ce5df69e43"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactBell.imageset/Contents.json",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactBell.imageset/icon.svg",
+      "sha256": "d43271c70b3fb82524248fa69ca78e7af0b82356006bf7db9718e76e2128e4c1"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactBrowseClock.imageset/Contents.json",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactBrowseClock.imageset/icon.svg",
+      "sha256": "56b5db5ff0587655f91017ee6214afb71ab36e01f6e712d959a9a61708e39237"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactBrowseFlame.imageset/Contents.json",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactBrowseFlame.imageset/icon.svg",
+      "sha256": "9fd5a409f37448993761b89f7f96b31231a346f438b62caacc321de40b296ee9"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactBrowseStar.imageset/Contents.json",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactBrowseStar.imageset/icon.svg",
+      "sha256": "9621c6c1a1aa736c6141d08ad684ca72a87ccf75d610847f4512225726f1c9e0"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactCheck.imageset/Contents.json",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactCheck.imageset/icon.svg",
+      "sha256": "ff5cbf7a2d39ca9048d5d1c90289c29cb100362806990b9311aee4451334532f"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactCheckBold.imageset/Contents.json",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactCheckBold.imageset/icon.svg",
+      "sha256": "68caa5d8ebfa338de3de6a8b9c039e4f01ed7eb66fdea2c04a250f17e7a07c99"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactChevronLeft.imageset/Contents.json",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactChevronLeft.imageset/icon.svg",
+      "sha256": "c0724fd812b4ef9364dfa820b4d034b2be2515f099760af6446b3e8126e883eb"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactChevronRight.imageset/Contents.json",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactChevronRight.imageset/icon.svg",
+      "sha256": "8bb0ef533603fdf98dcf45c2348299ec40d0e8883917e3c3e947edbd5e53e924"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactClock.imageset/Contents.json",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactClock.imageset/icon.svg",
+      "sha256": "76bd1b88a57744d1edf0d15d9b0dc17b29ad7adb9b31cc3f0f118d652a284b2f"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactFlame.imageset/Contents.json",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactFlame.imageset/icon.svg",
+      "sha256": "4678a8890ea5a8f4a028c60566e7a1f28d06a83bfd86c4e71c84c590682fdadb"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactHeaderFlame.imageset/Contents.json",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactHeaderFlame.imageset/icon.svg",
+      "sha256": "9ac0d8b19f7d40a5ec640ae375b14b1bd1af4e72b7fcfd44e780dba55e91c5c0"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactHeart.imageset/Contents.json",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactHeart.imageset/icon.svg",
+      "sha256": "663ac77c8526b01d36655ecce49115957dadaa561f7c1a1563c9e5cc9f8ea0fe"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactMoreVertical.imageset/Contents.json",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactMoreVertical.imageset/icon.svg",
+      "sha256": "c39b908f02c1c11e7746001f5efbed6a5d5ba06f168c924c245510dab88578f9"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactPlus.imageset/Contents.json",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactPlus.imageset/icon.svg",
+      "sha256": "faa78a75aa5b72aa60612d6bc887456b7a11f2af6ea304a89b354ecb0c81caab"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactPlusBold.imageset/Contents.json",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactPlusBold.imageset/icon.svg",
+      "sha256": "ac32ea62bdbfa0eadec8538652f00b7b3627d5a9edaef5a1cf8b4404a360808c"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactSearch.imageset/Contents.json",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactSearch.imageset/icon.svg",
+      "sha256": "cc8b6e2fbd3bf56532b09b5938b57e9570b36c506c8c22080fffdfbafdb3d291"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactSettings.imageset/Contents.json",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactSettings.imageset/icon.svg",
+      "sha256": "c8fab4164e95f88f23b57688b631163392cf36a89124935af1b86048358dddd8"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactStar.imageset/Contents.json",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactStar.imageset/icon.svg",
+      "sha256": "bd12360704e803da04aae61cdb31d0c3b38326126ec14b4fca44d3f56c1e20ce"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactUtensils.imageset/Contents.json",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactUtensils.imageset/icon.svg",
+      "sha256": "263e3d3567df1632c6996462e18f1add7b8ae47945323b0115261f7800c9fca1"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactWifi.imageset/Contents.json",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactWifi.imageset/icon.svg",
+      "sha256": "aca73c6feea5ede70e20fc585f81c616caa0ef6b1179b870b8037aea0c8cf6de"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactX.imageset/Contents.json",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactX.imageset/icon.svg",
+      "sha256": "d291fb22afcf3164a801957b55d7474a4a77721e5b3cab3c29cc45d3adc4322b"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactZap.imageset/Contents.json",
+      "sha256": "7955da9968744e1d5bc877b3074006eb810183608def76fc83abcfdcd4358534"
+    },
+    {
+      "path": "Luqma/Resources/Assets.xcassets/NutritionExactZap.imageset/icon.svg",
+      "sha256": "e876fcea44ab886dfafa2870faf52714a841aa7fdc8e1678233acbae4c4e8783"
+    },
+    {
+      "path": "Luqma/Resources/Lucide-LICENSE.txt",
+      "sha256": "b495047bd93a9b06913511076f504daba17d5bbeb3e0650f3bb53a4220329c57"
+    },
+    {
+      "path": "Luqma/Views/Common.swift",
+      "sha256": "ac4dbc2ef4afdf7a757ac9b9bfd451e06d23f66e3c66e65263b4628f645c97fc"
+    },
+    {
+      "path": "Luqma/Views/DiaryView.swift",
+      "sha256": "de84a901ad79a79f90ae5b2b7759915ad27be78b7dd686912cadacf09ad4a575"
+    },
+    {
+      "path": "Luqma/Views/NutritionExactTheme.swift",
+      "sha256": "f442177abef3ee9dfa8525654e8bf4da67417e2470c357d1476e8e1778432b08"
+    },
+    {
+      "path": "Luqma/Views/NutritionHomeSheets.swift",
+      "sha256": "ba26cc5be2663fa99d1e9b2acbef18802eb88ba63b383d136e290072db658a13"
+    },
+    {
+      "path": "Luqma/Views/NutritionHomeView.swift",
+      "sha256": "0a5aa3dae5d59144dd8b30d8416829fb617b045681cc718b33461c2e7596338e"
+    },
+    {
+      "path": "Scripts/ui_interactions.py",
+      "sha256": "e711382cc627d45a5ef7d84a4807bd1241b36cb8c0705c12fdc3716986deab7d"
+    },
+    {
+      "path": "Tests/NutritionHomeDataTests.swift",
+      "sha256": "e0bf66d5beaec07b7546a7e352ac83b705adc63710835adc4a2c1320a6dee570"
+    },
+    {
+      "path": "Tests/SandowDesignSystemTests.swift",
+      "sha256": "e0b2dc37f64ced2423be44e80b81b24215a8ccd90d60d4d29867d2048da31ab9"
+    },
+    {
+      "path": "Tests/VisualDesignTokensTests.swift",
+      "sha256": "85eaf43c319f4409e0780f3459ac8bb6181f6b858f75cb13cf9e2a8771997b1b"
+    },
+    {
+      "path": "TestsUI/LuqmaInteractionTests.swift",
+      "sha256": "4313b2be300d31147476a793057d7ee7094164ec0aeff4d35e0ef2250bd9bb77"
+    },
+    {
+      "path": "TestsUI/LuqmaPerformanceTests.swift",
+      "sha256": "e7577fcd1cba39b3eb4bab56e3d1fd6db222c673b218984a9b641f9b3c7c1e13"
+    }
+  ],
+  "self_hash_omitted": true
+}

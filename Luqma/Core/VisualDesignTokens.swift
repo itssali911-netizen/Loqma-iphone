@@ -29,24 +29,24 @@ struct VisualRGB:Equatable,Codable,Sendable {
 }
 
 enum VisualDesignTokens {
-    static let background=VisualRGB(hex:0x111214)
-    static let card=VisualRGB(hex:0x24262B)
-    static let surface=VisualRGB(hex:0x393C43)
-    static let accent=VisualRGB(hex:0xF97316)
-    static let secondaryAccent=VisualRGB(hex:0x2563EB)
-    static let text=VisualRGB(hex:0xFFFFFF)
-    static let textSecondary=VisualRGB(hex:0xB8BBC2)
+    static let background=SandowPalette.gray100
+    static let card=SandowPalette.gray90
+    static let surface=SandowPalette.gray80
+    static let accent=SandowPalette.orange50
+    static let secondaryAccent=SandowPalette.blue60
+    static let text=SandowPalette.white
+    static let textSecondary=SandowPalette.gray30
     static let onAccent=background
     static let onSecondaryAccent=text
-    static let accentText=VisualRGB(hex:0xFDBA74)
-    static let secondaryAccentText=VisualRGB(hex:0x93C5FD)
-    static let controlBorder=VisualRGB(hex:0x9EA0A5)
-    static let divider=VisualRGB(hex:0x545861)
-    static let success=VisualRGB(hex:0x86EFAC)
-    static let warning=VisualRGB(hex:0xFDE68A)
-    static let error=VisualRGB(hex:0xFCA5A5)
-    static let errorBackground=VisualRGB(hex:0x450A0A)
-    static let errorBorder=VisualRGB(hex:0xEF4444)
+    static let accentText=SandowPalette.orange30
+    static let secondaryAccentText=SandowPalette.blue30
+    static let controlBorder=SandowPalette.gray40
+    static let divider=SandowPalette.gray70
+    static let success=SandowPalette.green30
+    static let warning=SandowPalette.yellow20
+    static let error=SandowPalette.red30
+    static let errorBackground=SandowPalette.red100
+    static let errorBorder=SandowPalette.red50
 
     struct ContrastResult:Codable,Equatable {
         let role:String

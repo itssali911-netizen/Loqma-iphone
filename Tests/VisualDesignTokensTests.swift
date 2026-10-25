@@ -35,13 +35,13 @@ final class VisualDesignTokensTests:XCTestCase {
         XCTAssertTrue(audit.contains{$0.role == "onAccent/accent"})
         XCTAssertTrue(audit.contains{$0.role == "onSecondaryAccent/secondaryAccent"})
     }
-    func testOrdinaryOrangeButtonTextUsesInkInsteadOfWhite(){
+    func testReadableInkOnAccentRoleRemainsAvailableForNumericSurfaces(){
         let orange=VisualDesignTokens.accent
         XCTAssertLessThan(VisualDesignTokens.text.contrastRatio(against:orange),3,"White is insufficient even for large orange-button text")
         XCTAssertGreaterThanOrEqual(VisualDesignTokens.onAccent.contrastRatio(against:orange),4.5)
         XCTAssertEqual(VisualDesignTokens.text.contrastRatio(against:orange),2.803,accuracy:0.001)
     }
-    func testPressedPrimaryActionRetainsReadableTextOnEachSupportedSurface(){
+    func testTranslucentInkOnAccentRoleRetainsReadableTextOnEachSupportedSurface(){
         for background in [VisualDesignTokens.background,VisualDesignTokens.card,VisualDesignTokens.surface]{
             let foreground=VisualDesignTokens.onAccent.composited(over:background,opacity:0.8)
             let fill=VisualDesignTokens.accent.composited(over:background,opacity:0.8)
