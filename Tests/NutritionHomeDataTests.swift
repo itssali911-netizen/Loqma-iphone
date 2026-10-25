@@ -70,6 +70,11 @@ final class NutritionHomeDataTests:XCTestCase {
         XCTAssertEqual(index.results(category:.meat,query:"").count,2)
         XCTAssertTrue(index.results(category:.fruit,query:"").isEmpty)
         XCTAssertEqual(index.results(category:.all,query:"").count,3)
+        XCTAssertFalse(NutritionHomeCategory.fruit.matches("جبنة موزاريلا Mozzarella"))
+        XCTAssertFalse(NutritionHomeCategory.fruit.matches("Updated recipe"))
+        XCTAssertTrue(NutritionHomeCategory.fruit.matches("حليب بالموز"))
+        XCTAssertTrue(NutritionHomeCategory.fruit.matches("Apples and berries"))
+        XCTAssertTrue(NutritionHomeCategory.vegetables.matches("الخضروات Vegetables"))
     }
     func testStableEntryIdentifiersAcrossProjectionRebuilds()throws{
         var state=DiarySnapshot();state.entries=[try entry()]

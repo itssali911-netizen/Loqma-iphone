@@ -22,7 +22,17 @@ enum NutritionHomeCategory:String,CaseIterable,Identifiable,Sendable {
         case .fruit:terms=["فواكه","تفاح","موز","توت","برتقال","تمر","fruit","apple","banana","berry","orange","date"]
         case .all:terms=[]
         }
-        return terms.contains{name.contains(FoodSearch.normalized($0))}
+        // Categories describe whole ingredients. Substring matching classified
+        // موزاريلا as موز and an English "update" as a date fruit.
+        let words=name.split(separator:" ").map(String.init)
+        return terms.contains { term in
+            let normalized=FoodSearch.normalized(term)
+            return words.contains { word in
+                if word==normalized{return true}
+                if word==normalized+"s" || (normalized.hasSuffix("y") && word==String(normalized.dropLast())+"ies"){return true}
+                return ["ال","وال","بال"].contains{word==$0+normalized}
+            }
+        }
     }
 }
 
