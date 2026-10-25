@@ -9,6 +9,7 @@ import json
 from pathlib import PurePosixPath
 import re
 import subprocess
+import time
 from typing import Callable
 
 
@@ -71,6 +72,62 @@ def _confirm_shutdown(device: str, command: Command) -> bool:
     return len(matches) == 1 and matches[0].get("state") == "Shutdown"
 
 
+def _remaining_boot_seconds(deadline: float) -> int:
+    remaining = int(deadline - time.monotonic())
+    if remaining < 1:
+        raise SimulatorSetupError(f"Simulator boot readiness exhausted its existing {BOOT_TIMEOUT_SECONDS}s deadline.")
+    return remaining
+
+
+def _wait_for_boot(device: str, command: Command, prefix: str,
+                   handoffs: list[dict]) -> None:
+    """Wait once without initiating another boot after a verified state race.
+
+    Performance/UI runners retain stdout in their labeled log and expose a
+    nonzero exit as ``<label> failed (<code>); see <file>.log.``. The native
+    font probe uses a different envelope and keeps the existing recovery path.
+    Exit 149 alone does
+    not establish CoreSimulator error 405 or readiness. For this observed exit,
+    require the exact available UUID to be Booted, then monitor without -b.
+    The caller still requires a real Settings PID. A timeout is not this race.
+    """
+    deadline = time.monotonic() + BOOT_TIMEOUT_SECONDS
+    label = prefix + "-boot-ready"
+    try:
+        command(["xcrun", "simctl", "bootstatus", device, "-b"], label, BOOT_TIMEOUT_SECONDS)
+    except STARTUP_FAILURES as error:
+        # Accept only the actual checked-runner nonzero-exit envelope. Do not
+        # misclassify wrapped timeouts, arbitrary boot errors, or a launch error.
+        envelope = (r"(?:[A-Za-z0-9_-]+-)?" + re.escape(label)
+                    + r" failed \(149\); see [^\r\n]+\.log\.")
+        if (isinstance(error, subprocess.TimeoutExpired)
+                or isinstance(error.__cause__, subprocess.TimeoutExpired)
+                or not isinstance(error, RuntimeError)
+                or not re.fullmatch(envelope, str(error))):
+            raise
+        try:
+            inventory = json.loads(command(["xcrun", "simctl", "list", "devices", "--json"],
+                                           prefix + "-boot-state",
+                                           min(30, _remaining_boot_seconds(deadline))))
+            devices = inventory.get("devices") if isinstance(inventory, dict) else None
+            matches = ([item for items in devices.values() for item in items
+                        if isinstance(item, dict) and item.get("udid", "").lower() == device.lower()]
+                       if isinstance(devices, dict) and all(isinstance(items, list) for items in devices.values()) else [])
+            confirmed = (len(matches) == 1 and matches[0].get("state") == "Booted"
+                         and matches[0].get("isAvailable") is True)
+        except (ValueError, TypeError, AttributeError, *STARTUP_FAILURES):
+            # The original nonzero wait remains the startup failure if the
+            # exact current state cannot be independently confirmed.
+            raise error
+        if not confirmed:
+            raise
+        handoffs.append({"initial_error": str(error)[:1024], "confirmed_state": "Booted",
+                         "attempt": int(prefix.rsplit("-", 1)[1]), "monitor_boots_device": False})
+        # Consume the original boot deadline, never a fresh 300-second budget.
+        command(["xcrun", "simctl", "bootstatus", device], prefix + "-boot-monitor",
+                _remaining_boot_seconds(deadline))
+
+
 def prepare_created_simulator(device: str, command: Command, *,
                               developer_dir: str | None = None) -> dict:
     """Boot/warm one caller-created Simulator, retrying its startup once.
@@ -84,17 +141,16 @@ def prepare_created_simulator(device: str, command: Command, *,
     simulator_app = _selected_simulator_app(command, developer_dir)
     failures: list[str] = []
     diagnostic_failures: list[str] = []
+    boot_wait_handoffs: list[dict] = []
     for attempt in (1, 2):
         prefix = f"simulator-bootstrap-{attempt}"
         try:
             command(["/usr/bin/open", "-g", "-a", simulator_app, "--args",
                      "-CurrentDeviceUDID", device], prefix + "-open", 30)
-            # -b boots if needed and waits when Simulator.app already initiated
-            # this exact device's boot; a separate boot would race with open.
-            # A fresh iOS 26.5 device can still be running CoreLocation data
-            # migration at three minutes. Let that existing migration finish
-            # before using the single reboot; readiness must still succeed.
-            command(["xcrun", "simctl", "bootstatus", device, "-b"], prefix + "-boot-ready", BOOT_TIMEOUT_SECONDS)
+            # Keep the GUI prerequisite. If open and -b race to start this
+            # exact device, verify Booted and continue monitoring without -b;
+            # no extra reboot or enlarged readiness deadline is introduced.
+            _wait_for_boot(device, command, prefix, boot_wait_handoffs)
             # Build 57 attempts 1/2 reached a running Settings process about
             # 96/101 seconds after bootstatus finished, with scene readiness
             # around 102/109 seconds. Allow that observed system startup lag;
@@ -107,7 +163,7 @@ def prepare_created_simulator(device: str, command: Command, *,
             return {"attempts": attempt, "reboot_performed": attempt == 2,
                     "probe_bundle": PROBE_BUNDLE, "probe_pid": int(process.group(1)),
                     "selected_simulator_app": simulator_app, "failures": failures,
-                    "diagnostic_failures": diagnostic_failures}
+                    "diagnostic_failures": diagnostic_failures, "boot_wait_handoffs": boot_wait_handoffs}
         except STARTUP_FAILURES as error:
             failures.append(str(error)[:1024])
             diagnostic = collect_startup_diagnostics(device, command, prefix + "-diagnostic")

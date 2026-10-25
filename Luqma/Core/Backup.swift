@@ -4,20 +4,31 @@ enum DiaryValidation {
     static func check(_ s: DiarySnapshot) throws {
         func require(_ ok: Bool) throws { if !ok { throw AppError.invalid("راجع البيانات والكميات؛ توجد قيم غير صالحة ولم يُغيّر سجلك.", "Check the data and quantities. Some values are invalid; your diary was not changed.") } }
         try require(s.app == "luqma" && s.version == 2 && s.entries.count <= 50000 && s.recipes.count <= 50000 && s.weights.count <= 50000 && s.products.count <= 1000 && s.searchHistory.count <= 30 && s.barcodeHistory.count <= 30 && (s.customFoods?.count ?? 0) <= 1000)
+        // One diary usually repeats a small number of day keys across many
+        // foods. Keep the existing strict parser/round trip, but do it once
+        // per distinct day in this validation. Never share mutable formatters
+        // between actors; cap the temporary set even for very long histories.
+        var validatedDays=Set<String>()
+        func validDay(_ day:String)->Bool {
+            if validatedDays.contains(day){return true}
+            guard DayKey.valid(day) else{return false}
+            if validatedDays.count<512{validatedDays.insert(day)}
+            return true
+        }
         let customFoods = s.customFoods ?? []
         try require(Set(customFoods.map(\.id)).count == customFoods.count && customFoods.allSatisfy {
             ($0.source == "Your food" || MealPhotoEstimate.isValidPhotoEstimate($0)) && !$0.id.isEmpty && $0.id.count <= 360
         })
         try require(s.goals.valid && (500...10000).contains(s.goals.kcal))
         try require(Set(s.entries.map(\.id)).count == s.entries.count && Set(s.recipes.map(\.id)).count == s.recipes.count && Set(s.weights.map(\.day)).count == s.weights.count)
-        for e in s.entries { try require(DayKey.valid(e.day) && !e.name.trimmingCharacters(in: .whitespaces).isEmpty && e.name.count <= 180 && e.amount.isFinite && e.amount > 0 && e.amount <= 10000 && e.nutrition.valid && (e.barcode?.count ?? 0) <= 20 && (e.foodID?.count ?? 0) <= 360 && (e.servingLabel?.count ?? 0) <= 240) }
+        for e in s.entries { try require(validDay(e.day) && !e.name.trimmingCharacters(in: .whitespaces).isEmpty && e.name.count <= 180 && e.amount.isFinite && e.amount > 0 && e.amount <= 10000 && e.nutrition.valid && (e.barcode?.count ?? 0) <= 20 && (e.foodID?.count ?? 0) <= 360 && (e.servingLabel?.count ?? 0) <= 240) }
         for r in s.recipes {
             try r.importInfo?.validate(ingredients:r.ingredients)
             try require(!r.name.trimmingCharacters(in: .whitespaces).isEmpty && r.name.count <= 180 && ["recipe", "meal", "prep"].contains(r.type) && (1...80).contains(r.ingredients.count) && Set(r.ingredients.map(\.id)).count == r.ingredients.count && r.portions.isFinite && r.portions > 0 && r.portions <= 1000 && r.notes.count <= 2000 && r.total.valid)
             try require(r.cookedWeight.map { $0.isFinite && $0 > 0 && $0 <= 100000 } ?? true)
             for i in r.ingredients { try require(!i.name.isEmpty && i.name.count <= 180 && i.amount.isFinite && i.amount > 0 && i.amount <= 10000 && i.nutrition.valid) }
         }
-        for w in s.weights { try require(DayKey.valid(w.day) && w.kg.isFinite && (35...300).contains(w.kg) && (w.timestamp?.isFinite ?? true)) }
+        for w in s.weights { try require(validDay(w.day) && w.kg.isFinite && (35...300).contains(w.kg) && (w.timestamp?.isFinite ?? true)) }
         if let h = s.healthSync {
             try require(h.records.count <= 50000 && Set(h.records.map(\.id)).count == h.records.count && (h.anchor?.count ?? 0) <= 1000000)
             for record in h.records { try require(record.kg.isFinite && (35...300).contains(record.kg) && record.end.isFinite && record.end > 0) }
@@ -41,6 +52,7 @@ enum DiaryValidation {
             try require((f.catalogID?.count ?? 0) <= 360 && (f.serving?.count ?? 0) <= 240 && (f.servingUnit?.count ?? 0) <= 240 && (f.servingQuantity.map { $0.isFinite && $0 > 0 && $0 <= 10000 } ?? true))
         }
         if let p = s.weightPlan { try p.validate() }
+        try FitnessAssessmentState.validate(s)
     }
     static func average(_ weights: [WeightReading], ending: String, days: Int = 7) -> (count: Int, kg: Double?) {
         let range = weights.filter { let n = WeightModel.days($0.day, ending); return n >= 0 && n < days }
@@ -95,6 +107,17 @@ enum Backup {
         if current.customFoods != nil || incoming.customFoods != nil || !currentPersonal.isEmpty || !incomingPersonal.isEmpty { result.customFoods = combine(currentPersonal, incomingPersonal, id: { $0.id }) }
         result.goals = incoming.goals.balanced(); result.weightPlan = incoming.weightPlan ?? current.weightPlan
         result.adaptive = incoming.adaptive && result.weightPlan != nil
+        // Restore the optional assessment as a coherent group. Older backups
+        // have no assessment keys and do not erase the existing local profile.
+        if incoming.fitnessProfile != nil {
+            result.fitnessProfile = incoming.fitnessProfile
+            result.proposedFitnessPlan = incoming.proposedFitnessPlan
+            result.appliedFitnessPlan = incoming.appliedFitnessPlan
+            result.fitnessDraft = incoming.fitnessDraft
+        } else if let draft = incoming.fitnessDraft {
+            result.fitnessDraft = draft
+        }
+        if let dismissed = incoming.fitnessOnboardingDismissed { result.fitnessOnboardingDismissed = dismissed }
         // Imported goals may use a different activity assumption. Require a
         // fresh opt-in before attaching current Health activity to those goals.
         HealthActivity.setGoalAssociation(false, in: &result)

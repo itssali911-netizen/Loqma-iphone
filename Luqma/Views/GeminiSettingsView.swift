@@ -25,7 +25,7 @@ struct GeminiSettingsView: View {
                 Section {
                     DisclosureGroup(diary.t("إعدادات متقدمة", "Advanced settings")) {
                         if !configured {
-                            SecureField(diary.t("مفتاح الاتصال", "Connection key"), text: $key)
+                            SecureField(diary.t("مفتاح الاتصال", "Connection key"), text: $key, prompt: Text(diary.t("مفتاح الاتصال", "Connection key")).foregroundColor(Theme.muted))
                                 .keyboardType(.asciiCapable).textInputAutocapitalization(.never).autocorrectionDisabled().privacySensitive()
                             Button(diary.t("تفعيل الاتصال", "Activate connection")) { save() }
                                 .buttonStyle(LuqmaPrimaryButtonStyle())

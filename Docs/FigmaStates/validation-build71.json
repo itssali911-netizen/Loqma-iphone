@@ -1,0 +1,46 @@
+{
+  "version": "2.5",
+  "build": 71,
+  "built_commit": "487ae878ae34e09be5ca1de8a412670e3e2e82a0",
+  "workflow_run": 39096260960,
+  "job_id": 117583238698,
+  "workflow_url": "https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/39096260960",
+  "ipa_sha256": "87f457134f5720cddab7c7e89f01687eb7cbf53477f0c2ab064b0ed7ab4fd353",
+  "tests": {
+    "swift_passed": 184,
+    "python_passed": 61,
+    "python_skipped": 0,
+    "native_passed": 6,
+    "native_skipped": 0,
+    "permission_scenarios": [
+      "allowed",
+      "denied"
+    ],
+    "actual_system_permission_alert": true,
+    "independent_fresh_simulators": 2,
+    "time_edit_and_cold_launch_persistence": "08:15"
+  },
+  "visual_review": {
+    "original_ar": 28,
+    "original_en": 10,
+    "devices": [
+      "iPhone16ProMax",
+      "iPhone13mini"
+    ],
+    "completed_by": "root",
+    "pixel_fidelity_claimed": false
+  },
+  "physical_device_verified": false,
+  "physical_notification_delivery_verified": false,
+  "live_ai_or_camera_verified": false,
+  "requires_personal_resigning": true,
+  "apple_health_added": false,
+  "main_merged": false,
+  "original_svg_assets": 6,
+  "missing_original_layers": [
+    "notifications-reminder photography",
+    "utility3D illustrations",
+    "motion tracks",
+    "standalone success screen"
+  ]
+}

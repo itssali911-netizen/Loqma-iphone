@@ -1,0 +1,74 @@
+{
+  "file_key": "IfMCdTI3FcvXpNFy79PRUA",
+  "source": "https://www.figma.com/file/IfMCdTI3FcvXpNFy79PRUA?type=design",
+  "date": "2026-10-16",
+  "assets": [
+    {
+      "parent_node": "2:10108",
+      "image_node": "2:10109",
+      "name": "Diet & Nutrition Management",
+      "figma_parent_dimensions": [
+        5460,
+        2119.482421875
+      ],
+      "file": "reference/nutrition-original.png",
+      "raster_dimensions": [
+        4096,
+        1590
+      ],
+      "bytes": 2388196,
+      "sha256": "ab5b1107d207abf6b6b471f7e87ee06c7ac590e2dd495e5ec7173c4e9f1606c1",
+      "asset_kind": "Original flattened panel image fill; reference evidence only",
+      "extracted_via": "Figma get_design_context asset, downloaded without pixel modification",
+      "contains_individual_editable_screen_nodes": false,
+      "production_resource": false
+    },
+    {
+      "parent_node": "2:10112",
+      "image_node": "2:10113",
+      "name": "Search Screen",
+      "figma_parent_dimensions": [
+        2387,
+        1292
+      ],
+      "file": "reference/search-original.png",
+      "raster_dimensions": [
+        2387,
+        1292
+      ],
+      "bytes": 460339,
+      "sha256": "db85d32a2ce7774cab5bc6d8566153dfc35daa9303a79c1a18ce5df5add29427",
+      "asset_kind": "Original flattened panel image fill; reference evidence only",
+      "extracted_via": "Figma get_design_context asset, downloaded without pixel modification",
+      "contains_individual_editable_screen_nodes": false,
+      "production_resource": false
+    },
+    {
+      "parent_node": "2:10120",
+      "image_node": "2:10121",
+      "name": "Profile Settings & Help Center",
+      "figma_parent_dimensions": [
+        5899,
+        2232.28759765625
+      ],
+      "file": "reference/settings-original.png",
+      "raster_dimensions": [
+        4096,
+        1550
+      ],
+      "bytes": 833340,
+      "sha256": "33a0b295b31f5da5188acb0eef49b04d828d65731645b137defc9a34147a6aa2",
+      "asset_kind": "Original flattened panel image fill; reference evidence only",
+      "extracted_via": "Figma get_design_context asset, downloaded without pixel modification",
+      "contains_individual_editable_screen_nodes": false,
+      "production_resource": false
+    }
+  ],
+  "unavailable_or_unverified": [
+    "Standalone target-screen SVG icons/vectors",
+    "Standalone target-screen food photography",
+    "Target-screen font binaries and all text metrics",
+    "Complete prototype interactions and component variants"
+  ],
+  "raw_temporary_download_urls_published": false
+}

@@ -1,12 +1,17 @@
 """Portable checks of bounded readiness and caller-owned Simulator recovery."""
+import contextlib
+import io
 import json
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "Scripts"))
 from simulator_support import PROBE_BUNDLE, SimulatorSetupError, prepare_created_simulator
+from signing import BuildError
 
 
 DEVICE = "A9E07D7C-308C-4B99-AC79-877B728134A3"
@@ -31,7 +36,7 @@ class FakeCommands:
             return DEVELOPER + "/usr/bin/simctl\n"
         if arguments[:4] == ["xcrun", "simctl", "list", "devices"]:
             return json.dumps({"devices": {"iOS": [
-                {"udid": DEVICE, "state": self.state},
+                {"udid": DEVICE, "state": self.state, "isAvailable": True},
                 {"udid": OTHER_DEVICE, "state": "Booted"}]}})
         if arguments[:3] == ["xcrun", "simctl", "launch"]:
             return PROBE_BUNDLE + ": 901\n"
@@ -72,6 +77,124 @@ class SimulatorSupportTests(unittest.TestCase):
         self.assertEqual(result["selected_simulator_app"], DEVELOPER + "/Applications/Simulator.app")
         self.assertEqual(result["failures"], [])
         json.dumps(result)
+        self.assert_only_owned_device_is_mutated(commands)
+
+    def test_actual_checked_runner_exit149_envelopes_handoff_to_monitor_and_real_settings(self):
+        # Exercise both real wrapper formats, including the preview label
+        # prefix, rather than assuming a CalledProcessError the runners do not
+        # actually expose. Retained stdout contains the observed CI97 error.
+        from performance_probe import execute
+        from ui_preview import command
+        boot = ["xcrun", "simctl", "bootstatus", DEVICE, "-b"]
+        failure_output = (b"Device boot failed\n"
+                          b"An error was encountered (domain=com.apple.CoreSimulator.SimError, code=405):\n"
+                          b"Unable to boot device in current state: Booted\n")
+        for runner, module, label in ((execute, "performance_probe", "simulator-bootstrap-1-boot-ready"),
+                                      (command, "ui_preview", "preview-simulator-bootstrap-1-boot-ready")):
+            with self.subTest(module=module), tempfile.TemporaryDirectory() as directory:
+                with patch(module + ".subprocess.run", return_value=subprocess.CompletedProcess(boot, 149, failure_output)):
+                    with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                        with self.assertRaises(BuildError) as caught:
+                            runner(boot, Path(directory), label, 300)
+                self.assertEqual((Path(directory) / (label + ".log")).read_bytes(), failure_output)
+                commands = FakeCommands({"simulator-bootstrap-1-boot-ready": caught.exception})
+                result = prepare_created_simulator(DEVICE, commands)
+                labels = [name for _, name, _ in commands.calls]
+                self.assertEqual(result["attempts"], 1)
+                self.assertFalse(result["reboot_performed"])
+                self.assertEqual(result["probe_pid"], 901)
+                self.assertEqual(result["failures"], [])
+                self.assertNotIn("simulator-recovery-shutdown", labels)
+                self.assertFalse(any(name.endswith("-diagnostic") for name in labels))
+                self.assertLess(labels.index("simulator-bootstrap-1-boot-state"), labels.index("simulator-bootstrap-1-boot-monitor"))
+                self.assertLess(labels.index("simulator-bootstrap-1-boot-monitor"), labels.index("simulator-bootstrap-1-settings"))
+                monitor = next(args for args, name, _ in commands.calls if name.endswith("-boot-monitor"))
+                self.assertEqual(monitor, ["xcrun", "simctl", "bootstatus", DEVICE])
+                self.assertEqual(result["boot_wait_handoffs"], [{"initial_error": str(caught.exception),
+                                 "confirmed_state": "Booted", "attempt": 1, "monitor_boots_device": False}])
+                json.dumps(result)
+                self.assert_only_owned_device_is_mutated(commands)
+
+    def test_exit149_handoff_requires_exact_unique_available_booted_device(self):
+        error = BuildError("simulator-bootstrap-1-boot-ready failed (149); see simulator-bootstrap-1-boot-ready.log.")
+        valid = {"udid": DEVICE, "state": "Booted", "isAvailable": True}
+        variants = [[], [{"udid": OTHER_DEVICE, "state": "Booted", "isAvailable": True}],
+                    [valid, valid], [dict(valid, state="Shutdown")], [dict(valid, state="Booting")],
+                    [dict(valid, isAvailable=False)], [{"udid": DEVICE, "state": "Booted"}]]
+        inventories = [json.dumps({"devices": {"iOS": items}}) for items in variants]
+        inventories += ["not JSON", "[]", '{"devices":[]}', '{"devices":{"iOS":{}}}',
+                        RuntimeError("inventory unavailable")]
+        for inventory in inventories:
+            with self.subTest(inventory=inventory):
+                commands = FakeCommands({"simulator-bootstrap-1-boot-ready": error,
+                                         "simulator-bootstrap-1-boot-state": inventory})
+                result = prepare_created_simulator(DEVICE, commands)
+                self.assertEqual(result["attempts"], 2)
+                self.assertEqual(result["boot_wait_handoffs"], [])
+                self.assertIn(str(error), result["failures"][0])
+                self.assertFalse(any(name.endswith("-boot-monitor") for _, name, _ in commands.calls))
+                self.assert_only_owned_device_is_mutated(commands)
+
+    def test_timeouts_and_unrecognized_errors_never_use_boot_handoff(self):
+        timeout = subprocess.TimeoutExpired(["xcrun", "simctl", "bootstatus", DEVICE, "-b"], 300)
+        wrapped = BuildError("simulator-bootstrap-1-boot-ready exceeded 300s; evidence retained in simulator-bootstrap-1-boot-ready.log.")
+        wrapped.__cause__ = timeout
+        misleading = BuildError("simulator-bootstrap-1-boot-ready failed (149); see simulator-bootstrap-1-boot-ready.log.")
+        misleading.__cause__ = timeout
+        for error in (timeout, wrapped, misleading, OSError("boot I/O error"),
+                      BuildError("simulator-bootstrap-1-boot-ready failed (65); see simulator-bootstrap-1-boot-ready.log."),
+                      RuntimeError("149 Unable to boot device in current state: Booted")):
+            with self.subTest(error=str(error)):
+                commands = FakeCommands({"simulator-bootstrap-1-boot-ready": error})
+                result = prepare_created_simulator(DEVICE, commands)
+                self.assertEqual(result["attempts"], 2)
+                self.assertFalse(any(name.endswith(("-boot-state", "-boot-monitor")) for _, name, _ in commands.calls))
+                self.assertEqual(result["boot_wait_handoffs"], [])
+                self.assert_only_owned_device_is_mutated(commands)
+
+    def test_boot_handoff_consumes_existing_deadline_without_extending_it(self):
+        error = BuildError("simulator-bootstrap-1-boot-ready failed (149); see simulator-bootstrap-1-boot-ready.log.")
+        commands = FakeCommands({"simulator-bootstrap-1-boot-ready": error})
+        with patch("simulator_support.time.monotonic", side_effect=[100.0, 104.0, 109.0]):
+            result = prepare_created_simulator(DEVICE, commands)
+        budgets = {name: timeout for _, name, timeout in commands.calls}
+        self.assertEqual(budgets["simulator-bootstrap-1-boot-ready"], 300)
+        self.assertEqual(budgets["simulator-bootstrap-1-boot-state"], 30)
+        self.assertEqual(budgets["simulator-bootstrap-1-boot-monitor"], 291)
+        self.assertEqual(budgets["simulator-bootstrap-1-settings"], 150)
+        self.assertEqual(result["attempts"], 1)
+        self.assert_only_owned_device_is_mutated(commands)
+
+    def test_boot_handoff_cannot_monitor_after_existing_deadline_expires(self):
+        error = BuildError("simulator-bootstrap-1-boot-ready failed (149); see simulator-bootstrap-1-boot-ready.log.")
+        commands = FakeCommands({"simulator-bootstrap-1-boot-ready": error})
+        with patch("simulator_support.time.monotonic", side_effect=[100.0, 101.0, 400.0, 500.0]):
+            result = prepare_created_simulator(DEVICE, commands)
+        self.assertEqual(result["attempts"], 2)
+        self.assertIn("existing 300s deadline", result["failures"][0])
+        self.assertFalse(any(name.endswith("-boot-monitor") for _, name, _ in commands.calls))
+        self.assert_only_owned_device_is_mutated(commands)
+
+    def test_failed_nonbooting_monitor_uses_only_existing_reboot_retry(self):
+        error = BuildError("simulator-bootstrap-1-boot-ready failed (149); see simulator-bootstrap-1-boot-ready.log.")
+        commands = FakeCommands({"simulator-bootstrap-1-boot-ready": error,
+                                 "simulator-bootstrap-1-boot-monitor": RuntimeError("monitor failed")})
+        result = prepare_created_simulator(DEVICE, commands)
+        self.assertEqual(result["attempts"], 2)
+        self.assertEqual(result["failures"], ["monitor failed"])
+        self.assertEqual(len(result["boot_wait_handoffs"]), 1)
+        self.assertEqual([name for _, name, _ in commands.calls].count("simulator-recovery-shutdown"), 1)
+        self.assert_only_owned_device_is_mutated(commands)
+
+    def test_booted_handoff_still_rejects_missing_real_settings_pid(self):
+        error = BuildError("simulator-bootstrap-1-boot-ready failed (149); see simulator-bootstrap-1-boot-ready.log.")
+        commands = FakeCommands({"simulator-bootstrap-1-boot-ready": error,
+                                 "simulator-bootstrap-1-settings": "",
+                                 "simulator-bootstrap-2-settings": ""})
+        with self.assertRaisesRegex(SimulatorSetupError, "returned no process ID"):
+            prepare_created_simulator(DEVICE, commands)
+        self.assertEqual([name for _, name, _ in commands.calls].count("simulator-recovery-shutdown"), 1)
+        self.assertFalse(any("bootstrap-3" in name for _, name, _ in commands.calls))
         self.assert_only_owned_device_is_mutated(commands)
 
     def test_readiness_timeout_reboots_only_owned_device_once_and_preserves_diagnostics(self):

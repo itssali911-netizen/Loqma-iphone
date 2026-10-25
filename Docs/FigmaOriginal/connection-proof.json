@@ -1,0 +1,163 @@
+{
+  "file_key": "IfMCdTI3FcvXpNFy79PRUA",
+  "reference": "https://www.figma.com/file/IfMCdTI3FcvXpNFy79PRUA?type=design",
+  "connection_verified": true,
+  "access": {
+    "tier": "starter",
+    "seat": "View",
+    "mcp_rate_limited": true
+  },
+  "page_index": [
+    {
+      "id": "0:1",
+      "name": "👋 Welcome!"
+    },
+    {
+      "id": "2:602",
+      "name": "✨ Benefits"
+    },
+    {
+      "id": "2:603",
+      "name": "❓ Getting Started"
+    },
+    {
+      "id": "2:604",
+      "name": "======================="
+    },
+    {
+      "id": "2:605",
+      "name": "🏋️‍♀️ sandow UI Kit"
+    },
+    {
+      "id": "2:4501",
+      "name": "      ↳ Main - Light Mode ⚪"
+    },
+    {
+      "id": "2:606",
+      "name": "      ↳ Main - Dark Mode ⚫"
+    },
+    {
+      "id": "2:607",
+      "name": "      ↳ Icon Set"
+    },
+    {
+      "id": "2:4502",
+      "name": "      ↳ Design System"
+    },
+    {
+      "id": "2:4503",
+      "name": "      ↳ Bonus (Dashboard)"
+    },
+    {
+      "id": "2:4504",
+      "name": "======================= "
+    },
+    {
+      "id": "2:4505",
+      "name": "🥰 Thank You!"
+    },
+    {
+      "id": "2:4506",
+      "name": "🛒 Get the Full Version!"
+    },
+    {
+      "id": "2:238",
+      "name": "📷 Thumbnail"
+    }
+  ],
+  "elements": [
+    {
+      "id": "2:10015",
+      "name": "Top Nav",
+      "type": "INSTANCE",
+      "width": 343,
+      "height": 48
+    },
+    {
+      "id": "2:10013",
+      "name": "Button Primary Icon",
+      "type": "INSTANCE",
+      "width": 343,
+      "height": 56
+    },
+    {
+      "id": "2:10019",
+      "name": "iPhone X or newer",
+      "type": "INSTANCE",
+      "width": 375,
+      "height": 44
+    }
+  ],
+  "colors_observed_from_welcome_nodes": [
+    "#111214",
+    "#393C43",
+    "#F97316"
+  ],
+  "targets": [
+    {
+      "id": "2:10108",
+      "name": "Diet & Nutrition Management",
+      "original_name": "🔒 Diet & Nutrition Management",
+      "width": 5460,
+      "height": 2119.482421875,
+      "child": "2:10109"
+    },
+    {
+      "id": "2:10112",
+      "name": "Search Screen",
+      "original_name": "🔒 Search Screen",
+      "width": 2387,
+      "height": 1292,
+      "child": "2:10113"
+    },
+    {
+      "id": "2:10120",
+      "name": "Profile Settings & Help Center",
+      "original_name": "🔒 Profile Settings & Help Center",
+      "width": 5899,
+      "height": 2232.28759765625,
+      "child": "2:10121"
+    }
+  ],
+  "limits": [
+    "Target panels expose one image rectangle each, without individual food-screen layer trees.",
+    "Some page inventory results exceeded the server 20480-byte return limit; no app or canvas edits were made.",
+    "The Starter MCP quota stopped further reads; all-page detail/variants/constraints extraction is incomplete.",
+    "The original three PNG image fills are available as reference evidence; they are not individual UI components or original standalone food photographs."
+  ],
+  "date": "2026-10-16",
+  "fonts_observed_in_welcome_nodes": [
+    {
+      "family": "Work Sans",
+      "style": "SemiBold",
+      "variationSettings": {
+        "wght": 600
+      }
+    },
+    {
+      "family": "Work Sans",
+      "style": "Bold",
+      "variationSettings": {
+        "wght": 700
+      }
+    },
+    {
+      "family": "Work Sans",
+      "style": "Medium",
+      "variationSettings": {
+        "wght": 500
+      }
+    },
+    {
+      "family": "Work Sans",
+      "style": "Regular",
+      "variationSettings": {
+        "wght": 400
+      }
+    }
+  ],
+  "additional_font_observed_in_promotional_page_only": "Chakra Petch Regular",
+  "all_target_screen_font_metrics_extracted": false,
+  "all_page_details_extracted": false,
+  "app_source_modified": false
+}

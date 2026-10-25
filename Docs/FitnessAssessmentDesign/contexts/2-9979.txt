@@ -1,0 +1,164 @@
+const assetPathPrefix = "../assets";
+const imgIsBlackFalse = `${assetPathPrefix}/49b57.svg`;
+const imgIPhoneXOrNewer = `${assetPathPrefix}/14254.svg`;
+const imgSolidMoodOverjoyed = `${assetPathPrefix}/4b6ce.svg`;
+const imgMonotoneClock = `${assetPathPrefix}/8acb7.svg`;
+const imgSolidMoodOverjoyed1 = `${assetPathPrefix}/3cf2d.svg`;
+const imgMonotoneClock1 = `${assetPathPrefix}/cced2.svg`;
+const imgSolidMoodOverjoyed2 = `${assetPathPrefix}/7828a.svg`;
+const imgSolidMoodOverjoyed3 = `${assetPathPrefix}/0eec0.svg`;
+const imgSolidMoodOverjoyed4 = `${assetPathPrefix}/44a0b.svg`;
+const imgMonotoneArrowRight = `${assetPathPrefix}/c1a83.svg`;
+const imgMonotoneChevronLeft = `${assetPathPrefix}/7c9b3.svg`;
+
+type HomeIndicatorProps = {
+  className?: string;
+  isBlack?: "False";
+};
+
+function HomeIndicator({ className, isBlack = "False" }: HomeIndicatorProps) {
+  return (
+    <div className={className || "h-[34px] relative w-[375px]"} data-node-id="2:4510">
+      <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIsBlackFalse} />
+    </div>
+  );
+}
+
+export default function ComprehensiveFitnessAssessment() {
+  return (
+    <div className="bg-[#111214] overflow-clip relative rounded-[40px] size-full" data-node-id="2:9979" data-name="Comprehensive Fitness Assessment">
+      <div className="absolute h-[44px] left-0 top-0 w-[375px]" data-node-id="2:9980" data-name="iPhone X or newer">
+        <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgIPhoneXOrNewer} />
+      </div>
+      <div className="absolute content-stretch flex flex-col gap-[40px] items-center left-[15px] top-[148px]" data-node-id="2:9981" data-name="Frame">
+        <p className="[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[38px] relative shrink-0 text-[30px] text-center text-white tracking-[-0.3px] w-[343px]" data-node-id="2:9982">
+          What’s your sleep quality like?
+        </p>
+        <div className="content-stretch flex flex-col gap-[8px] items-start relative shrink-0" data-node-id="2:9983" data-name="Frame">
+          <div className="bg-[#24262b] content-stretch flex items-center justify-between overflow-clip px-[16px] py-[12px] relative rounded-[24px] shrink-0 w-[343px]" data-node-id="2:9984" data-name="Frame">
+            <div className="content-stretch flex gap-[4px] items-center relative shrink-0" data-node-id="I2:9984;153:22936" data-name="Frame">
+              <div className="relative shrink-0 size-[48px]" data-node-id="I2:9984;43:9852" data-name="Solid mood overjoyed">
+                <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgSolidMoodOverjoyed} />
+              </div>
+              <p className="[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[18px] text-white tracking-[-0.072px] whitespace-nowrap" data-node-id="I2:9984;43:9848">
+                Excellent
+              </p>
+            </div>
+            <div className="content-stretch flex gap-[4px] items-start justify-end relative shrink-0" data-node-id="I2:9984;43:9849" data-name="Info">
+              <div className="relative shrink-0 size-[16px]" data-node-id="I2:9984;43:9850" data-name="Monotone clock">
+                <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgMonotoneClock} />
+              </div>
+              <p className="[word-break:break-word] font-['Work_Sans:Medium'] font-medium leading-[normal] relative shrink-0 text-[14px] text-white tracking-[-0.028px] whitespace-nowrap" data-node-id="I2:9984;43:9851">{`>8 hours`}</p>
+            </div>
+          </div>
+          <div className="bg-[#676c75] content-stretch flex items-center justify-between overflow-clip px-[16px] py-[12px] relative rounded-[24px] shadow-[0px_0px_0px_4px_rgba(129,133,141,0.25)] shrink-0 w-[343px]" data-node-id="2:9985" data-name="Assessment Sleep Quality">
+            <div className="content-stretch flex gap-[4px] items-center relative shrink-0" data-node-id="I2:9985;204:54267" data-name="Frame">
+              <div className="relative shrink-0 size-[48px]" data-node-id="I2:9985;204:54268" data-name="Solid mood overjoyed">
+                <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgSolidMoodOverjoyed1} />
+              </div>
+              <p className="[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[18px] text-white tracking-[-0.072px] whitespace-nowrap" data-node-id="I2:9985;204:54269">
+                Great
+              </p>
+            </div>
+            <div className="content-stretch flex gap-[4px] items-start justify-end relative shrink-0" data-node-id="I2:9985;204:54270" data-name="Info">
+              <div className="relative shrink-0 size-[16px]" data-node-id="I2:9985;204:54271" data-name="Monotone clock">
+                <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgMonotoneClock1} />
+              </div>
+              <p className="[word-break:break-word] font-['Work_Sans:Medium'] font-medium leading-[normal] relative shrink-0 text-[14px] text-white tracking-[-0.028px] whitespace-nowrap" data-node-id="I2:9985;204:54272">
+                7-8 hours
+              </p>
+            </div>
+          </div>
+          <div className="bg-[#24262b] content-stretch flex items-center justify-between overflow-clip px-[16px] py-[12px] relative rounded-[24px] shrink-0 w-[343px]" data-node-id="2:9986" data-name="Frame">
+            <div className="content-stretch flex gap-[4px] items-center relative shrink-0" data-node-id="I2:9986;153:22936" data-name="Frame">
+              <div className="relative shrink-0 size-[48px]" data-node-id="I2:9986;43:9852" data-name="Solid mood overjoyed">
+                <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgSolidMoodOverjoyed2} />
+              </div>
+              <p className="[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[18px] text-white tracking-[-0.072px] whitespace-nowrap" data-node-id="I2:9986;43:9848">
+                Normal
+              </p>
+            </div>
+            <div className="content-stretch flex gap-[4px] items-start justify-end relative shrink-0" data-node-id="I2:9986;43:9849" data-name="Info">
+              <div className="relative shrink-0 size-[16px]" data-node-id="I2:9986;43:9850" data-name="Monotone clock">
+                <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgMonotoneClock} />
+              </div>
+              <p className="[word-break:break-word] font-['Work_Sans:Medium'] font-medium leading-[normal] relative shrink-0 text-[14px] text-white tracking-[-0.028px] whitespace-nowrap" data-node-id="I2:9986;43:9851">
+                6-7 hours
+              </p>
+            </div>
+          </div>
+          <div className="bg-[#24262b] content-stretch flex items-center justify-between overflow-clip px-[16px] py-[12px] relative rounded-[24px] shrink-0 w-[343px]" data-node-id="2:9987" data-name="Frame">
+            <div className="content-stretch flex gap-[4px] items-center relative shrink-0" data-node-id="I2:9987;153:22936" data-name="Frame">
+              <div className="relative shrink-0 size-[48px]" data-node-id="I2:9987;43:9852" data-name="Solid mood overjoyed">
+                <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgSolidMoodOverjoyed3} />
+              </div>
+              <p className="[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[18px] text-white tracking-[-0.072px] whitespace-nowrap" data-node-id="I2:9987;43:9848">
+                Bad
+              </p>
+            </div>
+            <div className="content-stretch flex gap-[4px] items-start justify-end relative shrink-0" data-node-id="I2:9987;43:9849" data-name="Info">
+              <div className="relative shrink-0 size-[16px]" data-node-id="I2:9987;43:9850" data-name="Monotone clock">
+                <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgMonotoneClock} />
+              </div>
+              <p className="[word-break:break-word] font-['Work_Sans:Medium'] font-medium leading-[normal] relative shrink-0 text-[14px] text-white tracking-[-0.028px] whitespace-nowrap" data-node-id="I2:9987;43:9851">
+                3-4 hours
+              </p>
+            </div>
+          </div>
+          <div className="bg-[#24262b] content-stretch flex items-center justify-between overflow-clip px-[16px] py-[12px] relative rounded-[24px] shrink-0 w-[343px]" data-node-id="2:9988" data-name="Frame">
+            <div className="content-stretch flex gap-[4px] items-center relative shrink-0" data-node-id="I2:9988;153:22936" data-name="Frame">
+              <div className="relative shrink-0 size-[48px]" data-node-id="I2:9988;43:9852" data-name="Solid mood overjoyed">
+                <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgSolidMoodOverjoyed4} />
+              </div>
+              <p className="[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[18px] text-white tracking-[-0.072px] whitespace-nowrap" data-node-id="I2:9988;43:9848">
+                Insomniac
+              </p>
+            </div>
+            <div className="content-stretch flex gap-[4px] items-start justify-end relative shrink-0" data-node-id="I2:9988;43:9849" data-name="Info">
+              <div className="relative shrink-0 size-[16px]" data-node-id="I2:9988;43:9850" data-name="Monotone clock">
+                <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgMonotoneClock} />
+              </div>
+              <p className="[word-break:break-word] font-['Work_Sans:Medium'] font-medium leading-[normal] relative shrink-0 text-[14px] text-white tracking-[-0.028px] whitespace-nowrap" data-node-id="I2:9988;43:9851">{`<2 hours`}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-[#f97316] content-stretch flex h-[56px] items-center justify-center px-[28px] py-[16px] relative rounded-[19px] shrink-0 w-[345px]" data-node-id="2:9989" data-name="Button Primary Icon">
+          <div className="content-stretch flex gap-[12px] items-center justify-center relative shrink-0" data-node-id="I2:9989;40:2535" data-name="Content">
+            <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-white tracking-[-0.048px] whitespace-nowrap" data-node-id="I2:9989;40:2536">
+              Continue
+            </p>
+            <div className="relative shrink-0 size-[24px]" data-node-id="I2:9989;40:2537" data-name="Monotone arrow right">
+              <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgMonotoneArrowRight} />
+            </div>
+          </div>
+        </div>
+      </div>
+      <HomeIndicator className="-translate-x-1/2 absolute bottom-0 h-[34px] left-1/2 w-[375px]" />
+      <div className="-translate-x-1/2 absolute content-stretch flex gap-[12px] items-center left-1/2 top-[60px] w-[343px]" data-node-id="2:9991" data-name="Top Nav">
+        <div className="bg-[#393c43] content-stretch flex items-center justify-center relative rounded-[18px] shrink-0 size-[48px]" data-node-id="I2:9991;41:4259" data-name="Button Container">
+          <div className="relative shrink-0 size-[24px]" data-node-id="I2:9991;41:4260" data-name="Monotone chevron left">
+            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgMonotoneChevronLeft} />
+          </div>
+        </div>
+        <p className="[word-break:break-word] flex-[1_0_0] font-['Work_Sans:Bold'] font-bold leading-[normal] min-w-px relative text-[20px] text-white tracking-[-0.1px]" data-node-id="I2:9991;41:4261">
+          Assessment
+        </p>
+        <div className="bg-[#172554] content-stretch flex h-[32px] items-center justify-center overflow-clip px-[12px] py-[6px] relative rounded-[11px] shrink-0" data-node-id="I2:9991;153:22995" data-name="Tag Master">
+          <p className="[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[#2563eb] text-[14px] text-center tracking-[-0.028px] whitespace-nowrap" data-node-id="I2:9991;153:22995;765:39751">
+            14 of 17
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+SUPER CRITICAL: The generated React+Tailwind code MUST be converted to match the target project's technology stack and styling system.
+1. Analyze the target codebase to identify: technology stack, styling approach, component patterns, and design tokens
+2. Convert React syntax to the target framework/library
+3. Transform all Tailwind classes to the target styling system while preserving exact visual design
+4. Follow the project's existing patterns and conventions
+DO NOT install any Tailwind as a dependency unless the user instructs you to do so.
+
+Node ids have been added to the code as data attributes, e.g. `data-node-id="1:2"`.
+These styles are contained in the design: Sandow Gray/White: #FFFFFF, Heading sm/Bold: Font(family: "Work Sans", style: Bold, size: 30, weight: 700, lineHeight: 38, letterSpacing: -1), Sandow Gray/70: #50535B, Text lg/Bold: Font(family: "Work Sans", style: Bold, size: 18, weight: 700, lineHeight: 100, letterSpacing: -0.4000000059604645), Text sm/Medium: Font(family: "Work Sans", style: Medium, size: 14, weight: 500, lineHeight: 100, letterSpacing: -0.20000000298023224), Sandow Gray/90: #24262B, Sandow Gray/60: #676C75, Focus/ring-gray: Effect(type: DROP_SHADOW, color: #81858D40, offset: (0, 0), radius: 0, spread: 4), Text md/SemiBold: Font(family: "Work Sans", style: SemiBold, size: 16, weight: 600, lineHeight: 100, letterSpacing: -0.30000001192092896), Pulse Orange/50: #F97316, Sandow Gray/20: #D7D8D9, Sandow Gray/80: #393C43, Text xl/Bold: Font(family: "Work Sans", style: Bold, size: 20, weight: 700, lineHeight: 100, letterSpacing: -0.5), Tabata Blue/60: #2563EB, Text sm/SemiBold: Font(family: "Work Sans", style: SemiBold, size: 14, weight: 600, lineHeight: 100, letterSpacing: -0.20000000298023224), Tabata Blue/100: #172554, Sandow Gray/100: #111214.
+The generated code contains image and SVG URL constants, e.g. const image = `${assetPathPrefix}/<asset file name>`, where assetPathPrefix is declared once at the top of the code and every asset URL interpolates it. URLs were downloaded; the local assets directory is the durable reference. Download each asset into the project with curl -L, then replace its URL in the generated code with a reference to the downloaded asset. Never use the temporary URLs as runtime image sources.

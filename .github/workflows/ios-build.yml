@@ -2,12 +2,13 @@ name: Luqma iPhone build
 
 on:
   push:
-    branches: [main]
+    branches: [main, figma/original-design-fidelity]
     paths:
       - 'Luqma/**'
       - 'Luqma.xcodeproj/**'
       - 'Package.swift'
       - 'Tests/**'
+      - 'TestsUI/**'
       - 'Scripts/import_off_catalog.py'
       - 'Scripts/export_off_catalog.py'
       - 'Scripts/import_mfp_catalog.py'
@@ -15,6 +16,9 @@ on:
       - 'Scripts/build_project.py'
       - 'Scripts/build_ios.py'
       - 'Scripts/ui_preview.py'
+      - 'Scripts/ui_interactions.py'
+      - 'Scripts/performance_probe.py'
+      - 'Docs/PerformancePhase.json'
       - 'Scripts/simulator_support.py'
       - 'Scripts/model_smoke.py'
       - 'Scripts/vision_compat.py'
@@ -43,15 +47,17 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
-  group: luqma-ios-${{ github.ref }}
+  group: luqma-ios-${{ github.ref }}-${{ github.sha }}
+  # Preserve measured baseline runs and their raw artifacts for exact comparisons.
   cancel-in-progress: false
 
 jobs:
   build:
     runs-on: macos-26
-    timeout-minutes: 75
+    timeout-minutes: 150
     defaults:
       run:
         shell: bash
@@ -106,16 +112,49 @@ jobs:
             BuildOutput/Luqma-Simulator.zip
             BuildOutput/build-summary.json
             BuildOutput/READ-ME.txt
+            BuildOutput/core-tests.log
+            BuildOutput/build-tests.log
           if-no-files-found: error
           retention-days: 7
 
-      - name: Capture native SwiftUI screens
+      - name: Test actual navigation, food edits and persistence
+        id: native_interactions
         if: success()
-        timeout-minutes: 25
+        # Run the isolated fitness case before the other native scenarios and
+        # screenshot capture so interaction regressions fail without that wait.
+        # Reuse the tested Debug app for capture on separate fresh Simulators;
+        # every capture still requires a new output folder and native audits.
+        timeout-minutes: 60
         env:
           BUNDLE_ID: ${{ vars.BUNDLE_ID }}
           BUILD_NUMBER: ${{ github.run_number }}
-        run: python3 Scripts/ui_preview.py --packages BuildOutput/Packages --output UIPreview
+        run: python3 Scripts/ui_interactions.py --packages BuildOutput/Packages --derived UIInteractionDerived --output UIInteractions
+
+      - name: Native interaction test results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: Luqma-ui-interactions-${{ github.run_number }}-attempt-${{ github.run_attempt }}
+          path: |
+            UIInteractions/*.json
+            UIInteractions/*.log
+            UIInteractions/*.xcresult
+            UIInteractions/permission-denied/
+            UIInteractions/fitness-assessment/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Capture native SwiftUI screens
+        # Native rendering evidence is independent of functional-test outcome.
+        # A failed functional case still fails this job; captures never imply a pass.
+        if: ${{ !cancelled() && (success() || steps.native_interactions.outcome == 'failure') }}
+        # All 11 assessment pages, profile/review and three larger-text variants
+        # join the original capture set with actual per-launch font audits.
+        timeout-minutes: 35
+        env:
+          BUNDLE_ID: ${{ vars.BUNDLE_ID }}
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: python3 Scripts/ui_preview.py --packages BuildOutput/Packages --app UIInteractionDerived/Build/Products/Debug-iphonesimulator/Luqma.app --output UIPreview
 
       - name: Native SwiftUI screenshots and report
         if: always()
@@ -127,6 +166,54 @@ jobs:
             UIPreview/*.json
             UIPreview/*.log
             UIPreview/*.xcresult
+            UIPreview/font-audits/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Capture the thirteen approved Arabic variants at reference width
+        # Native rendering evidence is independent of functional-test outcome.
+        # A failed functional case still fails this job; captures never imply a pass.
+        if: ${{ !cancelled() && (success() || steps.native_interactions.outcome == 'failure') }}
+        timeout-minutes: 15
+        env:
+          BUNDLE_ID: ${{ vars.BUNDLE_ID }}
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: python3 Scripts/ui_preview.py --packages BuildOutput/Packages --app UIInteractionDerived/Build/Products/Debug-iphonesimulator/Luqma.app --output UIApproved --device-type com.apple.CoreSimulator.SimDeviceType.iPhone-13-mini --language ar --approved-capture --screens assessment-goal assessment-gender assessment-age assessment-height assessment-weight assessment-target assessment-activity fitness-plan food-portion approved-home approved-calorie approved-scan approved-results
+
+      - name: Approved-screen captures and native font evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: Luqma-approved-preview-${{ github.run_number }}-attempt-${{ github.run_attempt }}
+          path: |
+            UIApproved/*.png
+            UIApproved/*.json
+            UIApproved/*.log
+            UIApproved/font-audits/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Capture reference-width English screens
+        # Native rendering evidence is independent of functional-test outcome.
+        # A failed functional case still fails this job; captures never imply a pass.
+        if: ${{ !cancelled() && (success() || steps.native_interactions.outcome == 'failure') }}
+        continue-on-error: true
+        timeout-minutes: 15
+        env:
+          BUNDLE_ID: ${{ vars.BUNDLE_ID }}
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: python3 Scripts/ui_preview.py --packages BuildOutput/Packages --app UIInteractionDerived/Build/Products/Debug-iphonesimulator/Luqma.app --output UIReference --device-type com.apple.CoreSimulator.SimDeviceType.iPhone-13-mini --language en --screens today kitchen progress search macro-goals photo-estimate recipe-details notifications reminders state-error state-loading state-empty state-success assessment-goal assessment-gender assessment-activity assessment-details assessment-review fitness-profile fitness-plan assessment-age assessment-height assessment-weight assessment-target assessment-training assessment-safety
+
+      - name: Reference-width captures and readiness report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: Luqma-reference-preview-${{ github.run_number }}-attempt-${{ github.run_attempt }}
+          path: |
+            UIReference/*.png
+            UIReference/*.json
+            UIReference/*.log
+            UIReference/font-audits/
           if-no-files-found: ignore
           retention-days: 7
 
@@ -154,3 +241,83 @@ jobs:
             BuildOutput/*.xcresult
           if-no-files-found: ignore
           retention-days: 3
+
+  performance:
+    # The source-pinned phase records the actual baseline run used for a later
+    # comparison. Both jobs test the same commit, with separate fresh runners.
+    if: github.event_name == 'push'
+    runs-on: macos-26
+    timeout-minutes: 100
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out exact application revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Select the same Xcode as the application build
+        env:
+          DEVELOPER_DIR: ${{ vars.XCODE_DEVELOPER_DIR || '/Applications/Xcode_26.6.app/Contents/Developer' }}
+        run: |
+          test -d "$DEVELOPER_DIR"
+          xcodebuild -version
+          printf 'DEVELOPER_DIR=%s\n' "$DEVELOPER_DIR" >> "$GITHUB_ENV"
+      - name: Read the source-pinned measurement phase
+        id: phase
+        run: |
+          python3 - <<'PY'
+          import json, os, re
+          from pathlib import Path
+          phase=json.loads(Path('Docs/PerformancePhase.json').read_text())
+          assert phase['label'] in {'baseline','optimized'}
+          baseline=str(phase.get('baseline_run_id',''))
+          attempt=str(phase.get('baseline_attempt',1))
+          assert phase['label']=='baseline' or re.fullmatch(r'[1-9][0-9]+',baseline)
+          assert re.fullmatch(r'[1-9][0-9]*',attempt)
+          with open(os.environ['GITHUB_OUTPUT'],'a') as output:
+              output.write('label='+phase['label']+'\nbaseline_run_id='+baseline+'\nbaseline_attempt='+attempt+'\n')
+          PY
+      - name: Measure actual Core encoding before the Simulator build
+        env:
+          PHASE: ${{ steps.phase.outputs.label }}
+        run: python3 Scripts/performance_probe.py --label "$PHASE" --output CorePerformance --core-only --expected-revision "$GITHUB_SHA"
+      - name: Retain actual Core samples immediately
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: Luqma-core-${{ steps.phase.outputs.label }}-${{ github.run_id }}-attempt-${{ github.run_attempt }}
+          path: |
+            CorePerformance/*.json
+            CorePerformance/*.log
+            CorePerformance/*.swift
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Resolve the application's exact pinned packages
+        run: xcodebuild -resolvePackageDependencies -project Luqma.xcodeproj -scheme Luqma -clonedSourcePackagesDirPath BuildOutput/Packages
+      - name: Download the actual successful baseline artifact
+        if: steps.phase.outputs.label == 'optimized'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASELINE_RUN_ID: ${{ steps.phase.outputs.baseline_run_id }}
+          BASELINE_ATTEMPT: ${{ steps.phase.outputs.baseline_attempt }}
+        run: gh run download "$BASELINE_RUN_ID" --repo "$GITHUB_REPOSITORY" --name "Luqma-performance-baseline-$BASELINE_RUN_ID-attempt-$BASELINE_ATTEMPT" --dir BeforePerformance
+      - name: Measure the real Release-optimized native interactions
+        env:
+          PHASE: ${{ steps.phase.outputs.label }}
+        run: |
+          comparison=()
+          if [ "$PHASE" = optimized ]; then comparison=(--compare BeforePerformance/performance-report.json); fi
+          python3 Scripts/performance_probe.py --label "$PHASE" --output PerformanceResults --expected-revision "$GITHUB_SHA" "${comparison[@]}"
+      - name: Retain raw metrics, source identity and native result bundle
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: Luqma-performance-${{ steps.phase.outputs.label }}-${{ github.run_id }}-attempt-${{ github.run_attempt }}
+          path: |
+            PerformanceResults/*.json
+            PerformanceResults/*.log
+            PerformanceResults/*.swift
+            PerformanceResults/*.xcresult
+          if-no-files-found: ignore
+          retention-days: 7

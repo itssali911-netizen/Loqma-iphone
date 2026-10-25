@@ -1,0 +1,24 @@
+{
+  "original_file": "IfMCdTI3FcvXpNFy79PRUA",
+  "read_copy": "HBIa4HlRoHRjxZWJfqyrUG",
+  "read_only": true,
+  "new_figma_writes": false,
+  "section_node": "2:9664",
+  "section_metadata_saved": true,
+  "full_section_screenshot_saved": true,
+  "full_child_contexts_saved": 12,
+  "child_contexts_include_screenshot": true,
+  "quota_error": "You've reached the Figma MCP tool call limit on the Starter plan.",
+  "quota_observed_in_parallel_batch": true,
+  "further_mcp_reads_after_observing_limit": false,
+  "alternate_account_or_upgrade_attempted": false,
+  "blocked_child_nodes": [
+    "2:9692", "2:9763", "2:9795", "2:9992", "2:10016", "2:10037", "2:10065",
+    "2:9468", "2:9476", "2:9485", "2:9492"
+  ],
+  "saved_loading_evidence": "Docs/FigmaStates and work/states25-reference-inspection.json from the prior completed task",
+  "assets_source": "Only download URLs explicitly returned by successful get_design_context/get_screenshot responses; curl -L as instructed",
+  "raw_responses_location": "work/fitness-figma, outside repository",
+  "temporary_download_urls_persisted_inside_repository": false,
+  "native_implementation_completed_by_this_subtask": false
+}

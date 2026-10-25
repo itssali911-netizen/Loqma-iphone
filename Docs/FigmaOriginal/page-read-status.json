@@ -1,0 +1,97 @@
+{
+  "date": "2026-10-16",
+  "scope": "Detailed inventory attempts; not a claim of complete extraction. Specific dark-page metadata and three design contexts succeeded separately.",
+  "pages": [
+    {
+      "id": "0:1",
+      "name": "👋 Welcome!",
+      "status": "returned_inventory",
+      "nodes": 137,
+      "components": 1,
+      "image_fills": 3
+    },
+    {
+      "id": "2:602",
+      "status": "response_exceeded_20480_bytes",
+      "detail": "Return value exceeds the 20480-byte limit (182758 bytes). Canvas edits from this run were not committed."
+    },
+    {
+      "id": "2:603",
+      "status": "response_exceeded_20480_bytes",
+      "detail": "Return value exceeds the 20480-byte limit (55380 bytes). Canvas edits from this run were not committed."
+    },
+    {
+      "id": "2:604",
+      "name": "=======================",
+      "status": "returned_inventory",
+      "nodes": 0,
+      "components": 0,
+      "image_fills": 0
+    },
+    {
+      "id": "2:605",
+      "name": "🏋️‍♀️ sandow UI Kit",
+      "status": "returned_inventory",
+      "nodes": 0,
+      "components": 0,
+      "image_fills": 0
+    },
+    {
+      "id": "2:4501",
+      "status": "response_exceeded_20480_bytes",
+      "detail": "Return value exceeds the 20480-byte limit (156046 bytes). Canvas edits from this run were not committed."
+    },
+    {
+      "id": "2:606",
+      "status": "response_exceeded_20480_bytes",
+      "detail": "Return value exceeds the 20480-byte limit (157064 bytes). Canvas edits from this run were not committed."
+    },
+    {
+      "id": "2:607",
+      "status": "response_exceeded_20480_bytes",
+      "detail": "Return value exceeds the 20480-byte limit (208887 bytes). Canvas edits from this run were not committed."
+    },
+    {
+      "id": "2:4502",
+      "name": "      ↳ Design System",
+      "status": "returned_inventory",
+      "nodes": 50,
+      "components": 0,
+      "image_fills": 25
+    },
+    {
+      "id": "2:4503",
+      "name": "      ↳ Bonus (Dashboard)",
+      "status": "returned_inventory",
+      "nodes": 0,
+      "components": 0,
+      "image_fills": 0
+    },
+    {
+      "id": "2:4504",
+      "name": "======================= ",
+      "status": "returned_inventory",
+      "nodes": 0,
+      "components": 0,
+      "image_fills": 0
+    },
+    {
+      "id": "2:4505",
+      "status": "response_exceeded_20480_bytes",
+      "detail": "Return value exceeds the 20480-byte limit (35116 bytes). Canvas edits from this run were not committed."
+    },
+    {
+      "id": "2:4506",
+      "name": "🛒 Get the Full Version!",
+      "status": "returned_inventory",
+      "nodes": 104,
+      "components": 0,
+      "image_fills": 54
+    },
+    {
+      "id": "2:238",
+      "status": "mcp_quota_limit",
+      "detail": "Starter plan MCP call limit reached; no further read attempted."
+    }
+  ]
+}

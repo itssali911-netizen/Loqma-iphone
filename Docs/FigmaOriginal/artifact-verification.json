@@ -1,0 +1,17 @@
+{
+  "date": "2026-10-16",
+  "baseline_commit": "e48897be8390c8118ea1a62125894d92d129c7de",
+  "baseline_app_source": "b9c0f7cfeb058472f33592ffbb61ed260bceecef",
+  "checks": {
+    "all_png_files_decoded": 14,
+    "original_panel_hashes_checked": 3,
+    "comparison_output_hashes_checked": 5,
+    "page_index_entries": 14,
+    "app_source_changes": 0,
+    "temporary_asset_urls_published": false
+  },
+  "comparison": "Exploratory only; mismatched language/data/safe areas/viewport",
+  "new_native_build_run": false,
+  "new_core_or_interaction_tests_run": false,
+  "exact_fidelity_acceptance_passed": false
+}
