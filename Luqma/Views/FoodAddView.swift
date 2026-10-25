@@ -55,6 +55,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
     @State private var sourceSelectionTouched=false
     @FocusState private var queryFocused:Bool
     @Environment(\.layoutDirection) private var direction
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     #if DEBUG
     @State private var referencePreviewPhase:SearchScreenPhase?
     #endif
@@ -230,6 +231,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                 .background(selected ? Color.white:Color.white.opacity(0.1),in:RoundedRectangle(cornerRadius:10,style:.circular))
                 .overlay{RoundedRectangle(cornerRadius:10,style:.circular).strokeBorder(.white.opacity(selected ? 1:0.75),lineWidth:1)}
                 .shadow(color:.black.opacity(selected ? 0.05:0),radius:1,x:0,y:1)
+                .animation(reduceMotion ? nil:.timingCurve(0.4,0,0.2,1,duration:0.15),value:selected)
                 .contentShape(.interaction,Rectangle().inset(by:-5))
         }.buttonStyle(.plain).disabled(choosingFood).accessibilityAddTraits(filter==value ? .isSelected:[])
             .accessibilityIdentifier("search.filter."+String(value))

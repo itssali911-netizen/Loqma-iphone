@@ -46,6 +46,7 @@ struct SearchReferencePressStyle:ButtonStyle {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     func makeBody(configuration:Configuration)->some View {
         configuration.label.scaleEffect(configuration.isPressed && !reduceMotion ? scale:1)
+            .animation(reduceMotion ? nil:.timingCurve(0.4,0,0.2,1,duration:0.15),value:configuration.isPressed)
     }
 }
 
@@ -141,6 +142,7 @@ struct SearchReferenceLoading:View {
                             .frame(width:19,height:19).offset(x:CGFloat(34*cos(angle)),y:CGFloat(34*sin(angle)))
                     }
                 }.frame(width:96,height:96)
+                    .animation(staticRing || reduceMotion ? nil:.timingCurve(0.4,0,0.2,1,duration:0.15),value:active)
             }.accessibilityHidden(true)
             Text(language.text("جاري التحميل...","Loading...")).searchReferenceFont(17,weight:.heavy).tracking(-0.425).foregroundStyle(.white)
         }.padding(.bottom,16).frame(maxWidth:.infinity).accessibilityIdentifier("search.loading")
