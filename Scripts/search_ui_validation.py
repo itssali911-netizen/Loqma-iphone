@@ -47,7 +47,12 @@ def run():
                     pid=int(re.search(r':\s*(\d+)\s*$',launched).group(1))
                     confirm_process(pid,3)
                     details=capture_screenshot(OUT,device,key,pid,OUT/(key+'.png'))
-                    fonts=collect_runtime_font_audit(OUT,device,'app.luqma.diary',key,pid,len(report['screenshots'])+1,False)
+                    try:
+                        # The app exports the real route "search". Capture labels
+                        # are unique, but are not additional application routes.
+                        fonts=collect_runtime_font_audit(OUT,device,'app.luqma.diary','search',pid,len(report['screenshots'])+1,False)
+                    except BuildError as error:
+                        report['errors'].append(key+': '+str(error));fonts={'status':'failed','error':str(error)}
                     report['screenshots'].append(dict(screen=key,query=query,read_only_state_injection=state in ('empty','loading'),actual_bundled_foods=state in ('results','parity'),fonts=fonts,**details))
             command(['xcrun','simctl','shutdown',device],OUT,'shutdown-'+label,60,allow_failure=True)
     except BaseException as error:

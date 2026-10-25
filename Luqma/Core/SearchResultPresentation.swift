@@ -8,7 +8,7 @@ enum SearchNameSimilarity {
         guard !query.isEmpty else{return nil}
         var names=[food.name]
         if let english=food.nameEn{names.append(english)}
-        if let brand=food.brand{names.append(brand);names.append(brand+" "+food.name)}
+        if let brand=food.brand{names += [brand]+names.map{brand+" "+$0}}
         names.append(contentsOf:(food.aliases ?? "").components(separatedBy:CharacterSet(charactersIn:",،;؛|\n")))
         return names.map{score(query,canonical($0))}.max() ?? 0
     }

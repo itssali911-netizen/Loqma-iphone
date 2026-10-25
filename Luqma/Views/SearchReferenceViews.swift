@@ -59,6 +59,10 @@ struct SearchReferenceFoodRow:View {
     @Environment(\.layoutDirection) private var direction
     @Environment(\.dynamicTypeSize) private var typeSize
     private var badge:String {
+        if let brand=food.brand?.trimmingCharacters(in:.whitespacesAndNewlines),!brand.isEmpty,
+           !FoodSearch.normalized(food.label(language)).contains(FoodSearch.normalized(brand)) {
+            return DisplayFormat.westernDigits(brand)
+        }
         if bestMatch{return language.text("أفضل تطابق","Best match")}
         if FoodSearch.isPersonalFood(food){return language.text("أطعمتي","My food")}
         return FoodSearch.isOpenFoodFacts(food) ? language.text("منتج","Product"):language.text("طعام","Food")
@@ -75,8 +79,10 @@ struct SearchReferenceFoodRow:View {
     private var titleLines:Int? {typeSize.isAccessibilitySize ? nil:1}
     var body:some View {
         Button(action:action){cardContent}.buttonStyle(SearchReferencePressStyle())
-            .accessibilityElement(children:.ignore)
+            .accessibilityElement(children:.combine)
+            .accessibilityAddTraits(.isButton)
             .accessibilityLabel(Text(accessibilityText))
+            .accessibilityAction(.default,action)
             .accessibilityHint(Text(language.text("اختيار الطعام والكمية. تشابه الاسم ليس تأكيدًا لهوية المنتج.","Choose food and quantity. Name similarity does not verify product identity.")))
             .accessibilityIdentifier("food.result."+food.id)
     }
@@ -106,9 +112,9 @@ struct SearchReferenceFoodRow:View {
         }
     }
     private var badgeView:some View {
-        Text(badge).searchReferenceFont(11,weight:.semibold,lineHeight:1.25).foregroundStyle(.white)
+        Text(badge).lineLimit(1).searchReferenceFont(11,weight:.semibold,lineHeight:1.25).foregroundStyle(.white)
             .padding(.horizontal,10).padding(.vertical,3).background(badgeColor,in:RoundedRectangle(cornerRadius:6,style:.circular))
-            .fixedSize(horizontal:true,vertical:false)
+            .fixedSize(horizontal:false,vertical:true)
     }
     private var detailView:some View {
         Text(detail).searchReferenceFont(12,weight:.medium).foregroundStyle(SearchReferenceStyle.secondary)

@@ -9,6 +9,7 @@ final class SearchResultPresentationTests:XCTestCase {
         XCTAssertNil(SearchNameSimilarity.percent(query:"  ",food:food))
         XCTAssertEqual(SearchNameSimilarity.percent(query:"zzzz",food:food),0)
         XCTAssertEqual(SearchNameSimilarity.percent(query:"Brand",food:food),100)
+        XCTAssertEqual(SearchNameSimilarity.percent(query:"Brand Chicken Rice",food:food),100)
     }
     func testPartialAndRepeatedStringsStayBounded(){
         for name in ["a","aaaaa","Apple salad","", "حليب المراعي"]{

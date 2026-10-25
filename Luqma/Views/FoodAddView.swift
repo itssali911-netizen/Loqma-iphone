@@ -137,7 +137,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
     }
     private var searchSurface:some View {
         GeometryReader { geometry in
-            ScrollView {
+            ScrollView(showsIndicators:false) {
                 VStack(alignment:.leading,spacing:14){
                     if searchPhase == .loading {
                         SearchReferenceLoading(language:diary.language,staticRing:readOnlySearchPreview).frame(minHeight:max(0,geometry.size.height-40))
@@ -233,7 +233,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
     private func referenceFilter(_ value:Int,title:String,icon:String)->some View {
         let selected=sourceSelectionTouched && filter==value
         return Button{sourceSelectionTouched=true;filter=value}label:{
-            HStack(spacing:6){SearchReferenceIcon(name:icon,size:14,color:selected ? SearchReferenceStyle.header:.white);Text(title).searchReferenceFont(12,weight:.semibold)}
+            HStack(spacing:6){SearchReferenceIcon(name:icon,size:14,color:selected ? .black:.white);Text(title).searchReferenceFont(12,weight:.semibold)}
                 .foregroundStyle(selected ? SearchReferenceStyle.header:.white).padding(.horizontal,12).frame(height:34)
                 .background(selected ? Color.white:Color.white.opacity(0.1),in:RoundedRectangle(cornerRadius:10,style:.circular))
                 .overlay{RoundedRectangle(cornerRadius:10,style:.circular).strokeBorder(.white.opacity(selected ? 1:0.75),lineWidth:1)}
