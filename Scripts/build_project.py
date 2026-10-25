@@ -41,13 +41,13 @@ resources=[]
 groups=[]
 for folder in ['Core','Services','Views','Resources']:
     children=[]
-    for file in sorted((APP/folder).iterdir()):
+    for file in sorted((APP/folder).iterdir(), key=lambda file: file.name):
         if not file.is_file():
             continue
         if file.suffix not in ['.swift','.json','.txt','.xcprivacy','.ttf','.otf','.storyboard']:
             continue
         kind={'.swift':'sourcecode.swift','.json':'text.json','.txt':'text','.xcprivacy':'text.xml','.ttf':'file','.otf':'file','.storyboard':'file.storyboard'}[file.suffix]
-        key=str(file.relative_to(ROOT))
+        key=file.relative_to(ROOT).as_posix()
         identifier=add('file:'+key,'PBXFileReference',lastKnownFileType=kind,path=file.name,sourceTree='<group>')
         children.append(identifier)
         build=add('build:'+key,'PBXBuildFile',fileRef=identifier)
@@ -69,7 +69,7 @@ appgroup=add('group:app','PBXGroup',children=[rootfile,infoplist,entitlement]+gr
 product=add('product','PBXFileReference',explicitFileType='wrapper.application',includeInIndex=0,path='Luqma.app',sourceTree='BUILT_PRODUCTS_DIR')
 uitestfiles=[]
 uitestsources=[]
-for file in sorted((ROOT/'TestsUI').glob('*.swift')):
+for file in sorted((ROOT/'TestsUI').glob('*.swift'), key=lambda file: file.name):
     key=file.relative_to(ROOT).as_posix()
     file_ref=add('file:'+key,'PBXFileReference',lastKnownFileType='sourcecode.swift',path=file.name,sourceTree='<group>')
     uitestfiles.append(file_ref)
