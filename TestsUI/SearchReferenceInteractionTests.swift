@@ -55,6 +55,12 @@ final class SearchReferenceInteractionTests:XCTestCase {
         if !all.isHittable{app.buttons["search.filter.2"].swipeRight()}
         all.tap()
         XCTAssertTrue(results.firstMatch.waitForExistence(timeout:10));XCTAssertEqual(query.value as? String,"milk")
+        let options=app.buttons["search.actions"]
+        if !options.isHittable{app.buttons["search.filter.1"].swipeLeft()}
+        options.tap();app.buttons["Barcode reader"].tap()
+        XCTAssertTrue(app.buttons["Scan barcode"].waitForExistence(timeout:10))
+        app.buttons["search.close"].tap()
+        XCTAssertTrue(query.waitForExistence(timeout:10));XCTAssertEqual(query.value as? String,"milk")
         capture("Actual source filters restored")
     }
     func testArabicSearchMirrorsOnlyDirectionalLayout()throws {

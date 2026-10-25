@@ -163,17 +163,24 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
     private var searchHeader:some View {
         Group {
             if tab==0 { referenceSearchHeader }
-            else {
-                HStack(spacing:14){
-                    Button{tab=0}label:{SearchReferenceIcon(name:direction == .rightToLeft ? "ChevronRight":"ChevronLeft",size:20).frame(width:44,height:44)}
-                        .buttonStyle(.plain).accessibilityLabel(diary.t("العودة للبحث","Back to search"))
-                    Text(diary.t("باركود","Barcode")).luqmaFont(.headline)
-                    Spacer()
-                    Button{closeFoodAdd()}label:{Image(systemName:"xmark").frame(width:44,height:44)}
-                        .buttonStyle(.plain).accessibilityLabel(diary.t("إغلاق","Close"))
-                }.padding(.horizontal,16).background(Theme.background)
-            }
+            else { barcodeHeader }
         }
+    }
+    // Preserve the existing barcode chrome; the new reference applies to search.
+    private var barcodeHeader:some View {
+        HStack(spacing:8){
+            Button{tab=0}label:{
+                Image(systemName:"chevron.backward").font(.system(size:13,weight:.semibold))
+                    .frame(width:36,height:36).background(Theme.text.opacity(0.12),in:RoundedRectangle(cornerRadius:12,style:.continuous))
+                    .frame(width:44,height:44).contentShape(Rectangle())
+            }.buttonStyle(.plain).accessibilityLabel(diary.t("العودة للبحث","Back to search")).accessibilityIdentifier("search.close")
+            Text(diary.t("باركود","Barcode")).luqmaFont(size:14,weight:.semibold,relativeTo:.headline)
+                .multilineTextAlignment(.leading).accessibilityAddTraits(.isHeader)
+            Spacer(minLength:0)
+            Button{closeFoodAdd()}label:{Image(systemName:"xmark").font(.system(size:14,weight:.medium)).frame(width:44,height:44)}
+                .buttonStyle(.plain).accessibilityLabel(diary.t("إغلاق","Close"))
+        }.foregroundStyle(Theme.text).padding(.horizontal,16).padding(.top,6).padding(.bottom,10)
+            .frame(maxWidth:.infinity,alignment:.leading).background(Theme.background.ignoresSafeArea(edges:.top))
     }
     private var referenceSearchHeader:some View {
         VStack(alignment:.leading,spacing:16){
@@ -203,7 +210,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                 HStack(spacing:8){
                     referenceFilter(0,title:diary.t("الكل","All"),icon:"Utensils")
                     referenceFilter(1,title:diary.t("الأخيرة","Recent"),icon:"Runner")
-                    referenceFilter(2,title:diary.t("المتكررة","Frequent"),icon:"Sparkle")
+                    referenceFilter(2,title:diary.t("المتكررة","Frequent"),icon:"PillSparkle")
                     if !productSelection {referenceFilter(3,title:diary.t("أطعمتي","My foods"),icon:"Document")}
                     Menu {
                         if !query.isEmpty {Button(diary.t("مسح البحث","Clear search")){query=""}}
@@ -213,7 +220,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                             Button(diary.t("إضافة طعام يدويًا","Add food manually")){queryFocused=false;manual=true}
                         }
                     } label: {
-                        SearchReferenceIcon(name:"Sparkle",size:14,color:.white).padding(.horizontal,12).frame(height:34)
+                        SearchReferenceIcon(name:"PillSparkle",size:14,color:.white).padding(.horizontal,12).frame(height:34)
                             .background(.white.opacity(0.1),in:RoundedRectangle(cornerRadius:10,style:.circular))
                             .overlay{RoundedRectangle(cornerRadius:10,style:.circular).strokeBorder(.white.opacity(0.75),lineWidth:1)}
                     }.buttonStyle(.plain).disabled(choosingFood).accessibilityLabel(diary.t("طرق إضافة الطعام","Food entry options"))
