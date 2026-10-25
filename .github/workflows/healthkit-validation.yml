@@ -1,0 +1,73 @@
+name: Luqma native read-only HealthKit validation
+on:
+  push:
+    branches: [feature/healthkit-readonly-20261025]
+    paths: ['Luqma/**', 'Luqma.xcodeproj/**', 'Package.swift', 'Tests/**', 'TestsUI/**', 'Scripts/**', 'BuildTests/**', '.github/workflows/healthkit-validation.yml']
+permissions:
+  contents: read
+concurrency:
+  group: healthkit-readonly-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  healthkit:
+    runs-on: macos-26
+    timeout-minutes: 120
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+      BUNDLE_ID: app.luqma.diary
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Set build number after IPA 114
+        run: python3 -c 'import os; open(os.environ["GITHUB_ENV"],"a").write("BUILD_NUMBER="+str(114+int(os.environ["GITHUB_RUN_NUMBER"]))+"\n")'
+      - name: Test Core and build checks, then compile Simulator and device SDK targets
+        run: python3 Scripts/build_ios.py check
+      - name: Exercise real native Health consent and capture actual English and Arabic screens
+        run: python3 Scripts/healthkit_ui_validation.py validate
+      - name: Preserve actual HealthKit test and native screenshot evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: Luqma-healthkit-evidence-${{ github.run_id }}
+          path: |
+            HealthValidation/
+            BuildOutput/build-summary.json
+            BuildOutput/READ-ME.txt
+            BuildOutput/*.log
+          if-no-files-found: warn
+      - name: Check Apple signing input availability without exposing values
+        id: signing
+        if: always()
+        env:
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+        run: python3 Scripts/healthkit_ui_validation.py signing-status
+      - name: Export a verified Apple-provisioned Ad Hoc IPA only if credentials are available
+        id: signed
+        if: success() && steps.signing.outputs.configured == 'true'
+        env:
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+        run: python3 Scripts/healthkit_ui_validation.py signed-export
+      - name: Apple signing status and exact remaining steps
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: Luqma-healthkit-signing-status-${{ github.run_id }}
+          path: HealthSigning/signing-status.json
+          if-no-files-found: warn
+      - name: Downloadable IPA only after verified Apple signature and HealthKit entitlement checks
+        if: steps.signed.outputs.signed_available == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: Luqma-healthkit-signed-ipa-${{ github.run_id }}
+          path: |
+            BuildSigned/Luqma.ipa
+            BuildSigned/build-summary.json
+            BuildSigned/READ-ME.txt
+          if-no-files-found: error

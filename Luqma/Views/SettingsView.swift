@@ -26,6 +26,7 @@ struct SettingsView:View {
                 NavigationLink{RemindersView()}label:{settingsRow(diary.t("التذكيرات","Reminders"),symbol:"clock")}.accessibilityIdentifier("settings.reminders")
             }
             settingsGroup(diary.t("الربط والبيانات","Connections and data")){
+                NavigationLink{HealthSettingsView()}label:{settingsRow("Apple Health",symbol:"heart.fill")}.accessibilityIdentifier("settings.health")
                 Button{gemini=true}label:{settingsRow(diary.t("تحليل الوجبة","Meal analysis"),symbol:"sparkles")}
                 NavigationLink{BackupSettingsView()}label:{settingsRow(diary.t("النسخ الاحتياطي والنقل","Backup and transfer"),symbol:"externaldrive")}
             }
@@ -167,6 +168,7 @@ struct AboutLuqmaView:View {
             }.multilineTextAlignment(.center).frame(maxWidth:.infinity).padding(.top,28).padding(.bottom,20)
             aboutCard(diary.t("الخصوصية","Privacy"),symbol:"hand.raised.fill"){
                 Notice(text:diary.t("سجلك محفوظ على الجهاز. تحليل الوجبة يرسل الصورة والوصف إلى Google. استيراد الوصفة يرسل الرابط العام الذي تختاره أو نص الوصفة. إعداد الربط محفوظ في خزنة الجهاز ولا يدخل النسخ الاحتياطية.","Your diary stays on the device. Meal analysis sends the selected photo and description to Google. Recipe import sends your selected public link or recipe text. Connection credentials are stored in the device Keychain and excluded from backups."))
+                Notice(text:diary.t("صحتي اختياري وللقراءة فقط. تبقى قراءات الخطوات وطاقة النشاط والوزن والطول في ذاكرة الجهاز، ولا تُرسل للتحليل أو خادم ولا تدخل ملفات النسخ الاحتياطي. يمكنك إيقاف عرضها وإدارة كل إذن من صحتي.","Apple Health is optional and read only. Steps, active energy, weight and height observations stay in device memory, outside analysis requests, servers and backup files. You can clear displayed readings and manage each permission in Health."))
             }
             aboutCard(diary.t("مصادر الطعام","Food sources"),symbol:"fork.knife"){
                 Notice(text:diary.t("٧٤٤ طعامًا من ملف MyFitnessPal الذي أضفته. هذه عينة محلية؛ البيانات الناقصة تحتاج مراجعة الملصق.","744 foods from your supplied MyFitnessPal file. This is a local sample; incomplete values need label review."))

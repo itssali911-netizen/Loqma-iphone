@@ -7,6 +7,9 @@ xcuserdata/
 *.xcarchive
 .DS_Store
 BuildOutput/
+HealthValidation/
+HealthSigning/
+BuildSigned/
 __pycache__/
 *.pyc
 *.p12

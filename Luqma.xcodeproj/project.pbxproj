@@ -105,6 +105,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = 88B76ECB732F1C2ADD459E0B;
 		};
+		"C68550CEC1BC928534EAA3E3" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "HealthReadModels.swift";
+			"sourceTree" = "<group>";
+		};
+		"8732A4316A670AFBCFCFCF9E" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = C68550CEC1BC928534EAA3E3;
+		};
 		"740B6574D4BE2DB81E89F3F4" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -328,6 +338,7 @@
 				8F286E5ED2AD62A72DA83130,
 				CA5786B0EF2E26C4699D77AC,
 				88B76ECB732F1C2ADD459E0B,
+				C68550CEC1BC928534EAA3E3,
 				740B6574D4BE2DB81E89F3F4,
 				99FD76BD119C231294A67C24,
 				13978D5F2FE1DE5CB357BB6A,
@@ -352,6 +363,16 @@
 			);
 			"path" = "Core";
 			"sourceTree" = "<group>";
+		};
+		"048B2F3699B628098C5D8DA5" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "AppleHealthService.swift";
+			"sourceTree" = "<group>";
+		};
+		"4C515D63FAD46BE3E09C4FE9" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 048B2F3699B628098C5D8DA5;
 		};
 		"92F09BE3BE7408F4DD44966F" = {
 			"isa" = "PBXFileReference";
@@ -466,6 +487,7 @@
 		"6B8B2B5CD808F874BF4EE1BA" = {
 			"isa" = "PBXGroup";
 			"children" = (
+				048B2F3699B628098C5D8DA5,
 				92F09BE3BE7408F4DD44966F,
 				EA63825235A3A3823BF8D8D4,
 				1843CD3E6F8E7EB8B56ABA91,
@@ -480,6 +502,16 @@
 			);
 			"path" = "Services";
 			"sourceTree" = "<group>";
+		};
+		"31473A5A77807A62E2D838EB" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "AppleHealthView.swift";
+			"sourceTree" = "<group>";
+		};
+		"D4C466A8EFBABCD2E4C82BC2" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 31473A5A77807A62E2D838EB;
 		};
 		"2FB2E0E3C01B4A52D5E55DCA" = {
 			"isa" = "PBXFileReference";
@@ -714,6 +746,7 @@
 		"6C923F6D92369A43B16924F4" = {
 			"isa" = "PBXGroup";
 			"children" = (
+				31473A5A77807A62E2D838EB,
 				2FB2E0E3C01B4A52D5E55DCA,
 				EB1BA05A2A4A742DF7F85150,
 				8F7A2BF48A08222DC9D42E67,
@@ -1127,6 +1160,16 @@
 			"path" = "Luqma.app";
 			"sourceTree" = "BUILT_PRODUCTS_DIR";
 		};
+		"26025DB47A2ED493977EB5F5" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "AppleHealthInteractionTests.swift";
+			"sourceTree" = "<group>";
+		};
+		"7C998D2FCA399359C3078C6B" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 26025DB47A2ED493977EB5F5;
+		};
 		"A8CA97C9C396889CF0B7B755" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -1160,6 +1203,7 @@
 		"2676C1C3130EC43A71AB56D8" = {
 			"isa" = "PBXGroup";
 			"children" = (
+				26025DB47A2ED493977EB5F5,
 				A8CA97C9C396889CF0B7B755,
 				110A69DC2B0C1B39C63965B6,
 				A7A589ADF70D19D181EB4C34,
@@ -1183,11 +1227,31 @@
 			"name" = "Products";
 			"sourceTree" = "<group>";
 		};
+		"E5521D6751958A4EC3744EFF" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "wrapper.framework";
+			"name" = "HealthKit.framework";
+			"path" = "System/Library/Frameworks/HealthKit.framework";
+			"sourceTree" = "SDKROOT";
+		};
+		"7B064793679ED3B84783CF4A" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = E5521D6751958A4EC3744EFF;
+		};
+		"99B2612622859F92D7197CBF" = {
+			"isa" = "PBXGroup";
+			"children" = (
+				E5521D6751958A4EC3744EFF,
+			);
+			"name" = "Frameworks";
+			"sourceTree" = "<group>";
+		};
 		"AA0596BBDB4DCC95D5D4F10C" = {
 			"isa" = "PBXGroup";
 			"children" = (
 				085ED06E573690BA3A56BC1E,
 				2676C1C3130EC43A71AB56D8,
+				99B2612622859F92D7197CBF,
 				6F7199ED7B63CDA338A0FB82,
 			);
 			"sourceTree" = "<group>";
@@ -1274,6 +1338,7 @@
 				1FE956C0D7E022E94445DDC9,
 				66C58434E865BE22206AF1F7,
 				296B7C7F92ECAB568E3064DB,
+				8732A4316A670AFBCFCFCF9E,
 				FD770A0D1190CA0559B018D1,
 				98141A9EE077F7BCF208865C,
 				60ECFF57867921AABCC19DDD,
@@ -1295,6 +1360,7 @@
 				DDAB3EE96855605B9DD9745E,
 				D7764BDF2E8F543F56223B46,
 				765B745DE8348FC82E9DA4A8,
+				4C515D63FAD46BE3E09C4FE9,
 				31DB4AF06768137E0E95C19B,
 				403A3A19D829E31AE030433B,
 				E9DF33C90C95BE46CC7B5561,
@@ -1306,6 +1372,7 @@
 				082B6D20E4622E96660533DF,
 				0B98F3CD8455B64F89CCBE22,
 				32A69040FD1EC58A7366E44B,
+				D4C466A8EFBABCD2E4C82BC2,
 				AD9A99DF0C373E8A1E08DE03,
 				B4102638441C869DB3ABF3EF,
 				25FAC676E9E27349FB2F59A2,
@@ -1341,6 +1408,7 @@
 				F5A96A3C74A801FC651BF408,
 				87033805866ECC7565D124E1,
 				136C32846819F40D17A353A2,
+				7B064793679ED3B84783CF4A,
 			);
 			"runOnlyForDeploymentPostprocessing" = 0;
 		};
@@ -1592,6 +1660,7 @@
 			"isa" = "PBXSourcesBuildPhase";
 			"buildActionMask" = 2147483647;
 			"files" = (
+				7C998D2FCA399359C3078C6B,
 				F7030A48D0B54D27869E5317,
 				529F5DF0462DAC3C0CEE547A,
 				B5536D40B168AC7C6DD1F18B,
@@ -1639,6 +1708,11 @@
 					"34A04005BCAF206EEC990BD9" = {
 						"CreatedOnToolsVersion" = "16.0";
 						"ProvisioningStyle" = "Automatic";
+						"SystemCapabilities" = {
+							"com.apple.HealthKit" = {
+								"enabled" = 1;
+							};
+						};
 					};
 					"129964AA630C5970DF325D9E" = {
 						"CreatedOnToolsVersion" = "16.0";

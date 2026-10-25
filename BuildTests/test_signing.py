@@ -34,6 +34,7 @@ def profile_data(mode="ad-hoc"):
         "DeveloperCertificates": [CERTIFICATE],
         "Entitlements": {"application-identifier": TEAM + "." + BUNDLE,
                          "com.apple.developer.team-identifier": TEAM,
+                         "com.apple.developer.healthkit": True,
                          "get-task-allow": False},
     }
     if mode == "ad-hoc":
@@ -46,7 +47,7 @@ def validated(data=None, mode="ad-hoc"):
 
 
 class SigningTests(unittest.TestCase):
-    def test_ad_hoc_export_uses_registered_devices_without_extra_capabilities(self):
+    def test_ad_hoc_export_uses_registered_devices_with_requested_healthkit(self):
         profile = validated()
         self.assertEqual(profile.method, "release-testing")
         self.assertEqual(profile.device_count, 1)
@@ -54,6 +55,8 @@ class SigningTests(unittest.TestCase):
         self.assertEqual(options["provisioningProfiles"], {BUNDLE: UUID})
         self.assertEqual(options["signingCertificate"], FINGERPRINT)
         self.assertEqual(options["destination"], "export")
+        self.assertIs(profile.allowed_entitlements["com.apple.developer.healthkit"],True)
+        self.assertNotIn("com.apple.developer.healthkit.background-delivery",profile.allowed_entitlements)
 
     def test_app_store_export_is_not_direct_sideload(self):
         profile = validated(mode="app-store")
@@ -107,11 +110,23 @@ class SigningTests(unittest.TestCase):
             with self.assertRaises(BuildError):
                 select_identity(invalid, validated())
 
-    def test_exported_signature_matches_profile_and_rejects_removed_health_capabilities(self):
+    def test_profile_must_allow_requested_healthkit_with_the_correct_type(self):
+        for change in (lambda e:e.pop("com.apple.developer.healthkit"),
+                       lambda e:e.update({"com.apple.developer.healthkit":False}),
+                       lambda e:e.update({"com.apple.developer.healthkit":1}),
+                       lambda e:e.update({"com.apple.developer.healthkit":"true"})):
+            data=profile_data();change(data["Entitlements"])
+            with self.assertRaisesRegex(BuildError,"requested capability"):
+                validated(data)
+
+    def test_exported_signature_requires_healthkit_and_rejects_unrequested_capabilities(self):
         claims = dict(profile_data()["Entitlements"])
         validate_signed_entitlements(plistlib.dumps(claims), validated())
         changes = [
-            lambda c: c.update({"com.apple.developer.healthkit": True}),
+            lambda c: c.pop("com.apple.developer.healthkit"),
+            lambda c: c.update({"com.apple.developer.healthkit":False}),
+            lambda c: c.update({"com.apple.developer.healthkit":1}),
+            lambda c: c.update({"com.apple.developer.healthkit":"true"}),
             lambda c: c.update({"com.apple.developer.healthkit.background-delivery": True}),
             lambda c: c.pop("application-identifier"),
             lambda c: c.update({"application-identifier": TEAM + ".app.other"}),

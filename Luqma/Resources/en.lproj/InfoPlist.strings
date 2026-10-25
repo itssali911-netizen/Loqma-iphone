@@ -1,2 +1,3 @@
 "CFBundleDisplayName" = "Luqma";
 "NSCameraUsageDescription" = "Luqma uses the camera to scan product barcodes and photograph meals.";
+"NSHealthShareUsageDescription" = "Luqma reads your daily steps and active energy to show activity, and your latest weight and height for review. You choose which data to share; Luqma does not write to Apple Health.";
