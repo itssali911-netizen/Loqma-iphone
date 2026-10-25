@@ -6,9 +6,10 @@ enum SearchNameSimilarity {
     static func percent(query:String,food:Food)->Int? {
         let query=canonical(query)
         guard !query.isEmpty else{return nil}
-        let names=[food.name,food.nameEn,food.brand].compactMap{$0}
-            +(food.aliases ?? "").components(separatedBy:CharacterSet(charactersIn:",،;؛|\n"))
-            +[food.brand.map{$0+" "+food.name}].compactMap{$0}
+        var names=[food.name]
+        if let english=food.nameEn{names.append(english)}
+        if let brand=food.brand{names.append(brand);names.append(brand+" "+food.name)}
+        names.append(contentsOf:(food.aliases ?? "").components(separatedBy:CharacterSet(charactersIn:",،;؛|\n")))
         return names.map{score(query,canonical($0))}.max() ?? 0
     }
     private static func canonical(_ value:String)->String {
