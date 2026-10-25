@@ -36,17 +36,19 @@ def run():
             # Captures are actual view rendering. Loading/empty use read-only
             # DEBUG state injection; results use the real bundled food catalog.
             for language in ('en','ar'):
-                for state in ('results','empty','loading'):
+                states=['results','empty','loading']+(['parity'] if label=='large' and language=='ar' else [])
+                for state in states:
                     key=label+'-'+language+'-'+state
-                    args=['-loqma-preview-search','-loqma-preview-search-query','milk' if language=='en' else 'حليب','-loqma-preview-font-audit','-AppleLanguages','('+language+')','-AppleLocale','en_US' if language=='en' else 'ar_SA']
+                    query='التنمية صدر دجاج' if state=='parity' else 'milk' if language=='en' else 'حليب'
+                    args=['-loqma-preview-search','-loqma-preview-search-query',query,'-loqma-preview-font-audit','-AppleLanguages','('+language+')','-AppleLocale','en_US' if language=='en' else 'ar_SA']
                     args+=['-loqma-ui-test-en' if language=='en' else '-loqma-ui-test-ar']
-                    if state!='results':args+=['-loqma-preview-search-state',state]
+                    if state in ('empty','loading'):args+=['-loqma-preview-search-state',state]
                     launched=command(['xcrun','simctl','launch','--terminate-running-process',device,'app.luqma.diary',*args],OUT,'launch-'+key,120)
                     pid=int(re.search(r':\s*(\d+)\s*$',launched).group(1))
                     confirm_process(pid,3)
                     details=capture_screenshot(OUT,device,key,pid,OUT/(key+'.png'))
                     fonts=collect_runtime_font_audit(OUT,device,'app.luqma.diary',key,pid,len(report['screenshots'])+1,False)
-                    report['screenshots'].append(dict(screen=key,read_only_state_injection=state!='results',actual_bundled_foods=state=='results',fonts=fonts,**details))
+                    report['screenshots'].append(dict(screen=key,query=query,read_only_state_injection=state in ('empty','loading'),actual_bundled_foods=state in ('results','parity'),fonts=fonts,**details))
             command(['xcrun','simctl','shutdown',device],OUT,'shutdown-'+label,60,allow_failure=True)
     except BaseException as error:
         report['errors'].append(str(error));raise

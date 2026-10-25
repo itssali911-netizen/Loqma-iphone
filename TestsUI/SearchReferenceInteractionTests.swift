@@ -22,6 +22,10 @@ final class SearchReferenceInteractionTests:XCTestCase {
         let query=app.textFields["search.query"]
         XCTAssertTrue(query.waitForExistence(timeout:10));query.tap();query.typeText("milk")
         XCTAssertTrue(results.firstMatch.waitForExistence(timeout:15),app.debugDescription)
+        query.typeText("zz")
+        query.typeText(XCUIKeyboardKey.delete.rawValue+XCUIKeyboardKey.delete.rawValue)
+        XCTAssertEqual(query.value as? String,"milk")
+        XCTAssertTrue(results.firstMatch.waitForExistence(timeout:15))
         capture("Live search with keyboard")
         results.firstMatch.tap()
         let amount=app.textFields["portion.amount"]

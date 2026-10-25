@@ -112,8 +112,11 @@ struct SearchReferenceEmpty:View {
         VStack(spacing:0){
             Image("SearchReferenceMagnifier").resizable().scaledToFit().frame(width:220,height:160).padding(.bottom,20)
                 .accessibilityHidden(true).environment(\.layoutDirection,.leftToRight)
-            Text(language.text("عذرًا، لم نعثر على نتائج 😢","Woops, Not Found 😢"))
-                .searchReferenceFont(21,weight:.heavy).tracking(-0.525).foregroundStyle(.white).multilineTextAlignment(.center).padding(.bottom,10)
+            HStack(spacing:8){
+                Text(language.text("عذراً، لم يتم العثور على نتائج","Woops, Not Found"))
+                    .searchReferenceFont(21,weight:.heavy).tracking(-0.525).multilineTextAlignment(.center)
+                Text("😢").searchReferenceFont(21,lineHeight:1)
+            }.foregroundStyle(.white).padding(.bottom,10)
             Text(language.text("للأسف، الكلمة المفتاحية التي أدخلتها غير موجودة. يرجى تجربة كلمة أخرى أو التحقق مرة ثانية.","Unfortunately, the key you entered cannot be found. Please try another keyword or check again."))
                 .searchReferenceFont(13.5,lineHeight:1.55).foregroundStyle(SearchReferenceStyle.description)
                 .multilineTextAlignment(.center).frame(maxWidth:285)
@@ -139,7 +142,7 @@ struct SearchReferenceLoading:View {
                     }
                 }.frame(width:96,height:96)
             }.accessibilityHidden(true)
-            Text(language.text("جاري التحميل…","Loading...")).searchReferenceFont(17,weight:.heavy).tracking(-0.425).foregroundStyle(.white)
+            Text(language.text("جاري التحميل...","Loading...")).searchReferenceFont(17,weight:.heavy).tracking(-0.425).foregroundStyle(.white)
         }.padding(.bottom,16).frame(maxWidth:.infinity).accessibilityIdentifier("search.loading")
             .accessibilityElement(children:.combine)
     }

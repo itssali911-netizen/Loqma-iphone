@@ -189,7 +189,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                 Spacer(minLength:0)
             }
             HStack(spacing:0){
-                TextField("",text:$query,prompt:Text(diary.t("ابحث في لقمة…","Search Luqma...")).foregroundColor(SearchReferenceStyle.placeholder))
+                TextField("",text:$query,prompt:Text(diary.t("ابحث في لقمة...","Search Luqma...")).foregroundColor(SearchReferenceStyle.placeholder))
                     .searchReferenceFont(14.5,weight:.medium).foregroundStyle(SearchReferenceStyle.input)
                     .focused($queryFocused).submitLabel(.search).autocorrectionDisabled().textInputAutocapitalization(.never)
                     .onSubmit{startSearch()}.accessibilityIdentifier("search.query")
@@ -205,6 +205,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                     referenceFilter(2,title:diary.t("المتكررة","Frequent"),icon:"Sparkle")
                     if !productSelection {referenceFilter(3,title:diary.t("أطعمتي","My foods"),icon:"Document")}
                     Menu {
+                        if !query.isEmpty {Button(diary.t("مسح البحث","Clear search")){query=""}}
                         Button(diary.t("قارئ الباركود","Barcode reader")){queryFocused=false;tab=1}
                         if !productSelection {
                             Button(diary.t("تحليل صورة الوجبة","Analyze a meal photo")){queryFocused=false;tab=2}
@@ -252,7 +253,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                 } label: {
                     HStack(spacing:6){
                         SearchReferenceIcon(name:"Sliders",size:14,color:Color(hex:0xD0D3DA))
-                        Text(diary.t("التطابق%","Match%")).searchReferenceFont(11.5,weight:.semibold)
+                        Text(diary.t("نسبة التطابق%","Match%")).searchReferenceFont(11.5,weight:.semibold)
                         SearchReferenceIcon(name:"ChevronDown",size:12,color:Color(hex:0xA0A5B1))
                     }.foregroundStyle(SearchReferenceStyle.sortText).padding(.horizontal,10).frame(height:30)
                         .background(SearchReferenceStyle.sort,in:RoundedRectangle(cornerRadius:8,style:.circular))
