@@ -65,36 +65,45 @@ struct SearchReferenceFoodRow:View {
     }
     private var badgeColor:Color {bestMatch || FoodSearch.isPersonalFood(food) ? SearchReferenceStyle.green:FoodSearch.isOpenFoodFacts(food) ? SearchReferenceStyle.blue:SearchReferenceStyle.slate}
     private var detail:String {
-        if let score{return String(score)+language.text("% تشابه اسم","% Name match")}
+        if let score{return String(score)+language.text("% تشابه الاسم","% Name match")}
         if let value=food.values(for:food.unit){return DisplayFormat.decimal(value.kcal,digits:0)+language.text(" سعرة"," kcal")}
         return language.text("راجع التغذية","Review nutrition")
     }
+    private var accessibilityText:String {
+        [food.label(language),badge,detail,food.source ?? ""].filter{!$0.isEmpty}.joined(separator:", ")
+    }
+    private var titleLines:Int? {typeSize.isAccessibilitySize ? nil:1}
     var body:some View {
-        Button(action:action){
-            HStack(spacing:12){
-                HStack(spacing:14){
-                    SearchReferenceIcon(name:bestMatch ? "Sparkle":"Document")
-                        .frame(width:52,height:52)
-                        .background(SearchReferenceStyle.iconSurface,in:RoundedRectangle(cornerRadius:16,style:.circular))
-                    VStack(alignment:.leading,spacing:6){
-                        Text(food.label(language)).searchReferenceFont(14.5,weight:.heavy).tracking(-0.3625)
-                            .foregroundStyle(.white).multilineTextAlignment(.leading)
-                            .lineLimit(typeSize.isAccessibilitySize ? nil:1)
-                        ViewThatFits(in:.horizontal){
-                            HStack(spacing:8){badgeView;detailView}
-                            VStack(alignment:.leading,spacing:4){badgeView;detailView}
-                        }
-                    }.frame(maxWidth:.infinity,alignment:.leading)
-                }
-                SearchReferenceIcon(name:direction == .rightToLeft ? "ChevronLeft":"ChevronRight",size:16,color:SearchReferenceStyle.secondary).padding(.trailing,4)
-            }.padding(12).frame(maxWidth:.infinity,minHeight:76,alignment:.leading)
-                .background(SearchReferenceStyle.card,in:RoundedRectangle(cornerRadius:22,style:.circular))
-                .contentShape(RoundedRectangle(cornerRadius:22,style:.circular))
-        }.buttonStyle(SearchReferencePressStyle())
+        Button(action:action){cardContent}.buttonStyle(SearchReferencePressStyle())
             .accessibilityElement(children:.ignore)
-            .accessibilityLabel(food.label(language)+", "+badge+", "+detail+", "+(food.source ?? ""))
-            .accessibilityHint(language.text("اختيار الطعام والكمية. تشابه الاسم ليس تأكيدًا لهوية المنتج.","Choose food and quantity. Name similarity does not verify product identity."))
+            .accessibilityLabel(Text(accessibilityText))
+            .accessibilityHint(Text(language.text("اختيار الطعام والكمية. تشابه الاسم ليس تأكيدًا لهوية المنتج.","Choose food and quantity. Name similarity does not verify product identity.")))
             .accessibilityIdentifier("food.result."+food.id)
+    }
+    private var cardContent:some View {
+        HStack(spacing:12){
+            HStack(spacing:14){rowIcon;rowText}
+            SearchReferenceIcon(name:direction == .rightToLeft ? "ChevronLeft":"ChevronRight",size:16,color:SearchReferenceStyle.secondary).padding(.trailing,4)
+        }.padding(12).frame(maxWidth:.infinity,minHeight:76,alignment:.leading)
+            .background(SearchReferenceStyle.card,in:RoundedRectangle(cornerRadius:22,style:.circular))
+            .contentShape(RoundedRectangle(cornerRadius:22,style:.circular))
+    }
+    private var rowIcon:some View {
+        SearchReferenceIcon(name:bestMatch ? "Sparkle":"Document").frame(width:52,height:52)
+            .background(SearchReferenceStyle.iconSurface,in:RoundedRectangle(cornerRadius:16,style:.circular))
+    }
+    private var rowText:some View {
+        VStack(alignment:.leading,spacing:6){
+            Text(food.label(language)).searchReferenceFont(14.5,weight:.heavy).tracking(-0.3625)
+                .foregroundStyle(.white).multilineTextAlignment(.leading).lineLimit(titleLines)
+            metadataContent
+        }.frame(maxWidth:.infinity,alignment:.leading)
+    }
+    private var metadataContent:some View {
+        ViewThatFits(in:.horizontal){
+            HStack(spacing:8){badgeView;detailView}
+            VStack(alignment:.leading,spacing:4){badgeView;detailView}
+        }
     }
     private var badgeView:some View {
         Text(badge).searchReferenceFont(11,weight:.semibold,lineHeight:1.25).foregroundStyle(.white)
