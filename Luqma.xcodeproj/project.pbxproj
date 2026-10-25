@@ -245,6 +245,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = 8777857D91A36576C016D333;
 		};
+		"474AAED9092C58EA908ABA02" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "SearchResultPresentation.swift";
+			"sourceTree" = "<group>";
+		};
+		"92B51EC33FA83EF07E6277CC" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 474AAED9092C58EA908ABA02;
+		};
 		"D906310F52717E3245F9D8FC" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -332,6 +342,7 @@
 				BAFAA157BECEAFE793BB7738,
 				F14823DAC1F986FC4D5D52AF,
 				8777857D91A36576C016D333,
+				474AAED9092C58EA908ABA02,
 				D906310F52717E3245F9D8FC,
 				F866668F7C766A3FE269DA0B,
 				1F0D75ECCB677A0C7DCB66DA,
@@ -670,6 +681,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = D9B5C82156891D1D3F88E6F5;
 		};
+		"E9DBD63041C7656772A97B83" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "SearchReferenceViews.swift";
+			"sourceTree" = "<group>";
+		};
+		"05CAF3FE41A03589C08056A7" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = E9DBD63041C7656772A97B83;
+		};
 		"9B60CD3496F33511D72B01E9" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -713,6 +734,7 @@
 				C8ADF73E9B38238D03760F45,
 				440B250874D86CEECDBA87F1,
 				D9B5C82156891D1D3F88E6F5,
+				E9DBD63041C7656772A97B83,
 				9B60CD3496F33511D72B01E9,
 				88E979820DC9DBB7BBD2AD7F,
 			);
@@ -1125,11 +1147,22 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = 110A69DC2B0C1B39C63965B6;
 		};
+		"A7A589ADF70D19D181EB4C34" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "SearchReferenceInteractionTests.swift";
+			"sourceTree" = "<group>";
+		};
+		"B5536D40B168AC7C6DD1F18B" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = A7A589ADF70D19D181EB4C34;
+		};
 		"2676C1C3130EC43A71AB56D8" = {
 			"isa" = "PBXGroup";
 			"children" = (
 				A8CA97C9C396889CF0B7B755,
 				110A69DC2B0C1B39C63965B6,
+				A7A589ADF70D19D181EB4C34,
 			);
 			"path" = "TestsUI";
 			"sourceTree" = "<group>";
@@ -1255,6 +1288,7 @@
 				E0D20144630682CEEAA8B67E,
 				E133E96386FD1259FF725B07,
 				9C96F77E2CE33BA4AF4B8BC0,
+				92B51EC33FA83EF07E6277CC,
 				8746309086CC07F04F400DAD,
 				7156749514081042D0DEDDA9,
 				7F8C55211A3045987A30FBB4,
@@ -1292,6 +1326,7 @@
 				AEE8BD9FC54BA9E2B3082726,
 				C97CAF7A95D4BDBFD294D148,
 				1C26F4B390171819FE1078DE,
+				05CAF3FE41A03589C08056A7,
 				C47CAFDAF2B68AFF61327ACC,
 				A3649A21E2A5DDD3A101AC9C,
 				D157A1D7B85C6A507F2273F7,
@@ -1559,6 +1594,7 @@
 			"files" = (
 				F7030A48D0B54D27869E5317,
 				529F5DF0462DAC3C0CEE547A,
+				B5536D40B168AC7C6DD1F18B,
 			);
 			"runOnlyForDeploymentPostprocessing" = 0;
 		};

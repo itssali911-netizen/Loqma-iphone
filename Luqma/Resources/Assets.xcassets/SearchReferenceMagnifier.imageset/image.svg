@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 175">
+        <defs>
+          <linearGradient id="goldRimOuter" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#DFAD62" />
+            <stop offset="55%" stop-color="#B8833B" />
+            <stop offset="100%" stop-color="#84571F" />
+          </linearGradient>
+          <linearGradient id="goldRimTop" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#E4B56B" />
+            <stop offset="100%" stop-color="#C18D42" />
+          </linearGradient>
+          <linearGradient id="glassLens" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#1B303E" />
+            <stop offset="100%" stop-color="#264050" />
+          </linearGradient>
+          <linearGradient id="handleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#DDA95E" />
+            <stop offset="60%" stop-color="#B58038" />
+            <stop offset="100%" stop-color="#7C501B" />
+          </linearGradient>
+        </defs>
+
+
+        <ellipse cx="132" cy="128" rx="68" ry="12" fill="#050608" opacity="0.85" />
+
+
+        <g transform="translate(88, 102) rotate(-32)">
+
+          <rect x="-58" y="-8" width="64" height="20" rx="10" fill="#7D521D" />
+
+          <rect x="-58" y="-12" width="64" height="18" rx="9" fill="url(#handleGrad)" />
+
+          <rect x="-52" y="-8" width="46" height="4" rx="2" fill="#EAC180" opacity="0.45" />
+        </g>
+
+
+        <g transform="translate(132, 74) rotate(-6)">
+
+          <ellipse cx="0" cy="7" rx="58" ry="42" fill="#7C511C" />
+
+          <ellipse cx="0" cy="0" rx="58" ry="42" fill="url(#goldRimTop)" />
+
+          <ellipse cx="0" cy="0" rx="50" ry="35" fill="#1A1B1E" />
+
+          <ellipse cx="0" cy="2" rx="46" ry="31.5" fill="#7E5522" />
+
+          <ellipse cx="0" cy="1" rx="43" ry="29" fill="url(#glassLens)" />
+
+          <path
+            d="M -27 -6 Q 0 -23 28 -5"
+            fill="none"
+            stroke="#98B5C4"
+            stroke-width="8.5"
+            stroke-linecap="round"
+            opacity="0.85"
+          />
+
+          <path
+            d="M -22 20 Q 2 27 24 18"
+            fill="none"
+            stroke="#6C8FA1"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            opacity="0.65"
+          />
+        </g>
+      </svg>

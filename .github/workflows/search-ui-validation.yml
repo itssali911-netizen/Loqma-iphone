@@ -1,0 +1,45 @@
+name: Luqma search reference validation
+on:
+  push:
+    branches: [feature/search-reference-20261025]
+permissions:
+  contents: read
+concurrency:
+  group: search-reference-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  search:
+    runs-on: macos-26
+    timeout-minutes: 75
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Set build number after the previous IPA 105
+        run: python3 -c 'import os; open(os.environ["GITHUB_ENV"],"a").write("BUILD_NUMBER="+str(105+int(os.environ["GITHUB_RUN_NUMBER"]))+"\n")'
+      - name: Compile, test Core and package the real device application
+        run: python3 Scripts/build_ios.py sideload
+      - name: Preserve verified device build and actual test logs
+        if: success()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: Luqma-search-ipa-${{ github.run_id }}
+          path: |
+            BuildOutput/Luqma-Sideload.ipa
+            BuildOutput/build-summary.json
+            BuildOutput/READ-ME.txt
+            BuildOutput/core-tests.log
+            BuildOutput/build-tests.log
+      - name: Test real search navigation and capture three native states in Arabic and English
+        run: python3 Scripts/search_ui_validation.py
+      - name: Native search evidence and build diagnostics
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: Luqma-search-evidence-${{ github.run_id }}
+          path: |
+            SearchValidation/
+            BuildOutput/*.log
+          if-no-files-found: warn

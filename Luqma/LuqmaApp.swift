@@ -12,6 +12,7 @@ import UIKit
         #if DEBUG
         // Only the isolated UI-test Simulator uses this flag; it is absent from Release.
         if CommandLine.arguments.contains("-loqma-ui-test-en"), diary.language != .en {diary.change{$0.language = .en}}
+        if CommandLine.arguments.contains("-loqma-ui-test-ar"), diary.language != .ar {diary.change{$0.language = .ar}}
         #if targetEnvironment(simulator)
         performanceFixtureIdentity = LuqmaPerformanceFixture.prepare(diary)
         #endif
@@ -137,7 +138,10 @@ struct RootView:View {
             }
             .fullScreenCover(isPresented:$searchPreview){
                 #if DEBUG
-                FoodAddView(initialQuery:"التنمية صدر دجاج"){_,_,_,_ in false}
+                let arguments=CommandLine.arguments
+                let position=arguments.firstIndex(of:"-loqma-preview-search-query")
+                let query=position.flatMap{arguments.indices.contains($0+1) ? arguments[$0+1]:nil} ?? "التنمية صدر دجاج"
+                FoodAddView(initialQuery:query){_,_,_,_ in false}
                 #endif
             }
             .fullScreenCover(isPresented:$mealsPreview){

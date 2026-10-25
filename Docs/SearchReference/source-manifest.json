@@ -1,0 +1,16 @@
+{
+  "tsx_sha256": "c23beee9a3d1f5478dd3aa07aa859a023b099a1e47e60e46bbe472049abb37d8",
+  "canvas": [
+    360,
+    780
+  ],
+  "font_family_defined": false,
+  "outer_phone_and_fake_status_bar_excluded": true,
+  "illustration": "Unmodified SVG geometry/gradients from supplied TSX; only JSX attributes converted to XML",
+  "reference_conflicts": [
+    "PNG card icons and titles differ from TSX examples; TSX executable geometry/artwork is used.",
+    "Source says 8 results but renders 6; app shows actual result count.",
+    "TSX font-sans has no family files; retain existing licensed Work Sans/Tajawal cascade.",
+    "Workouts/Community are demo filters; app retains real All/Recent/Frequent/My foods sources in the approved chip styling."
+  ]
+}

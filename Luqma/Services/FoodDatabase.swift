@@ -50,6 +50,16 @@ actor FoodDatabase {
         var suggestions: [FoodSuggestion]
     }
 
+    /// Display metadata only. Keep string normalization off the keyboard's actor.
+    func nameSimilarityScores(_ foods:[Food],query:String)->[String:Int] {
+        var scores:[String:Int]=[:]
+        for food in foods {
+            if Task.isCancelled{return [:]}
+            if let value=SearchNameSimilarity.percent(query:query,food:food){scores[food.id]=value}
+        }
+        return scores
+    }
+
     private func prepareIndexes(_ cached: [Food]) {
         ensureCatalog()
         guard !indexesReady || cached != cachedFoods else { return }
