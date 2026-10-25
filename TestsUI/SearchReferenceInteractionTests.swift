@@ -49,8 +49,9 @@ final class SearchReferenceInteractionTests:XCTestCase {
         let own=app.buttons["search.filter.3"]
         if !own.isHittable{app.buttons["search.filter.1"].swipeLeft()}
         own.tap()
-        XCTAssertTrue(app.otherElements["search.empty"].waitForExistence(timeout:10))
+        XCTAssertTrue(app.staticTexts["Woops, Not Found"].waitForExistence(timeout:10))
         XCTAssertEqual(results.count,0)
+        capture("Actual My foods empty results")
         let all=app.buttons["search.filter.0"]
         if !all.isHittable{app.buttons["search.filter.2"].swipeRight()}
         all.tap()

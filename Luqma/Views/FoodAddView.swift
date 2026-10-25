@@ -20,6 +20,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
     @State private var query=""
     @State private var code=""
     @State private var busy=false
+    @State private var localLoading=false
     @State private var pageLoading=false
     @State private var scanning=false
     @State private var manual=false
@@ -117,10 +118,38 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
             .onChange(of:resultOrder){_,_ in orderedResults=resultOrder.arrange(results,scores:matchScores)}
             .onChange(of:tab){_,value in resetSearch();barcodePhotoTask?.cancel();photoToken=UUID();photo=nil;if value==0 {searchTask=Task{await refreshLocal()}}}
             .onChange(of:phase){_,value in if value == .active,notice?.offersSettings == true,AVCaptureDevice.authorizationStatus(for:.video) == .authorized{notice=nil}}
-            .onDisappear{searchTask?.cancel();selectionTask?.cancel();historyTask?.cancel();scoreTask?.cancel();queryToken=UUID();busy=false;pageLoading=false;choosingFood=false;barcodePhotoTask?.cancel();photoToken=UUID()}
+            .onDisappear{searchTask?.cancel();selectionTask?.cancel();historyTask?.cancel();scoreTask?.cancel();queryToken=UUID();busy=false;localLoading=false;pageLoading=false;choosingFood=false;barcodePhotoTask?.cancel();photoToken=UUID()}
             .onChange(of:photo){_,item in readBarcodePhoto(item)}
             .allowsHitTesting(!readOnlySearchPreview)
+            #if DEBUG
+            .task(id:searchCaptureKey){writeSearchCaptureState()}
+            #endif
     }
+    #if DEBUG
+    private var capturePhase:String {
+        switch searchPhase {
+        case .idle:return "idle"
+        case .loading:return "loading"
+        case .results:return "results"
+        case .empty:return "empty"
+        case .error:return "error"
+        }
+    }
+    private var searchCaptureKey:String {"\(capturePhase)|\(query)|\(diary.language.rawValue)|\(results.count)|\(orderedResults.count)|\(nearbyResults.count)|\(matchScores.count)"}
+    private func writeSearchCaptureState(){
+        // Evidence of real view state, never a simulated service result. Excluded
+        // from Release; used only by the source-pinned Simulator capture tool.
+        guard CommandLine.arguments.contains("-loqma-preview-search"),CommandLine.arguments.contains("-loqma-preview-font-audit"),
+              let folder=FileManager.default.urls(for:.documentDirectory,in:.userDomainMask).first else{return}
+        let foods=results+nearbyResults
+        let value:[String:Any] = ["process_id":ProcessInfo.processInfo.processIdentifier,"query":query,"language":diary.language.rawValue,
+                                 "phase":capturePhase,"result_count":foods.count,"rendered_result_count":orderedResults.count+nearbyResults.count,
+                                 "scores_ready":foods.allSatisfy{matchScores[$0.id] != nil}]
+        if let data=try? JSONSerialization.data(withJSONObject:value,options:[.sortedKeys]){
+            try? data.write(to:folder.appendingPathComponent("luqma-search-capture.json"),options:.atomic)
+        }
+    }
+    #endif
     private var readOnlySearchPreview:Bool {
         #if DEBUG
         referencePreviewPhase != nil
@@ -132,7 +161,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
         #if DEBUG
         if let referencePreviewPhase{return referencePreviewPhase}
         #endif
-        return SearchScreenPhase.resolve(resultCount:results.count+nearbyResults.count,isBusy:busy || choosingFood,
+        return SearchScreenPhase.resolve(resultCount:results.count+nearbyResults.count,isBusy:busy || choosingFood || localLoading,
                                   completed:completedSearch,hasError:notice?.isError == true)
     }
     private var searchSurface:some View {
@@ -149,7 +178,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                         Button(diary.t("إعادة المحاولة","Try again")){startSearch()}
                             .accessibilityIdentifier("search.retry")
                     }
-                    if busy || choosingFood {
+                    if busy || choosingFood || localLoading {
                         Button(diary.t("إلغاء","Cancel")){cancelOperation()}
                             .searchReferenceFont(13,weight:.semibold).foregroundStyle(.white).frame(minHeight:44)
                             .accessibilityIdentifier("search.cancel")
@@ -189,7 +218,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                     SearchReferenceIcon(name:direction == .rightToLeft ? "ChevronRight":"ChevronLeft",size:20,color:.white)
                         .frame(width:42,height:42)
                         .background(.white.opacity(0.2),in:RoundedRectangle(cornerRadius:13,style:.circular))
-                        .frame(width:44,height:44).contentShape(Rectangle())
+                        .contentShape(.interaction,Rectangle().inset(by:-1))
                 }.buttonStyle(SearchReferencePressStyle(scale:0.95)).accessibilityLabel(diary.t("إغلاق","Close"))
                     .accessibilityIdentifier("search.close")
                 Text(diary.t(productSelection ? "اختيار المنتج":"البحث",productSelection ? "Select a product":"Search"))
@@ -225,7 +254,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                             .overlay{RoundedRectangle(cornerRadius:10,style:.circular).strokeBorder(.white.opacity(0.75),lineWidth:1)}
                     }.buttonStyle(.plain).disabled(choosingFood).accessibilityLabel(diary.t("طرق إضافة الطعام","Food entry options"))
                         .accessibilityIdentifier("search.actions")
-                }.padding(.vertical,2)
+                }.padding(.top,2)
             }.accessibilityElement(children:.contain).accessibilityLabel(diary.t("قائمة الأطعمة","Food list"))
         }.padding(.horizontal,20).padding(.top,2).padding(.bottom,20)
             .background((searchPhase == .loading ? SearchReferenceStyle.loadingHeader:SearchReferenceStyle.header).ignoresSafeArea(edges:.top))
@@ -301,7 +330,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                 }}
             }
             if tab==0 && filter==0 && reachedSourceWindow {Notice(text:diary.t("البحث واسع جدًا. أضف نوع الطعام أو العلامة التجارية.","This search is very broad. Add the food type or brand."))}
-            if tab==0 && !productSelection && searchPhase != .loading {
+            if tab==0 && !productSelection && searchPhase != .loading && searchPhase != .empty {
                 Button{queryFocused=false;manual=true}label:{Label(diary.t("إضافة طعام يدويًا","Add food manually"),systemImage:"square.and.pencil").searchReferenceFont(13,weight:.medium).frame(minHeight:44)}
                     .foregroundStyle(.white).disabled(choosingFood).accessibilityIdentifier("search.manual")
             }
@@ -347,7 +376,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
     private func select(_ food:Food) {
         guard FoodSearch.availableForAdding(food), !productSelection || FoodSearch.isCatalogFood(food) else{return}
         queryFocused=false;selectionTask?.cancel();searchTask?.cancel();barcodePhotoTask?.cancel();photoToken=UUID()
-        let token=UUID(),fromBarcode=tab==1,selectionQuery=query,selectionTab=tab;queryToken=token;busy=false;pageLoading=false;choosingFood=false;notice=nil
+        let token=UUID(),fromBarcode=tab==1,selectionQuery=query,selectionTab=tab;queryToken=token;busy=false;localLoading=false;pageLoading=false;choosingFood=false;notice=nil
         guard food.sourceDescription==FoodDatabase.searchSummarySourceDescription else {diary.remember(food,barcode:fromBarcode);selected=food;return}
         choosingFood=true
         selectionTask=Task {
@@ -379,7 +408,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
         }
     }
     private func resetSearch() {
-        searchTask?.cancel();selectionTask?.cancel();scoreTask?.cancel();queryToken=UUID();busy=false;pageLoading=false;choosingFood=false;nextPage=nil;reachedSourceWindow=false;completedSearch=false;matchScores=[:]
+        searchTask?.cancel();selectionTask?.cancel();scoreTask?.cancel();queryToken=UUID();busy=false;localLoading=false;pageLoading=false;choosingFood=false;nextPage=nil;reachedSourceWindow=false;completedSearch=false;matchScores=[:]
         localResults=[];remoteResults=[];publishResults([]);nearbyResults=[];suggestions=[];notice=nil
     }
     private func presentNotice(_ text:String,error:Bool=false,settings:Bool=false){
@@ -387,7 +416,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
     }
     private func cancelOperation(){
         queryToken=UUID();photoToken=UUID();searchTask?.cancel();selectionTask?.cancel();scoreTask?.cancel();barcodePhotoTask?.cancel()
-        searchTask=nil;selectionTask=nil;barcodePhotoTask=nil;busy=false;pageLoading=false;choosingFood=false
+        searchTask=nil;selectionTask=nil;barcodePhotoTask=nil;busy=false;localLoading=false;pageLoading=false;choosingFood=false
     }
     private var cameraAccessBlocked:Bool {
         let status=AVCaptureDevice.authorizationStatus(for:.video)
@@ -456,6 +485,8 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
     private func refreshLocal(debounce:Bool=true) async {
         let token=queryToken,value=term,currentFilter=filter,language=diary.language
         guard tab==0 else{return}
+        localLoading = !value.isEmpty || currentFilter != 0
+        defer{if token==queryToken{localLoading=false}}
         if debounce {do{try await Task.sleep(nanoseconds:280_000_000)}catch{return}}
         guard !Task.isCancelled,token==queryToken else{return}
         let personal:[Food]? = currentFilter==0 ? nil:currentFilter==1 ? recentFoods:currentFilter==2 ? frequentFoods:savedFoods
@@ -469,7 +500,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
     }
     private func search() async {
         let value=term;guard !Task.isCancelled,tab==0,filter==0,!value.isEmpty else{return}
-        let token=UUID();queryToken=token;busy=true;pageLoading=false;notice=nil;nextPage=nil;reachedSourceWindow=false;remoteResults=[]
+        let token=UUID();queryToken=token;busy=true;localLoading=false;pageLoading=false;notice=nil;nextPage=nil;reachedSourceWindow=false;remoteResults=[]
         let found=await FoodDatabase.shared.presentation(value,cached:diary.state.products+savedFoods,history:recentFoods,language:diary.language,catalogOnly:productSelection)
         guard !Task.isCancelled,token==queryToken else{return};localResults=found.exact+found.nearby;suggestions=found.suggestions
         guard await mergeResults(token) else{return}

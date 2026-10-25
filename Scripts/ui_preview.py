@@ -423,7 +423,8 @@ def framebuffer_content(width: int, height: int, channels: int, pixels: bytearra
 def png_details(path: Path) -> dict:
     data = path.read_bytes()
     width, height, channels, pixels, frame = decode_png(data, path.name)
-    if width < 700 or height < 1400:
+    # iPhone SE (2nd/3rd generation), supported by iOS 17, is 750 x 1334.
+    if width < 700 or height < 1334:
         raise BuildError(f"{path.name} has unexpected phone screenshot dimensions.")
     return {"file": path.name, "width": width, "height": height,
             "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest(),

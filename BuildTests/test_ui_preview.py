@@ -106,6 +106,18 @@ class FramebufferTests(unittest.TestCase):
             with self.assertRaisesRegex(BuildError, "phone screenshot dimensions"):
                 png_details(path)
 
+    def test_supported_se_frame_is_accepted_but_shorter_capture_is_rejected(self):
+        width,height=750,1334
+        row=b"\0"+bytes([20,24,30])*width
+        with tempfile.TemporaryDirectory() as directory:
+            path=Path(directory)/"se.png"
+            path.write_bytes(png(width,height,[row]*height))
+            result=png_details(path)
+            self.assertEqual((result['width'],result['height']),(750,1334))
+            path.write_bytes(png(width,height-1,[row]*(height-1)))
+            with self.assertRaisesRegex(BuildError,"phone screenshot dimensions"):
+                png_details(path)
+
 
 class CaptureRetryTests(unittest.TestCase):
     def capture(self, directory, frames, fail_liveness=False):

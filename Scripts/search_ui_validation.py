@@ -8,6 +8,29 @@ from simulator_support import prepare_created_simulator
 ROOT=Path(__file__).resolve().parents[1]
 OUT=ROOT/'SearchValidation'
 TESTS=('testHomeSearchTypingSelectionAndReturn','testFiltersAndSortUseActualResults','testArabicSearchMirrorsOnlyDirectionalLayout')
+DIMENSIONS={'reference':(1080,2340),'compact':(750,1334),'large':(1320,2868)}
+
+def await_search_state(device,key,pid,query,language,state):
+    container=Path(command(['xcrun','simctl','get_app_container',device,'app.luqma.diary','data'],OUT,'state-container-'+key).strip())
+    if not container.is_absolute():raise BuildError('Invalid Simulator data container')
+    source=container/'Documents/luqma-search-capture.json'
+    expected='results' if state=='parity' else state
+    deadline=time.monotonic()+60
+    last=None
+    while time.monotonic()<deadline:
+        confirm_process(pid,.25)
+        try:
+            value=json.loads(source.read_text())
+        except (OSError,ValueError):continue
+        last=value
+        ready=(value.get('process_id')==pid and value.get('query')==query and value.get('language')==language and value.get('phase')==expected)
+        if expected=='results':
+            ready=ready and value.get('result_count',0)>0 and value.get('rendered_result_count')==value.get('result_count') and value.get('scores_ready') is True
+        if ready:
+            (OUT/(key+'.state.json')).write_text(json.dumps(value,indent=2)+'\n')
+            confirm_process(pid,1)
+            return value
+    raise BuildError(key+' did not reach the requested real view state: '+str(last))
 def run():
     require_mac()
     if OUT.exists():raise BuildError('SearchValidation must be a fresh evidence directory')
@@ -30,6 +53,12 @@ def run():
                     report['test_status']='passed';report['passed_tests']=passed
                 except BuildError as error:
                     report['test_status']='failed';report['errors'].append(str(error))
+                # Preserve human-viewable keyboard/navigation attachments too.
+                try:
+                    command(['xcrun','xcresulttool','export','attachments','--path',str(OUT/'search.xcresult'),'--output-path',str(OUT/'test-attachments')],OUT,'export-test-attachments',120)
+                    report['attachments_exported']=True
+                except BuildError as error:
+                    report['attachments_exported']=False;report['attachment_export_error']=str(error)
             app=derived/'Build/Products/Debug-iphonesimulator/Luqma.app'
             validate_app(app,'app.luqma.diary',OUT)
             command(['xcrun','simctl','install',device,str(app)],OUT,'install-'+label,120)
@@ -45,15 +74,16 @@ def run():
                     if state in ('empty','loading'):args+=['-loqma-preview-search-state',state]
                     launched=command(['xcrun','simctl','launch','--terminate-running-process',device,'app.luqma.diary',*args],OUT,'launch-'+key,120)
                     pid=int(re.search(r':\s*(\d+)\s*$',launched).group(1))
-                    confirm_process(pid,3)
+                    view_state=await_search_state(device,key,pid,query,language,state)
                     details=capture_screenshot(OUT,device,key,pid,OUT/(key+'.png'))
+                    if (details['width'],details['height'])!=DIMENSIONS[label]:raise BuildError(key+' does not match the selected Simulator pixel dimensions')
                     try:
                         # The app exports the real route "search". Capture labels
                         # are unique, but are not additional application routes.
                         fonts=collect_runtime_font_audit(OUT,device,'app.luqma.diary','search',pid,len(report['screenshots'])+1,False)
                     except BuildError as error:
                         report['errors'].append(key+': '+str(error));fonts={'status':'failed','error':str(error)}
-                    report['screenshots'].append(dict(screen=key,query=query,read_only_state_injection=state in ('empty','loading'),actual_bundled_foods=state in ('results','parity'),fonts=fonts,**details))
+                    report['screenshots'].append(dict(screen=key,query=query,view_state=view_state,read_only_state_injection=state in ('empty','loading'),actual_bundled_foods=state in ('results','parity'),fonts=fonts,**details))
             command(['xcrun','simctl','shutdown',device],OUT,'shutdown-'+label,60,allow_failure=True)
     except BaseException as error:
         report['errors'].append(str(error));raise
