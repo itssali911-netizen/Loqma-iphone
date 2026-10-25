@@ -2,11 +2,12 @@ name: Luqma search reference validation
 on:
   push:
     branches: [feature/search-reference-20261025]
+    paths: ['Luqma/**', 'Luqma.xcodeproj/**', 'Tests/**', 'TestsUI/**', 'Scripts/**', 'BuildTests/**', '.github/workflows/search-ui-validation.yml']
 permissions:
   contents: read
 concurrency:
   group: search-reference-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   search:
     runs-on: macos-26
