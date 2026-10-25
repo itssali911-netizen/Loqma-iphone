@@ -12,7 +12,6 @@ import hashlib
 import json
 import os
 from pathlib import Path
-import plistlib
 import re
 import shutil
 import signal
@@ -21,9 +20,11 @@ import sys
 import tempfile
 import uuid
 
-from build_ios import BuildError, public_environment, require_mac
+from build_ios import BuildError, require_mac
 from simulator_support import prepare_created_simulator
+from simulator_entitlements import read_simulator_entitlements
 from ui_preview import command, png_details, select_runtime, validate_app
+from vision_compat import apply_vision_compat
 
 ROOT=Path(__file__).resolve().parents[1]
 BUNDLE='app.luqma.diary'
@@ -123,7 +124,7 @@ def collect_attachments(output:Path,report:dict)->None:
     report['required_capture_names']=sorted(REQUIRED_CAPTURES)
     report['missing_capture_names']=sorted(REQUIRED_CAPTURES-seen)
 
-def validate()->None:
+def validate(fresh_build:bool=False)->None:
     require_mac()
     output=ROOT/'HealthValidation'
     if output.exists():raise BuildError('HealthValidation must be a fresh evidence directory')
@@ -139,7 +140,15 @@ def validate()->None:
                 native_permission_flow_verified=False,simulator_data_retrieval='Empty fresh Simulator only; no physical Health readings verified')
     device=None
     try:
-        report['prebuilt_app']=validate_app(app,BUNDLE,output)
+        if fresh_build:
+            if derived.exists():raise BuildError('A fresh Simulator derived directory is required')
+            packages.parent.mkdir(parents=True,exist_ok=True)
+            command(['xcodebuild','-resolvePackageDependencies','-project','Luqma.xcodeproj',
+                     '-scheme','Luqma','-clonedSourcePackagesDirPath',str(packages)],output,'packages',600)
+            apply_vision_compat(packages)
+            report['app_build']='Fresh arm64 Simulator build as part of xcodebuild test'
+        else:
+            report['prebuilt_app']=validate_app(app,BUNDLE,output)
         inventory=json.loads(command(['xcrun','simctl','list','--json'],output,'inventory'))
         runtime=select_runtime(inventory)
         device=command(['xcrun','simctl','create','Luqma Health '+uuid.uuid4().hex[:8],
@@ -171,13 +180,19 @@ def validate()->None:
             report['test_status']='passed'
         except BuildError as error:
             report['test_status']='failed';report['errors'].append(str(error))
-        # Read only the Simulator signature's public capability receipt, never
-        # Health values, app files, secrets or a real user's provisioning profile.
-        claims=subprocess.run(['codesign','--display','--entitlements','-','--xml',str(app)],capture_output=True,env=public_environment())
+        # Xcode embeds Simulator capability claims in the actual Mach-O's
+        # __TEXT,__entitlements section, separately from code-signing claims.
+        # Inspect that executable, not an intermediate .xcent or a device profile.
         try:
-            values=plistlib.loads(claims.stdout)
+            command(['codesign','--verify','--deep','--strict',str(app)],output,'simulator-signature',120)
+            report['simulator_local_signature_verified']=True
+            values=read_simulator_entitlements(app/'Luqma')
+            report['simulator_executable_sha256']=hashlib.sha256((app/'Luqma').read_bytes()).hexdigest()
+            report['simulator_entitlement_verification_method']='Actual Simulator Mach-O __TEXT,__entitlements; local signature verified separately'
             report['simulator_healthkit_entitlement_verified']=values.get('com.apple.developer.healthkit') is True
-        except (ValueError,TypeError,plistlib.InvalidFileException):report['simulator_healthkit_entitlement_verified']=False
+        except BuildError as error:
+            report['simulator_healthkit_entitlement_verified']=False
+            report['errors'].append(str(error))
         if not report['simulator_healthkit_entitlement_verified']:report['errors'].append('The actual Simulator executable does not claim HealthKit')
         collect_attachments(output,report)
         if report.get('missing_capture_names'):report['errors'].append('Required actual Settings/Health/Progress screenshots are missing')
@@ -200,9 +215,11 @@ def interrupted(signum,_frame):raise SystemExit(128+signum)
 def main()->int:
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('mode',nargs='?',default='validate',choices=('validate','signing-status','signed-export'))
+    parser.add_argument('--fresh-build',action='store_true',help='Build the actual Simulator app during UI testing instead of reusing a prior SDK check')
     args=parser.parse_args();signal.signal(signal.SIGTERM,interrupted)
     try:
-        {'validate':validate,'signing-status':signing_status,'signed-export':signed_export}[args.mode]()
+        if args.mode=='validate':validate(args.fresh_build)
+        else:{'signing-status':signing_status,'signed-export':signed_export}[args.mode]()
     except (BuildError,OSError,ValueError) as error:
         print('HealthKit validation: '+str(error),file=sys.stderr);return 1
     return 0

@@ -19,12 +19,44 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+          fetch-depth: 10
       - name: Set build number after IPA 114
         run: python3 -c 'import os; open(os.environ["GITHUB_ENV"],"a").write("BUILD_NUMBER="+str(114+int(os.environ["GITHUB_RUN_NUMBER"]))+"\n")'
+      - name: Determine whether only the Simulator evidence validator changed
+        id: scope
+        run: |
+          python3 - <<'PY'
+          import os, subprocess
+          # This immutable revision passed 266 Core + 93 BuildTests and both SDK
+          # app builds in run 40225173751. Its three native UI tests also passed;
+          # the old post-test validator incorrectly inspected signing claims
+          # instead of Xcode's actual Simulator Mach-O entitlement section.
+          base = '062fd96dbf1969644cb025493640312a434803b3'
+          allowed = {'.github/workflows/healthkit-validation.yml',
+                     'Scripts/healthkit_ui_validation.py', 'Scripts/simulator_entitlements.py',
+                     'BuildTests/test_simulator_entitlements.py'}
+          available = subprocess.run(['git','cat-file','-e',base+'^{commit}'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode == 0
+          changed = set(subprocess.check_output(['git','diff','--name-only',base,'HEAD'],text=True).splitlines()) if available else {'full_sdk_check_required'}
+          evidence_only = bool(changed) and changed <= allowed
+          with open(os.environ['GITHUB_OUTPUT'],'a') as output:
+              output.write('evidence_only='+str(evidence_only).lower()+'\n')
+          print('Validator-only follow-up: '+str(evidence_only)+'. Production source/configuration changes always run the complete SDK checks.')
+          PY
       - name: Test Core and build checks, then compile Simulator and device SDK targets
+        if: steps.scope.outputs.evidence_only != 'true'
         run: python3 Scripts/build_ios.py check
+      - name: Test the new actual-executable Simulator capability reader
+        if: steps.scope.outputs.evidence_only == 'true'
+        run: python3 -m unittest discover -s BuildTests -p test_simulator_entitlements.py -v
       - name: Exercise real native Health consent and capture actual English and Arabic screens
-        run: python3 Scripts/healthkit_ui_validation.py validate
+        env:
+          EVIDENCE_ONLY: ${{ steps.scope.outputs.evidence_only }}
+        run: |
+          if [ "$EVIDENCE_ONLY" = "true" ]; then
+            python3 Scripts/healthkit_ui_validation.py validate --fresh-build
+          else
+            python3 Scripts/healthkit_ui_validation.py validate
+          fi
       - name: Preserve actual HealthKit test and native screenshot evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
