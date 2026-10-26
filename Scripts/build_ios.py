@@ -224,7 +224,7 @@ def build(mode: str, output: Path) -> None:
     number = os.environ.get("BUILD_NUMBER", "1") or "1"
     if not re.fullmatch(r"[1-9][0-9]{0,8}", number):
         raise BuildError("BUILD_NUMBER must be a positive integer with at most nine digits.")
-    if mode in ("ad-hoc", "app-store"):
+    if mode in ("development", "ad-hoc", "app-store"):
         validate_identifiers(team, bundle)
     elif not re.fullmatch(r"[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+", bundle):
         raise BuildError("BUNDLE_ID is invalid.")
@@ -301,7 +301,7 @@ def build(mode: str, output: Path) -> None:
                     exported_profile = validate_profile(decoded, team, bundle, mode)
                     if exported_profile.uuid != profile.uuid or identity not in exported_profile.certificates:
                         raise BuildError("The exported IPA uses a different signing profile or certificate.")
-                    private_command(["codesign", "--verify", "--deep", "--strict", str(exported_app)],
+                    private_command(["codesign", "--verify", "--deep", "--strict", "-R", "anchor apple generic", str(exported_app)],
                                     "Exported application signature verification")
                     claims = private_command(["codesign", "--display", "--entitlements", "-", "--xml", str(exported_app)],
                                              "Exported signing entitlement verification")
@@ -312,6 +312,10 @@ def build(mode: str, output: Path) -> None:
                     leaf = Path(str(certificate_prefix) + "0")
                     if not leaf.is_file() or hashlib.sha1(leaf.read_bytes()).hexdigest().upper() != identity:
                         raise BuildError("The exported application's actual signing certificate differs from the validated certificate.")
+                    trust_arguments = ["security", "verify-cert", "-p", "codeSign"]
+                    for certificate in sorted(Path(folder).glob("exported-signer-*")):
+                        trust_arguments += ["-c", str(certificate)]
+                    private_command(trust_arguments, "Exported signing certificate trust verification")
         except (zipfile.BadZipFile, KeyError, plistlib.InvalidFileException) as error:
             raise BuildError("The exported IPA is missing valid application/signing metadata.") from error
         shutil.copyfile(exported[0], output / "Luqma.ipa")
@@ -320,7 +324,9 @@ def build(mode: str, output: Path) -> None:
                        registered_device_count=profile.device_count,
                        exported_signature_verified=True,
                        exported_requested_entitlements_verified=True)
-        instruction = ("Ad Hoc IPA: install only on iPhones included in the provisioning profile.\n"
+        instruction = ("Development IPA: install only on iPhones included in its valid HealthKit-enabled development profile. Personal Team export support depends on Xcode/account; use healthkit_device.py build for direct Xcode development installation. No physical Health reads are verified by export.\n"
+                       if mode == "development" else
+                       "Ad Hoc IPA: install only on iPhones included in the provisioning profile.\n"
                        if mode == "ad-hoc" else
                        "App Store Connect IPA: upload through your Apple distribution account for TestFlight/App Store. No upload was performed. This IPA is not for direct sideloading.\n")
         (output / "READ-ME.txt").write_text(instruction)
@@ -332,7 +338,7 @@ def interrupted(signum, _frame):
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", choices=("check", "sideload", "ad-hoc", "app-store"))
+    parser.add_argument("mode", choices=("check", "sideload", "development", "ad-hoc", "app-store"))
     parser.add_argument("--output", type=Path, default=ROOT / "BuildOutput")
     arguments = parser.parse_args()
     signal.signal(signal.SIGTERM, interrupted)

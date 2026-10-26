@@ -104,11 +104,17 @@ class BuildTests(unittest.TestCase):
             self.assertFalse((output / "build-summary.json").exists())
 
     def test_signed_export_checks_embedded_profile_and_never_uploads(self):
+        for mode in ("ad-hoc", "development"):
+            with self.subTest(mode=mode):
+                self._check_signed_export(mode)
+
+    def _check_signed_export(self, mode):
         calls = []
         private_calls = []
-        profile = validated()
+        profile = validated(mode=mode)
         @contextmanager
-        def signing(*_):
+        def signing(actual_mode, team, bundle):
+            self.assertEqual((actual_mode, team, bundle), (mode, TEAM, BUNDLE))
             yield profile, FINGERPRINT, Path("/synthetic/keychain")
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "signed"
@@ -124,9 +130,11 @@ class BuildTests(unittest.TestCase):
             def private(args, label):
                 private_calls.append(args)
                 if args[0] == "security" and "cms" in args:
-                    return plistlib.dumps(profile_data())
+                    return plistlib.dumps(profile_data(mode))
+                if args[0] == "security" and "verify-cert" in args:
+                    return b""
                 if args[0] == "codesign" and "--entitlements" in args:
-                    return plistlib.dumps(profile_data()["Entitlements"])
+                    return plistlib.dumps(profile_data(mode)["Entitlements"])
                 if args[0] == "codesign" and "--extract-certificates" in args:
                     prefix = args[args.index("--extract-certificates") + 1]
                     Path(prefix + "0").write_bytes(CERTIFICATE)
@@ -138,8 +146,9 @@ class BuildTests(unittest.TestCase):
                     patch("build_ios.installed_signing", signing), \
                     patch("build_ios.private_command", side_effect=private), \
                     patch.dict(os.environ, {"BUNDLE_ID": BUNDLE, "APPLE_TEAM_ID": TEAM, "BUILD_NUMBER": "12"}):
-                build("ad-hoc", output)
+                build(mode, output)
             self.assertTrue((output / "Luqma.ipa").is_file())
+            self.assertEqual(plistlib.loads((output / "ExportOptions.plist").read_bytes())["method"], profile.method)
             self.assertIn('"uploaded": false', (output / "build-summary.json").read_text())
             self.assertIn('"exported_signature_verified": true', (output / "build-summary.json").read_text())
             self.assertIn('"exported_requested_entitlements_verified": true', (output / "build-summary.json").read_text())
