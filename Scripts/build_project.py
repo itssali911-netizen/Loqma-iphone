@@ -41,13 +41,13 @@ resources=[]
 groups=[]
 for folder in ['Core','Services','Views','Resources']:
     children=[]
-    for file in sorted((APP/folder).iterdir()):
+    for file in sorted((APP/folder).iterdir(), key=lambda file: file.name):
         if not file.is_file():
             continue
         if file.suffix not in ['.swift','.json','.txt','.xcprivacy','.ttf','.otf','.storyboard']:
             continue
         kind={'.swift':'sourcecode.swift','.json':'text.json','.txt':'text','.xcprivacy':'text.xml','.ttf':'file','.otf':'file','.storyboard':'file.storyboard'}[file.suffix]
-        key=str(file.relative_to(ROOT))
+        key=file.relative_to(ROOT).as_posix()
         identifier=add('file:'+key,'PBXFileReference',lastKnownFileType=kind,path=file.name,sourceTree='<group>')
         children.append(identifier)
         build=add('build:'+key,'PBXBuildFile',fileRef=identifier)
@@ -69,7 +69,7 @@ appgroup=add('group:app','PBXGroup',children=[rootfile,infoplist,entitlement]+gr
 product=add('product','PBXFileReference',explicitFileType='wrapper.application',includeInIndex=0,path='Luqma.app',sourceTree='BUILT_PRODUCTS_DIR')
 uitestfiles=[]
 uitestsources=[]
-for file in sorted((ROOT/'TestsUI').glob('*.swift')):
+for file in sorted((ROOT/'TestsUI').glob('*.swift'), key=lambda file: file.name):
     key=file.relative_to(ROOT).as_posix()
     file_ref=add('file:'+key,'PBXFileReference',lastKnownFileType='sourcecode.swift',path=file.name,sourceTree='<group>')
     uitestfiles.append(file_ref)
@@ -77,7 +77,10 @@ for file in sorted((ROOT/'TestsUI').glob('*.swift')):
 uitestgroup=add('group:uitests','PBXGroup',children=uitestfiles,path='TestsUI',sourceTree='<group>')
 uitestproduct=add('product:uitests','PBXFileReference',explicitFileType='wrapper.cfbundle',includeInIndex=0,path='LuqmaUITests.xctest',sourceTree='BUILT_PRODUCTS_DIR')
 productgroup=add('group:products','PBXGroup',children=[product,uitestproduct],name='Products',sourceTree='<group>')
-main=add('group:main','PBXGroup',children=[appgroup,uitestgroup,productgroup],sourceTree='<group>')
+healthkit=add('framework:healthkit','PBXFileReference',lastKnownFileType='wrapper.framework',name='HealthKit.framework',path='System/Library/Frameworks/HealthKit.framework',sourceTree='SDKROOT')
+healthkitbuild=add('healthkit:build','PBXBuildFile',fileRef=healthkit)
+frameworkgroup=add('group:frameworks','PBXGroup',children=[healthkit],name='Frameworks',sourceTree='<group>')
+main=add('group:main','PBXGroup',children=[appgroup,uitestgroup,frameworkgroup,productgroup],sourceTree='<group>')
 package=add('package:ort','XCRemoteSwiftPackageReference',repositoryURL='https://github.com/microsoft/onnxruntime-swift-package-manager',requirement=dict(kind='exactVersion',version='1.24.2'))
 ort=add('ort:product','XCSwiftPackageProductDependency',package=package,productName='onnxruntime')
 ortbuild=add('ort:build','PBXBuildFile',productRef=ort)
@@ -86,7 +89,7 @@ mlxbase=add('package:mlx','XCRemoteSwiftPackageReference',repositoryURL='https:/
 transformers=add('package:transformers','XCRemoteSwiftPackageReference',repositoryURL='https://github.com/huggingface/swift-transformers',requirement=dict(kind='exactVersion',version='1.1.6'))
 mlxproducts=[add('mlx:'+name,'XCSwiftPackageProductDependency',package=mlxbase if name=='MLX' else mlxpackage,productName=name) for name in ['MLX','MLXLMCommon','MLXVLM']]
 mlxbuilds=[add('mlx-build:'+str(p),'PBXBuildFile',productRef=p) for p in mlxproducts]
-phases=[add('phase:sources','PBXSourcesBuildPhase',buildActionMask=2147483647,files=sources,runOnlyForDeploymentPostprocessing=0),add('phase:frameworks','PBXFrameworksBuildPhase',buildActionMask=2147483647,files=[ortbuild]+mlxbuilds,runOnlyForDeploymentPostprocessing=0),add('phase:resources','PBXResourcesBuildPhase',buildActionMask=2147483647,files=resources,runOnlyForDeploymentPostprocessing=0)]
+phases=[add('phase:sources','PBXSourcesBuildPhase',buildActionMask=2147483647,files=sources,runOnlyForDeploymentPostprocessing=0),add('phase:frameworks','PBXFrameworksBuildPhase',buildActionMask=2147483647,files=[ortbuild]+mlxbuilds+[healthkitbuild],runOnlyForDeploymentPostprocessing=0),add('phase:resources','PBXResourcesBuildPhase',buildActionMask=2147483647,files=resources,runOnlyForDeploymentPostprocessing=0)]
 
 targetsettings=dict(ASSETCATALOG_COMPILER_APPICON_NAME='AppIcon',CODE_SIGN_ENTITLEMENTS='Luqma/Luqma.entitlements',CODE_SIGN_STYLE='Automatic',DEVELOPMENT_TEAM='',CURRENT_PROJECT_VERSION='1',GENERATE_INFOPLIST_FILE='NO',INFOPLIST_FILE='Luqma/Info.plist',IPHONEOS_DEPLOYMENT_TARGET='17.0',LD_RUNPATH_SEARCH_PATHS=['$(inherited)','@executable_path/Frameworks'],MARKETING_VERSION='1.0',PRODUCT_BUNDLE_IDENTIFIER='app.luqma.diary',PRODUCT_NAME='$(TARGET_NAME)',SDKROOT='iphoneos',SUPPORTED_PLATFORMS='iphoneos iphonesimulator',SUPPORTS_MACCATALYST='NO',SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD='NO',SWIFT_VERSION='5.0',SWIFT_STRICT_CONCURRENCY='minimal',TARGETED_DEVICE_FAMILY='1')
 projectconfigs=[]
@@ -116,7 +119,7 @@ uitestproxy=add('uitests:proxy','PBXContainerItemProxy',containerPortal=ref('pro
 uitestdependency=add('uitests:dependency','PBXTargetDependency',target=target,targetProxy=uitestproxy)
 uitestphases=[add('uitests:sources','PBXSourcesBuildPhase',buildActionMask=2147483647,files=uitestsources,runOnlyForDeploymentPostprocessing=0),add('uitests:frameworks','PBXFrameworksBuildPhase',buildActionMask=2147483647,files=[],runOnlyForDeploymentPostprocessing=0),add('uitests:resources','PBXResourcesBuildPhase',buildActionMask=2147483647,files=[],runOnlyForDeploymentPostprocessing=0)]
 uitarget=add('target:uitests','PBXNativeTarget',buildConfigurationList=uitestconfiglist,buildPhases=uitestphases,buildRules=[],dependencies=[uitestdependency],name='LuqmaUITests',productName='LuqmaUITests',productReference=uitestproduct,productType='com.apple.product-type.bundle.ui-testing')
-project=add('project','PBXProject',attributes=dict(BuildIndependentTargetsInParallel='YES',LastUpgradeCheck='1600',TargetAttributes={target:dict(CreatedOnToolsVersion='16.0',ProvisioningStyle='Automatic'),uitarget:dict(CreatedOnToolsVersion='16.0',TestTargetID=target)}),buildConfigurationList=pc,compatibilityVersion='Xcode 14.0',developmentRegion='ar',hasScannedForEncodings=0,knownRegions=['ar','en','Base'],mainGroup=main,packageReferences=[package,mlxpackage,mlxbase,transformers],productRefGroup=productgroup,projectDirPath='',projectRoot='',targets=[target,uitarget])
+project=add('project','PBXProject',attributes=dict(BuildIndependentTargetsInParallel='YES',LastUpgradeCheck='1600',TargetAttributes={target:dict(CreatedOnToolsVersion='16.0',ProvisioningStyle='Automatic',SystemCapabilities={'com.apple.HealthKit':dict(enabled=1)}),uitarget:dict(CreatedOnToolsVersion='16.0',TestTargetID=target)}),buildConfigurationList=pc,compatibilityVersion='Xcode 14.0',developmentRegion='ar',hasScannedForEncodings=0,knownRegions=['ar','en','Base'],mainGroup=main,packageReferences=[package,mlxpackage,mlxbase,transformers],productRefGroup=productgroup,projectDirPath='',projectRoot='',targets=[target,uitarget])
 payload=dict(archiveVersion=1,classes={},objectVersion=56,objects=objects,rootObject=project)
 (PROJECT/'project.pbxproj').write_text('// !$*UTF8*$!\n'+encode(payload)+'\n', encoding='utf-8', newline='\n')
 scheme=PROJECT/'xcshareddata/xcschemes';scheme.mkdir(parents=True,exist_ok=True)

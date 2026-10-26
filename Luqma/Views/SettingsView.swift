@@ -26,6 +26,7 @@ struct SettingsView:View {
                 NavigationLink{RemindersView()}label:{settingsRow(diary.t("التذكيرات","Reminders"),symbol:"clock")}.accessibilityIdentifier("settings.reminders")
             }
             settingsGroup(diary.t("الربط والبيانات","Connections and data")){
+                NavigationLink{HealthSettingsView()}label:{settingsRow("Apple Health",symbol:"heart.fill")}.accessibilityIdentifier("settings.health")
                 Button{gemini=true}label:{settingsRow(diary.t("تحليل الوجبة","Meal analysis"),symbol:"sparkles")}
                 NavigationLink{BackupSettingsView()}label:{settingsRow(diary.t("النسخ الاحتياطي والنقل","Backup and transfer"),symbol:"externaldrive")}
             }

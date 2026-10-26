@@ -5,6 +5,7 @@ import UIKit
     static let shared = AppServices()
     let diary = DiaryStore()
     let reminders = ReminderService()
+    let health = AppleHealthService()
     #if DEBUG && targetEnvironment(simulator)
     private(set) var performanceFixtureIdentity: String?
     #endif
@@ -24,6 +25,7 @@ import UIKit
         // A launch while locked must not replace the protected diary with an empty one.
         _ = AppServices.shared.diary.restoreAfterUnlock()
         Task{await AppServices.shared.reminders.refresh(language:AppServices.shared.diary.language)}
+        Task{await AppServices.shared.health.refreshIfEnabled()}
     }
 }
 
@@ -31,6 +33,7 @@ import UIKit
     @UIApplicationDelegateAdaptor(DiaryAppDelegate.self) private var delegate
     @StateObject private var diary=AppServices.shared.diary
     @StateObject private var reminders=AppServices.shared.reminders
+    @StateObject private var health=AppServices.shared.health
     @Environment(\.scenePhase) private var phase
     init(){
         let navigation=UINavigationBarAppearance()
@@ -46,7 +49,7 @@ import UIKit
     }
     var body:some Scene {
         WindowGroup {
-            RootView().luqmaFont(.body).foregroundStyle(Theme.text).environmentObject(diary).environmentObject(reminders)
+            RootView().luqmaFont(.body).foregroundStyle(Theme.text).environmentObject(diary).environmentObject(reminders).environmentObject(health)
                 .environment(\.layoutDirection,diary.language == .ar ? .rightToLeft:.leftToRight)
                 .environment(\.locale,DisplayFormat.locale(diary.language))
                 .environment(\.calendar,DisplayFormat.calendar(diary.language))
@@ -55,10 +58,17 @@ import UIKit
                     if value == .active{
                         if diary.restoreAfterUnlock(){diary.adapt()}
                         Task{await reminders.refresh(language:diary.language)}
+                        Task{await health.refreshIfEnabled()}
                     }
+                    if value == .background { health.suspend() }
                 }
                 .onChange(of:diary.language){_,language in Task{await reminders.refresh(language:language)}}
-                .onReceive(NotificationCenter.default.publisher(for:NSNotification.Name.NSSystemTimeZoneDidChange)){_ in Task{await reminders.refresh(language:diary.language)}}
+                .onReceive(NotificationCenter.default.publisher(for:NSNotification.Name.NSSystemTimeZoneDidChange)){_ in
+                    Task{await reminders.refresh(language:diary.language)}
+                    Task{await health.calendarDidChange()}
+                }
+                .onReceive(NotificationCenter.default.publisher(for:NSNotification.Name.NSCalendarDayChanged)){_ in Task{await health.calendarDidChange()}}
+                .onReceive(NotificationCenter.default.publisher(for:UIApplication.significantTimeChangeNotification)){_ in Task{await health.calendarDidChange()}}
                 .alert(diary.t("تنبيه","Notice"),isPresented:Binding(get:{diary.error != nil},set:{if !$0 {diary.error=nil}})) {Button(diary.t("حسنًا","OK")){diary.error=nil}} message:{Text(diary.error ?? "")}
         }
     }
