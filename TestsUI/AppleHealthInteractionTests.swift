@@ -75,13 +75,24 @@ final class AppleHealthInteractionTests:XCTestCase {
         XCTAssertTrue(!element("health.explanation").label.isEmpty,"Explain purpose and partial sharing without claiming read permission.",file:file,line:line)
     }
     private func calorieTarget(file:StaticString=#filePath,line:UInt=#line)->String {
-        let goal=element("diary.calorieGoal")
-        XCTAssertTrue(goal.waitForExistence(timeout:25),"The restored 103 calorie card must exist.",file:file,line:line)
-        for _ in 0..<7 where !goal.isHittable {
-            app.coordinate(withNormalizedOffset:CGVector(dx:0.5,dy:0.73)).press(forDuration:0.01,thenDragTo:app.coordinate(withNormalizedOffset:CGVector(dx:0.5,dy:0.45)))
-        }
+        // The original 103 home card is a passive VStack, not a combined AX
+        // element. Read its existing editor's explicit value, then Cancel;
+        // observing the target must never save or rebalance the diary goals.
+        let route=app.buttons["diary.goals"]
+        XCTAssertTrue(route.waitForExistence(timeout:25),file:file,line:line)
+        tapVisible(route,file:file,line:line)
+        let goal=app.buttons["goals.editCalories"]
+        XCTAssertTrue(goal.waitForExistence(timeout:10),file:file,line:line)
         let value=goal.value as? String ?? ""
-        XCTAssertTrue(value.rangeOfCharacter(from:.decimalDigits) != nil,"Read the restored card's actual calorie accessibility value.",file:file,line:line)
+        XCTAssertTrue(value.rangeOfCharacter(from:.decimalDigits) != nil,"Read the actual saved calorie target through its existing control.",file:file,line:line)
+        let cancel=app.buttons.matching(identifier:"navigation.back")
+            .matching(NSPredicate(format:"label IN %@",["Cancel","إلغاء"])).firstMatch
+        XCTAssertTrue(cancel.waitForExistence(timeout:5),file:file,line:line)
+        cancel.tap()
+        let dismissed=XCTNSPredicateExpectation(predicate:NSPredicate { _,_ in
+            !self.app.buttons["goals.editCalories"].exists && self.app.buttons["nav.today"].isHittable
+        },object:app)
+        XCTAssertEqual(XCTWaiter.wait(for:[dismissed],timeout:8),.completed,"Cancel must dismiss the actual goal sheet without saving.",file:file,line:line)
         return value
     }
     private func knownConsentButton(_ labels:[String])->XCUIElement? {
@@ -159,7 +170,9 @@ final class AppleHealthInteractionTests:XCTestCase {
         // Progress keeps its original 103 layout: no inserted Health card.
         capture("health-"+language+"-progress")
         app.buttons["nav.settings"].tap()
-        tapVisible(element("settings.health"))
+        // The original TabView retains each tab's NavigationStack. Returning
+        // to Settings can already show Health; do not look for its root row.
+        if !element("health.explanation").exists {tapVisible(element("settings.health"))}
         XCTAssertTrue(element("health.explanation").waitForExistence(timeout:10))
         app.buttons["nav.today"].tap()
         XCTAssertFalse(calorieTarget().isEmpty,"The restored home stays usable independently of Health availability.")
