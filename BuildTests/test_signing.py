@@ -35,9 +35,9 @@ def profile_data(mode="ad-hoc"):
         "Entitlements": {"application-identifier": TEAM + "." + BUNDLE,
                          "com.apple.developer.team-identifier": TEAM,
                          "com.apple.developer.healthkit": True,
-                         "get-task-allow": False},
+                         "get-task-allow": mode == "development"},
     }
-    if mode == "ad-hoc":
+    if mode in ("ad-hoc", "development"):
         data["ProvisionedDevices"] = ["synthetic-test-device"]
     return data
 
@@ -47,6 +47,56 @@ def validated(data=None, mode="ad-hoc"):
 
 
 class SigningTests(unittest.TestCase):
+    def test_development_profile_preserves_healthkit_and_registered_device_scope(self):
+        profile = validated(mode="development")
+        self.assertEqual(profile.method, "debugging")
+        self.assertEqual(profile.device_count, 1)
+        self.assertIs(profile.allowed_entitlements["get-task-allow"], True)
+        self.assertIs(profile.allowed_entitlements["com.apple.developer.healthkit"], True)
+        self.assertEqual(profile.export_options(FINGERPRINT)["method"], "debugging")
+        validate_signed_entitlements(plistlib.dumps(profile_data("development")["Entitlements"]), profile)
+
+    def test_development_requires_explicit_debug_permission_and_registered_devices(self):
+        changes = [lambda p: p.pop("ProvisionedDevices"),
+                   lambda p: p.update(ProvisionedDevices=[]),
+                   lambda p: p.update(ProvisionsAllDevices=True),
+                   lambda p: p["Entitlements"].pop("get-task-allow"),
+                   lambda p: p["Entitlements"].update({"get-task-allow": False}),
+                   lambda p: p["Entitlements"].update({"get-task-allow": 1}),
+                   lambda p: p["Entitlements"].update({"get-task-allow": "true"}),
+                   lambda p: p["Entitlements"].pop("com.apple.developer.healthkit"),
+                   lambda p: p["Entitlements"].update({"com.apple.developer.healthkit": 1})]
+        for index, change in enumerate(changes):
+            with self.subTest(case=index):
+                data = profile_data("development"); change(data)
+                with self.assertRaises(BuildError):
+                    validated(data, mode="development")
+
+    def test_development_selects_only_matching_development_identity(self):
+        profile = validated(mode="development")
+        for prefix in ("Apple Development:", "iPhone Developer:"):
+            output = f'1) {FINGERPRINT} "{prefix} Example ({TEAM})"\n'
+            self.assertEqual(select_identity(output, profile), FINGERPRINT)
+        for prefix in ("Apple Distribution:", "iPhone Distribution:", "Developer ID Application:"):
+            with self.assertRaises(BuildError):
+                select_identity(f'1) {FINGERPRINT} "{prefix} Example ({TEAM})"', profile)
+        with self.assertRaises(BuildError):
+            select_identity(f'1) {"F" * 40} "Apple Development: Example ({TEAM})"', profile)
+        with self.assertRaises(BuildError):
+            select_identity("0 valid identities found", profile)
+
+    def test_development_signed_debug_permission_must_match_profile(self):
+        profile = validated(mode="development")
+        for value in (False, 1, "true", None):
+            with self.subTest(value=value):
+                claims = dict(profile_data("development")["Entitlements"])
+                if value is None:
+                    claims.pop("get-task-allow")
+                else:
+                    claims["get-task-allow"] = value
+                with self.assertRaises(BuildError):
+                    validate_signed_entitlements(plistlib.dumps(claims), profile)
+
     def test_ad_hoc_export_uses_registered_devices_with_requested_healthkit(self):
         profile = validated()
         self.assertEqual(profile.method, "release-testing")
@@ -146,6 +196,68 @@ class SigningTests(unittest.TestCase):
         data["ApplicationIdentifierPrefix"] = ["OLDPREFIX1"]
         data["Entitlements"]["application-identifier"] = "OLDPREFIX1." + BUNDLE
         validate_signed_entitlements(plistlib.dumps(data["Entitlements"]), validated(data))
+
+    def test_all_actual_claims_must_be_allowed_including_keychain_and_push(self):
+        # Reproduces the former gap: these non-com.apple.developer.* claims were
+        # accepted even when no provisioning allowlist authorized them.
+        for key, value in (("keychain-access-groups", ["WRONGTEAM.example"]),
+                           ("aps-environment", "production"),
+                           ("beta-reports-active", True),
+                           ("unprovisioned-entitlement", "unexpected")):
+            with self.subTest(key=key):
+                claims = dict(profile_data()["Entitlements"]); claims[key] = value
+                with self.assertRaisesRegex(BuildError, "unprovisioned"):
+                    validate_signed_entitlements(plistlib.dumps(claims), validated())
+
+    def test_keychain_groups_match_only_anchored_profile_prefixes_or_exact_groups(self):
+        data = profile_data()
+        data["Entitlements"]["keychain-access-groups"] = [TEAM + ".*", "com.apple.token"]
+        profile = validated(data)
+        claims = dict(data["Entitlements"])
+        claims["keychain-access-groups"] = [TEAM + "." + BUNDLE, TEAM + ".shared", "com.apple.token"]
+        validate_signed_entitlements(plistlib.dumps(claims), profile)
+        # The signature may claim fewer groups than the profile authorizes.
+        claims["keychain-access-groups"] = [TEAM + "." + BUNDLE]
+        validate_signed_entitlements(plistlib.dumps(claims), profile)
+        for groups in (["WRONGTEAM.example"], ["prefix" + TEAM + ".example"],
+                       [TEAM + "evil.example"], [TEAM + "."], [TEAM + ".*"],
+                       [TEAM + "." + BUNDLE, "WRONGTEAM.shared"], TEAM + "." + BUNDLE, [True]):
+            with self.subTest(groups=groups):
+                claims["keychain-access-groups"] = groups
+                with self.assertRaises(BuildError):
+                    validate_signed_entitlements(plistlib.dumps(claims), profile)
+
+    def test_profile_wildcards_are_not_unanchored_globs(self):
+        for pattern in ("*", "*" + TEAM + ".*", TEAM + ".*suffix", TEAM + ".**"):
+            with self.subTest(pattern=pattern):
+                data = profile_data(); data["Entitlements"]["keychain-access-groups"] = [pattern]
+                claims = dict(data["Entitlements"]); claims["keychain-access-groups"] = [TEAM + "." + BUNDLE]
+                with self.assertRaises(BuildError):
+                    validate_signed_entitlements(plistlib.dumps(claims), validated(data))
+
+    def test_non_developer_entitlements_preserve_exact_values_and_boolean_types(self):
+        data = profile_data()
+        data["Entitlements"].update({"aps-environment": "production", "beta-reports-active": True})
+        profile = validated(data)
+        claims = dict(data["Entitlements"])
+        validate_signed_entitlements(plistlib.dumps(claims), profile)
+        for key, value in (("aps-environment", "development"), ("aps-environment", ["production"]),
+                           ("beta-reports-active", 1), ("beta-reports-active", "true")):
+            with self.subTest(key=key, value=value):
+                changed = dict(claims); changed[key] = value
+                with self.assertRaises(BuildError):
+                    validate_signed_entitlements(plistlib.dumps(changed), profile)
+
+    def test_profile_allowlist_does_not_expand_this_apps_requested_capabilities(self):
+        data = profile_data()
+        data["Entitlements"]["com.apple.developer.healthkit.background-delivery"] = True
+        profile = validated(data)
+        claims = dict(data["Entitlements"])
+        with self.assertRaisesRegex(BuildError, "removed from this app"):
+            validate_signed_entitlements(plistlib.dumps(claims), profile)
+        # Extra profile allowances are harmless when the app does not claim them.
+        claims.pop("com.apple.developer.healthkit.background-delivery")
+        validate_signed_entitlements(plistlib.dumps(claims), profile)
 
     def test_export_payload_extracts_only_application_and_rejects_unsafe_entries(self):
         def package(name, symbolic=False):

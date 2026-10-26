@@ -54,8 +54,8 @@ def validate_identifiers(team: str, bundle: str) -> None:
 def validate_profile(data: bytes, team: str, bundle: str, mode: str,
                      now: datetime | None = None) -> SigningProfile:
     validate_identifiers(team, bundle)
-    if mode not in ("ad-hoc", "app-store"):
-        raise BuildError("Signed export mode must be ad-hoc or app-store.")
+    if mode not in ("development", "ad-hoc", "app-store"):
+        raise BuildError("Signed export mode must be development, ad-hoc or app-store.")
     try:
         profile = plistlib.loads(data)
     except (ValueError, TypeError, plistlib.InvalidFileException) as error:
@@ -84,7 +84,9 @@ def validate_profile(data: bytes, team: str, bundle: str, mode: str,
     for key,value in REQUESTED_ENTITLEMENTS.items():
         if entitlements.get(key)!=value or type(entitlements.get(key)) is not type(value):
             raise BuildError("The provisioning profile does not allow the requested capability: "+key)
-    if entitlements.get("get-task-allow", False) is not False:
+    if mode == "development" and entitlements.get("get-task-allow") is not True:
+        raise BuildError("A development profile permitting debugging is required for development signing.")
+    if mode != "development" and entitlements.get("get-task-allow", False) is not False:
         raise BuildError("A distribution profile is required, not a development profile.")
     if profile.get("ProvisionsAllDevices"):
         raise BuildError("Enterprise profiles are not supported by this distribution workflow.")
@@ -93,6 +95,8 @@ def validate_profile(data: bytes, team: str, bundle: str, mode: str,
         raise BuildError("The provisioning profile's device list is malformed.")
     if mode == "ad-hoc" and not devices:
         raise BuildError("An Ad Hoc profile containing registered iPhones is required.")
+    if mode == "development" and not devices:
+        raise BuildError("A development profile containing registered iPhones is required.")
     if mode == "app-store" and "ProvisionedDevices" in profile:
         raise BuildError("App Store export requires an App Store Connect distribution profile.")
     expires = profile.get("ExpirationDate")
@@ -107,10 +111,37 @@ def validate_profile(data: bytes, team: str, bundle: str, mode: str,
     if not isinstance(certificates, list) or not certificates or any(
             not isinstance(x, bytes) or not x for x in certificates):
         raise BuildError("The profile contains no valid signing certificate data.")
-    return SigningProfile(identifier, team, bundle,
-                          "release-testing" if mode == "ad-hoc" else "app-store-connect",
+    methods = {"development": "debugging", "ad-hoc": "release-testing", "app-store": "app-store-connect"}
+    return SigningProfile(identifier, team, bundle, methods[mode],
                           expires, tuple(hashlib.sha1(x).hexdigest().upper() for x in certificates), len(devices),
                           application_id, dict(entitlements))
+
+
+def _entitlement_value_allowed(actual, allowed) -> bool:
+    """Match an iOS profile allowlist without coercing booleans or globbing.
+
+    A profile can allow an anchored trailing wildcard such as PREFIX.*. Code
+    signatures must contain concrete values. Arrays claim a subset of the
+    profile's permitted values; an entitlement absent from the signature is fine.
+    """
+    if type(actual) is not type(allowed):
+        return False
+    if isinstance(actual, str):
+        if "*" in actual:
+            return False
+        if "*" not in allowed:
+            return actual == allowed
+        if allowed.count("*") != 1 or not allowed.endswith("*"):
+            return False
+        prefix = allowed[:-1]
+        return bool(prefix) and actual.startswith(prefix) and len(actual) > len(prefix)
+    if isinstance(actual, list):
+        return all(any(_entitlement_value_allowed(value, permitted) for permitted in allowed)
+                   for value in actual)
+    if isinstance(actual, dict):
+        return all(key in allowed and _entitlement_value_allowed(value, allowed[key])
+                   for key, value in actual.items())
+    return actual == allowed
 
 
 def validate_signed_entitlements(data: bytes, profile: SigningProfile) -> None:
@@ -134,17 +165,18 @@ def validate_signed_entitlements(data: bytes, profile: SigningProfile) -> None:
         actual = claims.get(key)
         if actual != expected or type(actual) is not type(expected):
             raise BuildError(f"The exported application's signature is missing or changes {key}.")
-    if claims.get("get-task-allow", False) is not False:
+    if profile.method == "debugging" and claims.get("get-task-allow") is not True:
+        raise BuildError("The exported development application's debugging entitlement does not match its profile.")
+    if profile.method != "debugging" and claims.get("get-task-allow", False) is not False:
         raise BuildError("The exported distribution application still permits debugging.")
-    # Apply the allowlist to every claimed Apple capability. Extra source
-    # capabilities (such as legacy memory limits) cannot silently slip through.
+    # Every claimed iOS entitlement must be provisioned, including keys outside
+    # com.apple.developer.* (for example keychain-access-groups and aps-environment).
+    # Keep the app's explicit capability scope stricter than the profile allowlist.
     for key, value in claims.items():
-        if not key.startswith("com.apple.developer."):
-            continue
-        if key != "com.apple.developer.team-identifier" and key not in REQUESTED_ENTITLEMENTS:
+        if (key.startswith("com.apple.developer.") and
+                key != "com.apple.developer.team-identifier" and key not in REQUESTED_ENTITLEMENTS):
             raise BuildError("The exported application claims a capability removed from this app: "+key)
-        allowed = profile.allowed_entitlements.get(key)
-        if value != allowed or type(value) is not type(allowed):
+        if key not in profile.allowed_entitlements or not _entitlement_value_allowed(value, profile.allowed_entitlements[key]):
             raise BuildError(f"The exported application claims an unprovisioned capability: {key}.")
 
 
@@ -161,7 +193,11 @@ def decode_secret(value: str, path: Path) -> None:
 
 
 def select_identity(output: str, profile: SigningProfile) -> str:
+    development = profile.method == "debugging"
+    prefixes = (("Apple Development:", "iPhone Developer:") if development else
+                ("Apple Distribution:", "iPhone Distribution:"))
     for fingerprint, name in re.findall(r'\b([A-Fa-f0-9]{40})\s+"([^"\n]+)"', output):
-        if fingerprint.upper() in profile.certificates and name.startswith(("Apple Distribution:", "iPhone Distribution:")):
+        if fingerprint.upper() in profile.certificates and name.startswith(prefixes):
             return fingerprint.upper()
-    raise BuildError("No valid distribution certificate with a private key matches the profile. Check the P12 file and password.")
+    kind = "development" if development else "distribution"
+    raise BuildError("No valid "+kind+" certificate with a private key matches the profile. Check the P12 file and password.")

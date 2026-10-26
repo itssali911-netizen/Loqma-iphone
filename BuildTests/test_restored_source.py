@@ -46,6 +46,24 @@ class RestoredSourceRulesTests(unittest.TestCase):
             with self.subTest(extra=extra):
                 self.assertIsNotNone(guard.validate_plist(plistlib.dumps(before), plistlib.dumps(dict(after, **extra))))
 
+    def test_exact_approved_arabic_purpose_preserves_bundle_and_rejects_unrelated_copy(self):
+        purpose = "يستخدم لُقمة بيانات نشاطك ووزنك وطولك من تطبيق صحتي لعرض معلوماتك الصحية ومساعدتك على متابعة أهدافك الغذائية."
+        actual = plistlib.loads((ROOT / "Luqma/Info.plist").read_bytes())
+        self.assertEqual(actual["NSHealthShareUsageDescription"], purpose)
+        localized = (ROOT / "Luqma/Resources/ar.lproj/InfoPlist.strings").read_text("utf8")
+        self.assertIn('"NSHealthShareUsageDescription" = "' + purpose + '";', localized)
+        self.assertTrue(guard.meaningful_purpose(purpose))
+        before = {"CFBundleIdentifier": "app.luqma.diary"}
+        after = dict(before, NSHealthShareUsageDescription=purpose)
+        self.assertIsNone(guard.validate_plist(plistlib.dumps(before), plistlib.dumps(after)))
+        names = '"CFBundleDisplayName" = "لُقمة";\n'.encode("utf8")
+        self.assertIsNone(guard.validate_strings(names, names + ('"NSHealthShareUsageDescription" = "' + purpose + '";\n').encode("utf8")))
+        for unrelated in ("اسمح بالوصول", "هذا وصف طويل يتعلق بألوان الواجهة وترتيب البطاقات ولا يشرح غرض قراءة بيانات صحتي."):
+            with self.subTest(copy=unrelated):
+                self.assertFalse(guard.meaningful_purpose(unrelated))
+                self.assertIsNotNone(guard.validate_plist(plistlib.dumps(before), plistlib.dumps(dict(after, NSHealthShareUsageDescription=unrelated))))
+        self.assertIsNotNone(guard.validate_plist(plistlib.dumps(before), plistlib.dumps(dict(after, CFBundleIdentifier="changed.identifier"))))
+
     def test_entitlement_preserves_other_capabilities_without_background_or_write_additions(self):
         before = {'original.capability': True}
         after = dict(before, **{'com.apple.developer.healthkit':True})

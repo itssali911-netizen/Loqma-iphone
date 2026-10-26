@@ -37,12 +37,15 @@ APP_EXCEPTIONS = {
 }
 NON_APP_EXCEPTIONS = {
     ".github/workflows/restored-healthkit.yml": "Required build compatibility change",
+    ".github/workflows/healthkit-signing.yml": "Required build compatibility change",
     ".gitignore": "Required build compatibility change",
     "Luqma.xcodeproj/project.pbxproj": "Required build compatibility change",
     "Luqma.xcodeproj/xcshareddata/xcschemes/Luqma.xcscheme": "Required build compatibility change",
     "Scripts/build_ios.py": "Required build compatibility change",
+    "Scripts/signing.py": "Required permissions or entitlements",
     "Scripts/build_project.py": "Required build compatibility change",
     "Scripts/healthkit_ui_validation.py": "Required build compatibility change",
+    "Scripts/healthkit_device.py": "Required build compatibility change",
     "Scripts/simulator_entitlements.py": "Required build compatibility change",
     "Scripts/verify_restored_source.py": "Required build compatibility change",
     "HEALTH-SETUP-AR.md": "HealthKit integration",
@@ -52,6 +55,8 @@ NON_APP_EXCEPTIONS = {
     "BuildTests/test_simulator_entitlements.py": "Required build compatibility change",
     "BuildTests/test_restored_source.py": "Required build compatibility change",
     "BuildTests/test_signing.py": "Required permissions or entitlements",
+    "BuildTests/test_healthkit_device.py": "Required permissions or entitlements",
+    "BuildTests/test_build.py": "Required build compatibility change",
     "BuildTests/test_removed_health.py": "Required permissions or entitlements",
     "Tests/HealthReadModelsTests.swift": "HealthKit integration",
     "TestsUI/AppleHealthInteractionTests.swift": "HealthKit integration",
@@ -135,7 +140,10 @@ def meaningful_purpose(value: object) -> bool:
     if not isinstance(value, str) or len(value.strip()) < 40:
         return False
     lower = value.casefold()
-    return (all(word in lower for word in ("steps", "energy", "weight", "height")) or
+    # Exact permission copy explicitly approved in the signing-fix request.
+    approved_arabic = "يستخدم لُقمة بيانات نشاطك ووزنك وطولك من تطبيق صحتي لعرض معلوماتك الصحية ومساعدتك على متابعة أهدافك الغذائية."
+    return (value == approved_arabic or
+            all(word in lower for word in ("steps", "energy", "weight", "height")) or
             all(word in value for word in ("خطوات", "طاقة", "وزن", "طول")))
 
 
