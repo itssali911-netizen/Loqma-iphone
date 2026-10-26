@@ -16,3 +16,7 @@ __pycache__/
 *.keychain-db
 .env
 .env.*
+HealthValidation/
+HealthSigning/
+BuildSigned/
+Restore103Validation/

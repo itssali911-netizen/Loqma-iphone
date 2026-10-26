@@ -1,0 +1,56 @@
+# Branch build and visual-validation assessment
+
+> Historical assessment of the pre-implementation branch/workflow. See `IMPLEMENTATION-AR.md` for the subsequent workflow and actual UI changes; the conclusions below are not current run results.
+
+Read-only assessment of repository HEAD `e48897be8390c8118ea1a62125894d92d129c7de` after the user's new exact-Figma/branch/PR instruction. No repository, app, workflow, branch, output or remote resource was modified for this assessment. The user's pasted exact-Figma task was read in full.
+
+## Branch-only build: no main merge is necessary
+
+The existing `.github/workflows/ios-build.yml` already supports `workflow_dispatch` at line26. A manual run with `ref=<design branch>`, `mode=sideload`, `run_local_vision_audit=false` will execute that branch's workflow and checkout its branch commit. No YAML change is necessary for this route. The workflow is already present on the default branch, satisfying GitHub's dispatch-discovery requirement.
+
+GitHub's current official documentation says dispatch uses the last commit of the selected ref and can be sent to any branch/tag once the workflow exists on the default branch: [workflow_dispatch](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#workflow_dispatch).
+
+The presently exposed GitHub connector has workflow reads and reruns, but no workflow-dispatch tool. Therefore the existing authenticated browser's Actions → Luqma iPhone build → Run workflow, choosing the actual design branch, is a usable purpose-built UI route. The root can do this after the branch is published. This assessment did not dispatch a run.
+
+If automatic building on publication is preferable, the smallest repository change is to add **only the actual authorized design branch** to `on.push.branches` at line5, for example `[main, '<actual design branch>']`. Do not ship the placeholder. The current line80 condition already builds sideload on push, so nothing else must change. Publishing this workflow change on the design branch does not require merging it to main. Concurrency is already per `github.ref` (line48), credentials are not persisted by checkout (line62), and workflow permissions remain `contents: read` (line44).
+
+Creating a PR alone will not run the current workflow: there is no `pull_request` trigger. Adding only that trigger would be insufficient because all three build modes would currently be skipped for a PR event; the subsequent artifact-upload step would fail on missing output. If automatic PR-event checks are desired later, also enable a nonsecret `check` or `sideload` build condition for that event. Do not use `pull_request_target` to run the changed app source, and do not expose Apple signing credentials to PR builds.
+
+PR provenance must be deliberate. A default `pull_request` checkout builds GitHub's synthetic merge commit and `GITHUB_SHA` is that merge SHA, rather than the branch head. The present `Scripts/build_ios.py:141` and `Scripts/ui_preview.py:335` both record `GITHUB_SHA`. Either retain the merge SHA honestly as the built source or explicitly checkout the head and derive a separate source SHA from `git rev-parse HEAD` in both reports. Do not merely label a merge build with a head SHA. A branch dispatch/push avoids this discrepancy entirely. [GitHub event semantics](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request), [security guidance](https://docs.github.com/en/actions/reference/security/securely-using-pull_request_target).
+
+## What the existing native pipeline proves
+
+- `Scripts/build_ios.py:231–232` actually runs Swift Core tests and Python build-tool tests. The accepted build59 had 172+61, including two actual native font probes. A new run must obtain its own counts; future test additions should change the expected count explicitly.
+- Sideload mode compiles a Release iPhoneOS application with `CODE_SIGNING_ALLOWED=NO`, packages it with local ad-hoc signing and records source/distribution metadata. It neither uploads nor creates an Apple membership.
+- `Scripts/ui_preview.py:42` fixes the capture device to iPhone16ProMax. Its real framebuffer capture has 20 route cases (`:65`), a fresh own Simulator, dark mode, stable status-bar values, process/PID liveness, CRC/pixel decoding, near-black rejection, unique frames and a bounded maximum of two recaptures. It retains original pixels and detailed metadata. This evidence is useful and should remain intact.
+- The capture program already accepts `--app` (`:446`), so a second reference-size capture can reuse the same immutable Debug app. Recompilation is unnecessary when only the Simulator device/fixture changes.
+- Native app screenshots and manual visual review do **not** currently include a Figma image, overlay, diff, SSIM, fixed reference-data fixture or second viewport. Those are additional acceptance requirements, not completed work.
+
+## Minimal additions for a genuine reference-size comparison
+
+1. Obtain root's actual Figma extraction and exported reference frame(s), with node ID, dimensions, reference image SHA256 and source-asset identities. Use the real node's size; 375×812 is a known inspected frame size, not an assumption that every nutrition screen has that size.
+2. Add a validated `--device-type` option to `ui_preview.py`, preserving iPhone16ProMax as the default and all current checks. Select an installed Simulator device with **measured** logical window bounds matching the reference (e.g.375×812 if that exact mapped frame is375×812). Do not assume a model's viewport from its marketing name. If the runner lacks a matching device, report that limit; a documented native hosting viewport can be separate reference evidence but must not be presented as a full physical-device screenshot.
+3. Record the real logical viewport, scale and safe-area insets from the launched DEBUG app. The existing target1320×2868 image is440×956 points at3×; shrinking this whole screenshot to375 pixels would change geometry rather than test the375-point layout. Preserve unmodified framebuffer originals.
+4. Add deterministic DEBUG-only comparison cases that use the **same production views**, with an in-memory snapshot, frozen date/time, selected tab/meal, scroll position, source photo, goal/macros and visible strings matching each exported reference. Production must continue using real user data. An isolated preview fixture must never write a user's diary or embed private credentials. The current `DiaryStore.state` is private-set (`Services/DiaryStore.swift:6`) and language comes from the snapshot (`:12`); launch `-AppleLanguages` alone cannot change the app's Arabic `diary.t` strings. Provide an explicit temporary preview language/snapshot rather than persistently changing settings just to take an English baseline.
+5. Retain Arabic RTL and large-text captures on the actual primary iPhone16ProMax as separate behavior/layout evidence. A same-data English Figma comparison is not proof of Arabic pixel equality. Current dates depend on `Date()`/`DayKey.today`, and current preview texts/nutrient values deliberately differ from Figma samples; these must be aligned in comparison fixtures before numerical diff can mean anything.
+6. Execute the primary20-route capture unchanged, then a separate reference-size capture with `--app <first Debug app>` and a new output directory. Give the second step its own bounded25-minute budget; do not silently remove the original twenty-route gate. If recording all20 at both viewports, require both complete reports and unique originals per viewport. Otherwise enumerate the precise extracted/mapped subset in an explicit comparison manifest.
+7. Add a comparison tool that reads originals and writes separate `reference`, `app`, `overlay`, absolute `diff` and machine-readable findings. Compare a1× Figma export against a1× rendering of the **same logical viewport**, with the resampling method declared when converting native3× pixels. Preserve original export/native hashes. Any masks for OS chrome or deliberately dynamic content must be recorded with coordinates and rationale, never enlarged to hide app mismatches. Do not compare mismatched photos/text/data and call its global similarity a UI fidelity score.
+8. Use per-region positions/color/type/spacing evidence plus pixel/SSIM metrics where valid; no fabricated acceptance percentage. Root must inspect the references and overlays and resolve material differences screen by screen. When a panel is only a reduced combined raster, document the exact crop/upscaling limits; it cannot supply independently recoverable vector geometry or an original-resolution pixel-perfect baseline by itself.
+
+## Small workflow footprint
+
+The minimum branch build change is zero lines for manual dispatch, or one branch-filter line for automatic authorized-branch pushes. Later comparison support needs a second capture step plus upload paths for its separate PNG/JSON/log and diff artifacts. Keep artifacts named with run number, run attempt and viewport so attempts and sizes cannot overwrite each other. Keep raw original captures separate from overlays/diffs. Optional model audits remain manual, require no new private API key in CI, and must not be represented as fresh calorie-accuracy testing if not run.
+
+The existing max75-minute job and25-minute capture step are bounded. Reusing the Debug app avoids a second package resolution/build, but two fresh Simulator readiness sequences can still cost time; measure actual execution before changing limits or splitting jobs. Do not weaken native font checks or use global Simulator resets to make the second viewport pass.
+
+## Interaction coverage remains separate work
+
+Current screenshot routes often use `.allowsHitTesting(false)` (`LuqmaApp.swift:139`, `DiaryView.swift:61/70`). They prove rendering of production views with labelled fixtures, not successful taps/add/edit/delete/navigation/persistence. Existing Core tests prove domain functions but not UI wiring. The generated Xcode scheme currently has an empty Testables list. A small real XCUITest target with fresh-device state, stable accessibility identifiers and add/edit/delete/goals/navigation assertions is the appropriate next addition when implementation is ready. The test must operate real controls and read resulting totals; it must not make the expected value appear through a screenshot flag. Live meal-analysis/network tests require a separate controlled procedure and do not follow from mocked service results.
+
+## Readiness and limits
+
+- Ready now: branch-scoped unsigned device build, same-commit20 native captures, retained build/source/credential/signing/resource gates, and a PR without main merge.
+- Needs implementation after Figma extraction: exact node-to-screen mapping, native source assets/tokens, deterministic matching-data/language snapshots, reference-size viewport, overlays/diffs and interaction checks.
+- Not verified by this assessment: a new branch workflow run, new app behavior,375 viewport, Figma export completeness, visual similarity, live analysis, physical performance or pixel-perfect acceptance.
+
+No app, source-manifest, version, workflow, deliverable or remote mutation was performed.

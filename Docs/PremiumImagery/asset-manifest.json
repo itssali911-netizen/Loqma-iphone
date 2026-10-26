@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "assets": [
+    {
+      "name": "LuqmaEditorialBreakfast",
+      "file": "Luqma/Resources/Assets.xcassets/Editorial/LuqmaEditorialBreakfast.imageset/artwork.jpg",
+      "width": 960,
+      "height": 640,
+      "bytes": 178212,
+      "decoded_rgba_bytes": 2457600,
+      "sha256": "fa6220c51ca2f17c4c55ddf642e5176d11af580f8002dbd26175fe48e3705b28",
+      "source_sha256": "57ce9bd96e9207d91079734f3c049ecf74a352b4790af2b74ea00ca95504e70a",
+      "source_dimensions": [
+        1536,
+        1024
+      ],
+      "processing": "Proportional LANCZOS downscale and RGB JPEG86; no cropping, repainting or embedded metadata",
+      "use": "Decorative editorial artwork only, never user meal/results data",
+      "source_kind": "new-ai-generated-original",
+      "tool": "built-in image_gen",
+      "prompt_key": "breakfast",
+      "rights": "New artwork generated for this project at the user request; not attributed to Figma or stock photography"
+    },
+    {
+      "name": "LuqmaEditorialLunch",
+      "file": "Luqma/Resources/Assets.xcassets/Editorial/LuqmaEditorialLunch.imageset/artwork.jpg",
+      "width": 960,
+      "height": 640,
+      "bytes": 179613,
+      "decoded_rgba_bytes": 2457600,
+      "sha256": "82b2838b688cfd57e2de56dd71286c6f97696c16d8f3cb52f7525b7d89e81c86",
+      "source_sha256": "167a05ff13aa2acb7edf3317f379acd36f79f85a51ebe76321195c5ebb87a2e2",
+      "source_dimensions": [
+        1536,
+        1024
+      ],
+      "processing": "Proportional LANCZOS downscale and RGB JPEG86; no cropping, repainting or embedded metadata",
+      "use": "Decorative editorial artwork only, never user meal/results data",
+      "source_kind": "new-ai-generated-original",
+      "tool": "built-in image_gen",
+      "prompt_key": "lunch",
+      "rights": "New artwork generated for this project at the user request; not attributed to Figma or stock photography"
+    },
+    {
+      "name": "LuqmaEditorialDinner",
+      "file": "Luqma/Resources/Assets.xcassets/Editorial/LuqmaEditorialDinner.imageset/artwork.jpg",
+      "width": 960,
+      "height": 640,
+      "bytes": 181089,
+      "decoded_rgba_bytes": 2457600,
+      "sha256": "9fa1dc5c49d42c90550a2c0002363a9277d217351a849513dfbd946a8dba5e52",
+      "source_sha256": "0beb1e78ba9a864fa64a4f14fd9453f4a583c404f2beb59b0452d45a826cf747",
+      "source_dimensions": [
+        1536,
+        1024
+      ],
+      "processing": "Proportional LANCZOS downscale and RGB JPEG86; no cropping, repainting or embedded metadata",
+      "use": "Decorative editorial artwork only, never user meal/results data",
+      "source_kind": "new-ai-generated-original",
+      "tool": "built-in image_gen",
+      "prompt_key": "dinner",
+      "rights": "New artwork generated for this project at the user request; not attributed to Figma or stock photography"
+    },
+    {
+      "name": "LuqmaEditorialSnack",
+      "file": "Luqma/Resources/Assets.xcassets/Editorial/LuqmaEditorialSnack.imageset/artwork.jpg",
+      "width": 960,
+      "height": 640,
+      "bytes": 162833,
+      "decoded_rgba_bytes": 2457600,
+      "sha256": "d00a7447729dfa889851f8b7340974e804b4400ad9cdb186de7c1993c17a8c6e",
+      "source_sha256": "a340e9675fcecc46ccabcb15054db1997ff782885637b398b9c832443f584e84",
+      "source_dimensions": [
+        1536,
+        1024
+      ],
+      "processing": "Proportional LANCZOS downscale and RGB JPEG86; no cropping, repainting or embedded metadata",
+      "use": "Decorative editorial artwork only, never user meal/results data",
+      "source_kind": "new-ai-generated-original",
+      "tool": "built-in image_gen",
+      "prompt_key": "snack",
+      "rights": "New artwork generated for this project at the user request; not attributed to Figma or stock photography"
+    },
+    {
+      "name": "LuqmaEditorialKitchen",
+      "file": "Luqma/Resources/Assets.xcassets/Editorial/LuqmaEditorialKitchen.imageset/artwork.jpg",
+      "width": 1200,
+      "height": 800,
+      "bytes": 82216,
+      "decoded_rgba_bytes": 3840000,
+      "sha256": "b2823ca5d8410f0b34014686dfc2d20a000fcb649758a4c6bfd70180231d5c76",
+      "source_sha256": "903e19604388c70e0179dd7a53602f7e36b2837d61ab1156c81435ecf623569f",
+      "source_dimensions": [
+        1536,
+        1024
+      ],
+      "processing": "Proportional LANCZOS downscale and RGB JPEG86; no cropping, repainting or embedded metadata",
+      "use": "Decorative editorial artwork only, never user meal/results data",
+      "source_kind": "new-ai-generated-original",
+      "tool": "built-in image_gen",
+      "prompt_key": "kitchen",
+      "rights": "New artwork generated for this project at the user request; not attributed to Figma or stock photography"
+    },
+    {
+      "name": "LuqmaEditorialFitness",
+      "file": "Luqma/Resources/Assets.xcassets/Editorial/LuqmaEditorialFitness.imageset/artwork.jpg",
+      "width": 1200,
+      "height": 753,
+      "bytes": 112797,
+      "decoded_rgba_bytes": 3614400,
+      "sha256": "9537a06bd52b95571e989a7c5c69bac310fa5222f9d1393599c206cef10be6e5",
+      "source_sha256": "dbc7c20ad1260c5fe28ec44a1ae1d3bc7e32a47127be77595e11361569e7f467",
+      "source_dimensions": [
+        2752,
+        1728
+      ],
+      "processing": "Proportional LANCZOS downscale and RGB JPEG86; no cropping, repainting or embedded metadata",
+      "use": "Decorative editorial artwork only, never user meal/results data",
+      "source_kind": "original-figma-asset",
+      "file_key": "HBIa4HlRoHRjxZWJfqyrUG",
+      "original_file_key": "IfMCdTI3FcvXpNFy79PRUA",
+      "node": "2:9530",
+      "source_title": "illustration fitness equipments design background",
+      "rights": "Sandow Community template supplied and authorized by the user; original attribution retained"
+    }
+  ],
+  "encoded_bytes": 896760,
+  "max_decoded_rgba_bytes_all_assets": 17284800,
+  "runtime_network_requests": 0,
+  "original_svg_icons_changed": false
+}

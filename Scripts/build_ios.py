@@ -246,7 +246,7 @@ def build(mode: str, output: Path) -> None:
         app = output / "device-derived/Build/Products/Release-iphoneos/Luqma.app"
         apply_vision_compat(packages, verify_only=True)
         prepare_sideload(app, output, bundle)
-        (output / "READ-ME.txt").write_text("Luqma-Sideload.ipa is an iPhoneOS build requiring personal re-signing by AltStore/AltServer. It has no Apple developer certificate or provisioning profile and cannot install directly. A free account requires refreshing every 7 days. Physical device behavior needs validation after installation. Apple Health integration was removed at the user's request. No Apple account was accessed and no store upload was performed.\n")
+        (output / "READ-ME.txt").write_text("Luqma-Sideload.ipa is an iPhoneOS build with local ad-hoc code-signing hashes, not an Apple developer signature. It has no Apple provisioning profile and cannot install directly. Apple Health is read-only and requires a re-signing process and provisioning profile that authorize com.apple.developer.healthkit for the final installed identifier; preserving an entitlement string alone does not grant access. Apple's current capability matrix lists HealthKit for free Apple Developer accounts, but Personal Team profiles expire after 7 days and re-signer compatibility must be verified. Use Xcode automatic signing for Personal Team device testing, or a properly provisioned Apple distribution export. Consent and data retrieval still require physical-device validation. No Apple account was accessed and no store upload was performed.\n")
         result_summary(output, mode, bundle, signed=False, apple_signed=False,
                        requires_personal_resigning=True, uploaded=False)
         return

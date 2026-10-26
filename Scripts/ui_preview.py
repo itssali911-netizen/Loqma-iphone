@@ -19,6 +19,7 @@ import argparse
 from datetime import datetime, timezone
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import platform
@@ -40,6 +41,7 @@ from vision_compat import apply_vision_compat
 
 ROOT = Path(__file__).resolve().parent.parent
 DEVICE_TYPE = "com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro-Max"
+REFERENCE_DEVICE_TYPE = "com.apple.CoreSimulator.SimDeviceType.iPhone-13-mini"
 SCREENS = ((0, "today"), (1, "kitchen"), (2, "progress"), (3, "settings"))
 PHOTO_SCREEN = "photo-estimate"
 RECIPE_SCREEN = "recipe-import"
@@ -49,15 +51,43 @@ EXTRA_ROUTES = (("search", "-loqma-preview-search"),
 TEMPLATE_ROUTES = (("macro-goals", "goals"),
                    ("food-portion", "portion"),
                    ("recipe-editor", "recipe"),
+                   ("recipe-details", "recipeDetail"),
                    ("weight-plan", "plan"),
                    ("weight-editor", "weight"),
                    ("analysis-connection", "connection"),
                    ("backup", "backup"),
                    ("about", "about"),
-                   ("barcode-guide", "barcode"))
+                   ("barcode-guide", "barcode"),
+                   ("language", "language"),
+                   ("notifications", "notifications"),
+                   ("reminders", "reminders"),
+                   ("state-error", "stateError"),
+                   ("state-loading", "stateLoading"),
+                   ("state-empty", "stateEmpty"),
+                   ("state-success", "stateSuccess"),
+                   ("approved-home", "approvedHome"),
+                   ("approved-calorie", "calorieDetails"),
+                   ("approved-scan", "approvedPhotoScan"),
+                   ("approved-results", "approvedPhotoResults"))
+FITNESS_ROUTES = (("assessment-goal", "assessmentGoal"),
+                  ("assessment-gender", "assessmentGender"),
+                  ("assessment-activity", "assessmentActivity"),
+                  ("assessment-details", "assessmentDetails"),
+                  ("assessment-review", "assessmentReview"),
+                  ("fitness-profile", "fitnessProfile"),
+                  ("fitness-plan", "fitnessPlan"))
+ASSESSMENT_EXTRA_ROUTES = (("assessment-age", 3), ("assessment-height", 4),
+                           ("assessment-weight", 5), ("assessment-target", 6),
+                           ("assessment-training", 8), ("assessment-safety", 1))
+ASSESSMENT_ACCESSIBILITY_ROUTES = (("accessibility-assessment-goal", 0),
+                                  ("accessibility-assessment-age", 3),
+                                  ("accessibility-assessment-safety", 1))
 VARIANT_ROUTES = (("accessibility-today", ("-loqma-preview-overview", "-loqma-preview-accessibility")),
-                  ("photo-components", ("-loqma-preview-photo", "-loqma-preview-photo-detailed")))
-EXPECTED_SCREEN_COUNT = len(SCREENS) + 2 + len(EXTRA_ROUTES) + len(TEMPLATE_ROUTES) + len(VARIANT_ROUTES)
+                  ("photo-components", ("-loqma-preview-photo", "-loqma-preview-photo-detailed")),
+                  ("editorial-dinner", ("-loqma-preview-routine-dinner",)),
+                  ("editorial-snack", ("-loqma-preview-routine-snack",)),
+                  ("accessibility-editorial", ("-loqma-preview-accessibility", "-loqma-preview-editorial-expanded")))
+EXPECTED_SCREEN_COUNT = len(SCREENS) + 2 + len(EXTRA_ROUTES) + len(TEMPLATE_ROUTES) + len(VARIANT_ROUTES) + len(FITNESS_ROUTES) + len(ASSESSMENT_EXTRA_ROUTES) + len(ASSESSMENT_ACCESSIBILITY_ROUTES)
 MAX_EMPTY_FRAME_RETRIES = 2
 EMPTY_FRAME_RETRY_SECONDS = 5.0
 
@@ -70,16 +100,145 @@ def preview_cases() -> list[dict]:
     cases += [{"tab": None, "screen": screen, "arguments": [argument],
                "synthetic_fixture": screen in {PHOTO_SCREEN, RECIPE_SCREEN, "meal-macros", "daily-overview"}}
               for screen, argument in routes]
-    cases += [{"tab": None, "screen": screen, "arguments": ["-loqma-preview-template", route],
+    cases += [{"tab": None, "screen": screen, "arguments": ["-loqma-preview-template", route,
+                              *(["-loqma-approved-photo-scan"] if route == "approvedPhotoScan" else
+                                ["-loqma-approved-photo-results"] if route == "approvedPhotoResults" else [])],
                "template_route": route, "read_only_preview": True,
-               "synthetic_fixture": route in {"portion", "recipe"}}
+               "synthetic_fixture": route in {"portion", "recipe", "recipeDetail", "approvedHome", "calorieDetails", "approvedPhotoScan", "approvedPhotoResults"} or route.startswith("state")}
               for screen, route in TEMPLATE_ROUTES]
     cases += [{"tab": None, "screen": screen, "arguments": list(arguments),
-               "synthetic_fixture": True,
+               "synthetic_fixture": screen in {"accessibility-today", "photo-components"},
+               "read_only_preview": True,
                **({"dynamic_type_override": "accessibility3"}
-                  if "-loqma-preview-accessibility" in arguments else {"component_detail_preview": True})}
+                  if "-loqma-preview-accessibility" in arguments else
+                  {"component_detail_preview": True} if "-loqma-preview-photo-detailed" in arguments else {})}
               for screen, arguments in VARIANT_ROUTES]
+    cases += [{"tab": None, "screen": screen,
+               "arguments": ["-loqma-preview-template", route],
+               "template_route": route, "read_only_preview": True,
+               "synthetic_fixture": True} for screen, route in FITNESS_ROUTES]
+    cases += [{"tab": None, "screen": screen,
+               "arguments": ["-loqma-preview-template", "assessmentGoal", "-loqma-preview-assessment-page", str(page),
+                             *(["-loqma-preview-accessibility"] if screen.startswith("accessibility-") else [])],
+               "template_route": "assessmentGoal", "read_only_preview": True, "synthetic_fixture": True,
+               "assessment_page": page,
+               **({"dynamic_type_override": "accessibility3"} if screen.startswith("accessibility-") else {})}
+              for screen, page in ASSESSMENT_EXTRA_ROUTES + ASSESSMENT_ACCESSIBILITY_ROUTES]
     return cases
+
+
+def validate_runtime_font_audit(value: dict, pid: int, accessibility: bool,
+                                expected_scope: str | None = None) -> dict:
+    """Check native UIFont registration AND actual CoreText shaped glyph runs.
+
+    The app writes this DEBUG-only envelope after startup. The launch PID rejects
+    stale data from the preceding screenshot process; filenames alone cannot
+    establish that a requested custom font actually rendered on iOS.
+    """
+    if not isinstance(value, dict) or value.get("processIdentifier") != pid:
+        raise BuildError("Runtime font audit is stale or has no matching application process ID.")
+    scope = value.get("renderingScope")
+    if (not isinstance(scope, str) or scope not in {"root", "template"} or
+            (expected_scope is not None and (not isinstance(expected_scope, str) or expected_scope not in {"root", "template"} or scope != expected_scope))):
+        raise BuildError("Runtime font audit has the wrong rendering scope for this captured view.")
+    actual_size = value.get("swiftUIDynamicTypeSize")
+    actual_accessibility = value.get("swiftUIIsAccessibilitySize")
+    body_points = value.get("swiftUIBodyPoints")
+    normal_sizes = {"xSmall", "small", "medium", "large", "xLarge", "xxLarge", "xxxLarge"}
+    accessibility_sizes = {"accessibility1", "accessibility2", "accessibility3", "accessibility4", "accessibility5"}
+    if (not isinstance(actual_size, str) or actual_size not in normal_sizes | accessibility_sizes or
+            type(actual_accessibility) is not bool or actual_accessibility != (actual_size in accessibility_sizes)):
+        raise BuildError("Runtime font audit lacks a valid actual SwiftUI Dynamic Type environment.")
+    if (not isinstance(body_points, (int, float)) or isinstance(body_points, bool) or
+            not math.isfinite(body_points) or body_points <= 0):
+        raise BuildError("Runtime font audit has an invalid actual SwiftUI body size.")
+    if accessibility:
+        if actual_size != "accessibility3" or actual_accessibility is not True or body_points <= 16:
+            raise BuildError("Accessibility preview did not actually scale its SwiftUI environment to accessibility3.")
+    elif actual_accessibility or actual_size not in normal_sizes:
+        raise BuildError("Ordinary preview unexpectedly uses an accessibility SwiftUI Dynamic Type environment.")
+    audit = value.get("fontAudit")
+    if not isinstance(audit, dict) or audit.get("source") != "Actual UIKit fonts and CoreText shaped runs from LuqmaTypography":
+        raise BuildError("Runtime font audit lacks native UIKit/CoreText provenance.")
+    if audit.get("passed") is not True:
+        raise BuildError("The app's native runtime font audit failed; inspect the saved audit JSON.")
+    entries = audit.get("entries")
+    required = {"display", "screenTitle", "sectionTitle", "headline", "body", "subheadline",
+                "helper", "caption", "caption2", "button", "metric", "legacyLightPromoted"}
+    if not isinstance(entries, list) or not all(isinstance(entry, dict) for entry in entries):
+        raise BuildError("Runtime font audit has no valid role entries.")
+    roles = [entry.get("role") for entry in entries]
+    if not all(isinstance(role, str) for role in roles) or len(set(roles)) != len(roles) or not required.issubset(roles):
+        raise BuildError("Runtime font audit omits or duplicates required typography roles.")
+    actual_fonts = set()
+    for entry in entries:
+        latin = entry.get("resolvedLatinPostScript", "")
+        arabic = entry.get("resolvedArabicPostScript", "")
+        if not isinstance(latin, str) or not isinstance(arabic, str) or not latin.startswith("WorkSans-") or not arabic.startswith("Tajawal-"):
+            raise BuildError("A runtime font role resolved to an unexpected system or substitute face.")
+        if not all(isinstance(entry.get(field), list) and all(isinstance(font, str) for font in entry[field])
+                   for field in ("latinRuns", "arabicRuns", "mixedRuns")):
+            raise BuildError("Runtime font audit has malformed shaped-font run data.")
+        if (entry.get("passed") is not True or entry.get("registered") is not True or
+                entry.get("missingGlyphs") != 0 or entry.get("uiFontPostScript") != latin or
+                set(entry.get("latinRuns", [])) != {latin} or
+                set(entry.get("arabicRuns", [])) != {arabic} or
+                set(entry.get("mixedRuns", [])) != {latin, arabic}):
+            raise BuildError("A runtime font role failed registration or actual Latin/Arabic shaping checks.")
+        if entry.get("effectiveWeight") in {"light", "thin", "ultraLight"}:
+            raise BuildError("App typography unexpectedly uses a thin effective text weight.")
+        for field in ("basePoints", "scaledPoints", "lineHeight"):
+            number = entry.get(field)
+            if not isinstance(number, (int, float)) or isinstance(number, bool) or not math.isfinite(number) or number <= 0:
+                raise BuildError("Runtime font audit contains an invalid measured font size.")
+        if entry["basePoints"] < 12:
+            raise BuildError("Runtime typography contains text below the declared readable base size.")
+        if accessibility and entry["scaledPoints"] <= entry["basePoints"]:
+            raise BuildError("Accessibility preview fonts did not actually scale above their base size.")
+        actual_fonts.update((latin, arabic))
+    category = audit.get("contentSizeCategory", "")
+    if (not isinstance(category, str) or not category or
+            ("Accessibility" in category) != actual_accessibility):
+        raise BuildError("Runtime font audit has the wrong Dynamic Type category for this capture.")
+    body = next(entry for entry in entries if entry["role"] == "body")
+    if abs(body["basePoints"] - 16) > 0.000001 or abs(body["scaledPoints"] - body_points) > 0.5:
+        raise BuildError("Actual SwiftUI body size does not match the measured body font role.")
+    emoji = audit.get("emojiFonts")
+    if not isinstance(emoji, list) or not any(isinstance(font, str) and "emoji" in font.lower() for font in emoji):
+        raise BuildError("Runtime audit did not resolve the emoji sample through the system emoji cascade.")
+    return {"passed": True, "process_id": pid, "roles_checked": len(entries),
+            "actual_postscript_fonts": sorted(actual_fonts), "content_size_category": category,
+            "rendering_scope": scope, "swiftui_dynamic_type_size": actual_size,
+            "swiftui_body_points": body_points, "swiftui_is_accessibility_size": actual_accessibility,
+            "swiftui_body_matches_role": True,
+            "accessibility_scaling_verified": accessibility,
+            "zero_missing_glyphs": True, "emoji_fonts": emoji}
+
+
+def collect_runtime_font_audit(output: Path, device: str, bundle: str,
+                               screen: str, pid: int, number: int, accessibility: bool) -> dict:
+    container = Path(command(["xcrun", "simctl", "get_app_container", device, bundle, "data"],
+                             output, "preview-font-container-" + screen).strip())
+    if not container.is_absolute():
+        raise BuildError("Simulator did not return an absolute app data container for font verification.")
+    source = container / "Documents/luqma-font-audit.json"
+    if not source.is_file() or source.stat().st_size > 250_000:
+        raise BuildError("The launched app did not produce a bounded native runtime font audit.")
+    data = source.read_bytes()
+    directory = output / "font-audits"
+    directory.mkdir(exist_ok=True)
+    target = directory / f"{number:02d}-{screen}.json"
+    target.write_bytes(data)
+    try:
+        value = json.loads(data)
+    except (ValueError, UnicodeError) as error:
+        raise BuildError("The launched app's runtime font audit is not valid JSON.") from error
+    case = next((item for item in preview_cases() if item["screen"] == screen), None)
+    if case is None:
+        raise BuildError("Runtime font audit has no recognized captured view route.")
+    expected_scope = "template" if "template_route" in case else "root"
+    details = validate_runtime_font_audit(value, pid, accessibility, expected_scope=expected_scope)
+    return {**details, "file": target.relative_to(output).as_posix(), "sha256": hashlib.sha256(data).hexdigest()}
 
 
 def command(arguments: list[str], output: Path, label: str, timeout: int = 120,
@@ -326,7 +485,8 @@ def collect_failure_diagnostics(output: Path, device: str, report: dict) -> None
 
 
 def capture(output: Path, packages: Path, prebuilt: Path | None,
-            bundle: str, settle_seconds: float) -> None:
+            bundle: str, settle_seconds: float, device_type: str=DEVICE_TYPE,
+            language: str='ar', screens: list[str] | None=None, approved_capture: bool=False) -> None:
     if output.exists():
         raise BuildError("Choose a new UI preview output directory to avoid mixing screenshots.")
     output.mkdir(parents=True)
@@ -337,16 +497,21 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
         "capture_method": "Native Debug SwiftUI app and simctl framebuffer screenshot",
         "fresh_simulator": False, "existing_device_data_modified": False,
         "api_key_used": False, "physical_device_verified": False,
-        "expected_screenshot_count": EXPECTED_SCREEN_COUNT,
+        "expected_screenshot_count": len(screens) if screens else EXPECTED_SCREEN_COUNT,
+        "language": language,
+        "approved_reference_capture": approved_capture,
+        "fixture_labels_recorded_externally": approved_capture,
         "synthetic_photo_fixture": True,
         "synthetic_recipe_fixture": True,
         "synthetic_meal_fixture": True,
         "synthetic_overview_fixture": True,
         "synthetic_portion_fixture": True,
         "synthetic_recipe_editor_fixture": True,
+        "synthetic_fitness_profile_fixtures": True,
+        "fitness_preview_writes_real_profile": False,
         "secondary_form_previews_read_only": True,
         "accessibility_preview_dynamic_type": "accessibility3",
-        "english_preview_skipped_reason": "DiaryStore exposes no temporary language override; preview does not write language settings",
+        "preview_language_override": "DEBUG English flag on this newly created Simulator" if language=='en' else "Default Arabic diary language",
         "search_uses_actual_catalog": True,
         "barcode_preview_uses_live_guide_component": True,
         "barcode_camera_session_started": False,
@@ -357,6 +522,7 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
                               "maximum_recaptures": MAX_EMPTY_FRAME_RETRIES,
                               "pixel_check_proves_layout_correct": False},
         "screenshots": [],
+        "runtime_font_audits": [],
     }
     device = None
     try:
@@ -368,16 +534,16 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
         inventory = json.loads(command(["xcrun", "simctl", "list", "--json"],
                                        output, "preview-inventory"))
         types = inventory.get("devicetypes", inventory.get("deviceTypes", []))
-        if not any(item.get("identifier") == DEVICE_TYPE for item in types):
-            raise BuildError("The selected Xcode has no iPhone 16 Pro Max Simulator device type.")
+        if not any(item.get("identifier") == device_type for item in types):
+            raise BuildError("The selected Xcode lacks the requested Simulator device type: "+device_type)
         runtime = select_runtime(inventory)
         name = "Luqma UI Preview " + uuid.uuid4().hex[:8]
-        device = command(["xcrun", "simctl", "create", name, DEVICE_TYPE,
+        device = command(["xcrun", "simctl", "create", name, device_type,
                           runtime["identifier"]], output, "preview-create").strip()
         if not re.fullmatch(r"[0-9A-Fa-f-]{36}", device):
             device = None
             raise BuildError("Simulator creation did not return a valid device identifier.")
-        report["simulator"] = {"udid": device, "device": "iPhone 16 Pro Max",
+        report["simulator"] = {"udid": device, "device": "iPhone 13 mini" if device_type==REFERENCE_DEVICE_TYPE else "iPhone 16 Pro Max",
                                "runtime": runtime["name"], "runtime_id": runtime["identifier"]}
         report["fresh_simulator"] = True
         try:
@@ -394,11 +560,17 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
                 output, "preview-status-bar")
         command(["xcrun", "simctl", "install", device, str(app)],
                 output, "preview-install", 180)
-        for number, case in enumerate(preview_cases(), 1):
+        cases=[case for case in preview_cases() if not screens or case['screen'] in screens]
+        if screens and len(cases)!=len(screens):
+            raise BuildError('One or more requested screen names are unknown or duplicated.')
+        for number, case in enumerate(cases, 1):
             tab, screen, arguments = case["tab"], case["screen"], case["arguments"]
             launched = command(["xcrun", "simctl", "launch", "--terminate-running-process",
                                 device, bundle, *arguments,
-                                "-AppleLanguages", "(ar)", "-AppleLocale", "ar_SA"],
+                                "-loqma-preview-font-audit",
+                                *(["-loqma-approved-capture"] if approved_capture else []),
+                                *(["-loqma-ui-test-en"] if language=='en' else []),
+                                "-AppleLanguages", "("+language+")", "-AppleLocale", "en_US" if language=='en' else "ar_SA"],
                                output, "preview-launch-" + screen, 300 if number == 1 else 120)
             match = re.search(r":\s*(\d+)\s*$", launched)
             if not match:
@@ -407,6 +579,9 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
             confirm_process(pid, settle_seconds)
             screenshot = output / f"{number:02d}-{screen}.png"
             details = capture_screenshot(output, device, screen, pid, screenshot)
+            font_details = collect_runtime_font_audit(output, device, bundle, screen, pid, number,
+                                                      "-loqma-preview-accessibility" in arguments)
+            report["runtime_font_audits"].append({"screen": screen, **font_details})
             report["screenshots"].append({"tab": tab, "screen": screen,
                                           "kind": "tab" if tab is not None else screen,
                                           "synthetic_fixture": case["synthetic_fixture"],
@@ -414,10 +589,13 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
                                           "process_still_running": True,
                                           **details})
             print(f"Captured native {screen}: {screenshot.name}", flush=True)
-        if len(report["screenshots"]) != EXPECTED_SCREEN_COUNT:
-            raise BuildError(f"The native preview did not capture all {EXPECTED_SCREEN_COUNT} required screens.")
-        if len({item["frame_sha256"] for item in report["screenshots"]}) != EXPECTED_SCREEN_COUNT:
+        if len(report["screenshots"]) != report['expected_screenshot_count']:
+            raise BuildError("The native preview did not capture all required screens.")
+        if len({item["frame_sha256"] for item in report["screenshots"]}) != report['expected_screenshot_count']:
             raise BuildError("Screenshots are identical; verify the DEBUG preview routes are installed.")
+        if len(report["runtime_font_audits"]) != report['expected_screenshot_count']:
+            raise BuildError("Native font verification did not cover every captured screen.")
+        report["runtime_fonts_verified"] = True
         report["status"] = "captured"
     except BaseException as error:
         report["status"] = "cancelled" if isinstance(error, (SystemExit, KeyboardInterrupt)) else "failed"
@@ -446,6 +624,10 @@ def main() -> int:
     parser.add_argument("--app", type=Path, help="Reuse an existing Debug arm64 Simulator .app")
     parser.add_argument("--bundle-id", default=os.environ.get("BUNDLE_ID", "") or "app.luqma.diary")
     parser.add_argument("--settle-seconds", type=float, default=6.0)
+    parser.add_argument("--device-type",choices=[DEVICE_TYPE,REFERENCE_DEVICE_TYPE],default=DEVICE_TYPE)
+    parser.add_argument("--language",choices=['ar','en'],default='ar')
+    parser.add_argument("--screens",nargs='+',help='Optional subset of named native routes')
+    parser.add_argument("--approved-capture",action="store_true",help="Clean native reference crop; synthetic fixture provenance remains in JSON")
     args = parser.parse_args()
     if not re.fullmatch(r"[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+", args.bundle_id):
         parser.error("Bundle identifier is invalid.")
@@ -455,7 +637,8 @@ def main() -> int:
         parser.error("BUILD_NUMBER must be a positive integer with at most nine digits.")
     try:
         capture(args.output.resolve(), args.packages.resolve(),
-                args.app.resolve() if args.app else None, args.bundle_id, args.settle_seconds)
+                args.app.resolve() if args.app else None, args.bundle_id, args.settle_seconds,
+                args.device_type,args.language,args.screens,args.approved_capture)
     except (BuildError, OSError, ValueError) as error:
         print("Luqma native UI preview:", str(error), file=sys.stderr)
         return 1

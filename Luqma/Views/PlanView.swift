@@ -53,7 +53,7 @@ struct PlanView:View {
             HStack{Text(diary.t("الثبات حاليًا","Current maintenance"));Spacer();Text("\(decimal(r.maintenance,0)) kcal")}
             HStack{Text(diary.t("الثبات عند الهدف","Maintenance at goal"));Spacer();Text("\(decimal(r.maintenanceAtGoal,0)) kcal")}
             Chart(r.points){p in LineMark(x:.value("Day",p.day),y:.value("Weight",p.kg)).lineStyle(StrokeStyle(lineWidth:2.5)).foregroundStyle(Theme.accent)}.chartYScale(domain:.automatic(includesZero:false)).frame(height:200)
-            if r.lowCalories{Text(diary.t("السعرات منخفضة؛ زد المدة أو راجع مختصًا قبل اعتمادها.","Calories are low. Extend the timeline or seek professional review before applying.")).luqmaFont(.footnote).foregroundStyle(.orange)}
+            if r.lowCalories{Text(diary.t("السعرات منخفضة؛ زد المدة أو راجع مختصًا قبل اعتمادها.","Calories are low. Extend the timeline or seek professional review before applying.")).luqmaFont(.footnote).foregroundStyle(Theme.warning)}
             Button(applied ? diary.t("تم اعتماد الخطة","Plan applied"):diary.t("اعتماد الخطة والأهداف","Apply plan and targets")){applied=diary.applyPlan(plan,r)}.buttonStyle(LuqmaPrimaryButtonStyle()).disabled(applied)
         }.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
     }

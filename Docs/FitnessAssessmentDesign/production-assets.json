@@ -1,0 +1,232 @@
+{
+  "source_file": "https://www.figma.com/file/IfMCdTI3FcvXpNFy79PRUA",
+  "accessible_reference_copy": "HBIa4HlRoHRjxZWJfqyrUG",
+  "source_kind": "Original Figma Community assessment assets saved before quota limit",
+  "note": "Bundled artwork depicts assessment choices, never a user meal, measurement or analysis result. Swimming and fish use native SF Symbols because no corresponding original asset was extracted.",
+  "total_bytes": 227212,
+  "assets": [
+    {
+      "name": "AssessmentBack",
+      "source": "Docs/FitnessAssessmentDesign/assets/7c9b3.svg",
+      "source_sha256": "874f17f81fece4236c693d1afc62ba642dd459f190bb10535e6daa2f9b0f4bdf",
+      "production": "Luqma/Resources/Assets.xcassets/Assessment/AssessmentBack.imageset/source.svg",
+      "transformation": "Original SVG bytes; template tint only for navigation arrows.",
+      "sha256": "874f17f81fece4236c693d1afc62ba642dd459f190bb10535e6daa2f9b0f4bdf",
+      "bytes": 460
+    },
+    {
+      "name": "AssessmentNext",
+      "source": "Docs/FitnessAssessmentDesign/assets/c1a83.svg",
+      "source_sha256": "f35284a840f55e660952ed989a65ca59b00701508e421925da419b53b5faf53f",
+      "production": "Luqma/Resources/Assets.xcassets/Assessment/AssessmentNext.imageset/source.svg",
+      "transformation": "Original SVG bytes; template tint only for navigation arrows.",
+      "sha256": "f35284a840f55e660952ed989a65ca59b00701508e421925da419b53b5faf53f",
+      "bytes": 549
+    },
+    {
+      "name": "AssessmentChecked",
+      "source": "Docs/FitnessAssessmentDesign/assets/3ee61.svg",
+      "source_sha256": "c6d1761b08c079b1880a60079cedb66c41a2b902a7f544a09af66e0a2e46664b",
+      "production": "Luqma/Resources/Assets.xcassets/Assessment/AssessmentChecked.imageset/source.svg",
+      "transformation": "Original SVG bytes; template tint only for navigation arrows.",
+      "sha256": "c6d1761b08c079b1880a60079cedb66c41a2b902a7f544a09af66e0a2e46664b",
+      "bytes": 1507
+    },
+    {
+      "name": "AssessmentUnchecked",
+      "source": "Docs/FitnessAssessmentDesign/assets/34b5e.svg",
+      "source_sha256": "4821b277e54a2e02b21acbb4e31fe40685c41bdd19ec12b7ec69be984c2c9486",
+      "production": "Luqma/Resources/Assets.xcassets/Assessment/AssessmentUnchecked.imageset/source.svg",
+      "transformation": "Original SVG bytes; template tint only for navigation arrows.",
+      "sha256": "4821b277e54a2e02b21acbb4e31fe40685c41bdd19ec12b7ec69be984c2c9486",
+      "bytes": 648
+    },
+    {
+      "name": "AssessmentGoalLose",
+      "source": "Docs/FitnessAssessmentDesign/assets/d7eee.svg",
+      "source_sha256": "986a04b61d6b35a1daace96825ee537f0b8e2a69583296eed552336bf8add3ab",
+      "production": "Luqma/Resources/Assets.xcassets/Assessment/AssessmentGoalLose.imageset/source.svg",
+      "transformation": "Original SVG bytes; template tint only for navigation arrows.",
+      "sha256": "986a04b61d6b35a1daace96825ee537f0b8e2a69583296eed552336bf8add3ab",
+      "bytes": 2035
+    },
+    {
+      "name": "AssessmentGoalMuscle",
+      "source": "Docs/FitnessAssessmentDesign/assets/9e577.svg",
+      "source_sha256": "f7d1027ecea2a4a654b0825fcfd7c5a4fd6edf06d8d78ad6d68d8e6a2ed70521",
+      "production": "Luqma/Resources/Assets.xcassets/Assessment/AssessmentGoalMuscle.imageset/source.svg",
+      "transformation": "Original SVG bytes; template tint only for navigation arrows.",
+      "sha256": "f7d1027ecea2a4a654b0825fcfd7c5a4fd6edf06d8d78ad6d68d8e6a2ed70521",
+      "bytes": 1455
+    },
+    {
+      "name": "AssessmentGoalEndurance",
+      "source": "Docs/FitnessAssessmentDesign/assets/17630.svg",
+      "source_sha256": "01f12b0ae013eb2d760c59c77f29a57ff5385f188076274b083f187a669aa6dd",
+      "production": "Luqma/Resources/Assets.xcassets/Assessment/AssessmentGoalEndurance.imageset/source.svg",
+      "transformation": "Original SVG bytes; template tint only for navigation arrows.",
+      "sha256": "01f12b0ae013eb2d760c59c77f29a57ff5385f188076274b083f187a669aa6dd",
+      "bytes": 1353
+    },
+    {
+      "name": "AssessmentGoalExplore",
+      "source": "Docs/FitnessAssessmentDesign/assets/e89cf.svg",
+      "source_sha256": "bcf5f310a821e1b26a363bf994858a4b00117d64407255d238521e5c8118e17a",
+      "production": "Luqma/Resources/Assets.xcassets/Assessment/AssessmentGoalExplore.imageset/source.svg",
+      "transformation": "Original SVG bytes; template tint only for navigation arrows.",
+      "sha256": "bcf5f310a821e1b26a363bf994858a4b00117d64407255d238521e5c8118e17a",
+      "bytes": 1308
+    },
+    {
+      "name": "AssessmentDietPlant",
+      "source": "Docs/FitnessAssessmentDesign/assets/d7c07.svg",
+      "source_sha256": "4fa8a95a71bbe54d89502b802502027ddf9d577284f3cdaf390d593b4870c5b1",
+      "production": "Luqma/Resources/Assets.xcassets/Assessment/AssessmentDietPlant.imageset/source.svg",
+      "transformation": "Original SVG bytes; template tint only for navigation arrows.",
+      "sha256": "4fa8a95a71bbe54d89502b802502027ddf9d577284f3cdaf390d593b4870c5b1",
+      "bytes": 1068
+    },
+    {
+      "name": "AssessmentDietBread",
+      "source": "Docs/FitnessAssessmentDesign/assets/0d586.svg",
+      "source_sha256": "aba8974ff36698b86ad5232a47b10ff6ce7f99e4feff66c9f86afdef9aa571f4",
+      "production": "Luqma/Resources/Assets.xcassets/Assessment/AssessmentDietBread.imageset/source.svg",
+      "transformation": "Original SVG bytes; template tint only for navigation arrows.",
+      "sha256": "aba8974ff36698b86ad5232a47b10ff6ce7f99e4feff66c9f86afdef9aa571f4",
+      "bytes": 1558
+    },
+    {
+      "name": "AssessmentDietFood",
+      "source": "Docs/FitnessAssessmentDesign/assets/bcfb7.svg",
+      "source_sha256": "57f411fff3dbdbfd3f992a49917e5433afe03ee36dfc1709b0ef038497506d10",
+      "production": "Luqma/Resources/Assets.xcassets/Assessment/AssessmentDietFood.imageset/source.svg",
+      "transformation": "Original SVG bytes; template tint only for navigation arrows.",
+      "sha256": "57f411fff3dbdbfd3f992a49917e5433afe03ee36dfc1709b0ef038497506d10",
+      "bytes": 1012
+    },
+    {
+      "name": "AssessmentExercise0",
+      "source": "Docs/FitnessAssessmentDesign/assets/d2138.svg",
+      "source_sha256": "02467433c4b23d61a810f299a3a97270fc80ad82086747b70a9331134048558c",
+      "production": "Luqma/Resources/Assets.xcassets/Assessment/AssessmentExercise0.imageset/source.svg",
+      "transformation": "Original SVG bytes; template tint only for navigation arrows.",
+      "sha256": "02467433c4b23d61a810f299a3a97270fc80ad82086747b70a9331134048558c",
+      "bytes": 2045
+    },
+    {
+      "name": "AssessmentExercise1",
+      "source": "Docs/FitnessAssessmentDesign/assets/23a45.svg",
+      "source_sha256": "4755a310de29b5ce602837959abf6700bd0872eb42978102959847c3a73e9951",
+      "production": "Luqma/Resources/Assets.xcassets/Assessment/AssessmentExercise1.imageset/source.svg",
+      "transformation": "Original SVG bytes; template tint only for navigation arrows.",
+      "sha256": "4755a310de29b5ce602837959abf6700bd0872eb42978102959847c3a73e9951",
+      "bytes": 1460
+    },
+    {
+      "name": "AssessmentExercise2",
+      "source": "Docs/FitnessAssessmentDesign/assets/d8664.svg",
+      "source_sha256": "95bfa5c7a8b8c0efd83d9ed262e576e5b08ff241e758f95bf7332ccf1b5d8099",
+      "production": "Luqma/Resources/Assets.xcassets/Assessment/AssessmentExercise2.imageset/source.svg",
+      "transformation": "Original SVG bytes; template tint only for navigation arrows.",
+      "sha256": "95bfa5c7a8b8c0efd83d9ed262e576e5b08ff241e758f95bf7332ccf1b5d8099",
+      "bytes": 1357
+    },
+    {
+      "name": "AssessmentExercise3",
+      "source": "Docs/FitnessAssessmentDesign/assets/6e49f.svg",
+      "source_sha256": "14d26116b5c0c6047501e4a55b5fa3ac6396f0418c0097b388215172642bc4d0",
+      "production": "Luqma/Resources/Assets.xcassets/Assessment/AssessmentExercise3.imageset/source.svg",
+      "transformation": "Original SVG bytes; template tint only for navigation arrows.",
+      "sha256": "14d26116b5c0c6047501e4a55b5fa3ac6396f0418c0097b388215172642bc4d0",
+      "bytes": 3519
+    },
+    {
+      "name": "AssessmentExercise4",
+      "source": "Docs/FitnessAssessmentDesign/assets/a929c.svg",
+      "source_sha256": "2156ef1beb7284b6a1e16dc9539257b3210272eb299f6d56e2096701bb98a9fd",
+      "production": "Luqma/Resources/Assets.xcassets/Assessment/AssessmentExercise4.imageset/source.svg",
+      "transformation": "Original SVG bytes; template tint only for navigation arrows.",
+      "sha256": "2156ef1beb7284b6a1e16dc9539257b3210272eb299f6d56e2096701bb98a9fd",
+      "bytes": 1699
+    },
+    {
+      "name": "AssessmentSleep0",
+      "source": "Docs/FitnessAssessmentDesign/assets/4b6ce.svg",
+      "source_sha256": "43a50d03af6c3edb44681a931297cf175ea674b886e2b68c4925f59124227a7e",
+      "production": "Luqma/Resources/Assets.xcassets/Assessment/AssessmentSleep0.imageset/source.svg",
+      "transformation": "Original SVG bytes; template tint only for navigation arrows.",
+      "sha256": "43a50d03af6c3edb44681a931297cf175ea674b886e2b68c4925f59124227a7e",
+      "bytes": 1290
+    },
+    {
+      "name": "AssessmentSleep1",
+      "source": "Docs/FitnessAssessmentDesign/assets/3cf2d.svg",
+      "source_sha256": "937eea8cdb2cccd8414ee06a28094a3407308395bfa89e68744d39af21b13fa6",
+      "production": "Luqma/Resources/Assets.xcassets/Assessment/AssessmentSleep1.imageset/source.svg",
+      "transformation": "Original SVG bytes; template tint only for navigation arrows.",
+      "sha256": "937eea8cdb2cccd8414ee06a28094a3407308395bfa89e68744d39af21b13fa6",
+      "bytes": 2223
+    },
+    {
+      "name": "AssessmentSleep2",
+      "source": "Docs/FitnessAssessmentDesign/assets/7828a.svg",
+      "source_sha256": "47ea56c030daf12a459da54f2cd1b2bb50d5611fb0980a1dca5eee5e5b5190fa",
+      "production": "Luqma/Resources/Assets.xcassets/Assessment/AssessmentSleep2.imageset/source.svg",
+      "transformation": "Original SVG bytes; template tint only for navigation arrows.",
+      "sha256": "47ea56c030daf12a459da54f2cd1b2bb50d5611fb0980a1dca5eee5e5b5190fa",
+      "bytes": 1379
+    },
+    {
+      "name": "AssessmentSleep3",
+      "source": "Docs/FitnessAssessmentDesign/assets/0eec0.svg",
+      "source_sha256": "1f4d81ce3f901ec98b2cda298519f2eb8358b77306c9a5e308aa12d94b28cf26",
+      "production": "Luqma/Resources/Assets.xcassets/Assessment/AssessmentSleep3.imageset/source.svg",
+      "transformation": "Original SVG bytes; template tint only for navigation arrows.",
+      "sha256": "1f4d81ce3f901ec98b2cda298519f2eb8358b77306c9a5e308aa12d94b28cf26",
+      "bytes": 2263
+    },
+    {
+      "name": "AssessmentSleep4",
+      "source": "Docs/FitnessAssessmentDesign/assets/44a0b.svg",
+      "source_sha256": "fce3bfdc00b62ef53c8aaa482b3e83e31f2b33265545ba7b2deca4013f41813e",
+      "production": "Luqma/Resources/Assets.xcassets/Assessment/AssessmentSleep4.imageset/source.svg",
+      "transformation": "Original SVG bytes; template tint only for navigation arrows.",
+      "sha256": "fce3bfdc00b62ef53c8aaa482b3e83e31f2b33265545ba7b2deca4013f41813e",
+      "bytes": 1330
+    },
+    {
+      "name": "AssessmentMale",
+      "source": "Docs/FitnessAssessmentDesign/assets/a5378.png",
+      "source_sha256": "029c953ebb1bd43eaa3b139eb74226d5f75b2b593312dbe279c220b10143cfd4",
+      "production": "Luqma/Resources/Assets.xcassets/Assessment/AssessmentMale.imageset/artwork.jpg",
+      "original_dimensions": [
+        4096,
+        2731
+      ],
+      "production_dimensions": [
+        1024,
+        683
+      ],
+      "transformation": "Aspect-preserving LANCZOS downsample, RGB JPEG quality91; no crop or semantic edit. Cropping is in the live card.",
+      "sha256": "e942bd558d45587b228225f5d42850028b8c3c973e4650d0fff5aed35f139c56",
+      "bytes": 77202
+    },
+    {
+      "name": "AssessmentFemale",
+      "source": "Docs/FitnessAssessmentDesign/assets/46d16.png",
+      "source_sha256": "7a24a7a0af4a66981c95a841e2a6cd126e759706187fb78a2672d61276d74909",
+      "production": "Luqma/Resources/Assets.xcassets/Assessment/AssessmentFemale.imageset/artwork.jpg",
+      "original_dimensions": [
+        3080,
+        2320
+      ],
+      "production_dimensions": [
+        1024,
+        771
+      ],
+      "transformation": "Aspect-preserving LANCZOS downsample, RGB JPEG quality91; no crop or semantic edit. Cropping is in the live card.",
+      "sha256": "637aca852e8c067d72de4b61d8cb187a4e2f14dce96d4b40b8c020256f178115",
+      "bytes": 118492
+    }
+  ]
+}

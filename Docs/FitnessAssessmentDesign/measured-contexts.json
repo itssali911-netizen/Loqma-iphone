@@ -1,0 +1,1795 @@
+{
+  "provenance": "Exact successful get_design_context output classes; rendered text is whitespace-normalized. No values inferred from stale layer names.",
+  "screens": [
+    {
+      "node": "2:9667",
+      "texts": [
+        {
+          "node": "2:9670",
+          "rendered_text": "What’s your fitness goal/target?",
+          "classes": "[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[38px] relative shrink-0 text-[30px] text-center text-white tracking-[-0.3px] w-[343px]"
+        },
+        {
+          "node": "I2:9672;42:4458",
+          "rendered_text": "I wanna lose weight",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9673;42:4464",
+          "rendered_text": "I wanna try AI Coach",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9674;42:4458",
+          "rendered_text": "I wanna get bulks",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9675;42:4458",
+          "rendered_text": "I wanna gain endurance",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9676;42:4458",
+          "rendered_text": "Just trying out the app! 👍",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9677;40:2536",
+          "rendered_text": "Continue",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9679;41:4261",
+          "rendered_text": "Assessment",
+          "classes": "[word-break:break-word] flex-[1_0_0] font-['Work_Sans:Bold'] font-bold leading-[normal] min-w-px relative text-[20px] text-white tracking-[-0.1px]"
+        },
+        {
+          "node": "I2:9679;153:22995;765:39751",
+          "rendered_text": "1 of 17",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[#2563eb] text-[14px] text-center tracking-[-0.028px] whitespace-nowrap"
+        }
+      ],
+      "asset_slots": [
+        {
+          "node": "2:9668",
+          "name": "iPhone X or newer",
+          "asset_variable": "imgIPhoneXOrNewer",
+          "wrapper_classes": "absolute h-[44px] left-0 top-0 w-[375px]"
+        },
+        {
+          "node": "I2:9672;42:4457",
+          "name": "Solid head heart",
+          "asset_variable": "imgSolidHeadHeart",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9672;42:4459",
+          "name": "Monotone checkbox empty",
+          "asset_variable": "imgMonotoneCheckboxEmpty",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9673;42:4463",
+          "name": "Solid head heart",
+          "asset_variable": "imgSolidHeadHeart1",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9673;42:4465",
+          "name": "Monotone checkbox empty",
+          "asset_variable": "imgMonotoneCheckboxEmpty1",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9674;42:4457",
+          "name": "Solid head heart",
+          "asset_variable": "imgSolidHeadHeart2",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9674;42:4459",
+          "name": "Monotone checkbox empty",
+          "asset_variable": "imgMonotoneCheckboxEmpty",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9675;42:4457",
+          "name": "Solid head heart",
+          "asset_variable": "imgSolidHeadHeart3",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9675;42:4459",
+          "name": "Monotone checkbox empty",
+          "asset_variable": "imgMonotoneCheckboxEmpty",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9676;42:4457",
+          "name": "Solid head heart",
+          "asset_variable": "imgSolidHeadHeart4",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9676;42:4459",
+          "name": "Monotone checkbox empty",
+          "asset_variable": "imgMonotoneCheckboxEmpty",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9677;40:2537",
+          "name": "Monotone arrow right",
+          "asset_variable": "imgMonotoneArrowRight",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9679;41:4260",
+          "name": "Monotone chevron left",
+          "asset_variable": "imgMonotoneChevronLeft",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        }
+      ]
+    },
+    {
+      "node": "2:9680",
+      "texts": [
+        {
+          "node": "I2:9683;41:4261",
+          "rendered_text": "Assessment",
+          "classes": "[word-break:break-word] flex-[1_0_0] font-['Work_Sans:Bold'] font-bold leading-[normal] min-w-px relative text-[20px] text-white tracking-[-0.1px]"
+        },
+        {
+          "node": "I2:9683;153:22995;765:39751",
+          "rendered_text": "2 of 17",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[#2563eb] text-[14px] text-center tracking-[-0.028px] whitespace-nowrap"
+        },
+        {
+          "node": "2:9685",
+          "rendered_text": "What is your gender?",
+          "classes": "[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[38px] relative shrink-0 text-[30px] text-center text-white tracking-[-0.3px] w-[343px]"
+        },
+        {
+          "node": "I2:9687;213:23161",
+          "rendered_text": "Male",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9688;213:23169",
+          "rendered_text": "Female",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9690;40:2536",
+          "rendered_text": "Prefer to skip, thanks!",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[#f97316] text-[16px] tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9691;40:2536",
+          "rendered_text": "Continue",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-white tracking-[-0.048px] whitespace-nowrap"
+        }
+      ],
+      "asset_slots": [
+        {
+          "node": "2:9681",
+          "name": "iPhone X or newer",
+          "asset_variable": "imgIPhoneXOrNewer",
+          "wrapper_classes": "absolute h-[44px] left-0 top-0 w-[375px]"
+        },
+        {
+          "node": "I2:9683;41:4260",
+          "name": "Monotone chevron left",
+          "asset_variable": "imgMonotoneChevronLeft",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9687;213:23196",
+          "name": "black man studio portrait fitness strength power dark light photography",
+          "asset_variable": "imgBlackManStudioPortraitFitnessStrengthPowerDarkLightPhotography",
+          "wrapper_classes": "-translate-y-1/2 absolute h-[227px] left-[65px] mix-blend-lighten top-[calc(50%+9.5px)] w-[340px]"
+        },
+        {
+          "node": "I2:9687;213:23160",
+          "name": "Solid head heart",
+          "asset_variable": "imgSolidHeadHeart",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9687;213:23162",
+          "name": "Monotone checkbox empty",
+          "asset_variable": "imgMonotoneCheckboxEmpty",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9688;213:23195",
+          "name": "dynamic photograph female athlete",
+          "asset_variable": "imgDynamicPhotographFemaleAthlete",
+          "wrapper_classes": "-translate-y-1/2 absolute h-[308px] left-[36px] mix-blend-lighten top-1/2 w-[408px]"
+        },
+        {
+          "node": "I2:9688;213:23168",
+          "name": "Solid head heart",
+          "asset_variable": "imgSolidHeadHeart1",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9688;213:23170",
+          "name": "Monotone checkbox empty",
+          "asset_variable": "imgMonotoneCheckboxEmpty1",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9690;40:2537",
+          "name": "Solid close x",
+          "asset_variable": "imgSolidCloseX",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9691;40:2537",
+          "name": "Monotone arrow right",
+          "asset_variable": "imgMonotoneArrowRight",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        }
+      ]
+    },
+    {
+      "node": "2:9749",
+      "texts": [
+        {
+          "node": "2:9752",
+          "rendered_text": "What is your age?",
+          "classes": "[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[38px] relative shrink-0 text-[30px] text-center text-white tracking-[-0.3px] w-[343px]"
+        },
+        {
+          "node": "2:9754",
+          "rendered_text": "16",
+          "classes": "[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[38px] relative shrink-0 text-[#393c43] text-[30px] text-center tracking-[-0.3px] whitespace-nowrap"
+        },
+        {
+          "node": "2:9755",
+          "rendered_text": "17",
+          "classes": "[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[68px] relative shrink-0 text-[#676c75] text-[60px] text-center tracking-[-1.08px] whitespace-nowrap"
+        },
+        {
+          "node": "2:9757",
+          "rendered_text": "18",
+          "classes": "[word-break:break-word] font-['Work_Sans:ExtraBold'] font-extrabold leading-none relative shrink-0 text-[#111214] text-[128px] text-center tracking-[-3.2px] whitespace-nowrap"
+        },
+        {
+          "node": "2:9758",
+          "rendered_text": "19",
+          "classes": "[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[68px] relative shrink-0 text-[#676c75] text-[60px] text-center tracking-[-1.08px] whitespace-nowrap"
+        },
+        {
+          "node": "2:9759",
+          "rendered_text": "20",
+          "classes": "[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[38px] relative shrink-0 text-[#393c43] text-[30px] text-center tracking-[-0.3px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9760;40:2536",
+          "rendered_text": "Continue",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9762;41:4261",
+          "rendered_text": "Assessment",
+          "classes": "[word-break:break-word] flex-[1_0_0] font-['Work_Sans:Bold'] font-bold leading-[normal] min-w-px relative text-[20px] text-white tracking-[-0.1px]"
+        },
+        {
+          "node": "I2:9762;153:22995;765:39751",
+          "rendered_text": "4 of 17",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[#2563eb] text-[14px] text-center tracking-[-0.028px] whitespace-nowrap"
+        }
+      ],
+      "asset_slots": [
+        {
+          "node": "2:9750",
+          "name": "iPhone X or newer",
+          "asset_variable": "imgIPhoneXOrNewer",
+          "wrapper_classes": "absolute h-[44px] left-0 top-0 w-[375px]"
+        },
+        {
+          "node": "I2:9760;40:2537",
+          "name": "Monotone arrow right",
+          "asset_variable": "imgMonotoneArrowRight",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9762;41:4260",
+          "name": "Monotone chevron left",
+          "asset_variable": "imgMonotoneChevronLeft",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        }
+      ]
+    },
+    {
+      "node": "2:9776",
+      "texts": [
+        {
+          "node": "I2:9779;41:4261",
+          "rendered_text": "Assessment",
+          "classes": "[word-break:break-word] flex-[1_0_0] font-['Work_Sans:Bold'] font-bold leading-[normal] min-w-px relative text-[20px] text-white tracking-[-0.1px]"
+        },
+        {
+          "node": "I2:9779;153:22995;765:39751",
+          "rendered_text": "6 of 17",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[#2563eb] text-[14px] text-center tracking-[-0.028px] whitespace-nowrap"
+        },
+        {
+          "node": "2:9781",
+          "rendered_text": "How would you rate your fitness level?",
+          "classes": "[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[38px] min-w-full relative shrink-0 text-[30px] text-center text-white tracking-[-0.3px] w-[min-content]"
+        },
+        {
+          "node": "2:9786",
+          "rendered_text": "3",
+          "classes": "font-['Work_Sans:ExtraBold'] font-extrabold leading-none relative shrink-0 text-[180px] text-white tracking-[-5.4px]"
+        },
+        {
+          "node": "2:9787",
+          "rendered_text": "Somewhat Athletic",
+          "classes": "font-['Work_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[#d7d8d9] text-[20px] tracking-[-0.1px]"
+        },
+        {
+          "node": "2:9793",
+          "rendered_text": "Drag to adjust",
+          "classes": "[word-break:break-word] font-['Work_Sans:Medium'] font-medium leading-[normal] relative shrink-0 text-[#d7d8d9] text-[14px] tracking-[-0.028px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9794;40:2536",
+          "rendered_text": "Continue",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-white tracking-[-0.048px] whitespace-nowrap"
+        }
+      ],
+      "asset_slots": [
+        {
+          "node": "2:9777",
+          "name": "iPhone X or newer",
+          "asset_variable": "imgIPhoneXOrNewer",
+          "wrapper_classes": "absolute h-[44px] left-0 top-0 w-[375px]"
+        },
+        {
+          "node": "I2:9779;41:4260",
+          "name": "Monotone chevron left",
+          "asset_variable": "imgMonotoneChevronLeft",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9790;42:5323",
+          "name": "Solid arrow right sm",
+          "asset_variable": "imgSolidArrowRightSm",
+          "wrapper_classes": "-translate-x-1/2 -translate-y-1/2 absolute left-1/2 size-[24px] top-1/2"
+        },
+        {
+          "node": "2:9792",
+          "name": "Solid question square",
+          "asset_variable": "imgSolidQuestionSquare",
+          "wrapper_classes": "relative shrink-0 size-[20px]"
+        },
+        {
+          "node": "I2:9794;40:2537",
+          "name": "Monotone arrow right",
+          "asset_variable": "imgMonotoneArrowRight",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        }
+      ]
+    },
+    {
+      "node": "2:9824",
+      "texts": [
+        {
+          "node": "2:9827",
+          "rendered_text": "Do you have a specific diet preference?",
+          "classes": "[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[38px] relative shrink-0 text-[30px] text-center text-white tracking-[-0.3px] w-full"
+        },
+        {
+          "node": "I2:9830;42:5591",
+          "rendered_text": "Plant Based",
+          "classes": "font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[#d7d8d9] w-full"
+        },
+        {
+          "node": "I2:9830;42:5598",
+          "rendered_text": "Vegan",
+          "classes": "font-['Work_Sans:Regular'] font-normal leading-[1.6] relative shrink-0 text-[#9ea0a5] w-full"
+        },
+        {
+          "node": "I2:9831;42:5591",
+          "rendered_text": "Carbo Diet",
+          "classes": "font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 w-full"
+        },
+        {
+          "node": "I2:9831;42:5598",
+          "rendered_text": "Bread, etc",
+          "classes": "font-['Work_Sans:Regular'] font-normal leading-[1.6] relative shrink-0 w-full"
+        },
+        {
+          "node": "I2:9833;42:5591",
+          "rendered_text": "Specialized",
+          "classes": "font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[#d7d8d9] w-full"
+        },
+        {
+          "node": "I2:9833;42:5598",
+          "rendered_text": "Paleo, keto, etc",
+          "classes": "font-['Work_Sans:Regular'] font-normal leading-[1.6] relative shrink-0 text-[#9ea0a5] w-full"
+        },
+        {
+          "node": "I2:9834;42:5591",
+          "rendered_text": "Traditional",
+          "classes": "font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[#d7d8d9] w-full"
+        },
+        {
+          "node": "I2:9834;42:5598",
+          "rendered_text": "Fruit diet",
+          "classes": "font-['Work_Sans:Regular'] font-normal leading-[1.6] relative shrink-0 text-[#9ea0a5] w-full"
+        },
+        {
+          "node": "I2:9835;40:2536",
+          "rendered_text": "Continue",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9837;41:4261",
+          "rendered_text": "Assessment",
+          "classes": "[word-break:break-word] flex-[1_0_0] font-['Work_Sans:Bold'] font-bold leading-[normal] min-w-px relative text-[20px] text-white tracking-[-0.1px]"
+        },
+        {
+          "node": "I2:9837;153:22995;765:39751",
+          "rendered_text": "8 of 17",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[#2563eb] text-[14px] text-center tracking-[-0.028px] whitespace-nowrap"
+        }
+      ],
+      "asset_slots": [
+        {
+          "node": "2:9825",
+          "name": "iPhone X or newer",
+          "asset_variable": "imgIPhoneXOrNewer",
+          "wrapper_classes": "absolute h-[44px] left-0 top-0 w-[375px]"
+        },
+        {
+          "node": "I2:9830;42:5626",
+          "name": "Solid head heart",
+          "asset_variable": "imgSolidHeadHeart",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9831;42:5626",
+          "name": "Solid head heart",
+          "asset_variable": "imgSolidHeadHeart1",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9833;42:5626",
+          "name": "Solid head heart",
+          "asset_variable": "imgSolidHeadHeart2",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9834;42:5626",
+          "name": "Solid head heart",
+          "asset_variable": "imgSolidHeadHeart3",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9835;40:2537",
+          "name": "Monotone arrow right",
+          "asset_variable": "imgMonotoneArrowRight",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9837;41:4260",
+          "name": "Monotone chevron left",
+          "asset_variable": "imgMonotoneChevronLeft",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        }
+      ]
+    },
+    {
+      "node": "2:9838",
+      "texts": [
+        {
+          "node": "2:9841",
+          "rendered_text": "How many days/wk will you commit?",
+          "classes": "[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[38px] min-w-full relative shrink-0 text-[30px] text-center text-white tracking-[-0.3px] w-[min-content]"
+        },
+        {
+          "node": "2:9843",
+          "rendered_text": "5x",
+          "classes": "[word-break:break-word] font-['Work_Sans:ExtraBold'] font-extrabold leading-none relative shrink-0 text-[180px] text-center text-white tracking-[-5.4px] w-full"
+        },
+        {
+          "node": "I2:9846;44:11533",
+          "rendered_text": "1",
+          "classes": "[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[#50535b] text-[20px] text-center tracking-[-0.1px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9847;44:11533",
+          "rendered_text": "2",
+          "classes": "[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[#50535b] text-[20px] text-center tracking-[-0.1px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9848;44:11533",
+          "rendered_text": "3",
+          "classes": "[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[#50535b] text-[20px] text-center tracking-[-0.1px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9849;44:11533",
+          "rendered_text": "4",
+          "classes": "[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[#50535b] text-[20px] text-center tracking-[-0.1px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9850;44:11533",
+          "rendered_text": "5",
+          "classes": "[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[20px] text-center text-white tracking-[-0.1px] whitespace-nowrap"
+        },
+        {
+          "node": "2:9851",
+          "rendered_text": "{`I’m commited to exercising `} 5x {` weekly`}",
+          "classes": "[word-break:break-word] font-['Work_Sans:Medium'] font-medium leading-[0] relative shrink-0 text-[0px] text-center text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9852;40:2536",
+          "rendered_text": "Continue",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9854;41:4261",
+          "rendered_text": "Assessment",
+          "classes": "[word-break:break-word] flex-[1_0_0] font-['Work_Sans:Bold'] font-bold leading-[normal] min-w-px relative text-[20px] text-white tracking-[-0.1px]"
+        },
+        {
+          "node": "I2:9854;153:22995;765:39751",
+          "rendered_text": "9 of 17",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[#2563eb] text-[14px] text-center tracking-[-0.028px] whitespace-nowrap"
+        }
+      ],
+      "asset_slots": [
+        {
+          "node": "2:9839",
+          "name": "iPhone X or newer",
+          "asset_variable": "imgIPhoneXOrNewer",
+          "wrapper_classes": "absolute h-[44px] left-0 right-0 top-0"
+        },
+        {
+          "node": "I2:9852;40:2537",
+          "name": "Monotone arrow right",
+          "asset_variable": "imgMonotoneArrowRight",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9854;41:4260",
+          "name": "Monotone chevron left",
+          "asset_variable": "imgMonotoneChevronLeft",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        }
+      ]
+    },
+    {
+      "node": "2:9855",
+      "texts": [
+        {
+          "node": "2:9858",
+          "rendered_text": "Do you have a specific Exercise Prefrence?",
+          "classes": "[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[38px] relative shrink-0 text-[30px] text-center text-white tracking-[-0.3px] w-[343px]"
+        },
+        {
+          "node": "I2:9861;43:10633",
+          "rendered_text": "Jogging",
+          "classes": "[word-break:break-word] font-['Work_Sans:Medium'] font-medium leading-[normal] min-w-full relative shrink-0 text-[#9ea0a5] text-[16px] text-center tracking-[-0.048px] w-[min-content]"
+        },
+        {
+          "node": "I2:9862;43:10633",
+          "rendered_text": "Walking",
+          "classes": "[word-break:break-word] font-['Work_Sans:Medium'] font-medium leading-[normal] min-w-full relative shrink-0 text-[#9ea0a5] text-[16px] text-center tracking-[-0.048px] w-[min-content]"
+        },
+        {
+          "node": "I2:9863;43:10633",
+          "rendered_text": "Hiking",
+          "classes": "[word-break:break-word] font-['Work_Sans:Medium'] font-medium leading-[normal] min-w-full relative shrink-0 text-[#9ea0a5] text-[16px] text-center tracking-[-0.048px] w-[min-content]"
+        },
+        {
+          "node": "I2:9865;43:10633",
+          "rendered_text": "Skating",
+          "classes": "[word-break:break-word] font-['Work_Sans:Medium'] font-medium leading-[normal] min-w-full relative shrink-0 text-[#9ea0a5] text-[16px] text-center tracking-[-0.048px] w-[min-content]"
+        },
+        {
+          "node": "I2:9866;43:10633",
+          "rendered_text": "Biking",
+          "classes": "[word-break:break-word] font-['Work_Sans:Medium'] font-medium leading-[normal] min-w-full relative shrink-0 text-[#9ea0a5] text-[16px] text-center tracking-[-0.048px] w-[min-content]"
+        },
+        {
+          "node": "I2:9867;204:54247",
+          "rendered_text": "Weightlift",
+          "classes": "[word-break:break-word] font-['Work_Sans:Medium'] font-medium leading-[normal] min-w-full relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] w-[min-content]"
+        },
+        {
+          "node": "I2:9869;43:10633",
+          "rendered_text": "Cardio",
+          "classes": "[word-break:break-word] font-['Work_Sans:Medium'] font-medium leading-[normal] min-w-full relative shrink-0 text-[#9ea0a5] text-[16px] text-center tracking-[-0.048px] w-[min-content]"
+        },
+        {
+          "node": "I2:9870;43:10633",
+          "rendered_text": "Yoga",
+          "classes": "[word-break:break-word] font-['Work_Sans:Medium'] font-medium leading-[normal] min-w-full relative shrink-0 text-[#9ea0a5] text-[16px] text-center tracking-[-0.048px] w-[min-content]"
+        },
+        {
+          "node": "I2:9871;43:10633",
+          "rendered_text": "Other",
+          "classes": "[word-break:break-word] font-['Work_Sans:Medium'] font-medium leading-[normal] min-w-full relative shrink-0 text-[#9ea0a5] text-[16px] text-center tracking-[-0.048px] w-[min-content]"
+        },
+        {
+          "node": "I2:9872;40:2536",
+          "rendered_text": "Continue",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9874;41:4261",
+          "rendered_text": "Assessment",
+          "classes": "[word-break:break-word] flex-[1_0_0] font-['Work_Sans:Bold'] font-bold leading-[normal] min-w-px relative text-[20px] text-white tracking-[-0.1px]"
+        },
+        {
+          "node": "I2:9874;153:22995;765:39751",
+          "rendered_text": "10 of 17",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[#2563eb] text-[14px] text-center tracking-[-0.028px] whitespace-nowrap"
+        }
+      ],
+      "asset_slots": [
+        {
+          "node": "2:9856",
+          "name": "iPhone X or newer",
+          "asset_variable": "imgIPhoneXOrNewer",
+          "wrapper_classes": "absolute h-[44px] left-0 top-0 w-[375px]"
+        },
+        {
+          "node": "I2:9861;43:10644",
+          "name": "Solid head heart",
+          "asset_variable": "imgSolidHeadHeart",
+          "wrapper_classes": "relative shrink-0 size-[48px]"
+        },
+        {
+          "node": "I2:9862;43:10644",
+          "name": "Solid head heart",
+          "asset_variable": "imgSolidHeadHeart1",
+          "wrapper_classes": "relative shrink-0 size-[48px]"
+        },
+        {
+          "node": "I2:9863;43:10644",
+          "name": "Solid head heart",
+          "asset_variable": "imgSolidHeadHeart2",
+          "wrapper_classes": "relative shrink-0 size-[48px]"
+        },
+        {
+          "node": "I2:9865;43:10644",
+          "name": "Solid head heart",
+          "asset_variable": "imgSolidHeadHeart3",
+          "wrapper_classes": "relative shrink-0 size-[48px]"
+        },
+        {
+          "node": "I2:9866;43:10644",
+          "name": "Solid head heart",
+          "asset_variable": "imgSolidHeadHeart4",
+          "wrapper_classes": "relative shrink-0 size-[48px]"
+        },
+        {
+          "node": "I2:9867;204:54246",
+          "name": "Solid head heart",
+          "asset_variable": "imgSolidHeadHeart5",
+          "wrapper_classes": "relative shrink-0 size-[48px]"
+        },
+        {
+          "node": "I2:9869;43:10644",
+          "name": "Solid head heart",
+          "asset_variable": "imgSolidHeadHeart6",
+          "wrapper_classes": "relative shrink-0 size-[48px]"
+        },
+        {
+          "node": "I2:9870;43:10644",
+          "name": "Solid head heart",
+          "asset_variable": "imgSolidHeadHeart7",
+          "wrapper_classes": "relative shrink-0 size-[48px]"
+        },
+        {
+          "node": "I2:9871;43:10644",
+          "name": "Solid head heart",
+          "asset_variable": "imgSolidHeadHeart8",
+          "wrapper_classes": "relative shrink-0 size-[48px]"
+        },
+        {
+          "node": "I2:9872;40:2537",
+          "name": "Monotone arrow right",
+          "asset_variable": "imgMonotoneArrowRight",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9874;41:4260",
+          "name": "Monotone chevron left",
+          "asset_variable": "imgMonotoneChevronLeft",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        }
+      ]
+    },
+    {
+      "node": "2:9875",
+      "texts": [
+        {
+          "node": "2:9879",
+          "rendered_text": "Are you taking any supplements?",
+          "classes": "[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[38px] relative shrink-0 text-[30px] text-center text-white tracking-[-0.3px] w-[343px]"
+        },
+        {
+          "node": "I2:9887;40:2536",
+          "rendered_text": "No",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9888;40:2536",
+          "rendered_text": "Yes",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9889;41:4261",
+          "rendered_text": "Assessment",
+          "classes": "[word-break:break-word] flex-[1_0_0] font-['Work_Sans:Bold'] font-bold leading-[normal] min-w-px relative text-[20px] text-white tracking-[-0.1px]"
+        },
+        {
+          "node": "I2:9889;153:22995;765:39751",
+          "rendered_text": "11 of 17",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[#2563eb] text-[14px] text-center tracking-[-0.028px] whitespace-nowrap"
+        }
+      ],
+      "asset_slots": [
+        {
+          "node": "2:9876",
+          "name": "iPhone X or newer",
+          "asset_variable": "imgIPhoneXOrNewer",
+          "wrapper_classes": "absolute h-[44px] left-0 top-0 w-[375px]"
+        },
+        {
+          "node": "2:9881",
+          "name": "Rectangle",
+          "asset_variable": "imgRectangle",
+          "wrapper_classes": "-translate-x-1/2 -translate-y-1/2 absolute left-[calc(50%+0.5px)] mix-blend-lighten size-[342px] top-1/2"
+        },
+        {
+          "node": "I2:9887;40:2537",
+          "name": "Solid close x",
+          "asset_variable": "imgSolidCloseX",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9888;40:2537",
+          "name": "Solid check",
+          "asset_variable": "imgSolidCheck",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9889;41:4260",
+          "name": "Monotone chevron left",
+          "asset_variable": "imgMonotoneChevronLeft",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        }
+      ]
+    },
+    {
+      "node": "2:9890",
+      "texts": [
+        {
+          "node": "I2:9893;41:4261",
+          "rendered_text": "Assessment",
+          "classes": "[word-break:break-word] flex-[1_0_0] font-['Work_Sans:Bold'] font-bold leading-[normal] min-w-px relative text-[20px] text-white tracking-[-0.1px]"
+        },
+        {
+          "node": "I2:9893;153:22995;765:39751",
+          "rendered_text": "12 of 17",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[#2563eb] text-[14px] text-center tracking-[-0.028px] whitespace-nowrap"
+        },
+        {
+          "node": "2:9896",
+          "rendered_text": "Specify Supplement",
+          "classes": "font-['Work_Sans:Bold'] font-bold leading-[38px] relative shrink-0 text-[30px] text-white tracking-[-0.3px] w-full"
+        },
+        {
+          "node": "2:9897",
+          "rendered_text": "Please specify your supplement.",
+          "classes": "font-['Work_Sans:Regular'] font-normal leading-[1.6] relative shrink-0 text-[#d7d8d9] text-[16px] tracking-[-0.048px] w-full"
+        },
+        {
+          "node": "I2:9900;1157:5800",
+          "rendered_text": "Most Common",
+          "classes": "font-['Work_Sans:Bold'] font-bold relative shrink-0 text-[16px] text-white tracking-[-0.048px]"
+        },
+        {
+          "node": "I2:9900;1157:5803",
+          "rendered_text": "See All Supplements",
+          "classes": "font-['Work_Sans:Medium'] font-medium relative shrink-0 text-[#f97316] text-[14px] tracking-[-0.028px]"
+        },
+        {
+          "node": "I2:9903;765:39759",
+          "rendered_text": "Protein",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9904;765:39759",
+          "rendered_text": "Whey",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9905;765:39761",
+          "rendered_text": "BCAAs",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9906;765:39759",
+          "rendered_text": "Vitamin D",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9907;765:39759",
+          "rendered_text": "Caffeine",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9909;765:39759",
+          "rendered_text": "Beta-Alanine",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9910;765:39759",
+          "rendered_text": "Tumeric",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9911;765:39759",
+          "rendered_text": "Curcumin",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9912;765:39759",
+          "rendered_text": "Glucosamine",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9913;765:39759",
+          "rendered_text": "Calcium",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9915;765:39761",
+          "rendered_text": "Magnesium",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9916;765:39759",
+          "rendered_text": "Iron",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9917;765:39759",
+          "rendered_text": "Omega 4",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9918;765:39759",
+          "rendered_text": "Omega 8",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9919;765:39759",
+          "rendered_text": "Calcium",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9921;765:39759",
+          "rendered_text": "Omega 12",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9922;765:39759",
+          "rendered_text": "Omega 2",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9923;765:39759",
+          "rendered_text": "Creatine",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9924;765:39761",
+          "rendered_text": "Createine 2",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9925;765:39759",
+          "rendered_text": "Glutamine",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9927;765:39759",
+          "rendered_text": "Vitamin A",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9928;765:39759",
+          "rendered_text": "Vitamin B",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9929;765:39759",
+          "rendered_text": "Vitamin C",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9930;765:39759",
+          "rendered_text": "Fiber",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9931;765:39759",
+          "rendered_text": "Multivitamin",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-center text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "2:9933",
+          "rendered_text": "Selected",
+          "classes": "[word-break:break-word] font-['Work_Sans:Medium'] font-medium leading-[normal] relative shrink-0 text-[12px] text-white tracking-[-0.018px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9935;765:39802",
+          "rendered_text": "BCAAs",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[#2563eb] text-[14px] text-center tracking-[-0.028px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9936;765:39802",
+          "rendered_text": "Omega-3",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[#2563eb] text-[14px] text-center tracking-[-0.028px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9937;40:2536",
+          "rendered_text": "Continue",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-white tracking-[-0.048px] whitespace-nowrap"
+        }
+      ],
+      "asset_slots": [
+        {
+          "node": "2:9891",
+          "name": "iPhone X or newer",
+          "asset_variable": "imgIPhoneXOrNewer",
+          "wrapper_classes": "absolute h-[44px] left-0 top-0 w-[375px]"
+        },
+        {
+          "node": "I2:9893;41:4260",
+          "name": "Monotone chevron left",
+          "asset_variable": "imgMonotoneChevronLeft",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9935;765:39803",
+          "name": "Solid close x",
+          "asset_variable": "imgSolidCloseX",
+          "wrapper_classes": "relative shrink-0 size-[16px]"
+        },
+        {
+          "node": "I2:9936;765:39803",
+          "name": "Solid close x",
+          "asset_variable": "imgSolidCloseX",
+          "wrapper_classes": "relative shrink-0 size-[16px]"
+        },
+        {
+          "node": "I2:9937;40:2537",
+          "name": "Monotone arrow right",
+          "asset_variable": "imgMonotoneArrowRight",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        }
+      ]
+    },
+    {
+      "node": "2:9938",
+      "texts": [
+        {
+          "node": "2:9944",
+          "rendered_text": "All Supplements",
+          "classes": "[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[normal] min-w-full relative shrink-0 text-[20px] text-center text-white tracking-[-0.1px] w-[min-content]"
+        },
+        {
+          "node": "I2:9947;41:3175",
+          "rendered_text": "Search supplements...",
+          "classes": "[word-break:break-word] font-['Work_Sans:Medium'] font-medium leading-[normal] relative shrink-0 text-[16px] text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9950;758:131871",
+          "rendered_text": "Whey",
+          "classes": "[word-break:break-word] flex-[1_0_0] font-['Work_Sans:Medium'] font-medium leading-[normal] min-w-px relative text-[16px] text-white tracking-[-0.048px]"
+        },
+        {
+          "node": "I2:9951;759:131910",
+          "rendered_text": "Protein",
+          "classes": "[word-break:break-word] flex-[1_0_0] font-['Work_Sans:Medium'] font-medium leading-[normal] min-w-px relative text-[16px] text-white tracking-[-0.048px]"
+        },
+        {
+          "node": "I2:9952;758:131871",
+          "rendered_text": "BCAAs",
+          "classes": "[word-break:break-word] flex-[1_0_0] font-['Work_Sans:Medium'] font-medium leading-[normal] min-w-px relative text-[16px] text-white tracking-[-0.048px]"
+        },
+        {
+          "node": "I2:9953;759:131910",
+          "rendered_text": "Vitamin D",
+          "classes": "[word-break:break-word] flex-[1_0_0] font-['Work_Sans:Medium'] font-medium leading-[normal] min-w-px relative text-[16px] text-white tracking-[-0.048px]"
+        },
+        {
+          "node": "I2:9954;759:131910",
+          "rendered_text": "Magnesium",
+          "classes": "[word-break:break-word] flex-[1_0_0] font-['Work_Sans:Medium'] font-medium leading-[normal] min-w-px relative text-[16px] text-white tracking-[-0.048px]"
+        },
+        {
+          "node": "2:9957",
+          "rendered_text": "Selected",
+          "classes": "[word-break:break-word] font-['Work_Sans:Medium'] font-medium leading-[normal] relative shrink-0 text-[12px] text-white tracking-[-0.018px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9959;765:39802",
+          "rendered_text": "BCAAs",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[#2563eb] text-[14px] text-center tracking-[-0.028px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9960;765:39802",
+          "rendered_text": "Omega-3",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[#2563eb] text-[14px] text-center tracking-[-0.028px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9961;40:2536",
+          "rendered_text": "Apply",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-white tracking-[-0.048px] whitespace-nowrap"
+        }
+      ],
+      "asset_slots": [
+        {
+          "node": "I2:9947;41:3176",
+          "name": "Solid search",
+          "asset_variable": "imgSolidSearch",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9950;758:131872",
+          "name": "Monotone radio filled",
+          "asset_variable": "imgMonotoneRadioFilled",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9951;759:131911",
+          "name": "Monotone radio filled",
+          "asset_variable": "imgMonotoneRadioFilled1",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9952;758:131872",
+          "name": "Monotone radio filled",
+          "asset_variable": "imgMonotoneRadioFilled",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9953;759:131911",
+          "name": "Monotone radio filled",
+          "asset_variable": "imgMonotoneRadioFilled1",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9954;759:131911",
+          "name": "Monotone radio filled",
+          "asset_variable": "imgMonotoneRadioFilled1",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9959;765:39803",
+          "name": "Solid close x",
+          "asset_variable": "imgSolidCloseX",
+          "wrapper_classes": "relative shrink-0 size-[16px]"
+        },
+        {
+          "node": "I2:9960;765:39803",
+          "name": "Solid close x",
+          "asset_variable": "imgSolidCloseX",
+          "wrapper_classes": "relative shrink-0 size-[16px]"
+        },
+        {
+          "node": "I2:9961;40:2537",
+          "name": "Monotone arrow right",
+          "asset_variable": "imgMonotoneArrowRight",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "2:9963",
+          "name": "iPhone X or newer",
+          "asset_variable": "imgIPhoneXOrNewer",
+          "wrapper_classes": "absolute h-[44px] left-0 top-0 w-[375px]"
+        }
+      ]
+    },
+    {
+      "node": "2:9964",
+      "texts": [
+        {
+          "node": "I2:9967;41:4261",
+          "rendered_text": "Assessment",
+          "classes": "[word-break:break-word] flex-[1_0_0] font-['Work_Sans:Bold'] font-bold leading-[normal] min-w-px relative text-[20px] text-white tracking-[-0.1px]"
+        },
+        {
+          "node": "I2:9967;153:22995;765:39751",
+          "rendered_text": "13 of 17",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[#2563eb] text-[14px] text-center tracking-[-0.028px] whitespace-nowrap"
+        },
+        {
+          "node": "2:9969",
+          "rendered_text": "What’s Your Calorie Goal per day?",
+          "classes": "[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[38px] relative shrink-0 text-[30px] text-center text-white tracking-[-0.3px] w-[343px]"
+        },
+        {
+          "node": "I2:9971;763:37436;763:37411",
+          "rendered_text": "Kcal",
+          "classes": "[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[16px] text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9971;763:37440;763:37422",
+          "rendered_text": "Joule’s",
+          "classes": "[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[#9ea0a5] text-[16px] tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "2:9973",
+          "rendered_text": "1,550",
+          "classes": "font-['Work_Sans:ExtraBold'] font-extrabold leading-none relative shrink-0 text-[96px] text-white tracking-[-1.92px] w-full"
+        },
+        {
+          "node": "2:9974",
+          "rendered_text": "calories daily",
+          "classes": "font-['Work_Sans:Medium'] font-medium leading-[normal] relative shrink-0 text-[#d7d8d9] text-[24px] tracking-[-0.192px] w-full"
+        },
+        {
+          "node": "I2:9978;40:2536",
+          "rendered_text": "Continue",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-white tracking-[-0.048px] whitespace-nowrap"
+        }
+      ],
+      "asset_slots": [
+        {
+          "node": "2:9965",
+          "name": "iPhone X or newer",
+          "asset_variable": "imgIPhoneXOrNewer",
+          "wrapper_classes": "absolute h-[44px] left-0 top-0 w-[375px]"
+        },
+        {
+          "node": "I2:9967;41:4260",
+          "name": "Monotone chevron left",
+          "asset_variable": "imgMonotoneChevronLeft",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9976;42:5323",
+          "name": "Solid arrow right sm",
+          "asset_variable": "imgSolidArrowRightSm",
+          "wrapper_classes": "-translate-x-1/2 -translate-y-1/2 absolute left-1/2 size-[24px] top-1/2"
+        },
+        {
+          "node": "I2:9977;42:5323",
+          "name": "Solid arrow right sm",
+          "asset_variable": "imgSolidArrowRightSm1",
+          "wrapper_classes": "-translate-x-1/2 -translate-y-1/2 absolute left-1/2 size-[24px] top-1/2"
+        },
+        {
+          "node": "I2:9978;40:2537",
+          "name": "Monotone arrow right",
+          "asset_variable": "imgMonotoneArrowRight",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        }
+      ]
+    },
+    {
+      "node": "2:9979",
+      "texts": [
+        {
+          "node": "2:9982",
+          "rendered_text": "What’s your sleep quality like?",
+          "classes": "[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[38px] relative shrink-0 text-[30px] text-center text-white tracking-[-0.3px] w-[343px]"
+        },
+        {
+          "node": "I2:9984;43:9848",
+          "rendered_text": "Excellent",
+          "classes": "[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[18px] text-white tracking-[-0.072px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9984;43:9851",
+          "rendered_text": "{`>8 hours`}",
+          "classes": "[word-break:break-word] font-['Work_Sans:Medium'] font-medium leading-[normal] relative shrink-0 text-[14px] text-white tracking-[-0.028px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9985;204:54269",
+          "rendered_text": "Great",
+          "classes": "[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[18px] text-white tracking-[-0.072px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9985;204:54272",
+          "rendered_text": "7-8 hours",
+          "classes": "[word-break:break-word] font-['Work_Sans:Medium'] font-medium leading-[normal] relative shrink-0 text-[14px] text-white tracking-[-0.028px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9986;43:9848",
+          "rendered_text": "Normal",
+          "classes": "[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[18px] text-white tracking-[-0.072px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9986;43:9851",
+          "rendered_text": "6-7 hours",
+          "classes": "[word-break:break-word] font-['Work_Sans:Medium'] font-medium leading-[normal] relative shrink-0 text-[14px] text-white tracking-[-0.028px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9987;43:9848",
+          "rendered_text": "Bad",
+          "classes": "[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[18px] text-white tracking-[-0.072px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9987;43:9851",
+          "rendered_text": "3-4 hours",
+          "classes": "[word-break:break-word] font-['Work_Sans:Medium'] font-medium leading-[normal] relative shrink-0 text-[14px] text-white tracking-[-0.028px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9988;43:9848",
+          "rendered_text": "Insomniac",
+          "classes": "[word-break:break-word] font-['Work_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[18px] text-white tracking-[-0.072px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9988;43:9851",
+          "rendered_text": "{`<2 hours`}",
+          "classes": "[word-break:break-word] font-['Work_Sans:Medium'] font-medium leading-[normal] relative shrink-0 text-[14px] text-white tracking-[-0.028px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9989;40:2536",
+          "rendered_text": "Continue",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[16px] text-white tracking-[-0.048px] whitespace-nowrap"
+        },
+        {
+          "node": "I2:9991;41:4261",
+          "rendered_text": "Assessment",
+          "classes": "[word-break:break-word] flex-[1_0_0] font-['Work_Sans:Bold'] font-bold leading-[normal] min-w-px relative text-[20px] text-white tracking-[-0.1px]"
+        },
+        {
+          "node": "I2:9991;153:22995;765:39751",
+          "rendered_text": "14 of 17",
+          "classes": "[word-break:break-word] font-['Work_Sans:SemiBold'] font-semibold leading-[normal] relative shrink-0 text-[#2563eb] text-[14px] text-center tracking-[-0.028px] whitespace-nowrap"
+        }
+      ],
+      "asset_slots": [
+        {
+          "node": "2:9980",
+          "name": "iPhone X or newer",
+          "asset_variable": "imgIPhoneXOrNewer",
+          "wrapper_classes": "absolute h-[44px] left-0 top-0 w-[375px]"
+        },
+        {
+          "node": "I2:9984;43:9852",
+          "name": "Solid mood overjoyed",
+          "asset_variable": "imgSolidMoodOverjoyed",
+          "wrapper_classes": "relative shrink-0 size-[48px]"
+        },
+        {
+          "node": "I2:9984;43:9850",
+          "name": "Monotone clock",
+          "asset_variable": "imgMonotoneClock",
+          "wrapper_classes": "relative shrink-0 size-[16px]"
+        },
+        {
+          "node": "I2:9985;204:54268",
+          "name": "Solid mood overjoyed",
+          "asset_variable": "imgSolidMoodOverjoyed1",
+          "wrapper_classes": "relative shrink-0 size-[48px]"
+        },
+        {
+          "node": "I2:9985;204:54271",
+          "name": "Monotone clock",
+          "asset_variable": "imgMonotoneClock1",
+          "wrapper_classes": "relative shrink-0 size-[16px]"
+        },
+        {
+          "node": "I2:9986;43:9852",
+          "name": "Solid mood overjoyed",
+          "asset_variable": "imgSolidMoodOverjoyed2",
+          "wrapper_classes": "relative shrink-0 size-[48px]"
+        },
+        {
+          "node": "I2:9986;43:9850",
+          "name": "Monotone clock",
+          "asset_variable": "imgMonotoneClock",
+          "wrapper_classes": "relative shrink-0 size-[16px]"
+        },
+        {
+          "node": "I2:9987;43:9852",
+          "name": "Solid mood overjoyed",
+          "asset_variable": "imgSolidMoodOverjoyed3",
+          "wrapper_classes": "relative shrink-0 size-[48px]"
+        },
+        {
+          "node": "I2:9987;43:9850",
+          "name": "Monotone clock",
+          "asset_variable": "imgMonotoneClock",
+          "wrapper_classes": "relative shrink-0 size-[16px]"
+        },
+        {
+          "node": "I2:9988;43:9852",
+          "name": "Solid mood overjoyed",
+          "asset_variable": "imgSolidMoodOverjoyed4",
+          "wrapper_classes": "relative shrink-0 size-[48px]"
+        },
+        {
+          "node": "I2:9988;43:9850",
+          "name": "Monotone clock",
+          "asset_variable": "imgMonotoneClock",
+          "wrapper_classes": "relative shrink-0 size-[16px]"
+        },
+        {
+          "node": "I2:9989;40:2537",
+          "name": "Monotone arrow right",
+          "asset_variable": "imgMonotoneArrowRight",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        },
+        {
+          "node": "I2:9991;41:4260",
+          "name": "Monotone chevron left",
+          "asset_variable": "imgMonotoneChevronLeft",
+          "wrapper_classes": "relative shrink-0 size-[24px]"
+        }
+      ]
+    }
+  ],
+  "colors": {
+    "#393C43": [
+      "2:9667",
+      "2:9680",
+      "2:9749",
+      "2:9776",
+      "2:9824",
+      "2:9838",
+      "2:9855",
+      "2:9875",
+      "2:9890",
+      "2:9938",
+      "2:9964",
+      "2:9979"
+    ],
+    "#F97316": [
+      "2:9667",
+      "2:9680",
+      "2:9749",
+      "2:9776",
+      "2:9824",
+      "2:9838",
+      "2:9855",
+      "2:9875",
+      "2:9890",
+      "2:9938",
+      "2:9964",
+      "2:9979"
+    ],
+    "#111214": [
+      "2:9667",
+      "2:9680",
+      "2:9749",
+      "2:9776",
+      "2:9824",
+      "2:9838",
+      "2:9855",
+      "2:9875",
+      "2:9890",
+      "2:9938",
+      "2:9964",
+      "2:9979"
+    ],
+    "#2563EB": [
+      "2:9667",
+      "2:9680",
+      "2:9749",
+      "2:9776",
+      "2:9824",
+      "2:9838",
+      "2:9855",
+      "2:9875",
+      "2:9890",
+      "2:9938",
+      "2:9964",
+      "2:9979"
+    ],
+    "#24262B": [
+      "2:9667",
+      "2:9680",
+      "2:9824",
+      "2:9838",
+      "2:9855",
+      "2:9890",
+      "2:9938",
+      "2:9979"
+    ],
+    "#172554": [
+      "2:9667",
+      "2:9680",
+      "2:9749",
+      "2:9776",
+      "2:9824",
+      "2:9838",
+      "2:9855",
+      "2:9875",
+      "2:9890",
+      "2:9938",
+      "2:9964",
+      "2:9979"
+    ],
+    "#431407": [
+      "2:9680"
+    ],
+    "#676C75": [
+      "2:9749",
+      "2:9824",
+      "2:9855",
+      "2:9890",
+      "2:9938",
+      "2:9964",
+      "2:9979"
+    ],
+    "#F3F3F4": [
+      "2:9749"
+    ],
+    "#D7D8D9": [
+      "2:9776",
+      "2:9824",
+      "2:9890",
+      "2:9964"
+    ],
+    "#9EA0A5": [
+      "2:9824",
+      "2:9855",
+      "2:9964"
+    ],
+    "#50535B": [
+      "2:9838",
+      "2:9938"
+    ]
+  },
+  "typography": [
+    {
+      "style": {
+        "font": "Bold",
+        "size_px": "30",
+        "line_height": "38px",
+        "tracking": "-0.3px"
+      },
+      "nodes": [
+        "2:9670",
+        "2:9685",
+        "2:9752",
+        "2:9754",
+        "2:9759",
+        "2:9781",
+        "2:9827",
+        "2:9841",
+        "2:9858",
+        "2:9879",
+        "2:9896",
+        "2:9969",
+        "2:9982"
+      ]
+    },
+    {
+      "style": {
+        "font": "SemiBold",
+        "size_px": "16",
+        "line_height": "normal",
+        "tracking": "-0.048px"
+      },
+      "nodes": [
+        "I2:9672;42:4458",
+        "I2:9673;42:4464",
+        "I2:9674;42:4458",
+        "I2:9675;42:4458",
+        "I2:9676;42:4458",
+        "I2:9677;40:2536",
+        "I2:9687;213:23161",
+        "I2:9688;213:23169",
+        "I2:9690;40:2536",
+        "I2:9691;40:2536",
+        "I2:9760;40:2536",
+        "I2:9794;40:2536",
+        "I2:9835;40:2536",
+        "I2:9852;40:2536",
+        "I2:9872;40:2536",
+        "I2:9887;40:2536",
+        "I2:9888;40:2536",
+        "I2:9903;765:39759",
+        "I2:9904;765:39759",
+        "I2:9905;765:39761",
+        "I2:9906;765:39759",
+        "I2:9907;765:39759",
+        "I2:9909;765:39759",
+        "I2:9910;765:39759",
+        "I2:9911;765:39759",
+        "I2:9912;765:39759",
+        "I2:9913;765:39759",
+        "I2:9915;765:39761",
+        "I2:9916;765:39759",
+        "I2:9917;765:39759",
+        "I2:9918;765:39759",
+        "I2:9919;765:39759",
+        "I2:9921;765:39759",
+        "I2:9922;765:39759",
+        "I2:9923;765:39759",
+        "I2:9924;765:39761",
+        "I2:9925;765:39759",
+        "I2:9927;765:39759",
+        "I2:9928;765:39759",
+        "I2:9929;765:39759",
+        "I2:9930;765:39759",
+        "I2:9931;765:39759",
+        "I2:9937;40:2536",
+        "I2:9961;40:2536",
+        "I2:9978;40:2536",
+        "I2:9989;40:2536"
+      ]
+    },
+    {
+      "style": {
+        "font": "Bold",
+        "size_px": "20",
+        "line_height": "normal",
+        "tracking": "-0.1px"
+      },
+      "nodes": [
+        "I2:9679;41:4261",
+        "I2:9683;41:4261",
+        "I2:9762;41:4261",
+        "I2:9779;41:4261",
+        "2:9787",
+        "I2:9837;41:4261",
+        "I2:9846;44:11533",
+        "I2:9847;44:11533",
+        "I2:9848;44:11533",
+        "I2:9849;44:11533",
+        "I2:9850;44:11533",
+        "I2:9854;41:4261",
+        "I2:9874;41:4261",
+        "I2:9889;41:4261",
+        "I2:9893;41:4261",
+        "2:9944",
+        "I2:9967;41:4261",
+        "I2:9991;41:4261"
+      ]
+    },
+    {
+      "style": {
+        "font": "SemiBold",
+        "size_px": "14",
+        "line_height": "normal",
+        "tracking": "-0.028px"
+      },
+      "nodes": [
+        "I2:9679;153:22995;765:39751",
+        "I2:9683;153:22995;765:39751",
+        "I2:9762;153:22995;765:39751",
+        "I2:9779;153:22995;765:39751",
+        "I2:9837;153:22995;765:39751",
+        "I2:9854;153:22995;765:39751",
+        "I2:9874;153:22995;765:39751",
+        "I2:9889;153:22995;765:39751",
+        "I2:9893;153:22995;765:39751",
+        "I2:9935;765:39802",
+        "I2:9936;765:39802",
+        "I2:9959;765:39802",
+        "I2:9960;765:39802",
+        "I2:9967;153:22995;765:39751",
+        "I2:9991;153:22995;765:39751"
+      ]
+    },
+    {
+      "style": {
+        "font": "Bold",
+        "size_px": "60",
+        "line_height": "68px",
+        "tracking": "-1.08px"
+      },
+      "nodes": [
+        "2:9755",
+        "2:9758"
+      ]
+    },
+    {
+      "style": {
+        "font": "ExtraBold",
+        "size_px": "128",
+        "line_height": null,
+        "tracking": "-3.2px"
+      },
+      "nodes": [
+        "2:9757"
+      ]
+    },
+    {
+      "style": {
+        "font": "ExtraBold",
+        "size_px": "180",
+        "line_height": null,
+        "tracking": "-5.4px"
+      },
+      "nodes": [
+        "2:9786",
+        "2:9843"
+      ]
+    },
+    {
+      "style": {
+        "font": "Medium",
+        "size_px": "14",
+        "line_height": "normal",
+        "tracking": "-0.028px"
+      },
+      "nodes": [
+        "2:9793",
+        "I2:9984;43:9851",
+        "I2:9985;204:54272",
+        "I2:9986;43:9851",
+        "I2:9987;43:9851",
+        "I2:9988;43:9851"
+      ]
+    },
+    {
+      "style": {
+        "font": "SemiBold",
+        "size_px": null,
+        "line_height": "normal",
+        "tracking": null
+      },
+      "nodes": [
+        "I2:9830;42:5591",
+        "I2:9831;42:5591",
+        "I2:9833;42:5591",
+        "I2:9834;42:5591"
+      ]
+    },
+    {
+      "style": {
+        "font": "Regular",
+        "size_px": null,
+        "line_height": "1.6",
+        "tracking": null
+      },
+      "nodes": [
+        "I2:9830;42:5598",
+        "I2:9831;42:5598",
+        "I2:9833;42:5598",
+        "I2:9834;42:5598"
+      ]
+    },
+    {
+      "style": {
+        "font": "Medium",
+        "size_px": "0",
+        "line_height": "0",
+        "tracking": "-0.048px"
+      },
+      "nodes": [
+        "2:9851"
+      ]
+    },
+    {
+      "style": {
+        "font": "Medium",
+        "size_px": "16",
+        "line_height": "normal",
+        "tracking": "-0.048px"
+      },
+      "nodes": [
+        "I2:9861;43:10633",
+        "I2:9862;43:10633",
+        "I2:9863;43:10633",
+        "I2:9865;43:10633",
+        "I2:9866;43:10633",
+        "I2:9867;204:54247",
+        "I2:9869;43:10633",
+        "I2:9870;43:10633",
+        "I2:9871;43:10633",
+        "I2:9947;41:3175",
+        "I2:9950;758:131871",
+        "I2:9951;759:131910",
+        "I2:9952;758:131871",
+        "I2:9953;759:131910",
+        "I2:9954;759:131910"
+      ]
+    },
+    {
+      "style": {
+        "font": "Regular",
+        "size_px": "16",
+        "line_height": "1.6",
+        "tracking": "-0.048px"
+      },
+      "nodes": [
+        "2:9897"
+      ]
+    },
+    {
+      "style": {
+        "font": "Bold",
+        "size_px": "16",
+        "line_height": null,
+        "tracking": "-0.048px"
+      },
+      "nodes": [
+        "I2:9900;1157:5800"
+      ]
+    },
+    {
+      "style": {
+        "font": "Medium",
+        "size_px": "14",
+        "line_height": null,
+        "tracking": "-0.028px"
+      },
+      "nodes": [
+        "I2:9900;1157:5803"
+      ]
+    },
+    {
+      "style": {
+        "font": "Medium",
+        "size_px": "12",
+        "line_height": "normal",
+        "tracking": "-0.018px"
+      },
+      "nodes": [
+        "2:9933",
+        "2:9957"
+      ]
+    },
+    {
+      "style": {
+        "font": "Bold",
+        "size_px": "16",
+        "line_height": "normal",
+        "tracking": "-0.048px"
+      },
+      "nodes": [
+        "I2:9971;763:37436;763:37411",
+        "I2:9971;763:37440;763:37422"
+      ]
+    },
+    {
+      "style": {
+        "font": "ExtraBold",
+        "size_px": "96",
+        "line_height": null,
+        "tracking": "-1.92px"
+      },
+      "nodes": [
+        "2:9973"
+      ]
+    },
+    {
+      "style": {
+        "font": "Medium",
+        "size_px": "24",
+        "line_height": "normal",
+        "tracking": "-0.192px"
+      },
+      "nodes": [
+        "2:9974"
+      ]
+    },
+    {
+      "style": {
+        "font": "Bold",
+        "size_px": "18",
+        "line_height": "normal",
+        "tracking": "-0.072px"
+      },
+      "nodes": [
+        "I2:9984;43:9848",
+        "I2:9985;204:54269",
+        "I2:9986;43:9848",
+        "I2:9987;43:9848",
+        "I2:9988;43:9848"
+      ]
+    }
+  ]
+}

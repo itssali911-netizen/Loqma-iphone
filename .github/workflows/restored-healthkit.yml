@@ -1,0 +1,114 @@
+name: Restored IPA 103 with native Apple Health
+on:
+  push:
+    branches: [restore/ipa103-healthkit-20261026]
+    paths: ['Luqma/**', 'Luqma.xcodeproj/**', 'Package.swift', 'Tests/**', 'TestsUI/**', 'Scripts/**', 'BuildTests/**', '.github/workflows/restored-healthkit.yml']
+permissions:
+  contents: read
+concurrency:
+  group: restored-healthkit-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  restored:
+    runs-on: macos-26
+    timeout-minutes: 180
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+      BUNDLE_ID: app.luqma.diary
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 10
+      - name: Set a new build number without changing the restored version
+        run: python3 -c 'import os; open(os.environ["GITHUB_ENV"],"a").write("BUILD_NUMBER="+str(117+int(os.environ["GITHUB_RUN_NUMBER"]))+"\n")'
+      - name: Verify exact restored source and classify every permitted change
+        run: python3 Scripts/verify_restored_source.py --output Restore103Validation/source-freeze.json
+      - name: Run all Core and BuildTests, resolve original dependencies and compile both SDK targets
+        id: sdk
+        run: python3 Scripts/build_ios.py check
+      - name: Package the real restored iPhoneOS app for personal re-signing
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib, shutil, sys
+          root = pathlib.Path.cwd()
+          sys.path.insert(0, str(root/'Scripts'))
+          from build_ios import prepare_sideload
+          output = root/'BuildOutput'
+          app = output/'device-derived/Build/Products/Release-iphoneos/Luqma.app'
+          packaged = prepare_sideload(app, output, 'app.luqma.diary')
+          target = output/'LUQMA-Restored-AppleHealth-Needs-Resigning.ipa'
+          shutil.copyfile(packaged, target)
+          receipt = dict(file=target.name, commit=os.environ['GITHUB_SHA'],
+                         restored_source='7007dfc72ddb622bb5bb0b4ea5ba6643b9494d39',
+                         sha256=hashlib.sha256(target.read_bytes()).hexdigest(), bytes=target.stat().st_size,
+                         apple_signed=False, embedded_apple_profile=False, requires_personal_resigning=True,
+                         healthkit_profile_required=True, physical_installation_verified=False)
+          (output/'sideload-package.json').write_text(json.dumps(receipt,indent=2)+'\n')
+          (output/'SIDELOAD-READ-ME.txt').write_text('This is the restored build103 source with only the native read-only Apple Health integration. This iPhoneOS IPA has local ad-hoc code-signing hashes, NOT an Apple developer certificate or provisioning profile. Re-sign it with a provisioning profile that permits HealthKit for the final installed identifier. The entitlement string alone does not grant HealthKit access. Consent and real health readings require physical iPhone validation. No Apple-signed IPA or successful device installation is claimed.\n')
+          PY
+      - name: Preserve the device IPA with its explicit re-signing requirement
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-Restored-AppleHealth-needs-resigning-${{ github.run_id }}
+          path: |
+            BuildOutput/LUQMA-Restored-AppleHealth-Needs-Resigning.ipa
+            BuildOutput/sideload-package.json
+            BuildOutput/SIDELOAD-READ-ME.txt
+          if-no-files-found: error
+      - name: Verify real native Health consent, actual executable capability and restored English and Arabic screens
+        run: python3 Scripts/healthkit_ui_validation.py validate
+      - name: Exercise the seven unchanged original 103 regression and persistence tests on fresh Simulators
+        if: ${{ !cancelled() && steps.sdk.outcome == 'success' }}
+        run: python3 Scripts/ui_interactions.py --output UIInteractions --packages BuildOutput/Packages --derived BuildOutput/simulator-derived
+      - name: Preserve actual restored application build, Health and regression evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-Restored-AppleHealth-evidence-${{ github.run_id }}
+          path: |
+            HealthValidation/
+            Restore103Validation/
+            UIInteractions/
+            BuildOutput/build-summary.json
+            BuildOutput/READ-ME.txt
+            BuildOutput/*.log
+          if-no-files-found: warn
+      - name: Check Apple signing availability without exposing credentials
+        id: signing
+        if: always()
+        env:
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+        run: python3 Scripts/healthkit_ui_validation.py signing-status
+      - name: Export only with a verified Apple provisioning profile and HealthKit-capable signature
+        id: signed
+        if: success() && steps.signing.outputs.configured == 'true'
+        env:
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+        run: python3 Scripts/healthkit_ui_validation.py signed-export
+      - name: Preserve honest signing status and remaining manual steps
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-Restored-AppleHealth-signing-${{ github.run_id }}
+          path: HealthSigning/signing-status.json
+          if-no-files-found: warn
+      - name: Name the actually verified signed IPA
+        if: steps.signed.outputs.signed_available == 'true'
+        run: python3 -c 'import shutil; shutil.copyfile("BuildSigned/Luqma.ipa","BuildSigned/LUQMA-Restored-AppleHealth.ipa")'
+      - name: Deliver an IPA only after real Apple signature and entitlement verification
+        if: steps.signed.outputs.signed_available == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-Restored-AppleHealth-signed-ipa-${{ github.run_id }}
+          path: |
+            BuildSigned/LUQMA-Restored-AppleHealth.ipa
+            BuildSigned/build-summary.json
+            BuildSigned/READ-ME.txt
+          if-no-files-found: error

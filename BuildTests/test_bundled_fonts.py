@@ -175,7 +175,12 @@ class BundledFontTests(unittest.TestCase):
         project = (ROOT / "Luqma.xcodeproj/project.pbxproj").read_text(encoding="utf-8")
         objects = dict(re.findall(r'^\t\t"([A-F0-9]{24})" = \{\n(.*?)^\t\t\};', project, re.M | re.S))
         self.assertTrue(objects, "Cannot read the committed generated project")
-        resource_phases = [body for body in objects.values() if '"isa" = "PBXResourcesBuildPhase";' in body]
+        app_targets = [body for body in objects.values() if '"isa" = "PBXNativeTarget";' in body
+                       and '"productType" = "com.apple.product-type.application";' in body]
+        self.assertEqual(len(app_targets), 1)
+        app_phase_ids = set(re.findall(r'\b[A-F0-9]{24}\b', app_targets[0]))
+        resource_phases = [body for identity, body in objects.items() if identity in app_phase_ids
+                           and '"isa" = "PBXResourcesBuildPhase";' in body]
         self.assertEqual(len(resource_phases), 1)
         copied = set(re.findall(r'\b[A-F0-9]{24}\b', resource_phases[0]))
         for filename in list(FONT_SHA256) + list(LICENSE_SHA256):

@@ -8,10 +8,26 @@ struct CameraPhoto: UIViewControllerRepresentable {
     func makeCoordinator() -> Coordinator { Coordinator(completion) }
     func makeUIViewController(context:Context) -> UIImagePickerController { let vc=UIImagePickerController();vc.sourceType = .camera;vc.cameraDevice = .rear;vc.delegate=context.coordinator;return vc }
     func updateUIViewController(_ controller:UIImagePickerController,context:Context) {}
-    final class Coordinator:NSObject,UIImagePickerControllerDelegate,UINavigationControllerDelegate {
-        let completion:(Data?)->Void;init(_ c:@escaping(Data?)->Void){completion=c}
-        func imagePickerControllerDidCancel(_ picker:UIImagePickerController){completion(nil)}
-        func imagePickerController(_ picker:UIImagePickerController,didFinishPickingMediaWithInfo info:[UIImagePickerController.InfoKey:Any]) {completion((info[.originalImage] as? UIImage)?.jpegData(compressionQuality:0.85))}
+    static func dismantleUIViewController(_ controller:UIImagePickerController,coordinator:Coordinator){coordinator.cancelEncoding()}
+    @MainActor final class Coordinator:NSObject,UIImagePickerControllerDelegate,UINavigationControllerDelegate {
+        let completion:(Data?)->Void
+        private var encoding:Task<Void,Never>?
+        private var generation=UUID()
+        init(_ c:@escaping(Data?)->Void){completion=c}
+        func cancelEncoding(){generation=UUID();encoding?.cancel();encoding=nil}
+        func imagePickerControllerDidCancel(_ picker:UIImagePickerController){cancelEncoding();completion(nil)}
+        func imagePickerController(_ picker:UIImagePickerController,didFinishPickingMediaWithInfo info:[UIImagePickerController.InfoKey:Any]) {
+            cancelEncoding()
+            guard let image=info[.originalImage] as? UIImage else{completion(nil);return}
+            let token=generation
+            encoding=Task{[weak self] in
+                do {
+                    let data=try await PhotoPreparationWorker.shared.cameraJPEG(image)
+                    guard !Task.isCancelled,let self,self.generation==token else{return}
+                    self.encoding=nil;self.completion(data)
+                }catch{guard !Task.isCancelled,let self,self.generation==token else{return};self.encoding=nil;self.completion(nil)}
+            }
+        }
     }
 }
 

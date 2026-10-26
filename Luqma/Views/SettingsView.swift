@@ -9,58 +9,119 @@ struct BackupDocument:FileDocument {
     func fileWrapper(configuration:WriteConfiguration) throws -> FileWrapper {FileWrapper(regularFileWithContents:data)}
 }
 struct SettingsView:View {
+    var onBack:(()->Void)?=nil
     @EnvironmentObject var diary:DiaryStore
     @State private var goals=false
     @State private var gemini=false
     var body:some View {
-        ScrollView{VStack(alignment:.leading,spacing:20){
-            Text(diary.t("الإعدادات","Settings")).luqmaFont(size:14,weight:.semibold,relativeTo:.headline)
-                .frame(maxWidth:.infinity,minHeight:44).accessibilityAddTraits(.isHeader)
-            settingsIdentity
+        ScrollView{VStack(alignment:.leading,spacing:24){
             settingsGroup(diary.t("أهدافي","My goals")){
-                Button{goals=true}label:{settingsRow(diary.t("السعرات والماكروز","Calories and macros"),symbol:"target")}
-                Divider().overlay(Theme.stroke)
+                NavigationLink{FitnessProfileView()}label:{settingsRow(diary.t("ملف اللياقة والخطة الشخصية","Fitness profile and personal plan"),symbol:"person.crop.circle")}.accessibilityIdentifier("settings.fitness")
+                Button{goals=true}label:{settingsRow(diary.t("السعرات والماكروز","Calories and macros"),symbol:"target")}.accessibilityIdentifier("settings.goals")
                 NavigationLink{PlanView()}label:{settingsRow(diary.t("خطة الوزن","Weight plan"),symbol:"chart.line.uptrend.xyaxis")}
             }
             settingsGroup(diary.t("التفضيلات","Preferences")){
-                HStack(spacing:10){settingsIcon("globe");Text(diary.t("اللغة","Language"));Spacer(minLength:0);Picker(diary.t("اللغة","Language"),selection:Binding(get:{diary.language},set:{value in diary.change{$0.language=value}})){Text("العربية").tag(AppLanguage.ar);Text("English").tag(AppLanguage.en)}.pickerStyle(.menu).labelsHidden()}.luqmaFont(size:14,relativeTo:.body).frame(minHeight:48)
+                languageRow
+                NavigationLink{NotificationsView()}label:{settingsRow(diary.t("الإشعارات","Notifications"),symbol:"bell")}.accessibilityIdentifier("settings.notifications")
+                NavigationLink{RemindersView()}label:{settingsRow(diary.t("التذكيرات","Reminders"),symbol:"clock")}.accessibilityIdentifier("settings.reminders")
             }
             settingsGroup(diary.t("الربط والبيانات","Connections and data")){
+                NavigationLink{HealthSettingsView()}label:{settingsRow("Apple Health",symbol:"heart.fill")}.accessibilityIdentifier("settings.health")
                 Button{gemini=true}label:{settingsRow(diary.t("تحليل الوجبة","Meal analysis"),symbol:"sparkles")}
-                Divider().overlay(Theme.stroke)
                 NavigationLink{BackupSettingsView()}label:{settingsRow(diary.t("النسخ الاحتياطي والنقل","Backup and transfer"),symbol:"externaldrive")}
             }
             settingsGroup(diary.t("لُقمة","Luqma")){
                 NavigationLink{AboutLuqmaView()}label:{settingsRow(diary.t("حول لُقمة والخصوصية","About Luqma and privacy"),symbol:"info.circle")}
             }
-        }.buttonStyle(.plain).padding(16)}.appBackground().navigationTitle(diary.t("الإعدادات","Settings"))
+            settingsFooter
+        }.buttonStyle(.plain).padding(16).padding(.top,4)}.appBackground().navigationTitle(diary.t("الإعدادات","Settings"))
             .toolbar(.hidden,for:.navigationBar)
+            .safeAreaInset(edge:.top,spacing:0){settingsHeader}
             .sheet(isPresented:$goals){GoalEditor()}
             .sheet(isPresented:$gemini){GeminiSettingsView()}
     }
-    private var settingsIdentity:some View {
-        HStack(spacing:12){
-            Image("LuqmaMark").resizable().scaledToFit().frame(width:44,height:44)
-                .padding(4).background(Theme.background,in:RoundedRectangle(cornerRadius:13)).accessibilityHidden(true)
-            VStack(alignment:.leading,spacing:5){
-                Text(diary.t("لُقمة","Luqma")).luqmaFont(size:18,weight:.bold,relativeTo:.headline)
-                Text(diary.t("كل لقمة تقرّبك من هدفك","Every bite brings you closer"))
-                    .luqmaFont(size:11,relativeTo:.caption).foregroundStyle(Theme.muted)
+    private var settingsHeader:some View {
+        VStack(alignment:.leading,spacing:12){
+            if let onBack{
+                Button(action:onBack){Image(systemName:"chevron.backward").font(.system(size:13,weight:.medium))
+                    .foregroundStyle(Theme.text).frame(width:34,height:34)
+                    .background(Theme.card,in:RoundedRectangle(cornerRadius:12))
+                    .frame(width:44,height:44).contentShape(Rectangle())}
+                    .buttonStyle(.plain).accessibilityLabel(diary.t("رجوع","Back")).accessibilityIdentifier("settings.back")
             }
-            Spacer(minLength:0)
-        }.padding(14).frame(maxWidth:.infinity,alignment:.leading)
-            .background(Theme.card,in:RoundedRectangle(cornerRadius:16,style:.continuous))
+            Text(diary.t("الإعدادات","Settings")).luqmaFont(size:24,weight:.bold,relativeTo:.title2)
+                .foregroundStyle(Theme.text).accessibilityAddTraits(.isHeader)
+        }.padding(.horizontal,16).padding(.top,8).padding(.bottom,20)
+            .frame(maxWidth:.infinity,minHeight:112,alignment:.bottomLeading)
+            .background{UnevenRoundedRectangle(bottomLeadingRadius:28,bottomTrailingRadius:28,style:.continuous)
+                .fill(Theme.surface).ignoresSafeArea(edges:.top)}
+    }
+    private var languageRow:some View {
+        NavigationLink{LuqmaLanguageView()}label:{
+            HStack(spacing:10){
+                settingsIcon("globe")
+                Text(diary.t("اللغة","Language")).luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline)
+                Spacer(minLength:0)
+                Text(diary.language == .ar ? "العربية":"English").luqmaFont(size:11,relativeTo:.caption).foregroundStyle(Theme.muted)
+                Image(systemName:"chevron.forward").font(.system(size:13,weight:.medium)).foregroundStyle(Theme.muted)
+            }.foregroundStyle(Theme.text).padding(.horizontal,10).padding(.vertical,8).frame(minHeight:64)
+                .background(Theme.card,in:RoundedRectangle(cornerRadius:20,style:.continuous))
+        }.accessibilityIdentifier("settings.language")
+    }
+    private var settingsFooter:some View {
+        VStack(spacing:6){
+            Image("LuqmaMark").resizable().scaledToFit().frame(width:24,height:24).accessibilityHidden(true)
+            Text(diary.t("لُقمة","Luqma")+" · "+(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""))
+                .luqmaFont(size:10,weight:.semibold,relativeTo:.caption2)
+        }.foregroundStyle(Theme.text).frame(maxWidth:.infinity).padding(.vertical,20)
+            .background(Theme.surface,in:RoundedRectangle(cornerRadius:24,style:.continuous))
     }
     private func settingsGroup<Content:View>(_ title:String,@ViewBuilder content:()->Content)->some View {
         VStack(alignment:.leading,spacing:9){
             Text(title).luqmaFont(size:12,weight:.semibold,relativeTo:.caption)
-                .foregroundStyle(Theme.muted).accessibilityAddTraits(.isHeader)
-            VStack(spacing:0,content:content).padding(.horizontal,14).padding(.vertical,4)
-                .background(Theme.card,in:RoundedRectangle(cornerRadius:16,style:.continuous))
+                .foregroundStyle(Theme.text).accessibilityAddTraits(.isHeader)
+            VStack(spacing:8,content:content)
         }
     }
-    private func settingsIcon(_ symbol:String)->some View {Image(systemName:symbol).font(.system(size:17,weight:.regular)).foregroundStyle(Theme.text).frame(width:28,height:32).accessibilityHidden(true)}
-    private func settingsRow(_ title:String,symbol:String)->some View {HStack(spacing:10){settingsIcon(symbol);Text(title).luqmaFont(size:14,relativeTo:.body).foregroundStyle(Theme.text);Spacer(minLength:0);Image(systemName:"chevron.forward").font(.system(size:11,weight:.medium)).foregroundStyle(Theme.muted)}.frame(minHeight:48).contentShape(Rectangle())}
+    private func settingsIcon(_ symbol:String)->some View {Image(systemName:symbol).font(.system(size:18,weight:.regular)).foregroundStyle(Theme.text).frame(width:42,height:42).background(Theme.surface,in:RoundedRectangle(cornerRadius:13)).accessibilityHidden(true)}
+    private func settingsRow(_ title:String,symbol:String)->some View {HStack(spacing:10){settingsIcon(symbol);Text(title).luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline).foregroundStyle(Theme.text);Spacer(minLength:0);Image(systemName:"chevron.forward").font(.system(size:13,weight:.medium)).foregroundStyle(Theme.muted)}.padding(.horizontal,10).padding(.vertical,8).frame(maxWidth:.infinity,minHeight:64,alignment:.leading).background(Theme.card,in:RoundedRectangle(cornerRadius:20,style:.continuous)).contentShape(RoundedRectangle(cornerRadius:20))}
+}
+struct LuqmaLanguageView:View {
+    @EnvironmentObject var diary:DiaryStore
+    @Environment(\.dismiss) private var dismiss
+    var body:some View {
+        ScrollView{VStack(alignment:.leading,spacing:32){
+            VStack(alignment:.leading,spacing:12){
+                languageHeading(diary.t("اللغة المختارة","Selected language"))
+                languageOption(diary.language,selected:true)
+            }
+            VStack(alignment:.leading,spacing:12){
+                languageHeading(diary.t("اللغات المتاحة","Available languages"))
+                ForEach(AppLanguage.allCases.filter{$0 != diary.language},id:\.self){language in languageOption(language,selected:false)}
+            }
+        }.padding(16).padding(.top,20).padding(.bottom,24)}.appBackground()
+            .navigationTitle(diary.t("اللغة","Language")).toolbar(.hidden,for:.navigationBar)
+            .safeAreaInset(edge:.top,spacing:0){
+                HStack(spacing:12){
+                    Button{dismiss()}label:{Image(systemName:"chevron.backward").font(.system(size:14,weight:.medium)).foregroundStyle(Theme.text).frame(width:40,height:40).background(Theme.surface,in:RoundedRectangle(cornerRadius:12)).frame(width:44,height:44)}
+                        .buttonStyle(.plain).accessibilityLabel(diary.t("رجوع","Back")).accessibilityIdentifier("language.back")
+                    Text(diary.t("اللغة","Language")).luqmaFont(size:20,weight:.bold,relativeTo:.title3).accessibilityAddTraits(.isHeader)
+                    Spacer(minLength:0)
+                }.padding(.horizontal,16).frame(minHeight:Theme.navigationHeight).background(Theme.background)
+            }
+    }
+    private func languageHeading(_ text:String)->some View {Text(text).luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline).foregroundStyle(Theme.text).accessibilityAddTraits(.isHeader)}
+    private func languageOption(_ language:AppLanguage,selected:Bool)->some View {
+        Button{if language != diary.language{diary.change{$0.language=language}}}label:{
+            HStack(spacing:14){
+                Image(systemName:"flag").font(.system(size:20,weight:.regular)).foregroundStyle(selected ? Theme.onAccent:Theme.text)
+                    .frame(width:44,height:44).background(selected ? Theme.text:Theme.surface,in:RoundedRectangle(cornerRadius:13)).accessibilityHidden(true)
+                Text(language == .ar ? "العربية (AR)":"English (EN)").luqmaFont(size:14,weight:.medium,relativeTo:.subheadline).foregroundStyle(selected ? Theme.onAccent:Theme.text)
+                Spacer(minLength:8)
+                Image(systemName:selected ? "checkmark.square.fill":"square").font(.system(size:18)).foregroundStyle(selected ? Theme.onAccent:Theme.text).accessibilityHidden(true)
+            }.padding(12).frame(maxWidth:.infinity,minHeight:68).background(selected ? Theme.accent:Theme.card,in:RoundedRectangle(cornerRadius:22,style:.continuous)).contentShape(Rectangle())
+        }.buttonStyle(.plain).accessibilityAddTraits(selected ? .isSelected:[]).accessibilityIdentifier("language.option."+language.rawValue)
+    }
 }
 struct BackupSettingsView:View {
     @EnvironmentObject var diary:DiaryStore
@@ -78,6 +139,9 @@ struct BackupSettingsView:View {
             }.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
             Section{
                 Notice(text:diary.t("صدّر نسخة لحفظ بياناتك أو نقلها إلى جهاز آخر. عند الاستيراد تُدمج البيانات، وتُحدَّث السجلات المطابقة دون حذف باقي سجلك.","Export a backup to save your data or move it to another device. Import merges the data and updates matching records without deleting the rest of your diary."))
+                if diary.state.fitnessProfile != nil || diary.state.fitnessDraft != nil{
+                    Notice(text:diary.t("تتضمن النسخة إجابات تقييم اللياقة والوزن والحساسيات والخطط المحفوظة. احفظ ملف التصدير في مكان خاص؛ إعداد اتصال التحليل يبقى خارج النسخة.","The backup includes fitness answers, weight, allergies and saved plans. Keep the exported file private; analysis connection credentials remain excluded."))
+                }
             }.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
         }.sandowForm().sandowNavigation(diary.t("النسخ الاحتياطي","Backup"),backLabel:diary.t("رجوع","Back"))
             .fileExporter(isPresented:$exporting,document:document,contentType:.json,defaultFilename:"luqma-backup-"+DayKey.today){if case let .failure(error)=$0{diary.report(error)}}
@@ -93,25 +157,45 @@ struct BackupSettingsView:View {
 struct AboutLuqmaView:View {
     @EnvironmentObject var diary:DiaryStore
     var body:some View {
-        Form{
-            Section(diary.t("لُقمة","Luqma")){
-                HStack(spacing:14){Image("LuqmaMark").resizable().scaledToFit().frame(width:60,height:60);Text(diary.t("لُقمة","Luqma")).luqmaFont(.title2)}.frame(maxWidth:.infinity,alignment:.leading).padding(.vertical,8)
-                Text(diary.t("الإصدار ","Version ") + (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.4"))
-            }.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
-            Section(diary.t("الخصوصية","Privacy")){
+        ScrollView{VStack(spacing:14){
+            VStack(spacing:12){
+                Image("LuqmaMark").resizable().scaledToFit().frame(width:84,height:84).accessibilityHidden(true)
+                Text(diary.t("لُقمة","Luqma")).luqmaFont(size:28,weight:.bold,relativeTo:.title)
+                Text(diary.t("مفكرة السعرات والتغذية","Your calorie and nutrition diary"))
+                    .luqmaFont(size:13,relativeTo:.subheadline).foregroundStyle(Theme.muted)
+                Text(diary.t("الإصدار ","Version ") + (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""))
+                    .luqmaFont(size:10,relativeTo:.caption2).foregroundStyle(Theme.muted)
+            }.multilineTextAlignment(.center).frame(maxWidth:.infinity).padding(.top,28).padding(.bottom,20)
+            aboutCard(diary.t("الخصوصية","Privacy"),symbol:"hand.raised.fill"){
                 Notice(text:diary.t("سجلك محفوظ على الجهاز. تحليل الوجبة يرسل الصورة والوصف إلى Google. استيراد الوصفة يرسل الرابط العام الذي تختاره أو نص الوصفة. إعداد الربط محفوظ في خزنة الجهاز ولا يدخل النسخ الاحتياطية.","Your diary stays on the device. Meal analysis sends the selected photo and description to Google. Recipe import sends your selected public link or recipe text. Connection credentials are stored in the device Keychain and excluded from backups."))
-            }.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
-            Section(diary.t("مصادر الطعام","Food sources")){
-                Text(diary.t("٧٤٤ طعامًا من ملف MyFitnessPal الذي أضفته. هذه عينة محلية؛ البيانات الناقصة تحتاج مراجعة الملصق.","744 foods from your supplied MyFitnessPal file. This is a local sample; incomplete values need label review."))
-                Link("Open Food Facts",destination:URL(string:"https://world.openfoodfacts.org")!)
-            }.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
-            Section(diary.t("التصميم","Design")){
-                Link("Sandow · Figma Community",destination:URL(string:"https://www.figma.com/design/IfMCdTI3FcvXpNFy79PRUA?node-id=2-606")!)
+            }
+            aboutCard(diary.t("مصادر الطعام","Food sources"),symbol:"fork.knife"){
+                Notice(text:diary.t("٧٤٤ طعامًا من ملف MyFitnessPal الذي أضفته. هذه عينة محلية؛ البيانات الناقصة تحتاج مراجعة الملصق.","744 foods from your supplied MyFitnessPal file. This is a local sample; incomplete values need label review."))
+                aboutLink("Open Food Facts",url:"https://world.openfoodfacts.org")
+            }
+            aboutCard(diary.t("التصميم","Design"),symbol:"paintpalette.fill"){
+                aboutLink("Sandow · Figma Community",url:"https://www.figma.com/design/IfMCdTI3FcvXpNFy79PRUA?node-id=2-606")
                 Text(diary.t("الثيم الداكن وألوان Sandow، مع تنظيم مخصص لسجل الطعام العربي. بعض شاشات المرجع صور معاينة أُعيد بناؤها للتطبيق.","Sandow dark theme and colors, arranged for the Arabic food diary. Some reference screens are flattened previews reconstructed for this app.")).luqmaFont(.footnote).foregroundStyle(Theme.muted)
-                Link("Work Sans · SIL Open Font License",destination:URL(string:"https://github.com/weiweihuanghuang/Work-Sans")!)
-                Link("Tajawal · SIL Open Font License",destination:URL(string:"https://github.com/google/fonts/tree/main/ofl/tajawal")!)
-            }.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
-        }.sandowForm().sandowNavigation(diary.t("حول لُقمة","About Luqma"),backLabel:diary.t("رجوع","Back"))
+                aboutLink("Work Sans · SIL Open Font License",url:"https://github.com/weiweihuanghuang/Work-Sans")
+                aboutLink("Tajawal · SIL Open Font License",url:"https://github.com/google/fonts/tree/main/ofl/tajawal")
+            }
+        }.padding(.horizontal,16).padding(.bottom,24)}.appBackground()
+            .sandowNavigation(diary.t("حول لُقمة","About Luqma"),backLabel:diary.t("رجوع","Back"))
+    }
+    private func aboutCard<Content:View>(_ title:String,symbol:String,@ViewBuilder content:()->Content)->some View {
+        VStack(alignment:.leading,spacing:12){
+            Label(title,systemImage:symbol).luqmaFont(size:12,weight:.semibold,relativeTo:.caption)
+                .foregroundStyle(Theme.text).accessibilityAddTraits(.isHeader)
+            content()
+        }.padding(16).frame(maxWidth:.infinity,alignment:.leading)
+            .background(Theme.card,in:RoundedRectangle(cornerRadius:24,style:.continuous))
+    }
+    private func aboutLink(_ title:String,url:String)->some View {
+        Link(destination:URL(string:url)!){HStack(spacing:8){
+            Text(title).luqmaFont(size:12,relativeTo:.caption).multilineTextAlignment(.leading)
+            Spacer(minLength:0)
+            Image(systemName:"arrow.up.forward").font(.system(size:10,weight:.medium))
+        }.foregroundStyle(Theme.text).frame(minHeight:32)}
     }
 }
 struct ImportPreview:View {
