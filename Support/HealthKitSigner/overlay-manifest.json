@@ -1,0 +1,13 @@
+{
+  "src-tauri/Cargo.toml": "9aba8bb005abae515827688e8e2585a3a46f4ea15861b1d2bf5c5a11f7715603",
+  "src-tauri/tauri.conf.json": "77b22fb4ab60dc55e10a03c9ceb6f1c2941cabdeff7625057ba3cac183f0816f",
+  "src-tauri/src/account.rs": "6fea2df03983443b6e3278cf02f1c0a5796ab3624491974e0fe5b9ffc40cafb1",
+  "src-tauri/src/secure_storage.rs": "ec9c53300fde8849a539f3fbe3d569ddba1a5a7cf7584abc41c93d2a5c215526",
+  "src-tauri/src/lib.rs": "ef6034b20d4d1a2b5f8fe212d96456f24e9cdc0983eb389cf3c7bb2f390a0a37",
+  "src/App.tsx": "d61dade05f907b493e1d1b00c0be429bda3f20e95ab02b213394898f8a10b7e7",
+  "src/update.ts": "9dbcdca16559e0376ae1b9a8bd864a155f2757b36702455521ab004e8fb19f1b",
+  "vendor/isideload/src/dev/app_ids.rs": "83a87696264173c346b57caaa0de55f72ea8308be1a8a92127bbae24e16c0043",
+  "vendor/isideload/src/sideload/healthkit.rs": "73e819d0cda60935657f60dcc8f3e81b8261e716cce0b8ff8c7cccedf4bdc46e",
+  "vendor/isideload/src/sideload/mod.rs": "a4e126f77a7f3cf58911a9c1b20aea3b73a023f2c72db5b382cc95ce408eaa9b",
+  "vendor/isideload/src/sideload/sideloader.rs": "84bfed2ce0588674d46313fa8a4223fdeb73701400a471ec664adc94479220d2"
+}

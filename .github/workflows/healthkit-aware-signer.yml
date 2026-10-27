@@ -1,0 +1,69 @@
+name: Build community Luqma HealthKit repair signer
+on:
+  push:
+    branches: [fix/healthkit-aware-signer-20261027]
+    paths: ['Support/HealthKitSigner/**', '.github/workflows/healthkit-aware-signer.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows-signer:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    env:
+      CARGO_BUILD_JOBS: '2'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Verify archive boundaries
+        run: python -m unittest discover -s Support/HealthKitSigner -p test_prepare.py -v
+      - name: Prepare pinned source and reviewed overlay
+        run: |
+          python Support/HealthKitSigner/prepare.py --output "${{ runner.temp }}/luqma-health-signer"
+          "CARGO_TARGET_DIR=$env:RUNNER_TEMP/luqma-health-signer/src-tauri/target" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+      - name: Select Rust stable
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          rustc --version
+          cargo --version
+      - uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756
+      - name: Ensure compiler support tools
+        run: |
+          if (-not (Get-Command perl -ErrorAction SilentlyContinue)) { choco install strawberryperl --yes --no-progress }
+          if (-not (Get-Command make -ErrorAction SilentlyContinue)) { choco install make --yes --no-progress }
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+      - name: Install locked frontend dependencies
+        working-directory: ${{ runner.temp }}/luqma-health-signer
+        run: bun install --frozen-lockfile
+      - name: Run signer capability and rejection tests without an Apple account
+        working-directory: ${{ runner.temp }}/luqma-health-signer
+        run: |
+          cargo test --manifest-path vendor/isideload/Cargo.toml --lib --locked --features fs-storage -- --test-threads=1 2>&1 | Tee-Object -FilePath cargo-tests.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Compile the separate community Windows app
+        working-directory: ${{ runner.temp }}/luqma-health-signer
+        run: |
+          bun tauri build --no-bundle 2>&1 | Tee-Object -FilePath windows-build.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Package actual build evidence without account data
+        working-directory: ${{ runner.temp }}/luqma-health-signer
+        run: |
+          New-Item -ItemType Directory -Path Delivery
+          Copy-Item -LiteralPath src-tauri/target/release/iloader.exe -Destination Delivery/Luqma-Health-Signer.exe
+          Copy-Item -LiteralPath LICENSE -Destination Delivery/LICENSE-iloader-MIT.txt
+          Copy-Item -LiteralPath COMMUNITY-NOTICE.md -Destination Delivery/README-AR.md
+          Copy-Item -LiteralPath source-provenance.json,cargo-tests.log,windows-build.log -Destination Delivery
+          $digest = (Get-FileHash -Algorithm SHA256 -LiteralPath Delivery/Luqma-Health-Signer.exe).Hash.ToLowerInvariant()
+          @{ status='windows_app_built_tests_passed'; executable_sha256=$digest; source_commit='${{ github.sha }}'; run_id='${{ github.run_id }}'; apple_authentication_performed=$false; apple_profile_issued=$false; ipa_signed=$false; iphone_installation_verified=$false; real_health_reads_verified=$false } | ConvertTo-Json | Set-Content -LiteralPath Delivery/validation.json -Encoding utf8
+      - name: Preserve verified build or failure diagnostics
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: Luqma-HealthKit-Signer-Windows-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/luqma-health-signer/Delivery/
+            ${{ runner.temp }}/luqma-health-signer/cargo-tests.log
+            ${{ runner.temp }}/luqma-health-signer/windows-build.log
+          if-no-files-found: ignore
