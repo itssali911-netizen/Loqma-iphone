@@ -7,7 +7,7 @@
   "src/App.tsx": "d61dade05f907b493e1d1b00c0be429bda3f20e95ab02b213394898f8a10b7e7",
   "src/update.ts": "9dbcdca16559e0376ae1b9a8bd864a155f2757b36702455521ab004e8fb19f1b",
   "vendor/isideload/src/dev/app_ids.rs": "83a87696264173c346b57caaa0de55f72ea8308be1a8a92127bbae24e16c0043",
-  "vendor/isideload/src/sideload/healthkit.rs": "5f9dd2c7a2719cb0a6199ebe237b4058452283f566a40ce632abc342d1fca4d1",
+  "vendor/isideload/src/sideload/healthkit.rs": "73e819d0cda60935657f60dcc8f3e81b8261e716cce0b8ff8c7cccedf4bdc46e",
   "vendor/isideload/src/sideload/mod.rs": "a4e126f77a7f3cf58911a9c1b20aea3b73a023f2c72db5b382cc95ce408eaa9b",
-  "vendor/isideload/src/sideload/sideloader.rs": "1bea637221caf15bab0d66c8191f35a95851823c6d3bd372161e251665160f5f"
+  "vendor/isideload/src/sideload/sideloader.rs": "84bfed2ce0588674d46313fa8a4223fdeb73701400a471ec664adc94479220d2"
 }

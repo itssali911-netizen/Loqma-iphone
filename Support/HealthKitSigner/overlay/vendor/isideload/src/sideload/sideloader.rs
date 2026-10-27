@@ -165,9 +165,9 @@ impl<C: MaxCertsCallback, E: ExtensionsBehaviorCallback> Sideloader<C, E> {
         app_id.ensure_healthkit_feature(&mut self.dev_session, &team).await?;
         if let Some(callback) = &progress_callback { callback(0.15).await; }
 
-        let main_provisioning_profile = self.dev_session
-            .download_team_provisioning_profile(&team, &app_id, None).await
-            .map_err(|_| report!("Apple did not return an authorized Luqma provisioning profile. Signing was stopped."))?;
+        let main_provisioning_profile = healthkit::download_profile(
+            &mut self.dev_session, &team, &app_id,
+        ).await?;
         // A feature-toggle reply is insufficient: validate the actual unchanged
         // downloaded CMS profile before any signing or device installation.
         healthkit::validate_downloaded_profile(

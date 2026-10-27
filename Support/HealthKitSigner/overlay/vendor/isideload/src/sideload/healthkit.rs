@@ -10,11 +10,37 @@ use plist::{Dictionary, Value};
 use rootcause::prelude::*;
 use x509_cert::der::Encode;
 
-use crate::dev::{app_groups::AppGroup, app_ids::AppId, devices::DeveloperDevice};
+use crate::dev::{app_groups::AppGroup, app_ids::{AppId, Profile}, devices::DeveloperDevice,
+                 developer_session::DeveloperSession, teams::DeveloperTeam, device_type::dev_url};
 use crate::sideload::cert_identity::CertificateIdentity;
 
 pub(crate) const ORIGINAL_BUNDLE_ID: &str = "app.luqma.diary";
 const HEALTHKIT: &str = "com.apple.developer.healthkit";
+
+fn profile_response(response: &Dictionary) -> Result<Profile, Report> {
+    if response.get("resultCode").and_then(Value::as_signed_integer) != Some(0) {
+        bail!("Apple did not confirm a successful provisioning-profile request. Signing was stopped.");
+    }
+    let value = response.get("provisioningProfile")
+        .filter(|value| value.as_dictionary().is_some())
+        .ok_or_else(|| report!("Apple did not return a provisioning-profile object."))?;
+    plist::from_value(value)
+        .map_err(|_| report!("Apple returned malformed provisioning-profile metadata. Signing was stopped."))
+}
+
+/// Unlike the upstream permissive payload parser, an explicit Apple error can
+/// never be treated as success even if it is accompanied by profile data.
+pub(crate) async fn download_profile(
+    session: &mut DeveloperSession, team: &DeveloperTeam, app_id: &AppId,
+) -> Result<Profile, Report> {
+    let mut body = Dictionary::new();
+    body.insert("teamId".into(), Value::String(team.team_id.clone()));
+    body.insert("appIdId".into(), Value::String(app_id.app_id_id.clone()));
+    let response = session.send_dev_request_no_response(
+        &dev_url("downloadTeamProvisioningProfile", None), body,
+    ).await.map_err(|_| report!("Apple's provisioning-profile request failed. Signing was stopped."))?;
+    profile_response(&response)
+}
 
 pub(crate) struct RepairTarget {
     pub bundle_id: String,
@@ -183,6 +209,23 @@ mod tests {
     const TEAM: &str = "A1B2C3D4E5";
     const DEVICE: &str = "synthetic-device-only";
     const CERT: &[u8] = b"synthetic-certificate-not-real-Apple-DER";
+
+    #[test]
+    fn apple_profile_error_cannot_be_accepted_even_with_a_payload() {
+        let mut response = Dictionary::new();
+        response.insert("provisioningProfile".into(), Value::Dictionary(Dictionary::new()));
+        response.insert("resultString".into(), Value::String("private-server-response-canary".into()));
+        for code in [Value::Integer(1.into()), Value::Integer((-1).into()),
+                     Value::String("0".into()), Value::Boolean(false)] {
+            response.insert("resultCode".into(), code);
+            let error = profile_response(&response).err().unwrap().to_string();
+            assert!(!error.contains("private-server-response-canary"));
+        }
+        response.remove("resultCode");
+        assert!(profile_response(&response).is_err());
+        response.insert("resultCode".into(), Value::Integer(0.into()));
+        assert!(profile_response(&response).is_err()); // malformed payload is not success
+    }
 
     fn info() -> Dictionary {
         let mut info = Dictionary::new();

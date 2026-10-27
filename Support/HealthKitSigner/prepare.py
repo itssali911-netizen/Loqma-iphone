@@ -41,7 +41,7 @@ def prepare(output: Path) -> None:
         data = (ROOT/'overlay'/name).read_bytes()
         if hashlib.sha256(data).hexdigest() != digest:
             raise ValueError('Overlay checksum mismatch: '+name)
-    subprocess.run(['git', 'clone', '--depth', '1', '--branch', 'v2.4.0',
+    subprocess.run(['git', '-c', 'core.autocrlf=false', 'clone', '--depth', '1', '--branch', 'v2.4.0',
                     'https://github.com/nab138/iloader.git', str(output)], check=True)
     head = subprocess.check_output(['git', '-C', str(output), 'rev-parse', 'HEAD'], text=True).strip()
     if head != UPSTREAM:
