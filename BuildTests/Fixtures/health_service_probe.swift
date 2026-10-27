@@ -420,6 +420,26 @@ private struct ProbeFailure: Error { let check: String }
         try require(reader.readCalls == 3, "observer_burst_created_duplicate_followup")
     }
 
+    @MainActor static func observerDuringObserverReadDoesNotCancelIt() async throws {
+        let environment = try ProbeEnvironment(); defer { environment.clean() }
+        let reader = ExtendedProbeReader()
+        let service = AppleHealthService(reader: reader, preferences: environment.preferences)
+        defer { service.suspend() }
+        await service.connect()
+        reader.holdReads = true
+        reader.emitChange()
+        try await waitUntil { reader.readCalls == 2 && service.isRefreshing }
+        let resets = reader.cacheResets
+        reader.emitChange(); reader.emitChange()
+        try await Task.sleep(nanoseconds: 450_000_000)
+        try require(service.isRefreshing && reader.readCalls == 2 && reader.cacheResets == resets,
+                    "observer_notification_cancelled_its_inflight_read")
+        reader.holdReads = false
+        try reader.completeRead(2)
+        try await waitUntil { reader.readCalls == 3 && !service.isWorking }
+        try require(reader.requests.last?.forceFull == false, "observer_owned_read_lost_pending_followup")
+    }
+
     @MainActor static func rangeChangeRejectsLateExtendedData() async throws {
         let environment = try ProbeEnvironment(); defer { environment.clean() }
         environment.enableRefreshPreference()
@@ -493,6 +513,7 @@ private struct ProbeFailure: Error { let check: String }
             try await extendedPartialAndLastSuccess(); checks.append("extended_partial_and_truthful_last_success")
             try await observersAreForegroundAndIncremental(); checks.append("foreground_observers_and_incremental_refresh")
             try await observerDuringRefreshQueuesSingleRead(); checks.append("observer_burst_queues_one_followup")
+            try await observerDuringObserverReadDoesNotCancelIt(); checks.append("observer_event_does_not_cancel_its_inflight_read")
             try await rangeChangeRejectsLateExtendedData(); checks.append("range_change_rejects_late_history")
             try await suspendedAuthorizationWaitsForForeground(); checks.append("suspended_authorization_waits_for_foreground")
             try await calendarChangesStaySuspended(); checks.append("background_calendar_change_stays_suspended")

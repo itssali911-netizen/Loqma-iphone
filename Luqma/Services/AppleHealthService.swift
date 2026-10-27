@@ -60,6 +60,7 @@ struct AppleHealthFailure: Error { let issue: HealthReadIssue }
         var value = try await base
         value.details = try await details
         try Task.checkCancellation()
+        value.refreshedAt = Date()
         return value.sanitized()
     }
     func startObserving(onChange: @escaping @MainActor () -> Void) { startForegroundObservation(onChange: onChange) }
@@ -273,6 +274,9 @@ struct AppleHealthFailure: Error { let issue: HealthReadIssue }
         observerRefreshTask = Task { [weak self] in
             try? await Task.sleep(for: .milliseconds(350))
             guard !Task.isCancelled, let self, refreshEnabled, isForeground else { return }
+            // The debounce task must stop owning the in-flight read: another
+            // observer event queues a follow-up instead of cancelling this read.
+            observerRefreshTask = nil
             guard !isWorking else { observerRefreshPending = true; return }
             await refresh(forceFull: false)
         }

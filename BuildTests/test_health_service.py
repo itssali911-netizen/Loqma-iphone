@@ -32,6 +32,7 @@ CHECKS = (
     "extended_partial_and_truthful_last_success",
     "foreground_observers_and_incremental_refresh",
     "observer_burst_queues_one_followup",
+    "observer_event_does_not_cancel_its_inflight_read",
     "range_change_rejects_late_history",
     "suspended_authorization_waits_for_foreground",
     "background_calendar_change_stays_suspended",
@@ -138,6 +139,9 @@ class NativeHealthServiceTests(unittest.TestCase):
 
     def test_range_change_rejects_late_old_data(self):
         self.assertIn("range_change_rejects_late_history", self.report["checks"])
+
+    def test_observer_notification_does_not_cancel_its_existing_read(self):
+        self.assertIn("observer_event_does_not_cancel_its_inflight_read", self.report["checks"])
 
     def test_suspended_authorization_waits_for_foreground(self):
         self.assertIn("suspended_authorization_waits_for_foreground", self.report["checks"])
