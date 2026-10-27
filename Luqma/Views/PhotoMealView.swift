@@ -123,6 +123,7 @@ import AVFoundation
             #endif
             if let data=imageData,preview==nil,previewTask==nil{preparePhotoPreview(data)}
             refreshCamera()
+            if automaticallyAnalyze,ready,preview != nil,!busy,phase == .active{automaticallyAnalyze=false;analyze()}
         }
         .onDisappear{visible=false;liveCamera.setActive(false);photoGeneration=UUID();analysisGeneration=UUID();previewGeneration=UUID();photoLoadTask?.cancel();analysisTask?.cancel();previewTask?.cancel();photoLoadTask=nil;analysisTask=nil;previewTask=nil;loadingPhoto=false;busy=false;scanFinishing=nil;shutterVisible=false}
     }
@@ -425,8 +426,9 @@ import AVFoundation
                     Spacer(minLength:8)
                     HStack(alignment:.firstTextBaseline,spacing:3){
                         Text(decimal(amount,1)).luqmaFont(size:22,weight:.heavy,relativeTo:.title3).monospacedDigit()
-                        Text(diary.t("جم","g")).luqmaFont(.caption)
-                    }.environment(\.layoutDirection,.leftToRight).lineLimit(1).minimumScaleFactor(0.75)
+                            .environment(\.layoutDirection,.leftToRight)
+                        Text(diary.t("جم","g")).luqmaFont(size:22,weight:.heavy,relativeTo:.title3)
+                    }.environment(\.layoutDirection,diary.language == .ar ? .rightToLeft:.leftToRight).lineLimit(1).minimumScaleFactor(0.75)
                 }.foregroundStyle(.white).padding(.horizontal,4).padding(.top,16).padding(.bottom,14)
             }
         }.frame(maxWidth:.infinity).frame(height:177)
