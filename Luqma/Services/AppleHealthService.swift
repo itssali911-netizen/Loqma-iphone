@@ -6,15 +6,30 @@ import HealthKit
     var availabilityIssue: HealthReadIssue? { get }
     func requestReadAccess() async throws
     func readSnapshot(at date: Date, calendar: Calendar) async throws -> HealthReadSnapshot
+    func readSnapshot(at date: Date, calendar: Calendar, historyDays: Int, forceFull: Bool) async throws -> HealthReadSnapshot
+    func startObserving(onChange: @escaping @MainActor () -> Void)
+    func stopObserving()
+    func resetHistoryCache()
 }
 
-private struct AppleHealthFailure: Error { let issue: HealthReadIssue }
+extension AppleHealthReading {
+    func readSnapshot(at date: Date, calendar: Calendar, historyDays: Int, forceFull: Bool) async throws -> HealthReadSnapshot {
+        try await readSnapshot(at: date, calendar: calendar)
+    }
+    func startObserving(onChange: @escaping @MainActor () -> Void) {}
+    func stopObserving() {}
+    func resetHistoryCache() {}
+}
 
-/// Native HealthKit only. No web bridge, third-party service, writes, or observers.
+struct AppleHealthFailure: Error { let issue: HealthReadIssue }
+
+/// Native HealthKit only, with bounded foreground queries and observers. No writes or server.
 @MainActor final class HealthKitReader: AppleHealthReading {
-    private let store = HKHealthStore()
+    let store = HKHealthStore()
+    let historyState = HealthHistoryState()
     private let profileIssue: HealthReadIssue?
-    private let identifiers: [HKQuantityTypeIdentifier] = [.stepCount, .bodyMass, .height, .activeEnergyBurned]
+    private let identifiers: [HKQuantityTypeIdentifier] = [.stepCount, .bodyMass, .height, .activeEnergyBurned,
+        .distanceWalkingRunning, .basalEnergyBurned, .bodyFatPercentage, .heartRate]
 
     init() {
         // A missing embedded profile is normal for some installation methods.
@@ -30,13 +45,25 @@ private struct AppleHealthFailure: Error { let issue: HealthReadIssue }
     }
     func requestReadAccess() async throws {
         if let issue = availabilityIssue { throw AppleHealthFailure(issue: issue) }
-        let types = Set<HKObjectType>(identifiers.compactMap { HKObjectType.quantityType(forIdentifier: $0) })
-        guard types.count == 4 else { throw AppleHealthFailure(issue: .unavailable) }
+        var types = Set<HKObjectType>(identifiers.compactMap { HKObjectType.quantityType(forIdentifier: $0) })
+        guard let sleep = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) else { throw AppleHealthFailure(issue: .unavailable) }
+        types.insert(sleep); types.insert(HKObjectType.workoutType())
+        guard types.count == 10 else { throw AppleHealthFailure(issue: .unavailable) }
         // Completion means the request was processed, never that reads were granted.
         // The native sheet lets the person choose each type. No Apple ID is requested.
         try await store.requestAuthorization(toShare: [], read: types)
         try Task.checkCancellation()
     }
+    func readSnapshot(at date: Date, calendar: Calendar, historyDays: Int, forceFull: Bool) async throws -> HealthReadSnapshot {
+        async let base = readSnapshot(at: date, calendar: calendar)
+        async let details = readDetails(at: date, calendar: calendar, days: historyDays, forceFull: forceFull)
+        var value = try await base
+        value.details = try await details
+        try Task.checkCancellation()
+        return value.sanitized()
+    }
+    func startObserving(onChange: @escaping @MainActor () -> Void) { startForegroundObservation(onChange: onChange) }
+    func stopObserving() { stopForegroundObservation() }
     func readSnapshot(at date: Date = Date(), calendar: Calendar = .autoupdatingCurrent) async throws -> HealthReadSnapshot {
         if let issue = availabilityIssue { throw AppleHealthFailure(issue: issue) }
         guard let window = HealthDayWindow.containing(date, calendar: calendar) else {
@@ -73,7 +100,7 @@ private struct AppleHealthFailure: Error { let issue: HealthReadIssue }
             return .value(HealthMeasurement(value: quantity.doubleValue(for: unit), date: cutoff))
         } catch { return Self.fieldFailure(error) }
     }
-    private func latest(_ identifier: HKQuantityTypeIdentifier, unit: HKUnit, cutoff: Date) async -> HealthReadField {
+    func latest(_ identifier: HKQuantityTypeIdentifier, unit: HKUnit, cutoff: Date) async -> HealthReadField {
         guard let type = HKObjectType.quantityType(forIdentifier: identifier) else { return .failed(.unavailable) }
         let predicate = HKQuery.predicateForSamples(withStart: nil, end: cutoff, options: .strictEndDate)
         let descriptor = HKSampleQueryDescriptor(predicates: [.quantitySample(type: type, predicate: predicate)],
@@ -86,7 +113,7 @@ private struct AppleHealthFailure: Error { let issue: HealthReadIssue }
             return .value(HealthMeasurement(value: sample.quantity.doubleValue(for: unit), date: sample.endDate))
         } catch { return Self.fieldFailure(error) }
     }
-    private static func fieldFailure(_ error: Error) -> HealthReadField {
+    static func fieldFailure(_ error: Error) -> HealthReadField {
         let native = error as NSError
         if native.domain == HKErrorDomain, native.code == HKError.Code.errorNoData.rawValue { return .noData }
         return .failed(issue(for: error))
@@ -115,10 +142,17 @@ private struct AppleHealthFailure: Error { let issue: HealthReadIssue }
     @Published private(set) var isRefreshing = false
     @Published private(set) var referenceDate = Date()
     @Published private(set) var lastAttempt: Date?
+    @Published private(set) var lastSuccessfulSync: Date?
+    @Published private(set) var historyDays: Int
+    @Published private(set) var hasConfigured: Bool
     private let reader: any AppleHealthReading
     private let preferences: UserDefaults
     private static let preferenceKey = "luqma.health.refreshOnOpen"
+    private static let rangeKey = "luqma.health.historyDays"
     private var refreshTask: Task<Void, Never>?
+    private var observerRefreshTask: Task<Void, Never>?
+    private var isForeground = true
+    private var observerRefreshPending = false
     private var generation = UUID()
     var isWorking: Bool { isAuthorizing || isRefreshing }
     var availabilityIssue: HealthReadIssue? { reader.availabilityIssue }
@@ -126,6 +160,8 @@ private struct AppleHealthFailure: Error { let issue: HealthReadIssue }
     init(reader: (any AppleHealthReading)? = nil, preferences: UserDefaults = .standard) {
         self.reader = reader ?? HealthKitReader(); self.preferences = preferences
         refreshEnabled = preferences.bool(forKey: Self.preferenceKey)
+        hasConfigured = preferences.object(forKey: Self.preferenceKey) != nil
+        historyDays = HealthHistoryRange(rawValue: preferences.integer(forKey: Self.rangeKey))?.rawValue ?? 30
     }
     func connect() async {
         guard !isWorking else { return }
@@ -137,8 +173,12 @@ private struct AppleHealthFailure: Error { let issue: HealthReadIssue }
             guard !Task.isCancelled, generation == token else { return }
             // This is the person's refresh preference, NOT an authorization status.
             refreshEnabled = true; preferences.set(true, forKey: Self.preferenceKey)
+            hasConfigured = true
             isAuthorizing = false
-            await refresh()
+            if isForeground {
+                await refresh()
+                observeIfEnabled()
+            }
         } catch {
             guard generation == token else { return }
             let failure = HealthKitReader.issue(for: error)
@@ -146,25 +186,29 @@ private struct AppleHealthFailure: Error { let issue: HealthReadIssue }
         }
     }
     func refreshIfEnabled() async {
+        isForeground = true
         referenceDate = Date()
         guard refreshEnabled else { return }
         await refresh()
+        observeIfEnabled()
     }
-    func refresh() async {
+    func refresh(forceFull: Bool = true) async {
         referenceDate = Date()
-        guard refreshEnabled, !isWorking else { return }
+        guard isForeground, refreshEnabled, !isWorking else { return }
         if let unavailable = availabilityIssue { issue = unavailable; snapshot = nil; return }
         let token = UUID(); generation = token; isRefreshing = true; issue = nil
         lastAttempt = Date()
         let provider = reader
+        let days = historyDays
         let task = Task { [weak self] in
             do {
-                let value = try await provider.readSnapshot(at: Date(), calendar: .autoupdatingCurrent)
+                let value = try await provider.readSnapshot(at: Date(), calendar: .autoupdatingCurrent, historyDays: days, forceFull: forceFull)
                 try Task.checkCancellation()
                 guard let self, generation == token, refreshEnabled else { return }
                 // Empty or partially failed reads replace the prior observations.
                 // Revocation cannot silently leave a previously seen value current.
                 snapshot = value.sanitized(); referenceDate = Date(); issue = nil
+                if value.hasReadableData { lastSuccessfulSync = value.refreshedAt }
             } catch {
                 guard let self, generation == token else { return }
                 let failure = HealthKitReader.issue(for: error)
@@ -185,22 +229,58 @@ private struct AppleHealthFailure: Error { let issue: HealthReadIssue }
             }
         }
         if generation == token { refreshTask = nil }
+        if observerRefreshPending, refreshEnabled, isForeground, !isWorking {
+            observerRefreshPending = false
+            scheduleObserverRefresh()
+        }
     }
     func cancelRefresh() {
         // Calendar/background events cannot cancel a native authorization sheet.
         // Leave its generation intact so its eventual completion clears busy state.
         guard !isAuthorizing else { referenceDate = Date(); return }
         generation = UUID(); refreshTask?.cancel(); refreshTask = nil; isRefreshing = false; referenceDate = Date()
+        reader.resetHistoryCache()
     }
     func calendarDidChange() async {
         cancelRefresh()
-        await refreshIfEnabled()
+        if isForeground, refreshEnabled { await refresh() }
     }
-    func suspend() { if !isAuthorizing { cancelRefresh() } }
+    func suspend() {
+        isForeground = false; reader.stopObserving()
+        observerRefreshTask?.cancel(); observerRefreshTask = nil; observerRefreshPending = false
+        if !isAuthorizing { cancelRefresh() }
+    }
     func disconnect() {
         guard !isAuthorizing else { return }
         cancelRefresh(); refreshEnabled = false; preferences.set(false, forKey: Self.preferenceKey)
         snapshot = nil; issue = nil; lastAttempt = nil
+        lastSuccessfulSync = nil; reader.stopObserving(); reader.resetHistoryCache()
+        observerRefreshTask?.cancel(); observerRefreshTask = nil; observerRefreshPending = false
         // Local disconnect cannot revoke system permissions. The UI explains Health settings.
+    }
+    func setHistoryDays(_ value: Int) async {
+        guard let range = HealthHistoryRange(rawValue: value), range.rawValue != historyDays else { return }
+        cancelRefresh(); historyDays = range.rawValue; preferences.set(historyDays, forKey: Self.rangeKey)
+        await refresh()
+    }
+    private func observeIfEnabled() {
+        guard isForeground, refreshEnabled, availabilityIssue == nil else { return }
+        reader.startObserving { [weak self] in self?.scheduleObserverRefresh() }
+    }
+    private func scheduleObserverRefresh() {
+        guard refreshEnabled, isForeground else { return }
+        observerRefreshTask?.cancel()
+        observerRefreshTask = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(350))
+            guard !Task.isCancelled, let self, refreshEnabled, isForeground else { return }
+            guard !isWorking else { observerRefreshPending = true; return }
+            await refresh(forceFull: false)
+        }
+    }
+}
+
+extension HealthReadSnapshot {
+    var hasReadableData: Bool {
+        [steps, activeEnergy, bodyMass, height].contains { $0.measurement != nil } || details.hasReadableData
     }
 }

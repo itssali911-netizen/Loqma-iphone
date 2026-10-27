@@ -167,7 +167,8 @@ final class AppleHealthInteractionTests:XCTestCase {
         }
         app.buttons["nav.progress"].tap()
         XCTAssertTrue(app.buttons["nav.progress"].isSelected)
-        // Progress keeps its original 103 layout: no inserted Health card.
+        // The original Progress sections remain; Health adds its own card only
+        // after the person has enabled refresh. No sample data is injected.
         capture("health-"+language+"-progress")
         app.buttons["nav.settings"].tap()
         // The original TabView retains each tab's NavigationStack. Returning

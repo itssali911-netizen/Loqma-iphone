@@ -5,6 +5,27 @@ enum HealthReadIssue: String, Codable, Equatable, Sendable {
     case unavailable, restricted, deviceLocked, missingEntitlement, queryFailed, cancelled
 }
 
+extension HealthReadSnapshot {
+    private enum CodingKeys: String, CodingKey {
+        case windowStart, windowEnd, timeZoneIdentifier, refreshedAt
+        case steps, activeEnergy, bodyMass, height, details
+    }
+
+    /// Older in-memory/export test fixtures predate the extended readings.
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        windowStart = try values.decode(Date.self, forKey: .windowStart)
+        windowEnd = try values.decode(Date.self, forKey: .windowEnd)
+        timeZoneIdentifier = try values.decode(String.self, forKey: .timeZoneIdentifier)
+        refreshedAt = try values.decode(Date.self, forKey: .refreshedAt)
+        steps = try values.decode(HealthReadField.self, forKey: .steps)
+        activeEnergy = try values.decode(HealthReadField.self, forKey: .activeEnergy)
+        bodyMass = try values.decode(HealthReadField.self, forKey: .bodyMass)
+        height = try values.decode(HealthReadField.self, forKey: .height)
+        details = try values.decodeIfPresent(HealthReadDetails.self, forKey: .details) ?? .empty
+    }
+}
+
 /// Units are fixed by the containing field: count, kcal, kg, or cm.
 struct HealthMeasurement: Codable, Equatable, Sendable {
     var value: Double
@@ -67,6 +88,7 @@ struct HealthReadSnapshot: Codable, Equatable, Sendable {
     var activeEnergy: HealthReadField
     var bodyMass: HealthReadField
     var height: HealthReadField
+    var details: HealthReadDetails = .empty
 
     /// Validates observations without inventing measurements or adult-profile limits.
     /// Use the current-day accessors for daily totals; old totals remain historical cache data.
@@ -76,6 +98,7 @@ struct HealthReadSnapshot: Codable, Equatable, Sendable {
         result.activeEnergy = activeEnergy.sanitized(allowZero: true, now: now)
         result.bodyMass = bodyMass.sanitized(allowZero: false, now: now)
         result.height = height.sanitized(allowZero: false, now: now)
+        result.details = details.sanitized(now: now, calendar: .autoupdatingCurrent)
         return result
     }
 
