@@ -157,7 +157,7 @@ import AVFoundation
                 }label:{
                     cameraControl("camera.fill",size:96,radius:28)
                         .overlay{RoundedRectangle(cornerRadius:31,style:.continuous).stroke(Color(hex:0x393C43),lineWidth:4).padding(-2)}
-                }.buttonStyle(.plain).padding(.bottom,16).disabled(busy || loadingPhoto || liveCamera.capturing || (imageData == nil && liveCamera.state != .ready))
+                }.buttonStyle(.plain).padding(.bottom,16).disabled(busy || loadingPhoto || liveCamera.capturing || (imageData == nil && liveCamera.state != .ready) || (imageData != nil && preview == nil))
                     .accessibilityLabel(imageData == nil ? diary.t("الكاميرا","Camera"):diary.t("تحليل الوجبة","Meal analysis"))
                     .accessibilityIdentifier("photo.shutter")
                 Button{showingSetup=true}label:{cameraControl("gearshape",size:68,radius:20)}
@@ -168,7 +168,7 @@ import AVFoundation
                     .luqmaFont(.caption).foregroundStyle(Theme.muted).fixedSize(horizontal:false,vertical:true)
             }
             if imageData != nil,!busy,!loadingPhoto{
-                Button(diary.t("التقاط صورة جديدة","Take another photo")){automaticallyAnalyze=false;item=nil;imageData=nil}
+                Button(diary.t("التقاط صورة جديدة","Take another photo")){automaticallyAnalyze=false;item=nil;error=nil;cancellationMessage=nil;imageData=nil}
                     .buttonStyle(LuqmaSecondaryButtonStyle()).accessibilityIdentifier("photo.retake")
             }
             if let cameraMessage{
@@ -357,18 +357,29 @@ import AVFoundation
     }
     private func calorieValue(_ kcal:Double)->some View {
         VStack(spacing:4){
-            HStack(alignment:.firstTextBaseline,spacing:8){
-                FoodAnalysisIcon(kind:.calories).frame(width:28,height:32)
-                    .alignmentGuide(.firstTextBaseline){$0[.bottom]-3}.accessibilityHidden(true)
-                Text(decimal(kcal,0)).luqmaFont(size:40,weight:.bold,relativeTo:.largeTitle)
-                    .monospacedDigit().environment(\.layoutDirection,.leftToRight)
+            if typeSize.isAccessibilitySize{
+                calorieNumber(kcal)
                 Text(diary.t("سعرة حرارية","kcal")).luqmaFont(size:20,weight:.medium,relativeTo:.title3)
-            }.foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.7)
-                .environment(\.layoutDirection,diary.language == .ar ? .rightToLeft:.leftToRight)
+                    .foregroundStyle(.white).multilineTextAlignment(.center)
+            }else{
+                HStack(alignment:.firstTextBaseline,spacing:8){
+                    calorieNumber(kcal)
+                    Text(diary.t("سعرة حرارية","kcal")).luqmaFont(size:20,weight:.medium,relativeTo:.title3)
+                }.foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.7)
+                    .environment(\.layoutDirection,diary.language == .ar ? .rightToLeft:.leftToRight)
+            }
             Text(diary.t("تقدير الصورة","Photo estimate")).luqmaFont(.caption).foregroundStyle(Theme.muted)
         }.accessibilityElement(children:.ignore)
             .accessibilityLabel(diary.t("تقدير الصورة","Photo estimate")+", "+decimal(kcal,0)+" "+diary.t("سعرة حرارية","kcal"))
             .accessibilityIdentifier("photo.calories")
+    }
+    private func calorieNumber(_ kcal:Double)->some View {
+        HStack(alignment:.firstTextBaseline,spacing:8){
+            FoodAnalysisIcon(kind:.calories).frame(width:28,height:32)
+                .alignmentGuide(.firstTextBaseline){$0[.bottom]-3}.accessibilityHidden(true)
+            Text(decimal(kcal,0)).luqmaFont(size:40,weight:.bold,relativeTo:.largeTitle)
+                .monospacedDigit().environment(\.layoutDirection,.leftToRight)
+        }.foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.7)
     }
     private func calorieContribution(_ kcal:Double)->some View {
         VStack(alignment:.leading,spacing:8){
@@ -399,13 +410,15 @@ import AVFoundation
                 RoundedRectangle(cornerRadius:24,style:.continuous).fill(macroColor(key))
                     .frame(height:geometry.size.height*CGFloat(fraction))
                 VStack(spacing:8) {
-                    FoodAnalysisIcon(kind:macroIcon(key)).frame(width:26,height:26).accessibilityHidden(true)
+                    FoodAnalysisIcon(kind:macroIcon(key)).frame(width:26,height:26).padding(4)
+                        .background(Theme.background,in:RoundedRectangle(cornerRadius:8)).accessibilityHidden(true)
                     Text(key.label(diary.language)).luqmaFont(size:13,weight:.medium,relativeTo:.caption)
+                    Spacer(minLength:8)
                     HStack(alignment:.firstTextBaseline,spacing:3){
                         Text(decimal(amount,1)).luqmaFont(size:22,weight:.heavy,relativeTo:.title3).monospacedDigit()
                         Text(diary.t("جم","g")).luqmaFont(.caption)
                     }.environment(\.layoutDirection,.leftToRight).lineLimit(1).minimumScaleFactor(0.75)
-                }.foregroundStyle(.white).padding(.horizontal,4).padding(.bottom,14)
+                }.foregroundStyle(.white).padding(.horizontal,4).padding(.top,16).padding(.bottom,14)
             }
         }.frame(maxWidth:.infinity).frame(height:177)
             .accessibilityElement(children:.ignore).accessibilityLabel(key.label(diary.language))
@@ -584,11 +597,14 @@ import AVFoundation
     }
     private func loadPhoto(_ value:PhotosPickerItem?){
         photoLoadTask?.cancel();let token=UUID();photoGeneration=token
-        guard let value else{loadingPhoto=false;refreshCamera();return};loadingPhoto=true;automaticallyAnalyze=true;parts=[];products=[:];error=nil;refreshCamera()
+        guard let value else{loadingPhoto=false;refreshCamera();return}
+        previewGeneration=UUID();previewTask?.cancel();previewTask=nil
+        loadingPhoto=true;automaticallyAnalyze=false;parts=[];products=[:];error=nil;refreshCamera()
         photoLoadTask=Task{do{
             let data=try await value.loadTransferable(type:Data.self);try Task.checkCancellation()
             guard photoGeneration==token else{return}
             guard let data else{throw AppError.invalid("تعذّر فتح الصورة. اختر صورة أخرى.","The photo could not be opened. Choose another photo.")}
+            automaticallyAnalyze=true
             // Equal bytes still represent a new selection and must invoke analysis.
             if imageData == data{preparePhotoPreview(data)}else{imageData=data}
         }catch{guard photoGeneration==token,!Task.isCancelled else{return};self.error=diary.t("تعذّر فتح الصورة. اختر صورة أخرى.","The photo could not be opened. Choose another photo.")}
