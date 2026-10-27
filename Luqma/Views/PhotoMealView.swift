@@ -245,7 +245,7 @@ import AVFoundation
                             withAnimation(.easeOut(duration:0.16)){shutterVisible=false}
                         }
                 }
-            }.frame(maxWidth:.infinity)
+            }.frame(width:width,height:height).clipped()
                 .accessibilityElement(children:.contain)
                 .accessibilityLabel(diary.t(preview == nil ? "معاينة الكاميرا المباشرة":"صورة وجبتك داخل إطار المسح",preview == nil ? "Live camera preview":"Your meal photo in the viewfinder"))
                 .accessibilityIdentifier("photo.viewfinder")
