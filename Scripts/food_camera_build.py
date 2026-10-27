@@ -13,7 +13,11 @@ from vision_compat import apply_vision_compat
 ROOT=Path(__file__).resolve().parents[1]
 require_mac(26)
 output=ROOT/'BuildOutput'
-output.mkdir(exist_ok=False)
+output.mkdir(exist_ok=True)
+# Existing font/Health tests write their diagnostics into BuildOutput. Preserve
+# those logs while refusing to mix any previously compiled app or package tree.
+for name in ['Packages','simulator-derived','device-derived','simulator.xcresult','device.xcresult','build-summary.json']:
+    if (output/name).exists():raise SystemExit('Refusing stale compilation output: '+name)
 packages=output/'Packages'
 run(['xcodebuild','-resolvePackageDependencies','-project','Luqma.xcodeproj','-scheme','Luqma','-clonedSourcePackagesDirPath',str(packages)],output/'packages.log')
 apply_vision_compat(packages)
