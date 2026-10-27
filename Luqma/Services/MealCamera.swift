@@ -118,6 +118,9 @@ final class MealCameraSession: NSObject, AVCapturePhotoCaptureDelegate, @uncheck
     func setOrientation(_ value: AVCaptureVideoOrientation) { queue.async { [self] in orientation = value } }
     private func reconcile() {
         guard wanted else { if session.isRunning { session.stopRunning() }; return }
+        // A background stop may end an interruption before its queued notice.
+        // Re-read AVFoundation's current state when returning to the feature.
+        interrupted = session.isInterrupted
         guard !interrupted else { onState?(.interrupted); return }
         guard AVCaptureDevice.authorizationStatus(for: .video) == .authorized else { onState?(.denied); return }
         if !configured {
