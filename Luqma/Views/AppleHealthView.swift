@@ -1,6 +1,6 @@
 import SwiftUI
 
-private enum HealthCopy {
+enum HealthCopy {
     static func issue(_ issue: HealthReadIssue, _ language: AppLanguage) -> String {
         switch issue {
         case .unavailable:
@@ -25,7 +25,7 @@ private enum HealthCopy {
     }
 }
 
-private struct HealthMetricRow: View {
+struct HealthMetricRow: View {
     let title: String
     let unit: String
     let field: HealthReadField
@@ -58,6 +58,7 @@ private struct HealthMetricRow: View {
 struct HealthSettingsView: View {
     @EnvironmentObject private var diary: DiaryStore
     @EnvironmentObject private var health: AppleHealthService
+    @State private var showingAccessGuide = false
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
@@ -67,31 +68,43 @@ struct HealthSettingsView: View {
                     SandowStateAlert(text: HealthCopy.issue(issue, diary.language)).accessibilityIdentifier("health.issue")
                 }
                 readings
+                HealthExtendedReadingsView()
                 accessGuide
             }.padding(16).padding(.bottom, 20)
-        }.appBackground().sandowNavigation(diary.t("صحتي", "Apple Health"), backLabel: diary.t("رجوع", "Back"))
+        }.background(HealthPalette.background.ignoresSafeArea()).sandowNavigation(diary.t("صحتي", "Apple Health"), backLabel: diary.t("رجوع", "Back"))
             .accessibilityIdentifier("health.screen")
+            .sheet(isPresented: $showingAccessGuide) {
+                NavigationStack {
+                    ScrollView { accessGuide.padding(16) }
+                        .background(HealthPalette.background.ignoresSafeArea())
+                        .navigationTitle(diary.t("إدارة أذونات صحتي", "Manage Health access"))
+                        .toolbar { ToolbarItem(placement: .confirmationAction) { Button(diary.t("تم", "Done")) { showingAccessGuide = false } } }
+                }
+            }
     }
     private var explanation: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("Apple Health", systemImage: "heart.fill").luqmaFont(size: 20, weight: .bold, relativeTo: .title3).foregroundStyle(Theme.accentText)
-            Text(diary.t("اعرض خطوات اليوم وطاقة النشاط، وآخر وزن وطول متاحين. تختار بنفسك الأنواع التي تسمح بقراءتها في نافذة صحتي.", "View today's steps and active energy, plus the latest available weight and height. Choose each data type yourself in the native Health permission sheet."))
+            Label("Apple Health", systemImage: "heart.fill").luqmaFont(size: 20, weight: .bold, relativeTo: .title3).foregroundStyle(HealthPalette.accent)
+            Text(diary.t("تابع الخطوات والمسافة وطاقة النشاط والراحة، والوزن والطول ونسبة الدهون والنبض والتمارين والنوم. تختار بنفسك الأنواع التي تسمح بقراءتها في نافذة صحتي الرسمية.", "Follow steps, distance, active and resting energy, weight, height, body fat, heart rate, workouts and sleep. Choose each data type yourself in Apple's native Health permission sheet."))
                 .luqmaFont(size: 14, relativeTo: .body)
             Text(diary.t("قراءة فقط. لا نكتب في صحتي، ولا نغيّر إدخالاتك اليدوية أو أهداف السعرات تلقائيًا. تبقى القراءات في ذاكرة التطبيق على جهازك، ولا تدخل النسخ الاحتياطية أو التحليل أو أي خادم.", "Read only. Luqma does not write to Health or automatically change manual entries or calorie targets. Readings stay in app memory on this device, outside backups, analysis requests and servers."))
                 .luqmaFont(size: 12, relativeTo: .footnote).foregroundStyle(Theme.muted)
-        }.luqmaCard().accessibilityElement(children: .combine).accessibilityIdentifier("health.explanation")
+        }.healthCard().accessibilityElement(children: .combine).accessibilityIdentifier("health.explanation")
     }
     private var actions: some View {
         VStack(alignment: .leading, spacing: 12) {
             Button { Task { await health.connect() } } label: {
                 Label(diary.t(health.refreshEnabled ? "طلب الوصول مرة أخرى" : "ربط Apple Health", health.refreshEnabled ? "Request access again" : "Connect Apple Health"), systemImage: "heart.text.square")
                     .frame(maxWidth: .infinity, minHeight: 44)
-            }.buttonStyle(LuqmaPrimaryButtonStyle()).disabled(health.isWorking || health.availabilityIssue != nil)
+            }.buttonStyle(HealthPrimaryButtonStyle()).disabled(health.isWorking || health.availabilityIssue != nil)
                 .accessibilityIdentifier("health.connect")
             Button { Task { await health.refresh() } } label: {
                 Label(diary.t("تحديث القراءات", "Refresh readings"), systemImage: "arrow.clockwise").frame(maxWidth: .infinity, minHeight: 44)
             }.buttonStyle(LuqmaSecondaryButtonStyle()).disabled(!health.refreshEnabled || health.isWorking || health.availabilityIssue != nil)
                 .accessibilityIdentifier("health.refresh")
+            Button { showingAccessGuide = true } label: {
+                Label(diary.t("إدارة أذونات صحتي", "Manage Health access"), systemImage: "hand.raised").frame(maxWidth: .infinity, minHeight: 44)
+            }.buttonStyle(LuqmaSecondaryButtonStyle()).accessibilityIdentifier("health.manageAccess")
             if health.isWorking {
                 HStack(spacing: 8) {
                     ProgressView()
@@ -107,7 +120,7 @@ struct HealthSettingsView: View {
                 Button(diary.t("إيقاف التحديث ومسح القراءات المعروضة", "Stop refresh and clear displayed readings")) { health.disconnect() }
                     .buttonStyle(LuqmaSecondaryButtonStyle()).disabled(health.isAuthorizing).accessibilityIdentifier("health.disconnect")
             }
-        }.luqmaCard()
+        }.healthCard()
     }
     private var readings: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -125,7 +138,7 @@ struct HealthSettingsView: View {
             }
             Text(diary.t("القراءة الفارغة قد تعني عدم وجود سجلات أو عدم السماح بقراءتها؛ لا يكشف صحتي للتطبيق أيهما السبب. يمكنك مشاركة بعض الأنواع فقط. القيم غير المتاحة لا تُعرض كصفر.", "An empty read can mean no records or no read access; Health does not tell Luqma which. You may share only some types. Unavailable values are never displayed as zero."))
                 .luqmaFont(.footnote).foregroundStyle(Theme.muted)
-        }.luqmaCard()
+        }.healthCard()
     }
     private func dailyField(_ key: KeyPath<HealthReadSnapshot, HealthReadField>) -> HealthReadField {
         guard let snapshot = health.snapshot, snapshot.dailyReadingsAreCurrent(at: health.referenceDate, calendar: .autoupdatingCurrent) else { return .noData }
@@ -143,6 +156,6 @@ struct HealthSettingsView: View {
                 .luqmaFont(.footnote).foregroundStyle(Theme.muted)
             Text(diary.t("قد لا تظهر نافذة الأذونات مجددًا إذا سبق أن أجبت عنها. إيقاف التحديث في لقمة يمسح القراءات المعروضة فقط؛ سحب الأذونات يتم من صحتي. لا توجد مزامنة مستمرة في الخلفية.", "The permission sheet may not appear again after you have answered it. Stopping refresh in Luqma clears displayed readings only; revoke permissions in Health. No continuous background sync is promised."))
                 .luqmaFont(.footnote).foregroundStyle(Theme.muted)
-        }.luqmaCard().accessibilityIdentifier("health.accessGuide")
+        }.healthCard().accessibilityIdentifier("health.accessGuide")
     }
 }

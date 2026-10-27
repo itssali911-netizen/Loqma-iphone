@@ -13,6 +13,7 @@ struct ProgressViewScreen:View {
             Text(diary.t("تقدّمي","My progress")).luqmaFont(size:14,weight:.semibold,relativeTo:.headline)
                 .frame(maxWidth:.infinity,minHeight:44).accessibilityAddTraits(.isHeader)
             weightSummary
+            AppleHealthProgressCard()
             Text(diary.t("اتجاه الوزن","Weight trend")).luqmaFont(size:13,weight:.semibold,relativeTo:.subheadline)
                 .accessibilityAddTraits(.isHeader)
             weightChart(snapshot)

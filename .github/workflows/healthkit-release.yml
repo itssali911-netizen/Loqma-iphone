@@ -1,0 +1,150 @@
+name: Luqma HealthKit re-signable IPA release
+
+on:
+  push:
+    branches: [feature/healthkit-ipa-release]
+    paths: ['Luqma/**', 'Luqma.xcodeproj/**', 'Package.swift', 'Tests/**', 'TestsUI/**', 'BuildTests/**', 'Scripts/**', 'Docs/HealthKitRelease/**', '.github/workflows/healthkit-release.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: luqma-healthkit-release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-verify:
+    if: github.ref == 'refs/heads/feature/healthkit-ipa-release'
+    runs-on: macos-26
+    timeout-minutes: 180
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+      BUNDLE_ID: app.luqma.diary
+      BUILD_NUMBER: '120'
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 10
+      - name: Verify release packaging rejection gates
+        run: python3 Scripts/package_healthkit_release.py --self-test
+      - name: Verify selected toolchain
+        run: |
+          test -d "$DEVELOPER_DIR"
+          xcodebuild -version
+          swift --version
+      - name: Verify approved source, assets and unrelated screens remain frozen
+        run: python3 Scripts/verify_restored_source.py --output Restore103Validation/source-freeze.json
+      - name: Run all Core and BuildTests and compile device Release and Simulator Debug once
+        run: python3 Scripts/build_ios.py check --output BuildOutput
+      - name: Record actual public toolchain versions
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, platform, subprocess
+          data = {'macos': platform.mac_ver()[0]}
+          for key, args in {'xcode': ['xcodebuild','-version'], 'swift': ['swift','--version']}.items():
+              data[key] = subprocess.run(args, check=True, capture_output=True, text=True).stdout.strip()
+          pathlib.Path('BuildOutput/toolchain.json').write_text(json.dumps(data, indent=2)+'\n')
+          PY
+      - name: Create a device IPA with local ad-hoc hashes and no Apple profile
+        run: |
+          python3 - <<'PY'
+          import pathlib, sys
+          sys.path.insert(0, str(pathlib.Path('Scripts').resolve()))
+          from build_ios import prepare_sideload
+          output = pathlib.Path('BuildOutput').resolve()
+          prepare_sideload(output/'device-derived/Build/Products/Release-iphoneos/Luqma.app', output, 'app.luqma.diary')
+          PY
+      - name: Inspect the actual IPA and fail closed on every unexpected signing result
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, subprocess, sys
+          sys.path.insert(0, str(pathlib.Path('Scripts').resolve()))
+          from package_healthkit_release import validate_resignable_report
+          ipa = pathlib.Path('BuildOutput/Luqma-Sideload.ipa')
+          report = pathlib.Path('BuildOutput/healthkit-signing-report.json')
+          result = subprocess.run([sys.executable, 'Scripts/verify_healthkit_signing.py', '--ipa', str(ipa), '--output', str(report), '--expected-bundle', 'app.luqma.diary'])
+          validate_resignable_report(json.loads(report.read_text()), ipa)
+          if result.returncode != 2:
+              raise SystemExit('Expected incomplete Apple signing (exit 2) only after the strict re-signable gate passed.')
+          PY
+      - name: Run actual native Health UI tests and capture Simulator screenshots
+        run: python3 Scripts/healthkit_ui_validation.py validate
+      - name: Assemble the verified IPA, installation guides and measured test report
+        run: python3 Scripts/package_healthkit_release.py --ipa BuildOutput/Luqma-Sideload.ipa --inspection BuildOutput/healthkit-signing-report.json --build-output BuildOutput --ui-report HealthValidation/report.json --output HealthKitRelease
+      - name: Preserve the release candidate only after all gates pass
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-HealthKit-v2.9-build120-${{ github.sha }}
+          path: HealthKitRelease/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Preserve actual build, native UI and inspection evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-HealthKit-evidence-${{ github.run_id }}
+          path: |
+            BuildOutput/build-summary.json
+            BuildOutput/toolchain.json
+            BuildOutput/healthkit-signing-report.json
+            BuildOutput/*.log
+            HealthValidation/
+          if-no-files-found: warn
+          retention-days: 14
+
+  publish-prerelease:
+    needs: build-and-verify
+    if: github.ref == 'refs/heads/feature/healthkit-ipa-release'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      actions: read
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RELEASE_TAG: luqma-healthkit-v2.9-build120
+      SOURCE_SHA: ${{ github.sha }}
+      SOURCE_RUN: ${{ github.run_id }}
+    steps:
+      - name: Download only this successful commit's release candidate
+        run: gh run download "$SOURCE_RUN" --name "LUQMA-HealthKit-v2.9-build120-$SOURCE_SHA" --dir ReleaseCandidate
+      - name: Verify download hashes and source identity before publication
+        run: |
+          cd ReleaseCandidate
+          sha256sum --check SHA256SUMS
+          python3 - <<'PY'
+          import json, os, pathlib
+          value = json.loads(pathlib.Path('release-manifest.json').read_text())
+          assert value['commit'] == os.environ['SOURCE_SHA']
+          assert value['version'] == '2.9' and value['build'] == '120'
+          assert value['bundle_identifier'] == 'app.luqma.diary'
+          assert value['signing_kind'] == 'ADHOC_HASH' and value['embedded_apple_profile'] is False
+          assert value['apple_signed'] is False and value['requires_resigning'] is True
+          assert value['physical_installation'] == 'NOTTESTED' and value['real_health_data'] == 'NOTTESTED'
+          assert pathlib.Path(value['ipa_file']).is_file()
+          PY
+      - name: Publish a clearly labeled re-signable prerelease without replacing an existing release
+        run: |
+          if gh api "repos/$GH_REPO/git/ref/tags/$RELEASE_TAG" >/dev/null 2>&1; then
+            echo 'The release tag already exists. Refusing to replace its source or assets.'
+            exit 1
+          fi
+          gh release create "$RELEASE_TAG" \
+            ReleaseCandidate/LUQMA-HealthKit-Resignable-v2.9-build120.ipa \
+            ReleaseCandidate/LUQMA-HealthKit-Release-v2.9-build120.zip \
+            ReleaseCandidate/SHA256SUMS \
+            ReleaseCandidate/release-manifest.json \
+            ReleaseCandidate/signing-report.json \
+            ReleaseCandidate/README-Installation-AR.md \
+            ReleaseCandidate/README-Installation-EN.md \
+            ReleaseCandidate/HEALTHKIT-COMPATIBILITY.md \
+            ReleaseCandidate/HEALTHKIT-TEST-REPORT.md \
+            --target "$SOURCE_SHA" --prerelease \
+            --title 'Luqma 2.9 (120) — HealthKit re-signable preview' \
+            --notes-file ReleaseCandidate/RELEASE-NOTES.md

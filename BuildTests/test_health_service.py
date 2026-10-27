@@ -28,6 +28,14 @@ CHECKS = (
     "only_refresh_intent_persists",
     "unavailable_does_not_authorize",
     "authorization_survives_lifecycle_events",
+    "history_range_contract_and_intent_persistence",
+    "extended_partial_and_truthful_last_success",
+    "foreground_observers_and_incremental_refresh",
+    "observer_burst_queues_one_followup",
+    "observer_event_does_not_cancel_its_inflight_read",
+    "range_change_rejects_late_history",
+    "suspended_authorization_waits_for_foreground",
+    "background_calendar_change_stays_suspended",
 )
 
 
@@ -47,10 +55,11 @@ class NativeHealthServiceTests(unittest.TestCase):
             architecture = "arm64" if platform.machine().lower() in ("arm64", "arm64e", "aarch64") else "x86_64"
             executable = folder / "HealthServiceProbe"
             arguments = ["xcrun", "swiftc", "-swift-version", "5", "-strict-concurrency=minimal", "-parse-as-library",
-                         "-sdk", sdk, "-target", architecture + "-apple-macosx13.0",
+                         "-sdk", sdk, "-target", architecture + "-apple-macosx14.0",
                          "-module-cache-path", str(folder / "Modules"), "-framework", "HealthKit", "-framework", "Combine"]
             arguments += [str(path) for path in sorted((ROOT / "Luqma/Core").glob("*.swift"))]
             arguments += [str(ROOT / "Luqma/Services/AppleHealthService.swift"),
+                          str(ROOT / "Luqma/Services/HealthHistoryReader.swift"),
                           str(ROOT / "BuildTests/Fixtures/health_service_probe.swift"), "-o", str(executable)]
             compiled = subprocess.run(arguments, cwd=ROOT, env=public_environment(), stdout=subprocess.PIPE,
                                       stderr=subprocess.STDOUT, timeout=240, check=False)
@@ -115,3 +124,27 @@ class NativeHealthServiceTests(unittest.TestCase):
 
     def test_native_authorization_survives_calendar_and_disconnect_events(self):
         self.assertIn("authorization_survives_lifecycle_events", self.report["checks"])
+
+    def test_history_range_forwarding_and_only_intent_persistence(self):
+        self.assertIn("history_range_contract_and_intent_persistence", self.report["checks"])
+
+    def test_extended_readings_and_last_success_are_truthful(self):
+        self.assertIn("extended_partial_and_truthful_last_success", self.report["checks"])
+
+    def test_observers_stop_in_background_and_refresh_incrementally(self):
+        self.assertIn("foreground_observers_and_incremental_refresh", self.report["checks"])
+
+    def test_observer_bursts_queue_only_one_followup(self):
+        self.assertIn("observer_burst_queues_one_followup", self.report["checks"])
+
+    def test_range_change_rejects_late_old_data(self):
+        self.assertIn("range_change_rejects_late_history", self.report["checks"])
+
+    def test_observer_notification_does_not_cancel_its_existing_read(self):
+        self.assertIn("observer_event_does_not_cancel_its_inflight_read", self.report["checks"])
+
+    def test_suspended_authorization_waits_for_foreground(self):
+        self.assertIn("suspended_authorization_waits_for_foreground", self.report["checks"])
+
+    def test_background_calendar_event_does_not_reactivate_queries(self):
+        self.assertIn("background_calendar_change_stays_suspended", self.report["checks"])

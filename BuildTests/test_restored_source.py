@@ -47,7 +47,7 @@ class RestoredSourceRulesTests(unittest.TestCase):
                 self.assertIsNotNone(guard.validate_plist(plistlib.dumps(before), plistlib.dumps(dict(after, **extra))))
 
     def test_exact_approved_arabic_purpose_preserves_bundle_and_rejects_unrelated_copy(self):
-        purpose = "يستخدم لُقمة بيانات نشاطك ووزنك وطولك من تطبيق صحتي لعرض معلوماتك الصحية ومساعدتك على متابعة أهدافك الغذائية."
+        purpose = "يستخدم لُقمة بيانات صحتي التي تسمح بمشاركتها لعرض الخطوات والمسافة والسعرات المحروقة والتمارين والنوم والنبض والوزن والطول ونسبة الدهون ومتابعة تقدمك."
         actual = plistlib.loads((ROOT / "Luqma/Info.plist").read_bytes())
         self.assertEqual(actual["NSHealthShareUsageDescription"], purpose)
         localized = (ROOT / "Luqma/Resources/ar.lproj/InfoPlist.strings").read_text("utf8")
@@ -87,12 +87,41 @@ class RestoredSourceRulesTests(unittest.TestCase):
         self.assertIsNotNone(guard.validate_ignore(before, before + b'Luqma/new-design.swift\n'))
         self.assertIsNotNone(guard.validate_ignore(before, b'*.ipa\n'))
 
-    def test_only_three_new_app_sources_and_no_progress_card(self):
-        self.assertIsNone(guard.validate_delta('Luqma/Core/HealthReadModels.swift', None, b'import Foundation\n'))
+    def test_only_six_named_health_sources_and_one_progress_insertion(self):
+        self.assertEqual(len(guard.HEALTH_SOURCES), 6)
+        for path in guard.HEALTH_SOURCES:
+            self.assertIsNone(guard.validate_delta(path, None, b'import Foundation\n'))
+            self.assertIsNotNone(guard.validate_delta(path, b'original', b'import Foundation\n'))
         self.assertIsNotNone(guard.validate_delta('Luqma/Core/Nutrition.swift', b'original', b'changed'))
         self.assertIsNotNone(guard.validate_delta('Luqma/Resources/Assets.xcassets/new.imageset/Contents.json', None, b'{}'))
         self.assertIsNotNone(guard.validate_delta('Luqma/Views/AppleHealthView.swift', None, b'struct HealthProgressCard {}'))
         self.assertIsNotNone(guard.validate_delta('Luqma/Views/ProgressView.swift', b'original', b'changed'))
+
+    def test_progress_adds_only_one_card_at_the_approved_insertion(self):
+        before = b'VStack {\n    weightSummary\n    originalChart\n}\n'
+        after = before.replace(b'    weightSummary\n', b'    weightSummary\n    AppleHealthProgressCard()\n')
+        self.assertIsNone(guard.validate_progress(before, after))
+        for wrong in (after.replace(b'originalChart', b'otherChart'), after+b'AppleHealthProgressCard()\n',
+                      after.replace(b'weightSummary\n    AppleHealthProgressCard()', b'AppleHealthProgressCard()\n    weightSummary')):
+            self.assertIsNotNone(guard.validate_progress(before, wrong))
+
+    def test_privacy_additions_preserve_collection_and_tracking(self):
+        before = {'NSPrivacyAccessedAPITypes': [], 'NSPrivacyTracking': False,
+                  'NSPrivacyCollectedDataTypes': [{'original': True}]}
+        additions = [{'NSPrivacyAccessedAPIType': key, 'NSPrivacyAccessedAPITypeReasons': [value]}
+                     for key, value in guard.PRIVACY_REASONS.items()]
+        after = dict(before, NSPrivacyAccessedAPITypes=additions)
+        self.assertIsNone(guard.validate_privacy(plistlib.dumps(before), plistlib.dumps(after)))
+        for wrong in (dict(after, NSPrivacyTracking=True), dict(after, NSPrivacyCollectedDataTypes=[]),
+                      dict(after, NSPrivacyAccessedAPITypes=additions+additions),
+                      dict(after, NSPrivacyAccessedAPITypes=additions[:1])):
+            self.assertIsNotNone(guard.validate_privacy(plistlib.dumps(before), plistlib.dumps(wrong)))
+
+    def test_release_document_scope_does_not_admit_code_or_private_credentials(self):
+        self.assertIsNone(guard.validate_delta('Docs/HealthKitRelease/README.md', None, b'# Guide\n'))
+        for path in ('Docs/HealthKitRelease/key.p12', 'Docs/HealthKitRelease/code.py',
+                     'Docs/HealthKitRelease/sub/hidden.md', 'Support/unreviewed.swift'):
+            self.assertIsNotNone(guard.validate_delta(path, None, b'anything'))
 
 
 class RestoredSourceGitTests(unittest.TestCase):
@@ -108,6 +137,12 @@ class RestoredSourceGitTests(unittest.TestCase):
         self.git('-c', 'user.name=Freeze Test', '-c', 'user.email=freeze@example.invalid', 'commit', '-q', '-m', 'Fixture baseline')
         self.baseline = self.git('rev-parse', 'HEAD').decode().strip()
         self.tree = self.git('rev-parse', 'HEAD^{tree}').decode().strip()
+        self.put('Support/Reviewed/README.md', b'Reviewed support\n')
+        self.put(guard.SIGNER_WORKFLOW, b'name: reviewed signer\n')
+        self.git('add', '.')
+        self.git('-c', 'user.name=Freeze Test', '-c', 'user.email=freeze@example.invalid', 'commit', '-q', '-m', 'Reviewed support fixture')
+        self.support_baseline = self.git('rev-parse', 'HEAD').decode().strip()
+        self.support_tree = self.git('rev-parse', 'HEAD^{tree}').decode().strip()
 
     def tearDown(self):
         self.folder.cleanup()
@@ -124,8 +159,17 @@ class RestoredSourceGitTests(unittest.TestCase):
         path.write_bytes(data)
 
     def inspect(self):
-        with patch.object(guard, 'BASELINE', self.baseline), patch.object(guard, 'BASELINE_TREE', self.tree):
+        with patch.object(guard, 'BASELINE', self.baseline), patch.object(guard, 'BASELINE_TREE', self.tree), \
+             patch.object(guard, 'SUPPORT_BASELINE', self.support_baseline), patch.object(guard, 'SUPPORT_BASELINE_TREE', self.support_tree):
             return guard.inspect_repository(self.root)
+
+    def test_reviewed_support_cannot_be_changed_or_extended(self):
+        self.assertEqual(self.inspect()['status'], 'passed')
+        self.put('Support/Reviewed/README.md', b'changed\n')
+        self.assertEqual(self.inspect()['status'], 'failed')
+        self.put('Support/Reviewed/README.md', b'Reviewed support\n')
+        self.put('Support/unreviewed.md', b'new\n')
+        self.assertEqual(self.inspect()['status'], 'failed')
 
     def test_canonical_text_crlf_is_accepted_but_binary_asset_changes_fail(self):
         self.put('Luqma/Core/Protected.swift', b'import Foundation\r\nlet original = 1\r\n')
@@ -160,7 +204,7 @@ class RestoredSourceGitTests(unittest.TestCase):
             report = guard.inspect_repository(self.root)
         self.assertEqual(report['status'], 'failed')
         self.assertTrue(report['violations'])
-        self.assertEqual(self.git('rev-parse', 'HEAD').decode().strip(), self.baseline)
+        self.assertEqual(self.git('rev-parse', 'HEAD').decode().strip(), self.support_baseline)
 
 
 if __name__ == '__main__':
