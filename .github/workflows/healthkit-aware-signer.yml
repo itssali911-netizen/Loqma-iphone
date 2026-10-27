@@ -12,7 +12,6 @@ jobs:
     timeout-minutes: 90
     env:
       CARGO_BUILD_JOBS: '2'
-      CARGO_TARGET_DIR: ${{ runner.temp }}/luqma-health-signer/src-tauri/target
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -20,7 +19,9 @@ jobs:
       - name: Verify archive boundaries
         run: python -m unittest discover -s Support/HealthKitSigner -p test_prepare.py -v
       - name: Prepare pinned source and reviewed overlay
-        run: python Support/HealthKitSigner/prepare.py --output "${{ runner.temp }}/luqma-health-signer"
+        run: |
+          python Support/HealthKitSigner/prepare.py --output "${{ runner.temp }}/luqma-health-signer"
+          "CARGO_TARGET_DIR=$env:RUNNER_TEMP/luqma-health-signer/src-tauri/target" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
       - name: Select Rust stable
         run: |
           rustup toolchain install stable --profile minimal
