@@ -20,7 +20,7 @@ import AVFoundation
     @State private var showingGallery=false
     @State private var visible=false
     @State private var automaticallyAnalyze=false
-    @State private var shutterOpacity=0.0
+    @State private var shutterVisible=false
     @State private var scanStarted=Date()
     @State private var scanFinishing:Date?
     @State private var busy=false
@@ -124,7 +124,7 @@ import AVFoundation
             if let data=imageData,preview==nil,previewTask==nil{preparePhotoPreview(data)}
             refreshCamera()
         }
-        .onDisappear{visible=false;liveCamera.setActive(false);photoGeneration=UUID();analysisGeneration=UUID();previewGeneration=UUID();photoLoadTask?.cancel();analysisTask?.cancel();previewTask?.cancel();photoLoadTask=nil;analysisTask=nil;previewTask=nil;loadingPhoto=false;busy=false;scanFinishing=nil}
+        .onDisappear{visible=false;liveCamera.setActive(false);photoGeneration=UUID();analysisGeneration=UUID();previewGeneration=UUID();photoLoadTask?.cancel();analysisTask?.cancel();previewTask?.cancel();photoLoadTask=nil;analysisTask=nil;previewTask=nil;loadingPhoto=false;busy=false;scanFinishing=nil;shutterVisible=false}
     }
     private var analysisHeader:some View {
         HStack {
@@ -235,7 +235,16 @@ import AVFoundation
                     }.padding(24).frame(width:width*0.75).background(Theme.card,in:RoundedRectangle(cornerRadius:20))
                         .position(x:width/2,y:height/2)
                 }
-                Color.black.opacity(shutterOpacity).allowsHitTesting(false).accessibilityHidden(true)
+                if shutterVisible{
+                    Color.black.opacity(0.55).allowsHitTesting(false).accessibilityHidden(true)
+                        .transition(.opacity)
+                        .task{
+                            // Wait for an actual rendered shutter frame before
+                            // fading it; same-turn opacity writes can coalesce.
+                            do{try await Task.sleep(for:.milliseconds(50))}catch{return}
+                            withAnimation(.easeOut(duration:0.16)){shutterVisible=false}
+                        }
+                }
             }.frame(maxWidth:.infinity)
                 .accessibilityElement(children:.contain)
                 .accessibilityLabel(diary.t(preview == nil ? "معاينة الكاميرا المباشرة":"صورة وجبتك داخل إطار المسح",preview == nil ? "Live camera preview":"Your meal photo in the viewfinder"))
@@ -585,10 +594,7 @@ import AVFoundation
             guard visible,phase == .active else{return}
             guard let data else{error=diary.t("تعذّر التقاط الصورة. حاول مجددًا أو اختر صورة من المكتبة.","The photo could not be captured. Retry or choose a photo.");return}
             UIImpactFeedbackGenerator(style:.light).impactOccurred(intensity:0.6)
-            if !reduceMotion{
-                shutterOpacity=0.55
-                withAnimation(.easeOut(duration:0.16)){shutterOpacity=0}
-            }
+            if !reduceMotion{shutterVisible=true}
             automaticallyAnalyze=true;error=nil;imageData=data
         }
     }
