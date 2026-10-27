@@ -33,7 +33,7 @@ scenario=dict(status='running',required_cases=['testMealCameraFallbackAndSystemP
 try:
     inventory=json.loads(preview.command(['xcrun','simctl','list','--json'],output,'inventory'))
     runtime=preview.select_runtime(inventory)
-    run_scenario(output/'interactions',packages,ROOT/'CameraDerived',runtime,tuple(scenario['required_cases']),scenario,os.environ.get('BUILD_NUMBER','1'))
+    run_scenario(output/'interactions',packages,ROOT/'BuildOutput/simulator-derived',runtime,tuple(scenario['required_cases']),scenario,os.environ.get('BUILD_NUMBER','1'))
 except Exception as error:failures.append(str(error))
 (output/'camera-test.json').write_text(json.dumps(scenario,indent=2)+'\n')
 if failures:raise SystemExit('\n'.join(failures))
