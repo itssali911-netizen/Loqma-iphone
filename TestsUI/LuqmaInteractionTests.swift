@@ -23,6 +23,29 @@ final class LuqmaInteractionTests:XCTestCase {
         }
     }
 
+    func testMealCameraFallbackAndSystemPhotoPicker() throws {
+        app.buttons["nav.add"].tap()
+        let analyze=app.buttons["Analyze a meal photo"]
+        XCTAssertTrue(analyze.waitForExistence(timeout:10))
+        analyze.tap()
+        let unavailable=app.staticTexts.matching(NSPredicate(format:"label CONTAINS %@","No camera is available on this device")).firstMatch
+        XCTAssertTrue(unavailable.waitForExistence(timeout:15),"Simulator must show the real no-camera fallback, never a fruit preview")
+        let shutter=app.buttons["photo.shutter"]
+        reveal(shutter)
+        XCTAssertFalse(shutter.isEnabled)
+        let gallery=app.buttons["photo.gallery"]
+        reveal(gallery);gallery.tap()
+        let cancel=app.buttons["Cancel"].firstMatch
+        XCTAssertTrue(cancel.waitForExistence(timeout:10),"The native system Photos picker must open")
+        cancel.tap()
+        XCTAssertTrue(gallery.waitForExistence(timeout:10))
+        XCTAssertFalse(shutter.isEnabled,"Cancelling import must return to the unavailable-camera state")
+        app.swipeDown()
+        let back=app.buttons["Back"]
+        reveal(back);back.tap()
+        XCTAssertTrue(analyze.waitForExistence(timeout:10),"Back preserves the existing food search navigation")
+    }
+
     func testFoodAddResizePersistenceAndDelete() throws {
         app.buttons["nav.add"].tap()
         // The initial catalog load can move rows. Use the real empty personal list
