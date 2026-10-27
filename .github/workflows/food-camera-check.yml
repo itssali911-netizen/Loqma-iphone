@@ -5,6 +5,9 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: food-camera-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   camera:
     runs-on: macos-26
@@ -16,9 +19,17 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - name: Compile both iOS SDKs and run existing tests
-        run: python3 Scripts/build_ios.py check
+      - name: Existing Swift core tests
+        run: set -o pipefail; swift test -j 2 2>&1 | tee camera-core-tests.log
+      - name: Existing build tools and native font tests
+        if: ${{ !cancelled() }}
+        run: set -o pipefail; python3 -m unittest discover -s BuildTests -v 2>&1 | tee camera-build-tests.log
+      - name: Compile both real iOS SDKs
+        id: sdks
+        if: ${{ !cancelled() }}
+        run: python3 Scripts/food_camera_build.py
       - name: Native gallery test and small-iPhone Arabic/English captures
+        if: ${{ !cancelled() && steps.sdks.outcome == 'success' }}
         run: python3 Scripts/food_camera_check.py
       - name: Preserve genuine build and Simulator evidence
         if: always()
@@ -28,5 +39,6 @@ jobs:
           path: |
             BuildOutput/*.log
             BuildOutput/build-summary.json
+            camera-*-tests.log
             CameraValidation/
           if-no-files-found: warn
