@@ -41,7 +41,9 @@ private struct CalorieCardReviewCanvas: View {
                 DailyCalorieCard(consumed: consumed,goals: target,language: language,isLoading: state == "loading",showHistory: false)
                     .background {
                         GeometryReader { geometry in
-                            Color.clear.task { record(geometry.frame(in: .global)) }
+                            Color.clear.onChange(of: geometry.frame(in: .global), initial: true) { _, frame in
+                                record(frame)
+                            }
                         }
                     }
                 Text("\(state) · \(Int(width)) pt · \(largeText ? "accessibility3" : "large")")
@@ -57,8 +59,9 @@ private struct CalorieCardReviewCanvas: View {
     private func record(_ frame: CGRect) {
         // Geometry belongs to this synthetic harness only, never the user's app.
         let data: [String: Any] = ["scope":"native component harness; synthetic inputs", "state":state,
+            "process_id":ProcessInfo.processInfo.processIdentifier,"capture_token":option("capture-token",fallback: ""),
             "language":language.rawValue,"canvas_width":Double(width),"scale":Double(UIScreen.main.scale),
-            "dynamic_type":largeText ? "accessibility3":"large", "card_frame":["x":frame.minX,"y":frame.minY,"width":frame.width,"height":frame.height]]
+            "dynamic_type":largeText ? "accessibility3":"large", "card_frame":["x":Double(frame.minX),"y":Double(frame.minY),"width":Double(frame.width),"height":Double(frame.height)]]
         guard let url = FileManager.default.urls(for: .documentDirectory,in: .userDomainMask).first?.appendingPathComponent("review-geometry.json"),
               let json = try? JSONSerialization.data(withJSONObject:data,options:.sortedKeys) else { return }
         try? json.write(to:url,options:.atomic)

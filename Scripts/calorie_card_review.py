@@ -22,6 +22,7 @@ import sys
 import tempfile
 import time
 import unittest
+from unittest.mock import patch
 import uuid
 import xml.etree.ElementTree as ET
 
@@ -275,6 +276,19 @@ def verified_preflight_host() -> dict:
     return report
 
 
+def component_geometry_matches(value, case: dict, pid: int, token: str) -> bool:
+    """Reject preceding launches and pre-layout/transient sizes, even for identical cases."""
+    if not isinstance(value, dict): return False
+    expected = (value.get("process_id") == pid and value.get("capture_token") == token
+                and value.get("state") == case["state"] and value.get("language") == case["language"]
+                and value.get("canvas_width") == case["width"] and value.get("dynamic_type") == case["dynamic_type"])
+    frame = value.get("card_frame", {})
+    if not expected or not isinstance(frame, dict): return False
+    numeric = all(type(frame.get(key)) in (int, float) and abs(frame[key]) < 100_000 for key in ("x", "y", "width", "height"))
+    return (numeric and frame["height"] > 0 and abs(frame["width"]-(case["width"]-32)) <= 1
+            and type(value.get("scale")) in (int, float) and 1 <= value["scale"] <= 4)
+
+
 def capture_component_cases(device: str, output: Path, report: dict, cases: list[dict] | None = None) -> None:
     if cases is None:
         cases=[dict(state="zero",width=width,language="ar",dynamic_type="large") for width in (320,375,390,430)]
@@ -290,26 +304,30 @@ def capture_component_cases(device: str, output: Path, report: dict, cases: list
     report["component_cases"]=[]
     for index,case in enumerate(cases):
         name=f'calorie-card-component-{case["language"]}-{case["state"]}-{case["width"]}-{case["dynamic_type"]}'
+        token=uuid.uuid4().hex
         args=["--state",case["state"],"--width",str(case["width"]),"--language",case["language"],"--dynamic-type",case["dynamic_type"],
+              "--capture-token",token,
               "-AppleLanguages","("+case["language"]+")","-AppleLocale","ar_SA" if case["language"]=="ar" else "en_US"]
         launched=command(["xcrun","simctl","launch","--terminate-running-process",device,HOST_BUNDLE,*args],output,"launch-"+name,180 if index==0 else 90)
         match=re.search(r":\s*(\d+)\s*$",launched)
         if not match:raise BuildError("The exact component host returned no actual process identifier.")
         pid=int(match.group(1));confirm_process(pid,3)
-        deadline=time.monotonic()+8;geometry=None
+        # A busy CI Simulator can start the process before its first SwiftUI layout.
+        # Wait for actual geometry from this PID/nonce instead of accepting an old file.
+        deadline=time.monotonic()+45;geometry=None;last_geometry=None;stable_since=None
         while time.monotonic()<deadline:
             try:
                 value=json.loads(geometry_file.read_text("utf8"))
-                frame=value.get("card_frame",{})
-                expected=(value.get("state")==case["state"] and value.get("language")==case["language"]
-                          and value.get("canvas_width")==case["width"] and value.get("dynamic_type")==case["dynamic_type"])
-                numeric=all(type(frame.get(key)) in (int,float) and abs(frame[key])<100_000 for key in ("x","y","width","height"))
-                if (expected and numeric and frame["width"]>0 and frame["height"]>0
-                        and type(value.get("scale")) in (int,float) and 1<=value["scale"]<=4):
-                    geometry=value;break
+                if component_geometry_matches(value,case,pid,token):
+                    if value != last_geometry: stable_since=time.monotonic()
+                    elif stable_since is not None and time.monotonic()-stable_since >= 0.3:
+                        geometry=value;break
+                else: stable_since=None
+                last_geometry=value
             except (OSError,ValueError,TypeError): pass
             confirm_process(pid,0.1)
         if geometry is None:
+            (captures/(name+"-rejected-geometry.json")).write_text(json.dumps(dict(expected_case=case,expected_process_id=pid,expected_capture_token=token,last_observed=last_geometry),indent=2)+"\n",encoding="utf8")
             raise BuildError("The native component geometry is missing, stale or does not match the requested review state.")
         screenshot=captures/(name+".png")
         details=capture_screenshot(output,device,name,pid,screenshot)
@@ -317,7 +335,7 @@ def capture_component_cases(device: str, output: Path, report: dict, cases: list
         card_pixels={key:round(frame[key]*scale,3) for key in ("x","y","width","height")}
         fully_visible=(card_pixels["x"]>=0 and card_pixels["y"]>=0 and card_pixels["x"]+card_pixels["width"]<=details["width"]+1 and card_pixels["y"]+card_pixels["height"]<=details["height"]+1)
         (captures/(name+"-geometry.json")).write_text(json.dumps(geometry,indent=2)+"\n",encoding="utf8")
-        record={**details,**case,"name":name,"file":str(screenshot.relative_to(output)),"source":"Actual Simulator framebuffer captured with simctl io screenshot","scope":"review-only native component host; synthetic presentation inputs","synthetic_fixture":True,"process_still_running":True,"native_geometry":geometry,"card_frame_pixels":card_pixels,"card_fully_visible_in_frame":fully_visible}
+        record={**case,**details,"canvas_width_points":case["width"],"name":name,"file":str(screenshot.relative_to(output)),"source":"Actual Simulator framebuffer captured with simctl io screenshot","scope":"review-only native component host; synthetic presentation inputs","synthetic_fixture":True,"process_still_running":True,"native_geometry":geometry,"card_frame_pixels":card_pixels,"card_fully_visible_in_frame":fully_visible}
         report["screenshots"].append(record);report["component_cases"].append(record)
     if len(report["component_cases"])!=len(cases):
         raise BuildError("The native component host did not cover every required review state.")
@@ -424,6 +442,40 @@ class ScopeTests(unittest.TestCase):
     def test_canonical_crlf_does_not_change_scope(self):
         before=(START+"old\n"+END+"end\n").encode()
         self.assertIsNone(diary_scope(before,before.replace(b"\n",b"\r\n")))
+    def test_geometry_requires_this_launch_and_final_canvas_width(self):
+        case=dict(state="zero",width=320,language="ar",dynamic_type="large")
+        value=dict(state="zero",canvas_width=320,language="ar",dynamic_type="large",process_id=123,
+                   capture_token="this-launch",scale=3,card_frame=dict(x=76,y=112,width=288,height=200))
+        self.assertTrue(component_geometry_matches(value,case,123,"this-launch"))
+        self.assertFalse(component_geometry_matches(value,case,124,"this-launch"))
+        self.assertFalse(component_geometry_matches(value,case,123,"preceding-launch"))
+        self.assertFalse(component_geometry_matches({**value,"state":"partial"},case,123,"this-launch"))
+        for width in (0,358,True,float("nan"),float("inf")):
+            self.assertFalse(component_geometry_matches({**value,"card_frame":{**value["card_frame"],"width":width}},case,123,"this-launch"))
+    def test_capture_keeps_native_pixels_separate_from_canvas_points(self):
+        # This tests capture bookkeeping only; it is never evidence of native rendering.
+        with tempfile.TemporaryDirectory() as temporary:
+            output=Path(temporary);container=output/"mock-container";(container/"Documents").mkdir(parents=True)
+            def fake_command(args,*_args,**_kwargs):
+                if "get_app_container" in args: return str(container)
+                if "launch" in args:
+                    token=args[args.index("--capture-token")+1]
+                    (container/"Documents/review-geometry.json").write_text(json.dumps(dict(
+                        state="zero",canvas_width=320,language="ar",dynamic_type="large",process_id=123,
+                        capture_token=token,scale=3,card_frame=dict(x=76,y=112,width=288,height=200))),encoding="utf8")
+                    return HOST_BUNDLE+": 123"
+                return ""
+            report=dict(screenshots=[])
+            module=sys.modules[__name__]
+            with patch.object(module,"command",side_effect=fake_command), \
+                    patch.object(module,"confirm_process",side_effect=lambda _pid,seconds: time.sleep(min(seconds,0.1))), \
+                    patch.object(module,"capture_screenshot",return_value=dict(width=1320,height=2868)):
+                capture_component_cases("mock-simulator",output,report,[dict(state="zero",width=320,language="ar",dynamic_type="large")])
+            record=report["component_cases"][0]
+            self.assertEqual(record["width"],1320)
+            self.assertEqual(record["canvas_width_points"],320)
+            self.assertEqual(record["card_frame_pixels"]["width"],864)
+            self.assertTrue(record["card_fully_visible_in_frame"])
 
 
 def main() -> int:

@@ -44,12 +44,12 @@ struct DailyCalorieCard: View {
             CalorieMetricLayout(rightToLeft: language == .ar, stacked: typeSize.isAccessibilitySize, spacing: 12) {
                 consumedGroup.environment(\.layoutDirection, direction)
                 remainingGroup.environment(\.layoutDirection, direction)
-            }.environment(\.layoutDirection, .leftToRight).padding(.top, 10)
-            CalorieCardBar(value: current, goal: target, color: CalorieCardStyle.accent, height: 6,
+            }.environment(\.layoutDirection, .leftToRight)
+            CalorieCardBar(value: current, goal: target, color: CalorieCardStyle.accent, height: 5,
                            label: language.text("التقدّم نحو هدف السعرات", "Daily calorie progress"),
                            identifier: "diary.summary.progress", loading: isLoading)
-                .padding(.top, 12)
-            Rectangle().fill(CalorieCardStyle.border).frame(height: 1).padding(.vertical, 16)
+                .padding(.top, 8)
+            Rectangle().fill(CalorieCardStyle.border).frame(height: 1).padding(.top, 16).padding(.bottom, 12)
             if typeSize.isAccessibilitySize {
                 VStack(spacing: 16) { ForEach(MacroKey.allCases) { macro($0) } }
             } else {
@@ -57,10 +57,10 @@ struct DailyCalorieCard: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(14)
+        .padding(.horizontal, 13).padding(.vertical, 10)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(CalorieCardStyle.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay { RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(CalorieCardStyle.border, lineWidth: 1) }
+        .background(CalorieCardStyle.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay { RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(CalorieCardStyle.border, lineWidth: 1) }
         .foregroundStyle(CalorieCardStyle.text)
         .environment(\.layoutDirection, direction)
         .accessibilityElement(children: .contain)
@@ -85,8 +85,8 @@ struct DailyCalorieCard: View {
                 .accessibilityIdentifier("diary.summary.title")
             Spacer(minLength: 0)
             Image("CalorieCardFlame").renderingMode(.template).resizable().scaledToFit()
-                .frame(width: 24, height: 24).foregroundStyle(CalorieCardStyle.accent).accessibilityHidden(true)
-        }.frame(minHeight: 32).contentShape(Rectangle().inset(by: -6))
+                .frame(width: 20, height: 20).foregroundStyle(CalorieCardStyle.accent).accessibilityHidden(true)
+        }.frame(minHeight: 20).contentShape(Rectangle().inset(by: -12))
     }
 
     private var consumedGroup: some View {
@@ -110,7 +110,7 @@ struct DailyCalorieCard: View {
     }
     private var consumedNumber: some View {
         Text(number(current)).luqmaFont(size: 40, weight: .bold, relativeTo: .largeTitle).monospacedDigit()
-            .fixedSize().accessibilityIdentifier("diary.summary.consumed")
+            .fixedSize().padding(.bottom, -6).accessibilityIdentifier("diary.summary.consumed")
             .accessibilityHint(language.text("السعرات المستهلكة", "Calories consumed"))
     }
     private var goalAndUnit: some View {
@@ -139,34 +139,34 @@ struct DailyCalorieCard: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
                 Image(CalorieCardStyle.icon(key)).renderingMode(.template).resizable().scaledToFit()
-                    .frame(width: 20, height: 20).foregroundStyle(CalorieCardStyle.color(key)).accessibilityHidden(true)
+                    .frame(width: 18, height: 18).foregroundStyle(CalorieCardStyle.color(key)).accessibilityHidden(true)
                 Text(key.label(language)).luqmaFont(size: 12, weight: .medium, relativeTo: .caption)
                     .foregroundStyle(CalorieCardStyle.secondary).fixedSize(horizontal: false, vertical: true)
             }.frame(maxWidth: .infinity, alignment: .leading)
             ViewThatFits(in: .horizontal) {
                 macroRatio(key).fixedSize(horizontal: true, vertical: false)
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(number(available(consumed[key]))).luqmaFont(size: 17, weight: .medium, relativeTo: .headline)
+                    Text(number(available(consumed[key]))).luqmaFont(size: 14, weight: .medium, relativeTo: .headline)
                         .monospacedDigit().accessibilityIdentifier("diary.summary."+key.rawValue+".consumed")
                     macroTarget(key)
                 }
             }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            CalorieCardBar(value: available(consumed[key]), goal: positive(goals[key]), color: CalorieCardStyle.color(key), height: 4,
+            CalorieCardBar(value: available(consumed[key]), goal: positive(goals[key]), color: CalorieCardStyle.color(key), height: 3,
                            label: key.label(language)+" "+language.text("التقدّم اليومي", "daily progress"),
                            identifier: "diary.summary."+key.rawValue+".progress", loading: isLoading)
         }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading).accessibilityElement(children: .contain)
     }
     private func macroRatio(_ key: MacroKey) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 3) {
-            Text(number(available(consumed[key]))).luqmaFont(size: 17, weight: .medium, relativeTo: .headline)
+            Text(number(available(consumed[key]))).luqmaFont(size: 14, weight: .medium, relativeTo: .headline)
                 .monospacedDigit().accessibilityIdentifier("diary.summary."+key.rawValue+".consumed")
             macroTarget(key)
         }
     }
     private func macroTarget(_ key: MacroKey) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 3) {
-            Text("/").luqmaFont(size: 15, relativeTo: .caption).accessibilityHidden(true)
-            Text(number(available(goals[key]))).luqmaFont(size: 17, weight: .semibold, relativeTo: .headline)
+            Text("/").luqmaFont(size: 13, relativeTo: .caption).accessibilityHidden(true)
+            Text(number(available(goals[key]))).luqmaFont(size: 14, weight: .semibold, relativeTo: .headline)
                 .monospacedDigit().accessibilityIdentifier("diary.summary."+key.rawValue+".target")
             Text(language.text("جم", "g")).luqmaFont(size: 12, relativeTo: .caption)
         }
