@@ -103,7 +103,7 @@ final class CalorieCardInteractionTests: XCTestCase {
         XCTAssertTrue(arabic.isSelected)
         app.buttons["language.back"].tap()
         app.buttons["nav.today"].tap()
-        let title = element("diary.summary.title")
+        let title = app.buttons["diary.calorieDetails"]
         XCTAssertTrue(title.waitForExistence(timeout: 10))
         XCTAssertTrue(title.label.contains("السعرات"))
         assertCard(consumed: 0, protein: 0, carbs: 0, fat: 0)
@@ -112,7 +112,7 @@ final class CalorieCardInteractionTests: XCTestCase {
     }
 
     func testCEnglishHome() throws {
-        let title = element("diary.summary.title")
+        let title = app.buttons["diary.calorieDetails"]
         XCTAssertTrue(title.waitForExistence(timeout: 10))
         XCTAssertFalse(title.label.isEmpty)
         XCTAssertFalse(title.label.contains("السعرات"))
@@ -222,7 +222,9 @@ final class CalorieCardInteractionTests: XCTestCase {
             let percentage = (min(1, max(0, consumed / target)) * 100).rounded()
             assertNumber("diary.summary.progress", equals: percentage, file: file, line: line)
         }
-        reveal(element("diary.summary.title"), file: file, line: line)
+        // SwiftUI exposes the history button as one accessible element; its title
+        // is the button label, rather than a separately reachable child Text.
+        reveal(app.buttons["diary.calorieDetails"], file: file, line: line)
     }
 
     private func assertWesternDigits(file: StaticString = #filePath, line: UInt = #line) {
