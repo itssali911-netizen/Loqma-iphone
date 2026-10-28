@@ -80,7 +80,7 @@ struct DailyCalorieCard: View {
     private var heading: some View {
         HStack(spacing: 12) {
             Text(language.text("ملخص السعرات اليوم", "Daily calorie summary"))
-                .luqmaFont(size: 14, weight: .medium, relativeTo: .subheadline)
+                .luqmaFont(size: 12, weight: .semibold, relativeTo: .subheadline)
                 .foregroundStyle(CalorieCardStyle.secondary).fixedSize(horizontal: false, vertical: true)
                 .accessibilityIdentifier("diary.summary.title")
             Spacer(minLength: 0)
