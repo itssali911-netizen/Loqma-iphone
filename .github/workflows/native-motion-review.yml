@@ -25,6 +25,7 @@ jobs:
         run: |
           python3 - <<'PY'
           import os,runpy,subprocess,sys
+          sys.path.insert(0,'Scripts')
           os.environ['GITHUB_SHA']=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
           sys.argv=['Scripts/ui_preview.py','--output','Motion-Before-AR','--language','ar']
           runpy.run_path('Scripts/ui_preview.py',run_name='__main__')
@@ -119,6 +120,7 @@ jobs:
         run: |
           python3 - <<'PY'
           import os,runpy,subprocess,sys
+          sys.path.insert(0,'Scripts')
           os.environ['GITHUB_SHA']=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
           sys.argv=['Scripts/performance_probe.py','--output','Motion-Performance','--label','baseline' if '${{ matrix.variant }}'=='baseline' else 'optimized','--expected-revision',os.environ['GITHUB_SHA'],'--timeout','5400']
           runpy.run_path('Scripts/performance_probe.py',run_name='__main__')
