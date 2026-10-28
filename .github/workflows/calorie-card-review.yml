@@ -39,7 +39,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: LUQMA-Calorie-Card-Preflight-${{ github.run_id }}
+          name: LUQMA-Calorie-Card-Preflight-${{ github.run_id }}-attempt-${{ github.run_attempt }}
           path: |
             Restore103Validation/calorie-card-scope.json
             Restore103Validation/CalorieCardHost/host-build-report.json
@@ -66,7 +66,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: LUQMA-Calorie-Card-Review-${{ github.run_id }}
+          name: LUQMA-Calorie-Card-Review-${{ github.run_id }}-attempt-${{ github.run_attempt }}
           path: |
             BuildOutput/build-summary.json
             BuildOutput/*.log
