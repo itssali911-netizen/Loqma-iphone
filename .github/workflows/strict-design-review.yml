@@ -1,0 +1,135 @@
+name: Luqma supplied design native before and after review
+
+on:
+  push:
+    branches: [feature/strict-design-review-20261028]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: luqma-strict-design-review-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  before:
+    # The authentic checkpoint was captured successfully in run 40729225211.
+    # Later correction pushes reuse that immutable evidence; a manual workflow
+    # run may explicitly regenerate the same before screenshots if needed.
+    if: github.sha == '792aee3e524d1f60197ac09187e7b132dff211f5' || github.event_name == 'workflow_dispatch'
+    runs-on: macos-26
+    timeout-minutes: 90
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+      BUNDLE_ID: app.luqma.diary
+      BUILD_NUMBER: '121'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: d0a278ec897520ec2bd5c21af4b0183fdcdf25f7
+          persist-credentials: false
+      - name: Build the authentic pre-request source and capture Arabic screens
+        run: |
+          python3 - <<'PY'
+          import os,runpy,subprocess,sys
+          os.environ['GITHUB_SHA']=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          sys.argv=['Scripts/ui_preview.py','--output','Before-AR','--language','ar','--screens','today','food-portion','settings']
+          runpy.run_path('Scripts/ui_preview.py',run_name='__main__')
+          PY
+      - name: Capture the same baseline in English without rebuilding
+        run: |
+          python3 - <<'PY'
+          import os,runpy,subprocess,sys
+          os.environ['GITHUB_SHA']=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          sys.argv=['Scripts/ui_preview.py','--output','Before-EN','--language','en','--app','Before-AR/derived/Build/Products/Debug-iphonesimulator/Luqma.app','--screens','today','food-portion']
+          runpy.run_path('Scripts/ui_preview.py',run_name='__main__')
+          PY
+      - name: Preserve original before screenshots and runtime font evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-Strict-Design-Before-${{ github.run_id }}-attempt-${{ github.run_attempt }}
+          path: |
+            Before-AR/*.png
+            Before-AR/ui-preview.json
+            Before-AR/*.log
+            Before-AR/font-audits/
+            Before-EN/*.png
+            Before-EN/ui-preview.json
+            Before-EN/*.log
+            Before-EN/font-audits/
+          retention-days: 30
+
+  after:
+    runs-on: macos-26
+    timeout-minutes: 180
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+      BUNDLE_ID: app.luqma.diary
+      BUILD_NUMBER: '122'
+      LUQMA_STRICT_DESIGN_REVIEW: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 30
+      - name: Verify requested scope and source integrity
+        run: |
+          python3 Scripts/calorie_card_review.py --self-test
+          python3 Scripts/strict_design_review.py freeze --output Restore103Validation/strict-design-scope.json
+      - name: Build the exact calorie component with the new production typography
+        run: python3 Scripts/strict_design_review.py host-build
+      - name: Preserve component compilation evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-Strict-Design-Preflight-${{ github.run_id }}-attempt-${{ github.run_attempt }}
+          path: |
+            Restore103Validation/strict-design-scope.json
+            Restore103Validation/CalorieCardHost/host-build-report.json
+            Restore103Validation/CalorieCardHost/*.log
+            Restore103Validation/CalorieCardHost/captures/
+          retention-days: 30
+      - name: Compile actual iPhone Release and Simulator Debug and run Core and BuildTests
+        run: python3 Scripts/build_ios.py check --output BuildOutput
+      - name: Run native data persistence and component boundary tests
+        run: python3 Scripts/strict_design_review.py validate
+      - name: Capture actual Arabic screens with runtime Changa verification
+        if: success() || failure()
+        run: python3 Scripts/ui_preview.py --output After-AR --language ar --app BuildOutput/simulator-derived/Build/Products/Debug-iphonesimulator/Luqma.app --screens today kitchen progress settings food-portion search meal-macros assessment-age accessibility-today
+      - name: Capture English screens and verify the actual English font
+        if: success() || failure()
+        run: python3 Scripts/ui_preview.py --output After-EN --language en --app BuildOutput/simulator-derived/Build/Products/Debug-iphonesimulator/Luqma.app --screens today food-portion
+      - name: Capture compact iPhone layout with actual fonts
+        if: success() || failure()
+        run: python3 Scripts/ui_preview.py --output After-Compact --language ar --device-type com.apple.CoreSimulator.SimDeviceType.iPhone-13-mini --app BuildOutput/simulator-derived/Build/Products/Debug-iphonesimulator/Luqma.app --screens today food-portion
+      - name: Preserve native evidence and source validation without exporting an IPA
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-Strict-Design-After-${{ github.run_id }}-attempt-${{ github.run_attempt }}
+          path: |
+            BuildOutput/build-summary.json
+            BuildOutput/*.log
+            BuildOutput/Luqma-Simulator.zip
+            BuildOutput/CalorieCardReview/report.json
+            BuildOutput/CalorieCardReview/*.log
+            BuildOutput/CalorieCardReview/captures/
+            BuildOutput/CalorieCardReview/permission-denied/*.log
+            BuildOutput/CalorieCardReview/permission-denied/*.json
+            Restore103Validation/strict-design-scope.json
+            After-*/*.png
+            After-*/ui-preview.json
+            After-*/*.log
+            After-*/font-audits/
+          retention-days: 30
+      - name: Preserve full native test diagnostics separately
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-Strict-Design-XCTest-${{ github.run_id }}-attempt-${{ github.run_attempt }}
+          path: |
+            BuildOutput/CalorieCardReview/calorie-card.xcresult/
+            BuildOutput/CalorieCardReview/permission-denied/interactions.xcresult/
+          retention-days: 30

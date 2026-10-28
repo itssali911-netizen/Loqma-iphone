@@ -1,0 +1,84 @@
+name: Luqma reference calorie card review
+
+on:
+  push:
+    branches: [feature/reference-calorie-card-20261028]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: luqma-calorie-card-review-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  native-card-review:
+    if: github.ref == 'refs/heads/feature/reference-calorie-card-20261028'
+    runs-on: macos-26
+    timeout-minutes: 180
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+      BUNDLE_ID: app.luqma.diary
+      BUILD_NUMBER: '121'
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 20
+      - name: Verify the isolated reference-card source boundary
+        run: |
+          python3 Scripts/calorie_card_review.py --self-test
+          python3 Scripts/calorie_card_review.py freeze --output Restore103Validation/calorie-card-scope.json
+      - name: Preflight the exact SwiftUI card, typography and vector assets without MLX dependencies
+        run: python3 Scripts/calorie_card_review.py host-preflight
+      - name: Keep early native reference renders before the full SDK build
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-Calorie-Card-Preflight-${{ github.run_id }}-attempt-${{ github.run_attempt }}
+          path: |
+            Restore103Validation/calorie-card-scope.json
+            Restore103Validation/CalorieCardHost/host-build-report.json
+            Restore103Validation/CalorieCardHost/*.log
+            Restore103Validation/CalorieCardHost/captures/
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Compile iPhone Release and Simulator Debug and run Core and BuildTests
+        run: python3 Scripts/build_ios.py check --output BuildOutput
+      - name: Run actual native diary and exact-component host UI tests
+        run: python3 Scripts/calorie_card_review.py validate
+      - name: Keep the native Simulator app for reproducible review
+        run: |
+          ditto -c -k --sequesterRsrc --keepParent BuildOutput/simulator-derived/Build/Products/Debug-iphonesimulator/Luqma.app BuildOutput/Luqma-Tested-Simulator.zip
+          python3 - <<'PY'
+          import hashlib,json,pathlib,subprocess
+          folder=pathlib.Path('BuildOutput/CalorieCardReview')
+          data={'source_commit':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),'approval_required':True,'merged':False,'ipa_published':False}
+          for file in [pathlib.Path('BuildOutput/Luqma-Tested-Simulator.zip'),folder/'report.json']:
+              data[file.name]={'bytes':file.stat().st_size,'sha256':hashlib.sha256(file.read_bytes()).hexdigest()}
+          (folder/'review-manifest.json').write_text(json.dumps(data,indent=2)+'\n')
+          PY
+      - name: Preserve review evidence and original native screenshots
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-Calorie-Card-Review-${{ github.run_id }}-attempt-${{ github.run_attempt }}
+          path: |
+            BuildOutput/build-summary.json
+            BuildOutput/*.log
+            BuildOutput/Luqma-Tested-Simulator.zip
+            BuildOutput/CalorieCardReview/report.json
+            BuildOutput/CalorieCardReview/review-manifest.json
+            BuildOutput/CalorieCardReview/*.log
+            BuildOutput/CalorieCardReview/captures/
+            BuildOutput/CalorieCardReview/calorie-card.xcresult/
+            Restore103Validation/calorie-card-scope.json
+            Restore103Validation/CalorieCardHost/host-build-report.json
+            Restore103Validation/CalorieCardHost/*.log
+            Restore103Validation/CalorieCardHost/Host/
+          if-no-files-found: warn
+          retention-days: 30

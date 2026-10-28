@@ -174,7 +174,7 @@ def validate_runtime_font_audit(value: dict, pid: int, accessibility: bool,
     for entry in entries:
         latin = entry.get("resolvedLatinPostScript", "")
         arabic = entry.get("resolvedArabicPostScript", "")
-        if not isinstance(latin, str) or not isinstance(arabic, str) or not latin.startswith("WorkSans-") or not arabic.startswith("Tajawal-"):
+        if not isinstance(latin, str) or not isinstance(arabic, str) or latin != "Changa-Bold" or arabic != "Changa-Bold":
             raise BuildError("A runtime font role resolved to an unexpected system or substitute face.")
         if not all(isinstance(entry.get(field), list) and all(isinstance(font, str) for font in entry[field])
                    for field in ("latinRuns", "arabicRuns", "mixedRuns")):
@@ -185,8 +185,8 @@ def validate_runtime_font_audit(value: dict, pid: int, accessibility: bool,
                 set(entry.get("arabicRuns", [])) != {arabic} or
                 set(entry.get("mixedRuns", [])) != {latin, arabic}):
             raise BuildError("A runtime font role failed registration or actual Latin/Arabic shaping checks.")
-        if entry.get("effectiveWeight") in {"light", "thin", "ultraLight"}:
-            raise BuildError("App typography unexpectedly uses a thin effective text weight.")
+        if entry.get("effectiveWeight") != "bold":
+            raise BuildError("App typography did not use the approved Changa Bold weight.")
         for field in ("basePoints", "scaledPoints", "lineHeight"):
             number = entry.get(field)
             if not isinstance(number, (int, float)) or isinstance(number, bool) or not math.isfinite(number) or number <= 0:

@@ -58,13 +58,17 @@ enum LTypography {
     static var caption:Font {font(size:Descriptor.caption.size,weight:Descriptor.caption.weight,relativeTo:.caption)}
     static var caption2:Font {font(size:Descriptor.caption2.size,weight:Descriptor.caption2.weight,relativeTo:.caption2)}
 
-    /// Keep original Light faces available to the low-level renderer and font
-    /// verification, while app text never relies on fragile thin strokes.
-    static func readableWeight(_ weight:Font.Weight)->Font.Weight {
-        switch weight{case .ultraLight,.thin,.light:return .regular;default:return weight}
-    }
+    /// The approved typography uses the real Changa Bold face for all custom
+    /// text, including secondary labels and numbers. Call sites retain their
+    /// semantic roles/sizes; the common renderer owns the requested weight.
+    static func readableWeight(_ weight:Font.Weight)->Font.Weight { .bold }
 
+    static let approvedFontPostScriptName="Changa-Bold"
+
+    // Legacy faces stay registered so saved/UI review resources remain valid;
+    // every current custom text role below resolves to the approved Bold face.
     static let bundledFontNames=[
+        "Changa-Bold",
         "WorkSans-Light","WorkSans-Regular","WorkSans-Medium","WorkSans-SemiBold","WorkSans-Bold","WorkSans-ExtraBold",
         "Tajawal-Light","Tajawal-Regular","Tajawal-Medium","Tajawal-Bold","Tajawal-ExtraBold"
     ]
@@ -86,8 +90,7 @@ enum LTypography {
         let key="\(pair.latin)|\(pair.arabic)|\(Double(size).bitPattern)" as NSString
         if let cached=fontCache.object(forKey:key) {return cached.font}
         let primary=CTFontCreateWithName(pair.latin as CFString,size,nil)
-        let arabic=CTFontCreateWithName(pair.arabic as CFString,size,nil)
-        let cascade=[CTFontCopyFontDescriptor(arabic)]+defaultCascade(for:primary)
+        let cascade=defaultCascade(for:primary)
         let attributes=[kCTFontCascadeListAttribute as String:cascade] as CFDictionary
         let descriptor=CTFontDescriptorCreateCopyWithAttributes(CTFontCopyFontDescriptor(primary),attributes)
         let font=CTFontCreateWithFontDescriptor(descriptor,size,nil)
@@ -108,8 +111,7 @@ enum LTypography {
             guard let name=CTFontDescriptorCopyAttribute(descriptor,kCTFontNameAttribute) as? String else{return nil}
             return UIFontDescriptor(name:name,size:size)
         }
-        let arabic=UIFontDescriptor(name:pair.arabic,size:size)
-        let descriptor=primary.fontDescriptor.addingAttributes([.cascadeList:[arabic]+systemDescriptors])
+        let descriptor=primary.fontDescriptor.addingAttributes([.cascadeList:systemDescriptors])
         let unscaled=UIFont(descriptor:descriptor,size:size)
         return UIFontMetrics(forTextStyle:relativeTo).scaledFont(for:unscaled,compatibleWith:traits)
     }
@@ -233,14 +235,9 @@ enum LTypography {
     #endif
 
     private static func faces(for weight:Font.Weight)->(latin:String,arabic:String) {
-        switch weight {
-        case .ultraLight,.thin,.light:return ("WorkSans-Light","Tajawal-Light")
-        case .medium:return ("WorkSans-Medium","Tajawal-Medium")
-        case .semibold:return ("WorkSans-SemiBold","Tajawal-Bold")
-        case .bold:return ("WorkSans-Bold","Tajawal-Bold")
-        case .heavy,.black:return ("WorkSans-ExtraBold","Tajawal-ExtraBold")
-        default:return ("WorkSans-Regular","Tajawal-Regular")
-        }
+        // This one official font contains Arabic, Latin and Western digits;
+        // the system cascade is retained solely for unsupported symbols/emoji.
+        (approvedFontPostScriptName,approvedFontPostScriptName)
     }
 }
 

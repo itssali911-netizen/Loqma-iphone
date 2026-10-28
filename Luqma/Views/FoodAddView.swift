@@ -90,8 +90,8 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                     }
             }.appBackground()
                 .toolbar(.hidden,for:.navigationBar)
-                .sheet(item:$selected){food in FoodPortionView(food:food,sourceBarcode:tab==1,initialMeal:initialMeal,onCommit:{f,a,u,m in if onCommit(f,a,u,m){dismiss();return true};return false})}
-                .sheet(isPresented:$manual){FoodPortionView(food:Food(name:""),manual:true,initialMeal:initialMeal,onCommit:{f,a,u,m in if onCommit(f,a,u,m){dismiss();return true};return false})}
+                .sheet(item:$selected){food in FoodPortionView(food:food,sourceBarcode:tab==1,initialMeal:initialMeal,onAnalyze:productSelection ? nil:{selected=nil;tab=2},onCommit:{f,a,u,m in if onCommit(f,a,u,m){dismiss();return true};return false})}
+                .sheet(isPresented:$manual){FoodPortionView(food:Food(name:""),manual:true,initialMeal:initialMeal,onAnalyze:productSelection ? nil:{manual=false;tab=2},onCommit:{f,a,u,m in if onCommit(f,a,u,m){dismiss();return true};return false})}
                 .sheet(isPresented:$scanning){NavigationStack{BarcodeCamera(language:diary.language,completion:{value in scanning=false;code=value;startLookup()},failed:{message in scanning=false;presentNotice(message,error:true,settings:cameraAccessBlocked)}).ignoresSafeArea().sandowNavigation(diary.t("مسح الباركود","Scan barcode"),backLabel:diary.t("إغلاق","Close"),onBack:{scanning=false})}}
         }.onAppear{if let initial{selected=initial};if query.isEmpty && !initialQuery.isEmpty {query=initialQuery};refreshHistory();if tab==0 {searchTask=Task{await refreshLocal()}}}
             .onChange(of:diary.state.entries){_,_ in refreshHistory()}
@@ -440,6 +440,7 @@ struct FoodPortionView:View {
     let food:Food
     var manual=false,sourceBarcode=false
     var initialMeal:Meal?=nil
+    var onAnalyze:(()->Void)?=nil
     var onCommit:FoodCommit
     @EnvironmentObject var diary:DiaryStore
     @Environment(\.dismiss) var dismiss
@@ -458,6 +459,12 @@ struct FoodPortionView:View {
     @State private var servingID=""
     @State private var servingWeight=""
     @State private var personalID="personal:"+UUID().uuidString
+    @State private var initialized=false
+    @State private var showingQuantity=false
+    @State private var showingOptions=false
+    @State private var saving=false
+    @State private var nutrientDrafts:[String:String]=[:]
+    @FocusState private var focusedField:String?
     private var needsServingSize:Bool {!manual && food.unit != .serving && food.values(for:.serving)==nil && food.per100 != nil}
     private var portionFood:Food {
         if let choice=food.portionChoices.first(where:{$0.id==portionID}) {return (try? food.selectingPortion(choice)) ?? food}
@@ -469,138 +476,300 @@ struct FoodPortionView:View {
     private var quantity:Double? {TextSearch.number(amount)}
     private var total:Nutrition {base?.scaled((quantity ?? 0)/(unit == .serving ? 1:100)) ?? .zero}
     private var availableUnits:[FoodUnit] {manual ? [.serving,.g,.ml]:food.additionUnits}
-    private var canSave:Bool {!(base==nil || name.trimmingCharacters(in:.whitespaces).isEmpty || (quantity ?? 0)<=0 || (quantity ?? 0)>10000)}
-    private let sheetColor=Color(hex:0x24262B)
+    private var canSave:Bool {base != nil && !name.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty && quantityIsValid && !saving}
+    private var editable:Bool {manual || editingNutrition}
+    private let sheetColor=Color(hex:0x383C44)
     private let backgroundColor=Color(hex:0x111214)
-    private let orange=Color(hex:0xF97316)
+    private let chromeColor=Color(hex:0x1B1C20)
+    private let orange=Color(hex:0xF97318)
+    private let textColor=Color(hex:0xF7F7F7)
+    private let secondaryColor=Color(hex:0xB5B7BC)
 
-    // The approved dnm_05 layout wraps the existing serving and food APIs.
-    // Moving a track changes the consumed quantity; it never edits source nutrition.
+    // Native translation of the supplied Add Meal handoff, not a web view.
+    // Column heights are decorative, exactly as the source specifies; displayed
+    // nutrition always comes from the existing source/quantity calculation.
     var body:some View {
         NavigationStack {
-            VStack(spacing:0) {
-                portionHeader
-                ScrollView(showsIndicators:false) {
-                    VStack(alignment:.leading,spacing:18) {
-                        foodNameCard
-                        mealSelector
-                        servingOptions
-                        if let base {
-                            quantityTrack(.protein,reference:base.protein,upper:30)
-                            quantityTrack(.carbs,reference:base.carbs,upper:30)
-                            quantityTrack(nil,reference:base.kcal,upper:300)
-                        } else {
-                            Text(diary.t("حدد الحصة لعرض مجموع التغذية","Set the serving to see nutrition totals"))
-                                .luqmaFont(.subheadline).foregroundStyle(Theme.muted)
-                        }
-                        referenceCard
-                    }
-                    .padding(.horizontal,16).padding(.top,18).padding(.bottom,16)
-                }.scrollDismissesKeyboard(.interactively)
+            GeometryReader { geometry in
+                let compact=geometry.size.width<=360
+                VStack(spacing:0) {
+                    portionHeader
+                    ScrollView(showsIndicators:false) {
+                        VStack(spacing:0) {
+                            Capsule().fill(Color(hex:0x42454D)).frame(width:68,height:5)
+                                .padding(.bottom,28).accessibilityHidden(true)
+                            selectionChips.padding(.bottom,16)
+                            foodName(compact:compact).padding(.bottom,8)
+                            calorieRow.padding(.bottom,20)
+                            macroColumns(availableWidth:geometry.size.width-(compact ? 24:32),compact:compact)
+                            additionalOptions.padding(.top,16).padding(.bottom,8)
+                            saveButton.padding(.bottom,18)
+                        }.padding(.horizontal,compact ? 12:16).padding(.top,12)
+                            .frame(maxWidth:.infinity)
+                            .background(backgroundColor,in:UnevenRoundedRectangle(topLeadingRadius:compact ? 30:40,topTrailingRadius:compact ? 30:40,style:.continuous))
+                    }.scrollDismissesKeyboard(.interactively)
+                }.background(chromeColor.ignoresSafeArea())
             }
-            .background(backgroundColor.ignoresSafeArea())
-            .safeAreaInset(edge:.bottom,spacing:0) { saveButton }
             .toolbar(.hidden,for:.navigationBar)
+            .toolbar {ToolbarItemGroup(placement:.keyboard){Spacer();Button(diary.t("تم","Done")){focusedField=nil}}}
+            .sheet(isPresented:$showingQuantity){quantityEditor}
         }
-        .onAppear{if let initialMeal{meal=initialMeal};unit=food.defaultAdditionUnit;name=food.label(diary.language);amount="1";portionID=food.selectedPortionID ?? food.portionChoices.first?.id ?? "";if food.servingNutrition==nil{servingID=food.servingChoices.first?.id ?? ""};loadBase();editingNutrition=manual || (portionFood.per100==nil && portionFood.servingNutrition==nil)}
-        .onChange(of:unit){_,_ in amount=unit == .serving ? "1":"100";if !manual{loadBase();if portionFood.values(for:unit)==nil && !needsServingSize{editingNutrition=true}}}
+        .onAppear {
+            guard !initialized else{return};initialized=true
+            if let initialMeal{meal=initialMeal}
+            unit=food.defaultAdditionUnit;name=food.label(diary.language);amount="1"
+            portionID=food.selectedPortionID ?? food.portionChoices.first?.id ?? ""
+            if food.servingNutrition==nil{servingID=food.servingChoices.first?.id ?? ""}
+            loadBase();editingNutrition=manual || (portionFood.per100==nil && portionFood.servingNutrition==nil)
+        }
         .onChange(of:servingID){_,_ in if !manual{loadBase()}}
         .onChange(of:portionID){_,_ in if !manual{loadBase();editingNutrition=portionFood.values(for:unit)==nil}}
         .onChange(of:servingWeight){_,_ in if !manual && unit == .serving{loadBase()}}
+        .onChange(of:focusedField){previous,current in
+            if let previous,previous != current {nutrientDrafts.removeValue(forKey:previous)}
+        }
     }
     private var portionHeader:some View {
-        VStack(alignment:.leading,spacing:14) {
-            Button{dismiss()}label:{
-                CFACrescentChevron().stroke(Color.white,style:StrokeStyle(lineWidth:2.2,lineCap:.round,lineJoin:.round))
-                    .frame(width:10,height:18).frame(width:48,height:48)
-                    .background(Color(hex:0x393C43),in:RoundedRectangle(cornerRadius:18,style:.continuous))
-            }.buttonStyle(.plain).accessibilityLabel(diary.t("إلغاء","Cancel"))
-            Text(diary.t("كمية الطعام","Add New Meal"))
-                .luqmaFont(size:26,weight:.heavy,relativeTo:.title).foregroundStyle(.white)
-                .accessibilityAddTraits(.isHeader)
-            HStack(spacing:0) {
-                ForEach(availableUnits,id:\.self){value in
-                    Button{
-                        withAnimation(reduceMotion ? nil:.easeInOut(duration:0.18)){unit=value}
-                    }label:{
-                        Text(unitTitle(value)).luqmaFont(size:14,weight:.bold,relativeTo:.subheadline)
-                            .foregroundStyle(unit == value ? Color.white:Color(hex:0x9EA0A5))
-                            .frame(maxWidth:.infinity,minHeight:40)
-                            .background(unit == value ? Color(hex:0x676C75):.clear,in:RoundedRectangle(cornerRadius:12,style:.continuous))
-                    }.buttonStyle(.plain).accessibilityAddTraits(unit == value ? .isSelected:[])
-                        .accessibilityIdentifier("portion.unit."+value.rawValue)
-                }
-            }.padding(4).background(backgroundColor,in:RoundedRectangle(cornerRadius:16,style:.continuous))
-        }.padding(.horizontal,16).padding(.top,12).padding(.bottom,18)
-            .background(sheetColor,in:UnevenRoundedRectangle(bottomLeadingRadius:28,bottomTrailingRadius:28,style:.continuous))
-    }
-    private func unitTitle(_ value:FoodUnit)->String {
-        guard value == .serving,let serving=portionFood.serving,!serving.isEmpty else{return value.label(diary.language)}
-        return value.label(diary.language)+" ("+DisplayFormat.westernDigits(serving)+")"
-    }
-    private var foodNameCard:some View {
-        VStack(alignment:.leading,spacing:8) {
-            HStack {
-                Text(diary.t("اسم الطعام","Meal Name")).luqmaFont(size:14,weight:.bold,relativeTo:.subheadline).foregroundStyle(.white)
-                Spacer(minLength:8)
-                if let brand=food.brand,!brand.isEmpty {
-                    Text(DisplayFormat.westernDigits(brand)).luqmaFont(size:12,weight:.semibold,relativeTo:.caption).foregroundStyle(Color(hex:0x9EA0A5)).lineLimit(1)
-                }
+        VStack(spacing:16) {
+            HStack(spacing:12) {
+                Button{focusedField=nil;dismiss()}label:{
+                    CFACrescentChevron().stroke(textColor,style:StrokeStyle(lineWidth:2,lineCap:.round,lineJoin:.round))
+                        .frame(width:8,height:14).frame(width:40,height:40)
+                        .background(sheetColor,in:RoundedRectangle(cornerRadius:14,style:.continuous))
+                        .frame(minWidth:44,minHeight:44)
+                }.buttonStyle(.plain).accessibilityLabel(diary.t("رجوع","Back")).accessibilityIdentifier("portion.back")
+                Text(diary.t("إضافة وجبة","Add Meal")).luqmaFont(size:18,weight:.semibold,relativeTo:.headline)
+                    .foregroundStyle(textColor).accessibilityAddTraits(.isHeader)
+                Spacer(minLength:0)
             }
-            ViewThatFits(in:.horizontal) {
-                HStack(spacing:10){ foodName; Spacer(minLength:8); quantityInput }
-                VStack(alignment:.leading,spacing:12){foodName;quantityInput}
-            }.padding(.horizontal,16).padding(.vertical,typeSize.isAccessibilitySize ? 12:4)
-                .frame(minHeight:52).background(sheetColor,in:RoundedRectangle(cornerRadius:18,style:.continuous))
+            HStack(spacing:4) {
+                Button{editingNutrition=true}label:{
+                    Label(diary.t("إدخال يدوي","Manual entry"),systemImage:"pencil.line")
+                        .luqmaFont(size:12,weight:.semibold,relativeTo:.caption)
+                        .frame(maxWidth:.infinity,minHeight:40).foregroundStyle(textColor)
+                        .background(sheetColor,in:RoundedRectangle(cornerRadius:9,style:.continuous))
+                }.buttonStyle(.plain).accessibilityAddTraits(.isSelected)
+                    .accessibilityIdentifier("portion.mode.manual")
+                if let onAnalyze {
+                    Button{focusedField=nil;onAnalyze()}label:{
+                        Label(diary.t("تحليل بالذكاء الاصطناعي","Meal analysis"),systemImage:"viewfinder")
+                            .luqmaFont(size:12,weight:.semibold,relativeTo:.caption)
+                            .foregroundStyle(secondaryColor).frame(maxWidth:.infinity,minHeight:40)
+                    }.buttonStyle(.plain).accessibilityIdentifier("portion.mode.analysis")
+                }
+            }.padding(4).background(backgroundColor,in:RoundedRectangle(cornerRadius:12,style:.continuous))
+        }.padding(.horizontal,20).padding(.top,8).padding(.bottom,16)
+    }
+    private var selectionChips:some View {
+        HStack(spacing:8) {
+            Menu {
+                ForEach(Meal.allCases){value in Button{meal=value}label:{Text(value.label(diary.language))}}
+            } label:{chipLabel(meal.label(diary.language))}
+                .accessibilityIdentifier("portion.meal").accessibilityLabel(diary.t("نوع الوجبة","Meal type"))
+                .accessibilityValue(meal.label(diary.language))
+            Button{focusedField=nil;showingQuantity=true}label:{chipLabel(quantityLabel)}
+                .buttonStyle(.plain).accessibilityIdentifier("portion.quantity")
+                .accessibilityLabel(diary.t("تحديد الكمية","Set quantity")).accessibilityValue(quantityLabel)
+        }.frame(maxWidth:.infinity).environment(\.layoutDirection,.leftToRight)
+    }
+    private func chipLabel(_ title:String)->some View {
+        Text(title).luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline).monospacedDigit()
+            .foregroundStyle(textColor).padding(.horizontal,12).padding(.vertical,4).frame(minHeight:36)
+            .overlay{RoundedRectangle(cornerRadius:12,style:.continuous).strokeBorder(Color(hex:0x71747A),lineWidth:2)}
+            .padding(.vertical,4).contentShape(Rectangle())
+    }
+    private var quantityLabel:String {
+        (quantity.map{displayQuantity($0,places:2)} ?? "—")+" "+unit.label(diary.language)
+    }
+    private func displayQuantity(_ value:Double,places:Int)->String {
+        let formatted=decimal(value,places)
+        guard formatted.contains(".") else{return formatted}
+        return formatted.replacingOccurrences(of:"0+$",with:"",options:.regularExpression)
+            .replacingOccurrences(of:"\\.$",with:"",options:.regularExpression)
+    }
+    private func foodName(compact:Bool)->some View {
+        Group {
+            if manual {
+                TextField(diary.t("اسم الوجبة","Meal name"),text:$name,prompt:Text(diary.t("اسم الوجبة","Meal name")).foregroundColor(secondaryColor))
+                    .focused($focusedField,equals:"name").accessibilityIdentifier("portion.name")
+            } else {Text(DisplayFormat.westernDigits(name)).fixedSize(horizontal:false,vertical:true)}
+        }.luqmaFont(size:compact ? 25:28,weight:.bold,relativeTo:.title2).foregroundStyle(textColor)
+            .multilineTextAlignment(.center).frame(maxWidth:.infinity,minHeight:40)
+    }
+    private var calorieRow:some View {
+        HStack(alignment:.firstTextBaseline,spacing:8) {
+            Image("AddMealCalories").resizable().scaledToFit().frame(width:20,height:24)
+                .alignmentGuide(.firstTextBaseline){$0[.bottom]-3}.accessibilityHidden(true)
+            nutrientValue(nil,size:22).layoutPriority(1)
+            Text(diary.t("سعرة","kcal")).luqmaFont(size:16,weight:.medium,relativeTo:.body)
+                .foregroundStyle(Color(hex:0xE4E4E6)).fixedSize()
+        }.frame(maxWidth:.infinity,minHeight:32).accessibilityElement(children:.contain)
+    }
+    private func macroColumns(availableWidth:CGFloat,compact:Bool)->some View {
+        let gap:CGFloat=compact ? 8:10
+        let width=max(1,(availableWidth-2*gap)/3)
+        let height=max(160,width/0.625)
+        return HStack(spacing:gap) {
+            ForEach([MacroKey.protein,.carbs,.fat],id:\.self){key in
+                macroColumn(key,height:height,compact:compact)
+            }
+        }.environment(\.layoutDirection,diary.language == .ar ? .rightToLeft:.leftToRight)
+    }
+    private func macroColumn(_ key:MacroKey,height:CGFloat,compact:Bool)->some View {
+        let fill:Color=key == .protein ? Color(hex:0x2562EB):key == .carbs ? orange:Color(hex:0x676C76)
+        let fraction:CGFloat=key == .protein ? 0.70:key == .carbs ? 0.56:0.43
+        let radius:CGFloat=compact ? 20:25
+        let asset=key == .protein ? "AddMealProtein":key == .carbs ? "AddMealCarbs":"AddMealFat"
+        return ZStack(alignment:.bottom) {
+            RoundedRectangle(cornerRadius:radius,style:.continuous).fill(sheetColor)
+            RoundedRectangle(cornerRadius:radius,style:.continuous).fill(fill).frame(height:height*fraction)
+            VStack(spacing:0) {
+                Image(asset).resizable().scaledToFit().frame(width:key == .carbs ? 32:30,height:key == .carbs ? 29:30)
+                    .padding(.top,18).accessibilityHidden(true)
+                Spacer(minLength:12)
+                Text(key.label(diary.language)).luqmaFont(size:compact ? 13:14,weight:.semibold,relativeTo:.subheadline)
+                    .foregroundStyle(.white).multilineTextAlignment(.center).fixedSize(horizontal:false,vertical:true)
+                HStack(alignment:.firstTextBaseline,spacing:3) {
+                    nutrientValue(key,size:22).layoutPriority(1)
+                    Text(diary.t("غ","g")).luqmaFont(size:15,weight:.medium,relativeTo:.subheadline).foregroundStyle(.white)
+                }.padding(.top,4)
+                .padding(.bottom,14)
+            }.padding(.horizontal,6)
+        }.frame(maxWidth:.infinity).frame(minHeight:typeSize.isAccessibilitySize ? max(height,250):height)
+            .clipShape(RoundedRectangle(cornerRadius:radius,style:.continuous))
+            // The decorative ZStack must not leave a narrow native text hit
+            // region at the bottom of the column. A tap anywhere in the
+            // editable column selects its actual focused TextField; scrolling
+            // remains owned by the surrounding ScrollView.
+            .contentShape(RoundedRectangle(cornerRadius:radius,style:.continuous))
+            .simultaneousGesture(TapGesture().onEnded {
+                if editable {focusedField=key.rawValue}
+            })
+            .accessibilityElement(children:.contain)
+    }
+    @ViewBuilder private func nutrientValue(_ key:MacroKey?,size:CGFloat)->some View {
+        if editable {
+            TextField("0",text:totalBinding(key),prompt:Text("0").foregroundColor(secondaryColor))
+                .keyboardType(.decimalPad).focused($focusedField,equals:key?.rawValue ?? "kcal")
+                .multilineTextAlignment(.center).frame(minWidth:24,maxWidth:key == nil ? 130:.infinity,minHeight:32)
+                .luqmaFont(size:size,weight:.semibold,relativeTo:.title3).monospacedDigit()
+                .minimumScaleFactor(16/22).foregroundStyle(textColor)
+                .environment(\.layoutDirection,.leftToRight)
+                .accessibilityIdentifier("portion."+(key?.rawValue ?? "kcal"))
+                .accessibilityLabel(key?.label(diary.language) ?? diary.t("السعرات الحرارية","Calories"))
+                .contentShape(Rectangle())
+                .simultaneousGesture(TapGesture().onEnded {focusedField=key?.rawValue ?? "kcal"})
+        } else {
+            Text(base == nil ? "—":displayQuantity(key.map{total[$0]} ?? total.kcal,places:key == nil ? 0:1))
+                .luqmaFont(size:size,weight:.semibold,relativeTo:.title3).foregroundStyle(textColor).monospacedDigit()
+                .lineLimit(1).minimumScaleFactor(16/22).environment(\.layoutDirection,.leftToRight)
+                .accessibilityIdentifier("portion.total."+(key?.rawValue ?? "kcal"))
         }
     }
-    private var foodName:some View {
-        HStack(spacing:10) {
-            if manual {
-                TextField(diary.t("اسم الطعام","Food name"),text:$name,prompt:Text(diary.t("اسم الطعام","Food name")).foregroundColor(Theme.muted))
-                    .accessibilityIdentifier("portion.name")
-            } else {
-                Text(DisplayFormat.westernDigits(name)).fixedSize(horizontal:false,vertical:true)
-            }
-            Image(systemName:"fork.knife").font(.system(size:16,weight:.semibold)).foregroundStyle(Color(hex:0x9EA0A5)).accessibilityHidden(true)
-        }.luqmaFont(size:15,weight:.semibold,relativeTo:.body).foregroundStyle(.white)
+    private func totalBinding(_ key:MacroKey?)->Binding<String> {
+        let field=key?.rawValue ?? "kcal"
+        let reference:Binding<String>
+        switch key {case .protein:reference=$protein;case .carbs:reference=$carbs;case .fat:reference=$fat;case nil:reference=$kcal}
+        return Binding(get:{
+            if let draft=nutrientDrafts[field] {return draft}
+            guard let value=TextSearch.number(reference.wrappedValue),let quantity,quantity>0 else{return reference.wrappedValue}
+            return decimal(value*quantity/(unit == .serving ? 1:100),key == nil ? 2:3)
+        },set:{value in
+            // Keep the editing buffer (including a trailing decimal separator)
+            // intact. The native calculation retains its reference-unit values.
+            nutrientDrafts[field]=value
+            guard let number=TextSearch.number(value),let quantity,quantity>0 else{reference.wrappedValue=value;return}
+            // Store the Double reference without display rounding. Formatting
+            // the per-unit value here would lose precision at small quantities.
+            reference.wrappedValue=String(number/quantity*(unit == .serving ? 1:100))
+        })
     }
-    private var quantityInput:some View {
-        HStack(spacing:4) {
-            Text(diary.t(unit == .serving ? "عدد الحصص:":"الكمية:",unit == .serving ? "Servings:":"Amount:"))
-                .lineLimit(1).fixedSize(horizontal:true,vertical:false)
-            TextField("1",text:$amount,prompt:Text("1").foregroundColor(Theme.muted))
-                .keyboardType(.decimalPad).multilineTextAlignment(.center)
-                .frame(width:30).frame(minHeight:44)
-                .accessibilityIdentifier("portion.amount")
-                .accessibilityLabel(diary.t(unit == .serving ? "عدد الحصص":"الكمية المستهلكة",unit == .serving ? "Number of servings":"Consumed amount"))
-        }.luqmaFont(size:13,weight:.bold,relativeTo:.caption).foregroundStyle(orange)
-            .accessibilityAdjustableAction{direction in stepAmount(by:direction == .increment ? (unit == .serving ? 0.5:10):-(unit == .serving ? 0.5:10))}
+    private var additionalOptions:some View {
+        VStack(spacing:8) {
+            Button{withAnimation(reduceMotion ? nil:.easeInOut(duration:0.16)){showingOptions.toggle()}}label:{
+                HStack(spacing:7){Text(diary.t("خيارات إضافية","Additional options"));Image(systemName:showingOptions ? "chevron.up":"chevron.down").font(.system(size:10,weight:.semibold))}
+                    .luqmaFont(size:13,relativeTo:.footnote).foregroundStyle(secondaryColor).frame(maxWidth:.infinity,minHeight:44)
+            }.buttonStyle(.plain).accessibilityIdentifier("portion.options")
+                .accessibilityValue(diary.t(showingOptions ? "مفتوحة":"مغلقة",showingOptions ? "Expanded":"Collapsed"))
+            if showingOptions {
+                mealSelector
+                Text(referenceTitle).luqmaFont(.caption).foregroundStyle(secondaryColor).frame(maxWidth:.infinity,alignment:.leading)
+                    .accessibilityIdentifier("portion.reference")
+                if !manual {
+                    Toggle(diary.t("تعديل القيم الغذائية","Edit nutrition values"),isOn:$editingNutrition)
+                        .luqmaFont(.subheadline).tint(orange).foregroundStyle(textColor)
+                }
+                if base==nil {Text(diary.t("أكمل قيم السعرات والبروتين والكارب والدهون قبل الإضافة.","Complete calories, protein, carbs and fat before adding.")).luqmaFont(.caption).foregroundStyle(secondaryColor)}
+                if let brand=food.brand,!brand.isEmpty {Text(DisplayFormat.westernDigits(brand)).luqmaFont(.caption).foregroundStyle(secondaryColor)}
+            }
+        }
     }
     private var mealSelector:some View {
-        VStack(alignment:.leading,spacing:8) {
-            HStack {
-                Text(diary.t("الوجبة","Meal Type")).luqmaFont(size:14,weight:.bold,relativeTo:.subheadline).foregroundStyle(.white)
-                Spacer();Text(diary.t("اختر 1","Select 1")).luqmaFont(size:12,relativeTo:.caption).foregroundStyle(Color(hex:0x9EA0A5))
-            }
-            ScrollView(.horizontal,showsIndicators:false) {
-                HStack(spacing:8) {
-                    ForEach(Meal.allCases){value in
-                        Button{
-                            withAnimation(reduceMotion ? nil:.easeInOut(duration:0.18)){meal=value}
-                        }label:{
-                            HStack(spacing:10){Text(value.label(diary.language)).luqmaFont(size:14,weight:.bold,relativeTo:.subheadline);CFARadioIndicator(isSelected:meal == value)}
-                                .foregroundStyle(.white).padding(.horizontal,16).frame(minHeight:48)
-                                .background(meal == value ? Color(hex:0x2563EB):sheetColor,in:RoundedRectangle(cornerRadius:18,style:.continuous))
-                                .overlay{RoundedRectangle(cornerRadius:18,style:.continuous).strokeBorder(meal == value ? Color(hex:0x1E3A8A):.clear,lineWidth:3)}
-                        }.buttonStyle(.plain).accessibilityAddTraits(meal == value ? .isSelected:[])
-                            .accessibilityIdentifier("portion.meal."+value.rawValue)
-                    }
-                }.padding(.vertical,2)
-            }
+        ViewThatFits(in:.horizontal) {
+            HStack(spacing:6){ForEach(Meal.allCases){value in mealButton(value)}}
+            VStack(spacing:6){ForEach(Meal.allCases){value in mealButton(value)}}
         }
     }
+    private func mealButton(_ value:Meal)->some View {
+        Button{meal=value}label:{Text(value.label(diary.language)).luqmaFont(size:13,weight:.semibold,relativeTo:.caption)
+            .foregroundStyle(meal == value ? Color(hex:0xFFB580):secondaryColor).frame(maxWidth:.infinity,minHeight:44)
+            .padding(.horizontal,2).background(meal == value ? Color(hex:0x392416):.clear,in:RoundedRectangle(cornerRadius:11))
+            .overlay{RoundedRectangle(cornerRadius:11).strokeBorder(meal == value ? Color(hex:0xAA551C):Color(hex:0x45474E),lineWidth:1)}
+        }.buttonStyle(.plain).accessibilityIdentifier("portion.meal."+value.rawValue).accessibilityAddTraits(meal == value ? .isSelected:[])
+    }
+    private var quantityEditor:some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing:20) {
+                    HStack(spacing:4) {
+                        ForEach(availableUnits,id:\.self){value in
+                            Button{selectUnit(value)}label:{Text(value.label(diary.language)).luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline)
+                                .foregroundStyle(unit == value ? textColor:secondaryColor).frame(maxWidth:.infinity,minHeight:40)
+                                .background(unit == value ? sheetColor:.clear,in:RoundedRectangle(cornerRadius:9))
+                            }.buttonStyle(.plain).accessibilityIdentifier("portion.unit."+value.rawValue).accessibilityAddTraits(unit == value ? .isSelected:[])
+                        }
+                    }.padding(4).background(backgroundColor,in:RoundedRectangle(cornerRadius:12))
+                    HStack(alignment:.firstTextBaseline,spacing:12) {
+                        TextField("1",text:$amount,prompt:Text("1").foregroundColor(secondaryColor)).keyboardType(.decimalPad)
+                            .focused($focusedField,equals:"amount").multilineTextAlignment(.center)
+                            .luqmaFont(size:30,weight:.medium,relativeTo:.title).monospacedDigit().foregroundStyle(textColor)
+                            .padding(12).frame(maxWidth:240,minHeight:60).background(backgroundColor,in:RoundedRectangle(cornerRadius:14))
+                            .overlay{RoundedRectangle(cornerRadius:14).strokeBorder(Color(hex:0x45474E),lineWidth:1)}
+                            .environment(\.layoutDirection,.leftToRight).accessibilityIdentifier("portion.amount")
+                        Text(unit.label(diary.language)).luqmaFont(size:17,relativeTo:.body).foregroundStyle(secondaryColor)
+                    }
+                    servingOptions
+                    Text(quantitySummary)
+                        .luqmaFont(.subheadline).foregroundStyle(secondaryColor).monospacedDigit()
+                    if !quantityIsValid {Text(diary.t("أدخل كمية أكبر من صفر ولا تتجاوز 10000.","Enter an amount above zero and no greater than 10000.")).luqmaFont(.caption).foregroundStyle(textColor)}
+                    Button{focusedField=nil;showingQuantity=false}label:{Text(diary.t("تأكيد الكمية","Confirm quantity"))
+                        .luqmaFont(size:16,weight:.semibold,relativeTo:.headline).foregroundStyle(.white)
+                        .frame(maxWidth:.infinity,minHeight:52).background(orange,in:RoundedRectangle(cornerRadius:14))
+                    }.buttonStyle(.plain).disabled(!quantityIsValid).opacity(quantityIsValid ? 1:0.45).accessibilityIdentifier("portion.quantity.confirm")
+                }.padding(20)
+            }.background(chromeColor.ignoresSafeArea()).navigationTitle(diary.t("تحديد الكمية","Set quantity"))
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar{ToolbarItem(placement:.confirmationAction){Button(diary.t("تم","Done")){focusedField=nil;showingQuantity=false}.disabled(!quantityIsValid)}}
+                .toolbar{ToolbarItemGroup(placement:.keyboard){Spacer();Button(diary.t("تم","Done")){focusedField=nil}}}
+        }.presentationDetents([.medium,.large]).presentationDragIndicator(.visible).presentationCornerRadius(30)
+    }
+    private var quantitySummary:String {
+        let energy:String=base == nil ? "—":decimal(total.kcal)
+        let label=diary.t("سعرة","kcal")
+        return "\(quantityLabel) · \(energy) \(label)"
+    }
+    private var quantityIsValid:Bool {guard let quantity else{return false};return quantity.isFinite && quantity>0 && quantity<=10000}
+    private func selectUnit(_ value:FoodUnit) {
+        guard unit != value else{return}
+        unit=value;amount=unit == .serving ? "1":"100"
+        if !manual {loadBase();if portionFood.values(for:unit)==nil && !needsServingSize{editingNutrition=true}}
+    }
     @ViewBuilder private var servingOptions:some View {
+        if unit == .serving && !needsServingSize && food.servingChoices.isEmpty && food.portionChoices.isEmpty,
+           let description=selectedServingDescription {
+            Text(description).luqmaFont(.subheadline).foregroundStyle(textColor)
+                .fixedSize(horizontal:false,vertical:true).accessibilityIdentifier("portion.serving.description")
+        }
         if unit == .serving && !food.servingChoices.isEmpty {
             Picker(diary.t("حجم الحصة","Serving size"),selection:$servingID){
                 if food.servingNutrition != nil {Text(DisplayFormat.westernDigits(food.serving ?? diary.t("الحصة المحفوظة","Saved serving"))).tag("")}
@@ -611,109 +780,41 @@ struct FoodPortionView:View {
             Picker(diary.t("حجم الحصة","Serving size"),selection:$portionID){ForEach(food.portionChoices){choice in Text(DisplayFormat.westernDigits(choice.label)).tag(choice.id)}}.tint(orange)
         }
         if unit == .serving && needsServingSize {
-            input(diary.t(food.unit == .ml ? "حجم الحصة (مل)":"وزن الحصة (جم)",food.unit == .ml ? "Serving volume (ml)":"Serving weight (g)"),$servingWeight)
-            Text(diary.t("لا يحدد المصدر حجم الحصة. أدخله من الملصق أو اختر وحدة المنتج.","The source has no serving size. Enter it from the label, or choose the product's unit.")).luqmaFont(.caption).foregroundStyle(Theme.muted)
+            HStack{Text(diary.t(food.unit == .ml ? "حجم الحصة (مل)":"وزن الحصة (جم)",food.unit == .ml ? "Serving volume (ml)":"Serving weight (g)"));TextField("0",text:$servingWeight).keyboardType(.decimalPad).focused($focusedField,equals:"servingWeight").multilineTextAlignment(.trailing).accessibilityIdentifier("portion.servingWeight")}.luqmaFont(.subheadline).foregroundStyle(textColor)
+            Text(diary.t("لا يحدد المصدر حجم الحصة. أدخله من الملصق أو اختر وحدة المنتج.","The source has no serving size. Enter it from the label, or choose the product's unit.")).luqmaFont(.caption).foregroundStyle(secondaryColor)
         }
     }
-    private func quantityTrack(_ key:MacroKey?,reference:Double,upper:Double)->some View {
-        let current=key.map{total[$0]} ?? total.kcal
-        let maximum=max(upper,current)
-        let fraction=maximum>0 ? min(1,max(0,current/maximum)):0
-        let title:String=key.map{$0.label(diary.language)} ?? diary.t("إجمالي السعرات والدهون (\(decimal(total.fat,1)) جم)","Total Calories (\(decimal(total.fat,1))g Fat)")
-        return VStack(alignment:.leading,spacing:8) {
-            HStack {
-                Text(title).luqmaFont(size:14,weight:.bold,relativeTo:.subheadline).foregroundStyle(.white)
-                Spacer();Text(diary.t(key == nil ? "سعرة":"جم",key == nil ? "kcal":"g")).luqmaFont(size:12,relativeTo:.caption).foregroundStyle(Color(hex:0x9EA0A5))
-            }
-            GeometryReader{geometry in
-                let width=max(1,geometry.size.width-22)
-                ZStack(alignment:.leading) {
-                    Capsule().fill(sheetColor).frame(height:8)
-                    Capsule().fill(orange).frame(width:11+width*CGFloat(fraction),height:8)
-                    RoundedRectangle(cornerRadius:7,style:.continuous).fill(orange)
-                        .frame(width:22,height:22)
-                        .overlay{RoundedRectangle(cornerRadius:7,style:.continuous).stroke(backgroundColor,lineWidth:3)}
-                        .offset(x:width*CGFloat(fraction))
-                }.frame(maxHeight:.infinity)
-                    .overlay {
-                        // Preserve the approved 22pt track layout while the
-                        // transparent gesture target remains 44pt tall.
-                        Rectangle().fill(Color.clear).frame(height:44).contentShape(Rectangle())
-                            // Vertical scrolling must not alter the meal amount.
-                            .simultaneousGesture(DragGesture(minimumDistance:8).onChanged{value in
-                                let horizontal=abs(value.translation.width),vertical=abs(value.translation.height)
-                                guard horizontal>=8,horizontal>vertical*1.5 else{return}
-                                setTrackAmount(min(1,max(0,Double((value.location.x-11)/width)))*maximum,reference:reference)
-                            })
-                    }
-            }.frame(height:22).environment(\.layoutDirection,.leftToRight)
-                .accessibilityElement(children:.ignore).accessibilityLabel(title)
-                .accessibilityValue(decimal(current,1)+" "+diary.t(key == nil ? "سعرة":"جم",key == nil ? "kcal":"g"))
-                .accessibilityAdjustableAction{direction in stepAmount(by:direction == .increment ? (unit == .serving ? 0.5:10):-(unit == .serving ? 0.5:10))}
-                .accessibilityIdentifier("portion.track."+(key?.rawValue ?? "kcal"))
-                .allowsHitTesting(reference>0)
-            HStack {
-                Text("0").foregroundStyle(Color(hex:0x676C75))
-                Spacer();Text(decimal(current,key == nil ? 0:1)+" "+diary.t(key == nil ? "سعرة":"جم",key == nil ? "kcal":"g")).luqmaFont(size:13,weight:.heavy,relativeTo:.caption).foregroundStyle(.white).monospacedDigit()
-                Spacer();Text(decimal(maximum,0)).foregroundStyle(Color(hex:0x676C75))
-            }.luqmaFont(size:12,weight:.semibold,relativeTo:.caption).environment(\.layoutDirection,.leftToRight)
-        }
+    private var selectedServingDescription:String? {
+        let selected=portionFood
+        let rawLabel=selected.serving?.trimmingCharacters(in:.whitespacesAndNewlines) ?? ""
+        let label:String?=rawLabel.isEmpty ? nil:DisplayFormat.westernDigits(rawLabel)
+        guard let amount=selected.servingQuantity,amount.isFinite,amount>0,
+              let rawUnit=selected.servingUnit,!rawUnit.isEmpty else{return label}
+        let unitLabel=FoodUnit(rawValue:rawUnit)?.label(diary.language) ?? DisplayFormat.westernDigits(rawUnit)
+        let measurement=decimal(amount)+" "+unitLabel
+        guard let label else{return measurement}
+        let compactLabel=TextSearch.normalized(label).replacingOccurrences(of:" ",with:"")
+        let compactMeasurement=TextSearch.normalized(measurement).replacingOccurrences(of:" ",with:"")
+        return compactLabel.contains(compactMeasurement) ? label:label+" · "+measurement
     }
-    private func setTrackAmount(_ desired:Double,reference:Double) {
-        guard reference.isFinite,reference>0,desired.isFinite else{return}
-        let next=max(unit == .serving ? 0.01:0.1,min(10000,desired/reference*(unit == .serving ? 1:100)))
-        amount=decimal(next,2)
-    }
-    private func stepAmount(by delta:Double) {
-        let next=max(unit == .serving ? 0.01:0.1,min(10000,(quantity ?? (unit == .serving ? 1:100))+delta))
-        amount=decimal(next,2)
-    }
-    private var referenceCard:some View {
-        VStack(alignment:.leading,spacing:12) {
-            Button{if !manual{editingNutrition.toggle()}}label:{
-                HStack(spacing:8){
-                    Text(referenceTitle+(base.map{" ("+decimal($0.kcal,0)+" kcal)"} ?? ""))
-                        .luqmaFont(size:14,weight:.bold,relativeTo:.subheadline).foregroundStyle(.white)
-                    Spacer(minLength:0)
-                    if !manual{Image(systemName:editingNutrition ? "chevron.down":"chevron.forward").font(.system(size:12,weight:.semibold)).foregroundStyle(Theme.muted)}
-                }.frame(minHeight:44)
-            }.buttonStyle(.plain)
-            if manual || editingNutrition {referenceInputs}
-        }.padding(.horizontal,16).padding(.vertical,manual || editingNutrition ? 16:4)
-            .background(sheetColor,in:RoundedRectangle(cornerRadius:18,style:.continuous))
+    private var referenceTitle:String {
+        let basis=unit == .serving ? diary.t("حصة واحدة","one serving"):"100 "+unit.label(diary.language)
+        return diary.t("القيم أعلاه لإجمالي الكمية المحددة. مرجع الحساب: ","Displayed values are for the selected amount. Reference basis: ")+basis
     }
     private var saveButton:some View {
-        Button{save()}label:{
-            HStack(spacing:10){Text(diary.t("إضافة الطعام","Add food"));Image(systemName:"arrow.forward").font(.system(size:16,weight:.bold))}
-                .luqmaFont(size:16,weight:.bold,relativeTo:.headline).foregroundStyle(canSave ? backgroundColor:Color(hex:0x9EA0A5))
-                .frame(maxWidth:.infinity,minHeight:56)
-                .background(canSave ? .white:sheetColor,in:RoundedRectangle(cornerRadius:18,style:.continuous))
-        }.buttonStyle(.plain).disabled(!canSave).accessibilityIdentifier("portion.save")
-            .padding(.horizontal,16).padding(.top,8).padding(.bottom,12).background(backgroundColor)
-    }
-    private var referenceTitle:String {unit == .serving ? diary.t("القيم للحصة الواحدة","Values per serving"):diary.t("القيم لكل 100","Values per 100")+" "+unit.label(diary.language)}
-    private var referenceInputs:some View {Group{
-        input(diary.t("السعرات","Calories"),$kcal,identifier:"portion.kcal");input(diary.t("البروتين","Protein"),$protein,identifier:"portion.protein");input(diary.t("الكارب","Carbs"),$carbs,identifier:"portion.carbs");input(diary.t("الدهون","Fat"),$fat,identifier:"portion.fat")
-        if !manual,portionFood.values(for:unit)==nil && !needsServingSize {Notice(text:diary.t("المنتج ينقصه بيانات؛ أكملها من الملصق قبل الإضافة.","Nutrition is incomplete. Fill in the label values before adding."))}
-    }}
-    private func input(_ label:String,_ text:Binding<String>,identifier:String?=nil)->some View {
-        HStack{
-            Text(label).luqmaFont(size:13,weight:.medium,relativeTo:.subheadline).foregroundStyle(Theme.text)
-            Spacer(minLength:8)
-            TextField(label,text:text,prompt:Text(label).foregroundColor(Theme.muted)).keyboardType(.decimalPad).multilineTextAlignment(.trailing)
-                .luqmaFont(size:14,weight:.bold,relativeTo:.subheadline).monospacedDigit()
-                .padding(.horizontal,10).frame(width:110).frame(minHeight:44)
-                .background(backgroundColor,in:RoundedRectangle(cornerRadius:8,style:.continuous))
-                .accessibilityIdentifier(identifier ?? label)
-        }
+        Button{save()}label:{HStack(spacing:12){Text(diary.t("إضافة الوجبة","Add Meal"));Image(systemName:"plus").font(.system(size:21,weight:.semibold))}
+            .luqmaFont(size:18,weight:.semibold,relativeTo:.headline).foregroundStyle(.white)
+            .padding(.horizontal,16).padding(.vertical,12).frame(maxWidth:.infinity,minHeight:60)
+            .background(orange,in:RoundedRectangle(cornerRadius:20,style:.continuous))
+        }.buttonStyle(.plain).disabled(!canSave).opacity(canSave ? 1:0.45).accessibilityIdentifier("portion.save")
     }
     private func loadBase(){let n=portionFood.values(for:unit);kcal=n.map{decimal($0.kcal,2)} ?? "";protein=n.map{decimal($0.protein,3)} ?? "";carbs=n.map{decimal($0.carbs,3)} ?? "";fat=n.map{decimal($0.fat,3)} ?? ""}
     private func save(){
-        guard let base,let quantity else{return}
+        guard canSave,let base,let quantity else{return};focusedField=nil;saving=true
         var f=portionFood;f.name=String(name.trimmingCharacters(in:.whitespacesAndNewlines).prefix(180))
         if diary.language == .en {f.nameEn=f.name}
         if manual{f.catalogID=personalID;f.source="Your food";f.unit=unit}
-        do {f=try f.withReference(base,unit:unit);if onCommit(f,quantity,unit,meal){diary.remember(f,barcode:sourceBarcode);dismiss()}}
-        catch{diary.report(error)}
+        do {f=try f.withReference(base,unit:unit);if onCommit(f,quantity,unit,meal){diary.remember(f,barcode:sourceBarcode);dismiss()}else{saving=false}}
+        catch{saving=false;diary.report(error)}
     }
 }

@@ -91,6 +91,12 @@ final class LuqmaPerformanceTests: XCTestCase {
             reveal(product)
             startMeasuring()
             product.tap()
+            // The approved design opens quantity in its own real sheet. This
+            // scenario includes that explicit tap; do not compare its timing
+            // directly with the older inline-amount presentation.
+            let quantity = app.buttons["portion.quantity"]
+            XCTAssertTrue(quantity.waitForExistence(timeout: 10))
+            quantity.tap()
             XCTAssertTrue(app.textFields["portion.amount"].waitForExistence(timeout: 10))
             XCTAssertEqual(app.textFields["portion.amount"].value as? String, "1")
             stopMeasuring()
