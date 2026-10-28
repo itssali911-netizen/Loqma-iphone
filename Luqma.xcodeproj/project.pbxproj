@@ -532,6 +532,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = DD73BC8B5EBA9FFEE00ADC0B;
 		};
+		"A4FEA9B6C698E0A72C2E123D" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "DailyCalorieCard.swift";
+			"sourceTree" = "<group>";
+		};
+		"DBEB796306D6A29FD15E4760" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = A4FEA9B6C698E0A72C2E123D;
+		};
 		"A2C2846E141846D4239E36BE" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -709,6 +719,7 @@
 				C6E005D3443BCD463D0457B8,
 				82FCA24CF3F9753B48ABB140,
 				DD73BC8B5EBA9FFEE00ADC0B,
+				A4FEA9B6C698E0A72C2E123D,
 				A2C2846E141846D4239E36BE,
 				1E9BF1B70AA1073D8BA46C02,
 				D41D151B2B35AF73E6D09AD8,
@@ -729,6 +740,16 @@
 			);
 			"path" = "Views";
 			"sourceTree" = "<group>";
+		};
+		"533F31325E8554224FE2A0B9" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "text";
+			"path" = "CalorieCardIcons-LICENSE.txt";
+			"sourceTree" = "<group>";
+		};
+		"79E83529B9FD0CACD752FFFF" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 533F31325E8554224FE2A0B9;
 		};
 		"0E3E686E8841E556D7858E05" = {
 			"isa" = "PBXFileReference";
@@ -1030,6 +1051,7 @@
 		"369366657F0CC118760331FE" = {
 			"isa" = "PBXGroup";
 			"children" = (
+				533F31325E8554224FE2A0B9,
 				0E3E686E8841E556D7858E05,
 				3AEDFABCA989F7EFF159C0F7,
 				9F009A6C67366BC5A119C002,
@@ -1115,6 +1137,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = 26025DB47A2ED493977EB5F5;
 		};
+		"C3F8B295CA4C8D0325CB8B7B" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "CalorieCardInteractionTests.swift";
+			"sourceTree" = "<group>";
+		};
+		"D7BE33845969A81928D26DEE" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = C3F8B295CA4C8D0325CB8B7B;
+		};
 		"A8CA97C9C396889CF0B7B755" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -1139,6 +1171,7 @@
 			"isa" = "PBXGroup";
 			"children" = (
 				26025DB47A2ED493977EB5F5,
+				C3F8B295CA4C8D0325CB8B7B,
 				A8CA97C9C396889CF0B7B755,
 				110A69DC2B0C1B39C63965B6,
 			);
@@ -1309,6 +1342,7 @@
 				EA46DFA42C3EF132CA0356EB,
 				BE3F5B945001AB1D35AE0CAC,
 				FF71C1135CA6799BE2C58C42,
+				DBEB796306D6A29FD15E4760,
 				C4B8B7DD03FF0230596ED1A2,
 				A24EABD7EF05AC66A7DDB6B4,
 				41BF9A06D552D68ADE14742D,
@@ -1346,6 +1380,7 @@
 			"isa" = "PBXResourcesBuildPhase";
 			"buildActionMask" = 2147483647;
 			"files" = (
+				79E83529B9FD0CACD752FFFF,
 				DA3647F9CB736D8F0382E59E,
 				558092EFE7694C557ED1DFBE,
 				7E6FAD56D1119F7C653B7501,
@@ -1590,6 +1625,7 @@
 			"buildActionMask" = 2147483647;
 			"files" = (
 				7C998D2FCA399359C3078C6B,
+				D7BE33845969A81928D26DEE,
 				F7030A48D0B54D27869E5317,
 				529F5DF0462DAC3C0CEE547A,
 			);
