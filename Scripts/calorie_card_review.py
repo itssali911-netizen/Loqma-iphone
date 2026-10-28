@@ -160,8 +160,8 @@ def generate_host(folder: Path, root: Path = ROOT) -> dict:
     if not host_source.is_file(): raise BuildError("The review-only component host source is missing.")
     info = plistlib.loads((root/"Luqma/Info.plist").read_bytes())
     fonts = info.get("UIAppFonts", [])
-    if len(fonts) != 11 or not all(isinstance(name,str) and Path(name).name == name and (root/"Luqma/Resources"/name).is_file() for name in fonts):
-        raise BuildError("The component review must use the application's actual eleven bundled fonts.")
+    if not fonts or len(fonts) != len(set(fonts)) or not all(isinstance(name,str) and Path(name).name == name and (root/"Luqma/Resources"/name).is_file() for name in fonts):
+        raise BuildError("The component review must use the application's actual registered bundled fonts.")
     sources = [*sorted((root/"Luqma/Core").glob("*.swift")), root/CARD, root/"Luqma/Views/LuqmaTypography.swift", host_source]
     if any(not path.is_file() for path in sources): raise BuildError("An exact production source required by the host is unavailable.")
     folder.mkdir(parents=True)
@@ -361,7 +361,13 @@ def collect_attachments(output: Path, report: dict) -> None:
             source=directory/item.get("exportedFileName","")
             if source.resolve().parent != directory.resolve() or source.suffix.lower() != ".png":
                 raise BuildError("An unexpected native attachment path was returned.")
-            if key in seen: raise BuildError("Native review screenshots must have unique capture names.")
+            # XCTest can preserve a failure screenshot from several test cases.
+            # Keep every original attachment rather than masking the real test
+            # failure with an unrelated duplicate-filename exception.
+            if key in seen:
+                suffix = 2
+                while key + "-" + str(suffix) in seen: suffix += 1
+                key += "-" + str(suffix)
             seen.add(key);target=captures/(key+".png");shutil.copy2(source,target)
             data=target.read_bytes();width,height,channels,pixels,frame=decode_png(data,target.name)
             if width<200 or height<100: raise BuildError("A native card screenshot is unexpectedly small.")
@@ -409,7 +415,8 @@ def validate() -> dict:
         command(["xcrun","simctl","install",device,str(host_app)],output,"install-component-host",120)
         capture_component_cases(device,output,report)
         try:
-            log=command(["xcodebuild","-project","Luqma.xcodeproj","-scheme","Luqma","-clonedSourcePackagesDirPath",str(packages),"-disableAutomaticPackageResolution","-destination","id="+device,"-configuration","Debug","-derivedDataPath",str(derived),"-resultBundlePath",str(output/"calorie-card.xcresult"),"-parallel-testing-enabled","NO","-only-testing:LuqmaUITests/"+TEST_CLASS,"ARCHS=arm64","ONLY_ACTIVE_ARCH=YES","CODE_SIGNING_ALLOWED=YES","CODE_SIGN_IDENTITY=-","CURRENT_PROJECT_VERSION="+os.environ.get("BUILD_NUMBER","121"),"test"],output,"native-calorie-card-tests",1800)
+            extra = ["-only-testing:LuqmaUITests/LuqmaInteractionTests"] if os.environ.get("LUQMA_STRICT_DESIGN_REVIEW") == "1" else []
+            log=command(["xcodebuild","-project","Luqma.xcodeproj","-scheme","Luqma","-clonedSourcePackagesDirPath",str(packages),"-disableAutomaticPackageResolution","-destination","id="+device,"-configuration","Debug","-derivedDataPath",str(derived),"-resultBundlePath",str(output/"calorie-card.xcresult"),"-parallel-testing-enabled","NO","-only-testing:LuqmaUITests/"+TEST_CLASS,*extra,"ARCHS=arm64","ONLY_ACTIVE_ARCH=YES","CODE_SIGNING_ALLOWED=YES","CODE_SIGN_IDENTITY=-","CURRENT_PROJECT_VERSION="+os.environ.get("BUILD_NUMBER","121"),"test"],output,"native-calorie-card-tests",1800)
             report["passed_tests"]=[name for name in tests if re.search(r"Test Case '.*\b"+re.escape(name)+r"\b.*' passed",log)]
             if set(report["passed_tests"])!=set(tests): raise BuildError("The native run did not execute and pass every required card test.")
             report["test_status"]="passed"

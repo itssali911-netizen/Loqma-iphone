@@ -23,6 +23,7 @@ sys.path.insert(0, str(ROOT / "Scripts"))
 from simulator_support import collect_startup_diagnostics, prepare_created_simulator
 
 FONT_SHA256 = {
+    "Changa-Bold.ttf": "d2015fb807cdd2cdc4d2f539db75117f7f009e407fe9d4b3e7555d94c4ff2c9f",
     "Tajawal-Light.ttf": "ab26ed3e0c5af2c71b469b5780decff8088d290ab91aa29b07321580136e813a",
     "Tajawal-Regular.ttf": "6882892da3e03527d5db2bbab3b48bde6ef2e878a43f522d1a4eebda90010a19",
     "Tajawal-Medium.ttf": "1ff8bd943a261c9dd7906bdb1993cab87b6d925a7fb5f848cdb51ed301531090",
@@ -38,6 +39,7 @@ FONT_SHA256 = {
 # The official license is pinned after LF normalization, so Git's Windows CRLF
 # conversion cannot change its verified text.
 LICENSE_SHA256 = {
+    "Changa-OFL.txt": "6b12c8d417bb766fa017d1161c7ca050392817a7eecbf3110fc2a8616564b956",
     "Tajawal-OFL.txt": "184de01d11c016e7d7bb2f2f81db9a036171acb5374f006e74a36828faca1f12",
     "WorkSans-OFL.txt": "749aca05078664ce682dce1b1b10096ac397cb088c1a6df4e1bb56f0092a9272",
 }
@@ -150,7 +152,7 @@ class BundledFontTests(unittest.TestCase):
 
     def test_registered_faces_match_actual_postscript_names(self):
         typography = (ROOT / "Luqma/Views/LuqmaTypography.swift").read_text(encoding="utf-8")
-        requested_faces = set(re.findall(r'"((?:Tajawal|WorkSans)-[A-Za-z]+)"', typography))
+        requested_faces = set(re.findall(r'"((?:Changa|Tajawal|WorkSans)-[A-Za-z]+)"', typography))
         actual_faces = set()
         for filename in FONT_SHA256:
             with self.subTest(font=filename):
@@ -163,13 +165,21 @@ class BundledFontTests(unittest.TestCase):
         for filename in FONT_SHA256:
             with self.subTest(font=filename):
                 font = SfntFont((RESOURCES / filename).read_bytes())
-                required = GLYPH_SAMPLE if filename.startswith("Tajawal-") else GLYPH_SAMPLE[:62]
+                required = GLYPH_SAMPLE if filename.startswith(("Changa-", "Tajawal-")) else GLYPH_SAMPLE[:62]
                 missing = [character for character in required if not font.glyph_for(character)]
                 self.assertEqual(missing, [], "Missing glyphs would silently fall back to a system font")
                 self.assertNotIn(b"fvar", font.tables, "Ship the unchanged official static font files")
                 if filename.startswith("WorkSans-"):
                     self.assertTrue(all(not font.glyph_for(character) for character in GLYPH_SAMPLE[62:]),
                                     "Arabic is supplied by the explicit Tajawal cascade")
+
+    def test_approved_changa_is_an_actual_bold_face_with_layout_tables(self):
+        font = SfntFont((RESOURCES / "Changa-Bold.ttf").read_bytes())
+        self.assertEqual(font.postscript_names(), {"Changa-Bold"})
+        self.assertEqual(struct.unpack_from(">H", font.tables[b"OS/2"], 4)[0], 700)
+        self.assertTrue({b"GDEF", b"GPOS", b"GSUB"}.issubset(font.tables),
+                        "Arabic shaping and mark positioning tables must ship intact")
+        self.assertNotIn(b"fvar", font.tables)
 
     def test_fonts_and_license_are_in_xcode_resource_copy_phase(self):
         project = (ROOT / "Luqma.xcodeproj/project.pbxproj").read_text(encoding="utf-8")
@@ -343,12 +353,12 @@ func runFaces(_ text:String,_ font:CTFont)throws->[String] {
         }
         diagnostics["font_count"]=LTypography.bundledFontNames.count
         let weights:[(Font.Weight,String,String)]=[
-            (.light,"WorkSans-Light","Tajawal-Light"),
-            (.regular,"WorkSans-Regular","Tajawal-Regular"),
-            (.medium,"WorkSans-Medium","Tajawal-Medium"),
-            (.semibold,"WorkSans-SemiBold","Tajawal-Bold"),
-            (.bold,"WorkSans-Bold","Tajawal-Bold"),
-            (.heavy,"WorkSans-ExtraBold","Tajawal-ExtraBold")
+            (.light,"Changa-Bold","Changa-Bold"),
+            (.regular,"Changa-Bold","Changa-Bold"),
+            (.medium,"Changa-Bold","Changa-Bold"),
+            (.semibold,"Changa-Bold","Changa-Bold"),
+            (.bold,"Changa-Bold","Changa-Bold"),
+            (.heavy,"Changa-Bold","Changa-Bold")
         ]
         var results=[[String:Any]]()
         for (weight,latinName,arabicName) in weights {
@@ -387,7 +397,7 @@ func runFaces(_ text:String,_ font:CTFont)throws->[String] {
         let metrics=UIFontMetrics(forTextStyle:.body)
         let standardTraits=UITraitCollection(preferredContentSizeCategory:standardCategory)
         let accessibilityTraits=UITraitCollection(preferredContentSizeCategory:accessibilityCategory)
-        guard let base=UIFont(name:"WorkSans-Regular",size:18) else{
+        guard let base=UIFont(name:"Changa-Bold",size:18) else{
             throw FontProbeError.failed("Missing UIKit base font")
         }
         let standardFont=metrics.scaledFont(for:base,compatibleWith:standardTraits)

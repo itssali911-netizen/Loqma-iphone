@@ -279,7 +279,7 @@ struct FitnessPlanReviewView: View {
             let next=min(10000,max(ApprovedPlanGoals.minimumCalories(for:plan),target+(increasing ? 50:-50)))
             calorieOverride=abs(next-plan.goals.kcal)<0.000001 ? nil:next
         }label:{
-            Text(increasing ? "+":"—").font(.system(size:increasing ? 26:22,weight:.bold))
+            Text(increasing ? "+":"—").luqmaFont(size:increasing ? 26:22,weight:.bold,relativeTo:.title2)
                 .foregroundStyle(increasing ? Color.white:Color(hex:0xD7D8D9)).frame(width:114,height:72)
                 .background(increasing ? Color(hex:0xF97316):Color(hex:0x393C43),in:RoundedRectangle(cornerRadius:20))
                 .overlay{RoundedRectangle(cornerRadius:23).stroke(increasing ? Color(hex:0x7C2D12).opacity(0.65):Color.clear,lineWidth:4).padding(-2)}

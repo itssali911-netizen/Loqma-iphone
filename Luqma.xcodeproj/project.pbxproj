@@ -542,6 +542,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = A4FEA9B6C698E0A72C2E123D;
 		};
+		"DB38DFA9B691F1D96AD1075C" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "DailyMealCard.swift";
+			"sourceTree" = "<group>";
+		};
+		"719982DD0B0E38C7E9372C91" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = DB38DFA9B691F1D96AD1075C;
+		};
 		"A2C2846E141846D4239E36BE" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -720,6 +730,7 @@
 				82FCA24CF3F9753B48ABB140,
 				DD73BC8B5EBA9FFEE00ADC0B,
 				A4FEA9B6C698E0A72C2E123D,
+				DB38DFA9B691F1D96AD1075C,
 				A2C2846E141846D4239E36BE,
 				1E9BF1B70AA1073D8BA46C02,
 				D41D151B2B35AF73E6D09AD8,
@@ -750,6 +761,36 @@
 		"79E83529B9FD0CACD752FFFF" = {
 			"isa" = "PBXBuildFile";
 			"fileRef" = 533F31325E8554224FE2A0B9;
+		};
+		"BDC8DA6D3BF6A4846A20F814" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "file";
+			"path" = "Changa-Bold.ttf";
+			"sourceTree" = "<group>";
+		};
+		"FA202DFDE17D86164D9301B4" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = BDC8DA6D3BF6A4846A20F814;
+		};
+		"0A820FB0FD060225F6D6D907" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "text";
+			"path" = "Changa-Font-Provenance.txt";
+			"sourceTree" = "<group>";
+		};
+		"F3FAFC69A246E6B046B814D6" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 0A820FB0FD060225F6D6D907;
+		};
+		"7136F474E8C49E9404DD236A" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "text";
+			"path" = "Changa-OFL.txt";
+			"sourceTree" = "<group>";
+		};
+		"953E8DDF86EC1D8793E5F147" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 7136F474E8C49E9404DD236A;
 		};
 		"0E3E686E8841E556D7858E05" = {
 			"isa" = "PBXFileReference";
@@ -1052,6 +1093,9 @@
 			"isa" = "PBXGroup";
 			"children" = (
 				533F31325E8554224FE2A0B9,
+				BDC8DA6D3BF6A4846A20F814,
+				0A820FB0FD060225F6D6D907,
+				7136F474E8C49E9404DD236A,
 				0E3E686E8841E556D7858E05,
 				3AEDFABCA989F7EFF159C0F7,
 				9F009A6C67366BC5A119C002,
@@ -1343,6 +1387,7 @@
 				BE3F5B945001AB1D35AE0CAC,
 				FF71C1135CA6799BE2C58C42,
 				DBEB796306D6A29FD15E4760,
+				719982DD0B0E38C7E9372C91,
 				C4B8B7DD03FF0230596ED1A2,
 				A24EABD7EF05AC66A7DDB6B4,
 				41BF9A06D552D68ADE14742D,
@@ -1381,6 +1426,9 @@
 			"buildActionMask" = 2147483647;
 			"files" = (
 				79E83529B9FD0CACD752FFFF,
+				FA202DFDE17D86164D9301B4,
+				F3FAFC69A246E6B046B814D6,
+				953E8DDF86EC1D8793E5F147,
 				DA3647F9CB736D8F0382E59E,
 				558092EFE7694C557ED1DFBE,
 				7E6FAD56D1119F7C653B7501,

@@ -36,8 +36,10 @@ final class LuqmaInteractionTests:XCTestCase {
         manual.tap()
         XCTAssertTrue(app.textFields["portion.name"].waitForExistence(timeout:10),app.debugDescription)
         replace(app.textFields["portion.name"],with:"UI Test Oats")
+        openPortionQuantity()
         XCTAssertTrue(app.buttons["portion.unit.serving"].isSelected)
         XCTAssertEqual(app.textFields["portion.amount"].value as? String,"1")
+        confirmPortionQuantity()
         replace(app.textFields["portion.kcal"],with:"100")
         replace(app.textFields["portion.protein"],with:"10")
         replace(app.textFields["portion.carbs"],with:"15")
@@ -86,10 +88,77 @@ final class LuqmaInteractionTests:XCTestCase {
         app.terminate()
         app.launch()
         XCTAssertTrue(app.buttons["nav.today"].waitForExistence(timeout:15))
-        let breakfastCount=app.staticTexts["diary.mealCount.breakfast"]
-        reveal(breakfastCount)
-        XCTAssertEqual(breakfastCount.label,"Add your first food","The actual persisted meal count must be empty after deletion")
+        let breakfast=app.buttons["diary.meal.breakfast"]
+        reveal(breakfast)
+        XCTAssertEqual(breakfast.value as? String,"Add your first food, 0 kcal, Protein 0 g, Carbs 0 g, Fat 0 g",
+                       "The actual meal card must expose an empty persisted meal and zero totals after deletion")
         XCTAssertFalse(app.buttons["UI Test Oats"].exists,"Deleted entry must remain absent after relaunch")
+    }
+
+    func testGramAndServingQuantityRecalculateStoredFood() throws {
+        // Create the food with real controls and remember its known reference
+        // nutrition. No catalog/network fixture supplies the expected values.
+        let name="UI Gram Serving Oats"
+        app.buttons["nav.add"].tap()
+        let personal=app.buttons["search.filter.3"]
+        XCTAssertTrue(personal.waitForExistence(timeout:10));personal.tap()
+        let manual=app.buttons["search.manual"]
+        reveal(manual);manual.tap()
+        replace(app.textFields["portion.name"],with:name)
+        openPortionQuantity()
+        app.buttons["portion.unit.g"].tap()
+        XCTAssertTrue(app.buttons["portion.unit.g"].isSelected)
+        XCTAssertEqual(app.textFields["portion.amount"].value as? String,"100")
+        confirmPortionQuantity()
+        for (key,value) in [("kcal","200"),("protein","10"),("carbs","30"),("fat","4")] {
+            replace(app.textFields["portion."+key],with:value)
+        }
+        let save=app.buttons["portion.save"]
+        reveal(save);XCTAssertTrue(save.isEnabled);save.tap()
+        XCTAssertTrue(app.buttons["nav.today"].waitForExistence(timeout:10))
+
+        // The remembered product now has a real per-100g reference. Reopen it
+        // through search, use grams, then explicitly define a 50g serving.
+        app.buttons["nav.add"].tap()
+        XCTAssertTrue(personal.waitForExistence(timeout:10));personal.tap()
+        let product=app.buttons.matching(NSPredicate(format:"label CONTAINS %@",name)).firstMatch
+        reveal(product);product.tap()
+        openPortionQuantity()
+        XCTAssertTrue(app.buttons["portion.unit.serving"].isSelected)
+        app.buttons["portion.unit.g"].tap()
+        replace(app.textFields["portion.amount"],with:"0")
+        XCTAssertFalse(app.buttons["portion.quantity.confirm"].isEnabled,"Zero quantity must not be confirmed")
+        replace(app.textFields["portion.amount"],with:"50")
+        confirmPortionQuantity()
+        assertPortionNutrition(kcal:100,protein:5,carbs:15,fat:2)
+
+        openPortionQuantity()
+        app.buttons["portion.unit.serving"].tap()
+        XCTAssertEqual(app.textFields["portion.amount"].value as? String,"1")
+        replace(app.textFields["portion.servingWeight"],with:"50")
+        confirmPortionQuantity()
+        assertPortionNutrition(kcal:100,protein:5,carbs:15,fat:2)
+        openPortionQuantity()
+        replace(app.textFields["portion.amount"],with:"2")
+        confirmPortionQuantity()
+        assertPortionNutrition(kcal:200,protein:10,carbs:30,fat:4)
+        let proof=XCTAttachment(screenshot:app.screenshot())
+        proof.name="Actual stored-food grams and serving recalculation"
+        proof.lifetime = .keepAlways;add(proof)
+
+        // Dismiss without logging the preview a second time; only the initial
+        // 100g entry should exist. Remove that case's own saved entry.
+        app.buttons["portion.back"].tap()
+        XCTAssertTrue(app.buttons["search.close"].waitForExistence(timeout:5))
+        app.buttons["search.close"].tap()
+        XCTAssertTrue(app.buttons["nav.today"].waitForExistence(timeout:10))
+        openBreakfastEntry(named:name)
+        XCTAssertEqual(app.textFields["entry.amount"].value as? String,"100")
+        XCTAssertTrue(app.staticTexts["200"].exists,"Changing the add preview must leave the saved original entry unchanged")
+        let remove=app.buttons["entry.delete"]
+        reveal(remove);remove.tap()
+        XCTAssertTrue(app.buttons["Delete"].waitForExistence(timeout:5));app.buttons["Delete"].tap()
+        XCTAssertTrue(app.buttons["nav.today"].waitForExistence(timeout:10))
     }
 
     func testRecipeDraftSurvivesIngredientSearch() throws {
@@ -781,6 +850,35 @@ final class LuqmaInteractionTests:XCTestCase {
                 && nodes.contains{$0.identifier == "goals.save" && !$0.frame.isEmpty}
         },object:app)
         XCTAssertEqual(XCTWaiter.wait(for:[dismissed],timeout:5),.completed,"Done must dismiss the calorie input and reveal the actual parent goal controls.\n"+app.debugDescription)
+    }
+
+    private func openPortionQuantity(file:StaticString=#filePath,line:UInt=#line) {
+        let quantity=app.buttons["portion.quantity"]
+        reveal(quantity,file:file,line:line);quantity.tap()
+        XCTAssertTrue(app.textFields["portion.amount"].waitForExistence(timeout:5),
+                      "The real quantity sheet must contain its editable amount",file:file,line:line)
+    }
+
+    private func confirmPortionQuantity(file:StaticString=#filePath,line:UInt=#line) {
+        let confirm=app.buttons["portion.quantity.confirm"]
+        reveal(confirm,file:file,line:line)
+        XCTAssertTrue(confirm.isEnabled,file:file,line:line);confirm.tap()
+        let dismissed=XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == false"),object:app.textFields["portion.amount"])
+        XCTAssertEqual(XCTWaiter.wait(for:[dismissed],timeout:5),.completed,
+                       "Confirmation must dismiss the actual quantity sheet before editing nutrition",file:file,line:line)
+        XCTAssertTrue(app.buttons["portion.quantity"].waitForExistence(timeout:5),file:file,line:line)
+    }
+
+    private func assertPortionNutrition(kcal:Double,protein:Double,carbs:Double,fat:Double,
+                                       file:StaticString=#filePath,line:UInt=#line) {
+        for (key,expected) in [("kcal",kcal),("protein",protein),("carbs",carbs),("fat",fat)] {
+            let value=app.staticTexts["portion.total."+key]
+            let updated=XCTNSPredicateExpectation(predicate:NSPredicate { _,_ in
+                value.exists && self.numeric(value.label) == expected
+            },object:value)
+            XCTAssertEqual(XCTWaiter.wait(for:[updated],timeout:5),.completed,
+                           "The real selected quantity must recalculate "+key,file:file,line:line)
+        }
     }
 
     private func openBreakfastEntry(named name:String="UI Test Oats") {

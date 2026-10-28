@@ -176,6 +176,7 @@ struct AboutLuqmaView:View {
             aboutCard(diary.t("التصميم","Design"),symbol:"paintpalette.fill"){
                 aboutLink("Sandow · Figma Community",url:"https://www.figma.com/design/IfMCdTI3FcvXpNFy79PRUA?node-id=2-606")
                 Text(diary.t("الثيم الداكن وألوان Sandow، مع تنظيم مخصص لسجل الطعام العربي. بعض شاشات المرجع صور معاينة أُعيد بناؤها للتطبيق.","Sandow dark theme and colors, arranged for the Arabic food diary. Some reference screens are flattened previews reconstructed for this app.")).luqmaFont(.footnote).foregroundStyle(Theme.muted)
+                aboutLink("Changa Bold · SIL Open Font License",url:"https://github.com/googlefonts/changa-vf")
                 aboutLink("Work Sans · SIL Open Font License",url:"https://github.com/weiweihuanghuang/Work-Sans")
                 aboutLink("Tajawal · SIL Open Font License",url:"https://github.com/google/fonts/tree/main/ofl/tajawal")
             }

@@ -219,13 +219,13 @@ def synthetic_font_audit(pid=1234, accessibility=False, scope="root"):
     """Validator input only: this fixture is never used as native font evidence."""
     roles = ["display", "screenTitle", "sectionTitle", "headline", "body", "subheadline",
              "helper", "caption", "caption2", "button", "metric", "legacyLightPromoted"]
-    entries = [{"role": role, "resolvedLatinPostScript": "WorkSans-Regular",
-                "resolvedArabicPostScript": "Tajawal-Regular", "uiFontPostScript": "WorkSans-Regular",
-                "latinRuns": ["WorkSans-Regular"], "arabicRuns": ["Tajawal-Regular"],
-                "mixedRuns": ["WorkSans-Regular", "Tajawal-Regular"], "missingGlyphs": 0,
+    entries = [{"role": role, "resolvedLatinPostScript": "Changa-Bold",
+                "resolvedArabicPostScript": "Changa-Bold", "uiFontPostScript": "Changa-Bold",
+                "latinRuns": ["Changa-Bold"], "arabicRuns": ["Changa-Bold"],
+                "mixedRuns": ["Changa-Bold"], "missingGlyphs": 0,
                 "registered": True, "passed": True, "basePoints": 16,
                 "scaledPoints": 32 if accessibility else 16, "lineHeight": 40 if accessibility else 20,
-                "effectiveWeight": "regular"} for role in roles]
+                "effectiveWeight": "bold"} for role in roles]
     return {"processIdentifier": pid, "renderingScope": scope,
             "swiftUIDynamicTypeSize": "accessibility3" if accessibility else "large",
             "swiftUIBodyPoints": 32 if accessibility else 16,
@@ -248,6 +248,16 @@ class RuntimeFontAuditTests(unittest.TestCase):
         value["fontAudit"]["entries"][0]["arabicRuns"] = [".SFArabic-Regular"]
         with self.assertRaisesRegex(BuildError, "shaping"):
             validate_runtime_font_audit(value, 1234, False)
+
+    def test_unapproved_font_and_weight_are_rejected(self):
+        for field, replacement in (("resolvedLatinPostScript", "WorkSans-Bold"),
+                                   ("resolvedArabicPostScript", "Tajawal-Bold"),
+                                   ("effectiveWeight", "regular")):
+            with self.subTest(field=field):
+                value = synthetic_font_audit()
+                value["fontAudit"]["entries"][0][field] = replacement
+                with self.assertRaises(BuildError):
+                    validate_runtime_font_audit(value, 1234, False)
 
     def test_matching_process_id_rejects_stale_previous_launch(self):
         with self.assertRaisesRegex(BuildError, "process ID"):
@@ -293,7 +303,7 @@ class RuntimeFontAuditTests(unittest.TestCase):
 
     def test_missing_roles_thin_weight_and_invalid_measured_size_fail(self):
         for change, message in ((lambda value: value["fontAudit"]["entries"].pop(), "roles"),
-                                (lambda value: value["fontAudit"]["entries"][0].update(effectiveWeight="light"), "thin"),
+                                (lambda value: value["fontAudit"]["entries"][0].update(effectiveWeight="light"), "Changa Bold"),
                                 (lambda value: value["fontAudit"]["entries"][0].update(scaledPoints=float("nan")), "size")):
             with self.subTest(message=message):
                 value = synthetic_font_audit()

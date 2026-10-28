@@ -17,7 +17,7 @@ final class CalorieCardInteractionTests: XCTestCase {
 
     override func tearDownWithError() throws {
         if let testRun, testRun.failureCount > 0 {
-            capture("calorie-card-home-failed")
+            capture("calorie-card-home-failed-" + name.components(separatedBy: CharacterSet.alphanumerics.inverted).filter { !$0.isEmpty }.joined(separator: "-"))
         }
         app.terminate()
     }
@@ -37,8 +37,11 @@ final class CalorieCardInteractionTests: XCTestCase {
         reveal(manual)
         manual.tap()
         replace(app.textFields["portion.name"], with: foodName)
+        app.buttons["portion.quantity"].tap()
+        XCTAssertTrue(app.buttons["portion.unit.serving"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["portion.unit.serving"].isSelected)
         XCTAssertEqual(app.textFields["portion.amount"].value as? String, "1")
+        app.buttons["portion.quantity.confirm"].tap()
         for (identifier, value) in [("portion.kcal", "100"), ("portion.protein", "10"),
                                     ("portion.carbs", "15"), ("portion.fat", "0")] {
             replace(app.textFields[identifier], with: value)
@@ -221,6 +224,33 @@ final class CalorieCardInteractionTests: XCTestCase {
         XCTAssertTrue(element("diary.calorieGoal").waitForExistence(timeout: 10))
     }
 
+    func testGFourMealCardsKeepTheirRealAddRoutes() throws {
+        for (meal, label) in [("breakfast", "Breakfast"), ("lunch", "Lunch"),
+                              ("dinner", "Dinner"), ("snack", "Snack")] {
+            let card = app.buttons["diary.meal." + meal]
+            reveal(card)
+            XCTAssertTrue(card.isHittable)
+            capture("calorie-card-home-meal-" + meal)
+            card.tap()
+            let personal = app.buttons["search.filter.3"]
+            XCTAssertTrue(personal.waitForExistence(timeout: 10))
+            personal.tap()
+            let manual = app.buttons["search.manual"]
+            reveal(manual)
+            manual.tap()
+            let selectedMeal = app.buttons["portion.meal"]
+            XCTAssertTrue(selectedMeal.waitForExistence(timeout: 10))
+            XCTAssertEqual(selectedMeal.value as? String, label,
+                           "The category card must open the correct real meal")
+            let back = app.buttons["portion.back"]
+            back.tap()
+            let close = app.buttons["search.close"]
+            XCTAssertTrue(close.waitForExistence(timeout: 10))
+            close.tap()
+            XCTAssertTrue(app.buttons["nav.today"].waitForExistence(timeout: 10))
+        }
+    }
+
     private func element(_ identifier: String) -> XCUIElement {
         app.descendants(matching: .any).matching(identifier: identifier).firstMatch
     }
@@ -236,7 +266,9 @@ final class CalorieCardInteractionTests: XCTestCase {
     private func number(_ identifier: String) -> Double? {
         let node = element(identifier)
         guard node.exists else { return nil }
-        return numeric(node.value as? String ?? node.label)
+        // StaticText may expose an empty AX value even when its label is the
+        // complete number. Prefer a numeric value, then the actual text label.
+        return numeric(node.value as? String ?? "") ?? numeric(node.label)
     }
 
     private func assertNumber(_ identifier: String, equals expected: Double,

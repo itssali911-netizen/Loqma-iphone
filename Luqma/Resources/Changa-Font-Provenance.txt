@@ -1,0 +1,16 @@
+# Changa Bold font provenance
+
+Requested by the user for Arabic, English and numeric text throughout Luqma.
+
+- Author: The Changa Project Authors; designer Eduardo Tunni.
+- License: SIL Open Font License 1.1, full unchanged text in Changa-OFL.txt. No reserved font name is specified in that license.
+- Official upstream immutable commit: fb3207d4fe7234f610d0d4ef77dce01cfda57027
+- Original static file (unchanged): https://raw.githubusercontent.com/googlefonts/changa-vf/fb3207d4fe7234f610d0d4ef77dce01cfda57027/fonts/ttf/Changa-Bold.ttf
+- Original license: https://raw.githubusercontent.com/googlefonts/changa-vf/fb3207d4fe7234f610d0d4ef77dce01cfda57027/OFL.txt
+- Discovery: https://github.com/google/fonts/blob/3dd78844021e948ceb633d1dcee3f7885561b5d9/ofl/changa/METADATA.pb identifies this official upstream and commit.
+- Font SHA-256: d2015fb807cdd2cdc4d2f539db75117f7f009e407fe9d4b3e7555d94c4ff2c9f
+- Full license SHA-256 after LF normalization: 6b12c8d417bb766fa017d1161c7ca050392817a7eecbf3110fc2a8616564b956
+- Read from the actual font name table: PostScript Changa-Bold, family Changa, subfamily Bold.
+- Read from OS/2 table: weight class 700. Static font; no fvar table.
+- Both Arabic and Latin/Western digit glyph coverage verified from the font cmap. Native UIKit registration and shaped-run checks remain necessary and are part of the existing Simulator font probe.
+- Existing Work Sans and Tajawal resources remain bundled for compatibility, but custom Luqma text now resolves through Changa-Bold. SF Symbols retain their system symbol fonts. System-controlled Apple permission dialogs and keyboard fonts are not overridden.
