@@ -73,6 +73,7 @@ import AVFoundation
         .luqmaMotion(.content,value:parts.isEmpty)
         .luqmaMotion(.content,value:loadingPhoto)
         .luqmaMotion(.content,value:busy)
+        .luqmaFeedback(.error,trigger:error){_,message in message != nil}
         .sheet(isPresented:$camera){CameraPhoto{data in camera=false;if let data{photoGeneration=UUID();photoLoadTask?.cancel();loadingPhoto=false;imageData=data;parts=[];error=nil}}.ignoresSafeArea()}
         .sheet(isPresented:$showingSetup,onDismiss:{ready=GeminiCredentialStore.isConfigured}){GeminiSettingsView()}
         .sheet(item:$editing){request in PhotoEstimateEditor(title:componentName(request.id),estimate:request.estimate){updated in
@@ -214,6 +215,7 @@ import AVFoundation
                         LinearGradient(colors:[Color.white.opacity(0.45),Color.white.opacity(0)],startPoint:.top,endPoint:.bottom).frame(height:height*0.23)
                         Spacer(minLength:0)
                     }.frame(width:width*0.78,height:height)
+                        .luqmaScanSweep(active:busy,travel:height*0.22)
                     VStack(spacing:-2) {
                         Text(busy ? diary.t("جارٍ المسح...","Scanning..."):diary.t("جاهز للمسح","Ready to scan"))
                             .luqmaFont(size:13,weight:.bold,relativeTo:.caption).foregroundStyle(.white)

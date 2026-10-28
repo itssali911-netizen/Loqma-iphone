@@ -59,6 +59,7 @@ import SwiftUI
             }.scrollDismissesKeyboard(.interactively).appBackground()
                 .sandowNavigation(diary.t("استيراد وصفة", "Import recipe"),backLabel:diary.t("إغلاق", "Close"),onBack:{cancel();dismiss()})
         }.luqmaFeedback(.success,trigger:saved){_,new in new}
+            .luqmaFeedback(.error,trigger:error){_,message in message != nil}
             .onAppear { loadPreviewFixture() }.onDisappear { cancel() }
     }
 

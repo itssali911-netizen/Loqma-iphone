@@ -12,7 +12,7 @@ their nested editors, loading, empty, error and completion states.
 | Root notification destination | Existing queued routing and draft preservation; unchanged | Existing service behavior retained, regression suite pending |
 | Root app alerts | Native iOS alert presentation/dismissal and button behavior retained | Native behavior; relevant UI scenarios pending |
 | Original launch storyboard | Unchanged static storyboard and 96pt original mark; a 200ms noninteractive first-frame continuation disappears permanently | Pending launch recording; no artificial wait |
-| Global Reduce Motion | Actual SwiftUI environment gates custom transforms/transitions; DEBUG override used only by isolated review | Policy probe and actual environment captures pending |
+| Global Reduce Motion | Actual system preference is read from SwiftUI; isolated native tests enable it through genuine Simulator Settings UI | Policy probe and actual environment captures pending |
 | LuqmaPrimaryButtonStyle / Secondary | Original sizes, fonts, colors, disabled and pressed opacity; scoped press transform only | Pending interaction suite |
 | Plain custom buttons | LuqmaPressStyle preserves settled content; 0.98 press transform, immediately interruptible | Pending native suite |
 | LuqmaProgressRing / MacroRings | Animate actual finite progress; same original geometry and colors | Capture/runtime pending |

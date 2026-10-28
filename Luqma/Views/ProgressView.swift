@@ -114,7 +114,9 @@ struct ProgressViewScreen:View {
             }
             if let target=diary.state.weightPlan?.targetWeight{RuleMark(y:.value("Goal",target)).lineStyle(StrokeStyle(lineWidth:1,dash:[5])).foregroundStyle(Theme.secondaryAccent)}
         }.chartYScale(domain:.automatic(includesZero:false)).chartLegend(.hidden).frame(height:225)
-            .luqmaMotion(.content,value:snapshot.readings).accessibilityLabel(diary.t("رسم تغيّر الوزن بالكيلوجرام","Weight trend in kilograms"))}
+            .luqmaMotion(.content,value:snapshot.readings.count)
+            .luqmaMotion(.content,value:snapshot.readings.last)
+            .accessibilityLabel(diary.t("رسم تغيّر الوزن بالكيلوجرام","Weight trend in kilograms"))}
     }.luqmaCard()}
     private func rangeTitle(_ value:Int)->String {switch value{case 7:return diary.t("أسبوع","7d");case 30:return diary.t("شهر","30d");case 90:return diary.t("٣ شهور","90d");default:return diary.t("الكل","All")}}
 }

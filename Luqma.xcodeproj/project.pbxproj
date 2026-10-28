@@ -1232,6 +1232,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = 2D46157C2E316391A61CE9CD;
 		};
+		"C6ADEE133957FDCE7D5EBDD8" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "MotionSystemSettingsTests.swift";
+			"sourceTree" = "<group>";
+		};
+		"80E91734893555C1ABAEFFBE" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = C6ADEE133957FDCE7D5EBDD8;
+		};
 		"2676C1C3130EC43A71AB56D8" = {
 			"isa" = "PBXGroup";
 			"children" = (
@@ -1240,6 +1250,7 @@
 				A8CA97C9C396889CF0B7B755,
 				110A69DC2B0C1B39C63965B6,
 				2D46157C2E316391A61CE9CD,
+				C6ADEE133957FDCE7D5EBDD8,
 			);
 			"path" = "TestsUI";
 			"sourceTree" = "<group>";
@@ -1700,6 +1711,7 @@
 				F7030A48D0B54D27869E5317,
 				529F5DF0462DAC3C0CEE547A,
 				C5EC5412326B83BF13F78F24,
+				80E91734893555C1ABAEFFBE,
 			);
 			"runOnlyForDeploymentPostprocessing" = 0;
 		};

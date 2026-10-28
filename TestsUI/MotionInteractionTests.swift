@@ -1,9 +1,8 @@
 import XCTest
 
 /// Actual native navigation and typing. No analysis responses, permission
-/// grants or user data are injected. Reduced mode changes only the DEBUG
-/// SwiftUI accessibility environment and is reported separately from OS/device
-/// accessibility testing.
+/// grants or user data are injected. Reduced mode is enabled through the real
+/// Simulator Settings UI, never an app override or a private preferences API.
 final class MotionInteractionTests:XCTestCase {
     private let app=XCUIApplication()
     override func setUpWithError() throws {
@@ -18,10 +17,12 @@ final class MotionInteractionTests:XCTestCase {
         app.terminate()
     }
     func testNativeTabsSearchAndDismissal() {exercise(reduced:false)}
-    func testReduceMotionTabsSearchAndDismissal() {exercise(reduced:true)}
+    func testReduceMotionTabsSearchAndDismissal() throws {
+        try MotionSystemSettingsTests.enableReduceMotion()
+        exercise(reduced:true)
+    }
     private func exercise(reduced:Bool) {
         app.launchArguments=["-loqma-ui-test-en","-AppleLanguages","(en)","-AppleLocale","en_US"]
-        if reduced {app.launchArguments.append("-loqma-motion-reduced")}
         app.launch()
         XCTAssertTrue(app.buttons["nav.today"].waitForExistence(timeout:20))
         for _ in 0..<2 {

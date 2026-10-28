@@ -454,7 +454,7 @@ def validate() -> dict:
             from ui_interactions import run_scenario
             methods=tuple(re.findall(r"\bfunc\s+(test[A-Za-z0-9_]+)\s*\(",(ROOT/"TestsUI/MotionInteractionTests.swift").read_text("utf8")))
             motion=dict(status="running",required_cases=list(methods),fresh_simulator=False,
-                        reduce_motion_scope="DEBUG SwiftUI accessibility environment, not physical OS Settings")
+                        reduce_motion_scope="Actual Simulator Settings UI and system environment; not a physical iPhone")
             report["native_motion_scenario"]=motion
             try:
                 if len(methods)!=2:raise BuildError("Both normal and Reduce Motion native scenarios are required")

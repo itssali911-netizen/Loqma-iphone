@@ -96,6 +96,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                 .sheet(isPresented:$manual){FoodPortionView(food:Food(name:""),manual:true,initialMeal:initialMeal,onAnalyze:productSelection ? nil:{manual=false;tab=2},onCommit:{f,a,u,m in if onCommit(f,a,u,m){dismiss();return true};return false})}
                 .sheet(isPresented:$scanning){NavigationStack{BarcodeCamera(language:diary.language,completion:{value in scanning=false;code=value;startLookup()},failed:{message in scanning=false;presentNotice(message,error:true,settings:cameraAccessBlocked)}).ignoresSafeArea().sandowNavigation(diary.t("مسح الباركود","Scan barcode"),backLabel:diary.t("إغلاق","Close"),onBack:{scanning=false})}}
         }.luqmaFeedback(.selection,trigger:filter)
+            .luqmaFeedback(.error,trigger:notice?.isError == true){_,failed in failed}
             .onAppear{if let initial{selected=initial};if query.isEmpty && !initialQuery.isEmpty {query=initialQuery};refreshHistory();if tab==0 {searchTask=Task{await refreshLocal()}}}
             .onChange(of:diary.state.entries){_,_ in refreshHistory()}
             .onChange(of:diary.state.customFoods){_,_ in refreshHistory()}

@@ -35,7 +35,6 @@ import UIKit
     @StateObject private var reminders=AppServices.shared.reminders
     @StateObject private var health=AppServices.shared.health
     @Environment(\.scenePhase) private var phase
-    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     init(){
         let navigation=UINavigationBarAppearance()
         navigation.configureWithOpaqueBackground()
@@ -51,11 +50,6 @@ import UIKit
     var body:some Scene {
         WindowGroup {
             RootView().modifier(LuqmaLaunchMotion()).luqmaFont(.body).foregroundStyle(Theme.text).environmentObject(diary).environmentObject(reminders).environmentObject(health)
-                #if DEBUG
-                // Controlled Simulator accessibility scenario, never a shipped
-                // preference or a replacement for the system setting.
-                .environment(\.accessibilityReduceMotion,systemReduceMotion || CommandLine.arguments.contains("-loqma-motion-reduced"))
-                #endif
                 .environment(\.layoutDirection,diary.language == .ar ? .rightToLeft:.leftToRight)
                 .environment(\.locale,DisplayFormat.locale(diary.language))
                 .environment(\.calendar,DisplayFormat.calendar(diary.language))
@@ -127,6 +121,7 @@ struct RootView:View {
             NavigationStack{SettingsView(onBack:{tab=0}).toolbar(.hidden,for:.tabBar)}.tabItem{Label(diary.t("الإعدادات","Settings"),systemImage:"gearshape")}.tag(3)
         }.toolbar(.hidden,for:.tabBar)
             .luqmaFeedback(.selection,trigger:tab)
+            .luqmaFeedback(.success,trigger:diary.state.entries.count){old,new in new>old}
             .transaction { transaction in
                 if reduceMotion { transaction.animation=nil;transaction.disablesAnimations=true }
             }
@@ -399,7 +394,7 @@ private struct NativePreviewFontAudit:ViewModifier {
                 "swiftUIBodyPoints":Double(bodyPoints),
                 "motionPolicy":["actualSwiftUIReduceMotion":reduceMotion,
                                 "customProgressAnimationEnabled":LuqmaMotion.animation(.progress,reduceMotion:reduceMotion) != nil,
-                                "source":"Actual rendered SwiftUI environment; DEBUG-only accessibility override when requested"]
+                                "source":"Actual rendered SwiftUI accessibility environment; system preference is read-only"]
             ]
             let encoded=try JSONSerialization.data(withJSONObject:envelope,options:[.prettyPrinted,.sortedKeys])
             let folder=FileManager.default.urls(for:.documentDirectory,in:.userDomainMask)[0]

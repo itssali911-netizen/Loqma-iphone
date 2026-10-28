@@ -119,6 +119,22 @@ private struct LuqmaLoadingPulse: ViewModifier {
     }
 }
 
+/// Moves the existing scan beam only while processing a real meal photo. The
+/// idle, cancelled and reduced-motion branches render the exact original beam.
+private struct LuqmaScanSweep: ViewModifier {
+    let active: Bool
+    let travel: CGFloat
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var phase
+    func body(content: Content) -> some View {
+        if LuqmaMotion.permitsContinuousMotion(active: active, reduceMotion: reduceMotion, sceneIsActive: phase == .active) {
+            content.phaseAnimator([CGFloat(0), -1, 1, 0]) { view, position in
+                view.offset(y: position * max(0, travel.isFinite ? travel : 0))
+            } animation: { _ in .easeInOut(duration: 0.65) }
+        } else { content }
+    }
+}
+
 extension View {
     func luqmaPressFeedback(_ pressed: Bool) -> some View { modifier(LuqmaPressFeedback(pressed: pressed)) }
     func luqmaMotion<Value: Equatable>(_ kind: LuqmaMotion.Kind = .content, value: Value) -> some View {
@@ -132,5 +148,6 @@ extension View {
     }
     func luqmaMotionTransition() -> some View { modifier(LuqmaMotionTransition()) }
     func luqmaLoadingPulse(active: Bool = true) -> some View { modifier(LuqmaLoadingPulse(active: active)) }
+    func luqmaScanSweep(active: Bool, travel: CGFloat) -> some View { modifier(LuqmaScanSweep(active: active, travel: travel)) }
 }
 

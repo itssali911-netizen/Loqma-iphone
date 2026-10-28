@@ -13,7 +13,6 @@ struct SandowStateAlert:View {
             .overlay{RoundedRectangle(cornerRadius:14).stroke(Theme.errorBorder,lineWidth:1)}
             .accessibilityElement(children:.combine)
             .luqmaMotionTransition()
-            .luqmaFeedback(.error,trigger:text)
     }
 }
 

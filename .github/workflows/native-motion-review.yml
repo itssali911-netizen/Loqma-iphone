@@ -6,7 +6,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: luqma-native-motion-${{ github.ref }}
+  group: luqma-native-motion-revision-${{ github.ref }}
   cancel-in-progress: true
 env:
   DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
@@ -14,6 +14,10 @@ env:
   BUILD_NUMBER: '123'
 jobs:
   baseline-visual:
+    # The immutable 9f source is already being captured in run 40778353065.
+    # Preserve that independent job rather than recompiling the baseline on
+    # every correction. A manual dispatch may regenerate it explicitly.
+    if: github.sha == '0a78986b0e683558ae109f31804491ad32910cab' || github.event_name == 'workflow_dispatch'
     runs-on: macos-26
     timeout-minutes: 120
     steps:
@@ -116,6 +120,8 @@ jobs:
         with:
           ref: ${{ matrix.variant == 'baseline' && '9f567b449579d78c22833b06d9d0836bb37b833d' || github.sha }}
           persist-credentials: false
+      - name: Resolve the existing pinned app dependencies before benchmarking
+        run: xcodebuild -resolvePackageDependencies -project Luqma.xcodeproj -scheme Luqma -clonedSourcePackagesDirPath BuildOutput/Packages -onlyUsePackageVersionsFromResolvedFile
       - name: Measure existing Release UI scenarios with actual XCTest metrics
         run: |
           python3 - <<'PY'

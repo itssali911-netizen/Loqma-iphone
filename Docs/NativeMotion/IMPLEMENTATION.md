@@ -41,9 +41,10 @@ source check and does not substitute for screenshot comparison.
 The dedicated workflow builds both SDKs, runs the Core and BuildTests suites,
 real diary/quantity/assessment UI tests, two new normal/Reduce Motion navigation
 scenarios, independent native notification choices, actual screenshots and a
-Simulator screen recording. The Reduce Motion scenario deliberately overrides
-the real SwiftUI accessibility environment in DEBUG; it does not claim that
-physical iOS Settings or a device's haptic motor was tested.
+Simulator screen recording. The Reduce Motion scenario uses the actual
+Simulator Settings UI to enable the system preference, then verifies the
+rendered SwiftUI environment. No read-only Apple key or private preference is
+overridden. This does not claim physical-iPhone or haptic-motor verification.
 
 The performance jobs use the existing Release/-O fixture and XCTest metrics on
 both revisions. Their raw reports must be inspected before reporting numbers.
