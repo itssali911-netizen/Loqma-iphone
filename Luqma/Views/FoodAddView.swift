@@ -476,7 +476,7 @@ struct FoodPortionView:View {
     private var quantity:Double? {TextSearch.number(amount)}
     private var total:Nutrition {base?.scaled((quantity ?? 0)/(unit == .serving ? 1:100)) ?? .zero}
     private var availableUnits:[FoodUnit] {manual ? [.serving,.g,.ml]:food.additionUnits}
-    private var canSave:Bool {!(base==nil || name.trimmingCharacters(in:.whitespaces).isEmpty || (quantity ?? 0)<=0 || (quantity ?? 0)>10000 || saving)}
+    private var canSave:Bool {base != nil && !name.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty && quantityIsValid && !saving}
     private var editable:Bool {manual || editingNutrition}
     private let sheetColor=Color(hex:0x383C44)
     private let backgroundColor=Color(hex:0x111214)
@@ -663,7 +663,9 @@ struct FoodPortionView:View {
             // intact. The native calculation retains its reference-unit values.
             nutrientDrafts[field]=value
             guard let number=TextSearch.number(value),let quantity,quantity>0 else{reference.wrappedValue=value;return}
-            reference.wrappedValue=decimal(number/quantity*(unit == .serving ? 1:100),key == nil ? 2:3)
+            // Store the Double reference without display rounding. Formatting
+            // the per-unit value here would lose precision at small quantities.
+            reference.wrappedValue=String(number/quantity*(unit == .serving ? 1:100))
         })
     }
     private var additionalOptions:some View {
@@ -720,7 +722,7 @@ struct FoodPortionView:View {
                         Text(unit.label(diary.language)).luqmaFont(size:17,relativeTo:.body).foregroundStyle(secondaryColor)
                     }
                     servingOptions
-                    Text(quantityLabel+" · "+(base.map{_ in decimal(total.kcal)} ?? "—")+" "+diary.t("سعرة","kcal"))
+                    Text(quantitySummary)
                         .luqmaFont(.subheadline).foregroundStyle(secondaryColor).monospacedDigit()
                     if !quantityIsValid {Text(diary.t("أدخل كمية أكبر من صفر ولا تتجاوز 10000.","Enter an amount above zero and no greater than 10000.")).luqmaFont(.caption).foregroundStyle(textColor)}
                     Button{focusedField=nil;showingQuantity=false}label:{Text(diary.t("تأكيد الكمية","Confirm quantity"))
@@ -730,9 +732,14 @@ struct FoodPortionView:View {
                 }.padding(20)
             }.background(chromeColor.ignoresSafeArea()).navigationTitle(diary.t("تحديد الكمية","Set quantity"))
                 .navigationBarTitleDisplayMode(.inline)
-                .toolbar{ToolbarItem(placement:.confirmationAction){Button(diary.t("تم","Done")){focusedField=nil;showingQuantity=false}}}
+                .toolbar{ToolbarItem(placement:.confirmationAction){Button(diary.t("تم","Done")){focusedField=nil;showingQuantity=false}.disabled(!quantityIsValid)}}
                 .toolbar{ToolbarItemGroup(placement:.keyboard){Spacer();Button(diary.t("تم","Done")){focusedField=nil}}}
-        }.presentationDetents([.medium,.large]).presentationDragIndicator(.visible)
+        }.presentationDetents([.medium,.large]).presentationDragIndicator(.visible).presentationCornerRadius(30)
+    }
+    private var quantitySummary:String {
+        let energy:String=base == nil ? "—":decimal(total.kcal)
+        let label=diary.t("سعرة","kcal")
+        return "\(quantityLabel) · \(energy) \(label)"
     }
     private var quantityIsValid:Bool {guard let quantity else{return false};return quantity.isFinite && quantity>0 && quantity<=10000}
     private func selectUnit(_ value:FoodUnit) {
@@ -751,7 +758,7 @@ struct FoodPortionView:View {
             Picker(diary.t("حجم الحصة","Serving size"),selection:$portionID){ForEach(food.portionChoices){choice in Text(DisplayFormat.westernDigits(choice.label)).tag(choice.id)}}.tint(orange)
         }
         if unit == .serving && needsServingSize {
-            HStack{Text(diary.t(food.unit == .ml ? "حجم الحصة (مل)":"وزن الحصة (جم)",food.unit == .ml ? "Serving volume (ml)":"Serving weight (g)"));TextField("0",text:$servingWeight).keyboardType(.decimalPad).multilineTextAlignment(.trailing).accessibilityIdentifier("portion.servingWeight")}.luqmaFont(.subheadline).foregroundStyle(textColor)
+            HStack{Text(diary.t(food.unit == .ml ? "حجم الحصة (مل)":"وزن الحصة (جم)",food.unit == .ml ? "Serving volume (ml)":"Serving weight (g)"));TextField("0",text:$servingWeight).keyboardType(.decimalPad).focused($focusedField,equals:"servingWeight").multilineTextAlignment(.trailing).accessibilityIdentifier("portion.servingWeight")}.luqmaFont(.subheadline).foregroundStyle(textColor)
             Text(diary.t("لا يحدد المصدر حجم الحصة. أدخله من الملصق أو اختر وحدة المنتج.","The source has no serving size. Enter it from the label, or choose the product's unit.")).luqmaFont(.caption).foregroundStyle(secondaryColor)
         }
     }

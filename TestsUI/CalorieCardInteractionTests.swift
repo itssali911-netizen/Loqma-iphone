@@ -17,6 +17,7 @@ final class CalorieCardInteractionTests: XCTestCase {
 
     override func tearDownWithError() throws {
         if let testRun, testRun.failureCount > 0 {
+            print("LUQMA_CARD_FAILED_HIERARCHY\n" + app.debugDescription)
             capture("calorie-card-home-failed-" + name.components(separatedBy: CharacterSet.alphanumerics.inverted).filter { !$0.isEmpty }.joined(separator: "-"))
         }
         app.terminate()

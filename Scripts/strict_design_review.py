@@ -76,13 +76,13 @@ def freeze() -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", choices=("freeze", "host-preflight", "validate"))
+    parser.add_argument("mode", choices=("freeze", "host-build", "host-preflight", "validate"))
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     card.BASELINE = BASELINE
     card.freeze = freeze
     try:
-        result = freeze() if args.mode == "freeze" else card.preflight_host() if args.mode == "host-preflight" else card.validate()
+        result = freeze() if args.mode == "freeze" else card.preflight_host(render=args.mode == "host-preflight") if args.mode in {"host-build", "host-preflight"} else card.validate()
         if args.output:
             args.output.parent.mkdir(parents=True, exist_ok=True)
             args.output.write_text(json.dumps(result, indent=2) + "\n", encoding="utf8")

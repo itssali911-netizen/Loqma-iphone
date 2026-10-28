@@ -227,7 +227,7 @@ def host_source_hashes(root: Path = ROOT) -> dict:
     return {file.relative_to(root).as_posix():hashlib.sha256(file.read_bytes()).hexdigest() for file in files}
 
 
-def preflight_host() -> dict:
+def preflight_host(render: bool = True) -> dict:
     require_mac()
     output=ROOT/"Restore103Validation/CalorieCardHost"
     if output.exists():raise BuildError("The native host preflight requires a fresh output directory.")
@@ -240,7 +240,12 @@ def preflight_host() -> dict:
         command(["xcodebuild","-project",host["project"],"-scheme",host["scheme"],"-configuration","Debug","-destination","generic/platform=iOS Simulator","-derivedDataPath",str(derived),"ARCHS=arm64","ONLY_ACTIVE_ARCH=YES","CODE_SIGNING_ALLOWED=YES","CODE_SIGN_IDENTITY=-","build"],output,"component-host-build",900)
         app=derived/"Build/Products/Debug-iphonesimulator/CalorieCardReview.app"
         host["built_app"]=validate_app(app,HOST_BUNDLE,output)
-        report.update(status="passed",component_host=host,app_path=str(app),executable_sha256=hashlib.sha256((app/"CalorieCardReview").read_bytes()).hexdigest())
+        report.update(status="passed",component_host=host,app_path=str(app),executable_sha256=hashlib.sha256((app/"CalorieCardReview").read_bytes()).hexdigest(),render_validation_requested=render)
+        if not render:
+            # The strict review renders all 18 cases and tests interactions on
+            # its own fresh Simulator after the main app is built. Do not boot
+            # a redundant Simulator here or claim this build-only step rendered.
+            return report
         inventory=json.loads(command(["xcrun","simctl","list","--json"],output,"preflight-inventory"))
         runtime=select_runtime(inventory)
         device=command(["xcrun","simctl","create","Luqma Card Preflight "+uuid.uuid4().hex[:8],"com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro-Max",runtime["identifier"]],output,"preflight-create").strip()

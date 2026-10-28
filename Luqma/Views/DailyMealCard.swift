@@ -72,7 +72,7 @@ struct DailyMealCard: View {
             Text(mealTitle).luqmaFont(size: 16, weight: .bold, relativeTo: .headline)
                 .foregroundStyle(.white).fixedSize(horizontal: false, vertical: true)
             HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Image("CalorieCardFlame").renderingMode(.template).resizable().scaledToFit()
+                Image("AddMealCalories").renderingMode(.template).resizable().scaledToFit()
                     .frame(width: 12, height: 12).foregroundStyle(Color(hex: 0xD78957))
                 Text(DisplayFormat.decimal(summary.nutrition.kcal, digits: 0))
                     .luqmaFont(size: 14, weight: .bold, relativeTo: .subheadline).monospacedDigit()
@@ -126,7 +126,7 @@ struct DailyMealCard: View {
         }.foregroundStyle(Color(hex: 0xF7F8FA))
     }
     private func icon(_ key: MacroKey) -> String {
-        switch key { case .protein: return "CalorieCardProtein"; case .carbs: return "CalorieCardCarbs"; case .fat: return "CalorieCardFat" }
+        switch key { case .protein: return "AddMealProtein"; case .carbs: return "AddMealCarbs"; case .fat: return "AddMealFat" }
     }
     private func color(_ key: MacroKey) -> Color {
         switch key { case .protein: return Color(hex: 0xC48794); case .carbs: return Color(hex: 0xCEA46E); case .fat: return Color(hex: 0x92A37E) }

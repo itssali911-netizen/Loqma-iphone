@@ -14,22 +14,37 @@ concurrency:
 
 jobs:
   before:
+    # The authentic checkpoint was captured successfully in run 40729225211.
+    # Later correction pushes reuse that immutable evidence; a manual workflow
+    # run may explicitly regenerate the same before screenshots if needed.
+    if: github.sha == '792aee3e524d1f60197ac09187e7b132dff211f5' || github.event_name == 'workflow_dispatch'
     runs-on: macos-26
     timeout-minutes: 90
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
       BUNDLE_ID: app.luqma.diary
       BUILD_NUMBER: '121'
-      GITHUB_SHA: d0a278ec897520ec2bd5c21af4b0183fdcdf25f7
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: d0a278ec897520ec2bd5c21af4b0183fdcdf25f7
           persist-credentials: false
       - name: Build the authentic pre-request source and capture Arabic screens
-        run: python3 Scripts/ui_preview.py --output Before-AR --language ar --screens today food-portion settings
+        run: |
+          python3 - <<'PY'
+          import os,runpy,subprocess,sys
+          os.environ['GITHUB_SHA']=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          sys.argv=['Scripts/ui_preview.py','--output','Before-AR','--language','ar','--screens','today','food-portion','settings']
+          runpy.run_path('Scripts/ui_preview.py',run_name='__main__')
+          PY
       - name: Capture the same baseline in English without rebuilding
-        run: python3 Scripts/ui_preview.py --output Before-EN --language en --app Before-AR/derived/Build/Products/Debug-iphonesimulator/Luqma.app --screens today food-portion
+        run: |
+          python3 - <<'PY'
+          import os,runpy,subprocess,sys
+          os.environ['GITHUB_SHA']=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          sys.argv=['Scripts/ui_preview.py','--output','Before-EN','--language','en','--app','Before-AR/derived/Build/Products/Debug-iphonesimulator/Luqma.app','--screens','today','food-portion']
+          runpy.run_path('Scripts/ui_preview.py',run_name='__main__')
+          PY
       - name: Preserve original before screenshots and runtime font evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
@@ -64,7 +79,7 @@ jobs:
           python3 Scripts/calorie_card_review.py --self-test
           python3 Scripts/strict_design_review.py freeze --output Restore103Validation/strict-design-scope.json
       - name: Build the exact calorie component with the new production typography
-        run: python3 Scripts/strict_design_review.py host-preflight
+        run: python3 Scripts/strict_design_review.py host-build
       - name: Preserve early actual component renders
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
