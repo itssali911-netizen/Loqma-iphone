@@ -120,8 +120,10 @@ jobs:
         with:
           ref: ${{ matrix.variant == 'baseline' && '9f567b449579d78c22833b06d9d0836bb37b833d' || github.sha }}
           persist-credentials: false
-      - name: Resolve the existing pinned app dependencies before benchmarking
-        run: xcodebuild -resolvePackageDependencies -project Luqma.xcodeproj -scheme Luqma -clonedSourcePackagesDirPath BuildOutput/Packages -onlyUsePackageVersionsFromResolvedFile
+      - name: Resolve the existing project dependencies before benchmarking
+        run: |
+          xcodebuild -resolvePackageDependencies -project Luqma.xcodeproj -scheme Luqma -clonedSourcePackagesDirPath BuildOutput/Packages > Motion-Performance-packages.log 2>&1
+          cp Luqma.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved Motion-Performance-Package.resolved
       - name: Measure existing Release UI scenarios with actual XCTest metrics
         run: |
           python3 - <<'PY'
@@ -139,4 +141,6 @@ jobs:
           path: |
             Motion-Performance/*.json
             Motion-Performance/*.log
+            Motion-Performance-packages.log
+            Motion-Performance-Package.resolved
           retention-days: 30
