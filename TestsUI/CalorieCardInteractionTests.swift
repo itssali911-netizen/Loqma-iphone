@@ -229,7 +229,7 @@ final class CalorieCardInteractionTests: XCTestCase {
         for (meal, label) in [("breakfast", "Breakfast"), ("lunch", "Lunch"),
                               ("dinner", "Dinner"), ("snack", "Snack")] {
             let card = app.buttons["diary.meal." + meal]
-            reveal(card)
+            revealMealCard(card)
             XCTAssertTrue(card.isHittable)
             capture("calorie-card-home-meal-" + meal)
             card.tap()
@@ -243,6 +243,12 @@ final class CalorieCardInteractionTests: XCTestCase {
             XCTAssertTrue(selectedMeal.waitForExistence(timeout: 10))
             XCTAssertEqual(selectedMeal.value as? String, label,
                            "The category card must open the correct real meal")
+            XCTAssertTrue(app.buttons["portion.mode.manual"].isSelected,
+                          "The actual manual entry mode must remain selected")
+            let analysis = app.buttons["portion.mode.analysis"]
+            XCTAssertTrue(analysis.waitForExistence(timeout: 5))
+            XCTAssertTrue(analysis.isEnabled && analysis.isHittable,
+                          "Each real meal-add route must retain its existing analysis mode")
             let back = app.buttons["portion.back"]
             back.tap()
             let close = app.buttons["search.close"]
@@ -403,6 +409,22 @@ final class CalorieCardInteractionTests: XCTestCase {
             drag(content, toward: node)
         }
         XCTAssertTrue(node.exists && node.isHittable, "Production control must be reachable: " + node.identifier, file: file, line: line)
+    }
+
+    private func revealMealCard(_ card: XCUIElement,
+                                file: StaticString = #filePath, line: UInt = #line) {
+        let content = app.scrollViews.firstMatch
+        XCTAssertTrue(content.waitForExistence(timeout: 10), file: file, line: line)
+        // A tall meal card can be reported hittable while its center is below
+        // the pinned navigation. Require its complete frame above that bar.
+        // This uses actual scroll gestures, not a programmatic preview route.
+        for _ in 0..<12 {
+            if fullyVisible(card, in: visibleArea(content)) { return }
+            drag(content, toward: card)
+        }
+        XCTAssertTrue(fullyVisible(card, in: visibleArea(content)),
+                      "The whole real meal card must be visible before its tap: " + card.identifier,
+                      file: file, line: line)
     }
 
     private func drag(_ content: XCUIElement, toward node: XCUIElement) {

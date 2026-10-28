@@ -80,7 +80,7 @@ jobs:
           python3 Scripts/strict_design_review.py freeze --output Restore103Validation/strict-design-scope.json
       - name: Build the exact calorie component with the new production typography
         run: python3 Scripts/strict_design_review.py host-build
-      - name: Preserve early actual component renders
+      - name: Preserve component compilation evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
@@ -116,10 +116,20 @@ jobs:
             BuildOutput/CalorieCardReview/report.json
             BuildOutput/CalorieCardReview/*.log
             BuildOutput/CalorieCardReview/captures/
-            BuildOutput/CalorieCardReview/calorie-card.xcresult/
+            BuildOutput/CalorieCardReview/permission-denied/*.log
+            BuildOutput/CalorieCardReview/permission-denied/*.json
             Restore103Validation/strict-design-scope.json
             After-*/*.png
             After-*/ui-preview.json
             After-*/*.log
             After-*/font-audits/
+          retention-days: 30
+      - name: Preserve full native test diagnostics separately
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-Strict-Design-XCTest-${{ github.run_id }}-attempt-${{ github.run_attempt }}
+          path: |
+            BuildOutput/CalorieCardReview/calorie-card.xcresult/
+            BuildOutput/CalorieCardReview/permission-denied/interactions.xcresult/
           retention-days: 30

@@ -33,13 +33,15 @@ struct DailyMealCard: View {
                     Image(artwork).resizable().scaledToFill()
                         .frame(width: geometry.size.width, height: geometry.size.height)
                         .clipped()
+                        .accessibilityHidden(true).allowsHitTesting(false)
                         .overlay {
                             LinearGradient(stops: [.init(color: .black.opacity(0.05), location: 0),
                                                    .init(color: .black.opacity(0.10), location: 0.48),
                                                    .init(color: .black.opacity(0.24), location: 1)],
                                            startPoint: .leading, endPoint: .trailing)
                         }
-                }.environment(\.layoutDirection, .leftToRight).accessibilityHidden(true)
+                }.environment(\.layoutDirection, .leftToRight)
+                    .accessibilityHidden(true).allowsHitTesting(false)
             }
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay { RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Color(hex: 0x35383F), lineWidth: 1) }

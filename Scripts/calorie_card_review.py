@@ -420,13 +420,34 @@ def validate() -> dict:
         command(["xcrun","simctl","install",device,str(host_app)],output,"install-component-host",120)
         capture_component_cases(device,output,report)
         try:
-            extra = ["-only-testing:LuqmaUITests/LuqmaInteractionTests"] if os.environ.get("LUQMA_STRICT_DESIGN_REVIEW") == "1" else []
-            log=command(["xcodebuild","-project","Luqma.xcodeproj","-scheme","Luqma","-clonedSourcePackagesDirPath",str(packages),"-disableAutomaticPackageResolution","-destination","id="+device,"-configuration","Debug","-derivedDataPath",str(derived),"-resultBundlePath",str(output/"calorie-card.xcresult"),"-parallel-testing-enabled","NO","-only-testing:LuqmaUITests/"+TEST_CLASS,*extra,"ARCHS=arm64","ONLY_ACTIVE_ARCH=YES","CODE_SIGNING_ALLOWED=YES","CODE_SIGN_IDENTITY=-","CURRENT_PROJECT_VERSION="+os.environ.get("BUILD_NUMBER","121"),"test"],output,"native-calorie-card-tests",1800)
+            strict=os.environ.get("LUQMA_STRICT_DESIGN_REVIEW") == "1"
+            denied_method="testNotificationDeniedDoesNotClaimDelivery"
+            extra = ["-only-testing:LuqmaUITests/LuqmaInteractionTests","-skip-testing:LuqmaUITests/LuqmaInteractionTests/"+denied_method] if strict else []
+            log=command(["xcodebuild","-project","Luqma.xcodeproj","-scheme","Luqma","-clonedSourcePackagesDirPath",str(packages),"-disableAutomaticPackageResolution","-destination","id="+device,"-configuration","Debug","-derivedDataPath",str(derived),"-resultBundlePath",str(output/"calorie-card.xcresult"),"-parallel-testing-enabled","NO","-only-testing:LuqmaUITests/"+TEST_CLASS,*extra,"ARCHS=arm64","ONLY_ACTIVE_ARCH=YES","CODE_SIGNING_ALLOWED=YES","CODE_SIGN_IDENTITY=-","CURRENT_PROJECT_VERSION="+os.environ.get("BUILD_NUMBER","121"),"test"],output,"native-calorie-card-tests",2700 if strict else 1800)
             report["passed_tests"]=[name for name in tests if re.search(r"Test Case '.*\b"+re.escape(name)+r"\b.*' passed",log)]
             if set(report["passed_tests"])!=set(tests): raise BuildError("The native run did not execute and pass every required card test.")
+            if strict:
+                legacy_source=(ROOT/"TestsUI/LuqmaInteractionTests.swift").read_text("utf8")
+                legacy=[name for name in re.findall(r"\bfunc\s+(test[A-Za-z0-9_]+)\s*\(",legacy_source) if name!=denied_method]
+                report["additional_interaction_required_tests"]=legacy
+                report["additional_interaction_passed_tests"]=[name for name in legacy if re.search(r"Test Case '.*\b"+re.escape(name)+r"\b.*' passed",log)]
+                if set(report["additional_interaction_passed_tests"])!=set(legacy):raise BuildError("The main native interaction scenario did not execute every required case.")
             report["test_status"]="passed"
         except BuildError as error:
             report["test_status"]="failed";report["errors"].append(str(error))
+        if os.environ.get("LUQMA_STRICT_DESIGN_REVIEW") == "1":
+            # A genuine denial cannot be reset by changing application state.
+            # Reuse the existing supported runner, on its own newly created
+            # Simulator, while keeping the main build's local signing settings.
+            from ui_interactions import run_scenario, DENIED_TESTS
+            denied=dict(status="running",fresh_simulator=False,required_cases=list(DENIED_TESTS))
+            report["separate_notification_denied_scenario"]=denied
+            try:
+                run_scenario(output/"permission-denied",packages,derived,runtime,DENIED_TESTS,denied,
+                             os.environ.get("BUILD_NUMBER","121"),signing_settings=["CODE_SIGNING_ALLOWED=YES","CODE_SIGN_IDENTITY=-"])
+            except (BuildError,OSError,ValueError) as error:
+                report["errors"].append("Separate native notification denial: "+str(error))
+                report["test_status"]="failed"
         collect_attachments(output,report)
         report["tested_app"]=validate_app(app,APP_BUNDLE,output)
         report["simulator_executable_sha256"]=hashlib.sha256((app/"Luqma").read_bytes()).hexdigest()

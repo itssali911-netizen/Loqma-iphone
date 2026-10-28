@@ -579,7 +579,13 @@ struct FoodPortionView:View {
             .padding(.vertical,4).contentShape(Rectangle())
     }
     private var quantityLabel:String {
-        (quantity.map{decimal($0,2)} ?? "—")+" "+unit.label(diary.language)
+        (quantity.map{displayQuantity($0,places:2)} ?? "—")+" "+unit.label(diary.language)
+    }
+    private func displayQuantity(_ value:Double,places:Int)->String {
+        let formatted=decimal(value,places)
+        guard formatted.contains(".") else{return formatted}
+        return formatted.replacingOccurrences(of:"0+$",with:"",options:.regularExpression)
+            .replacingOccurrences(of:"\\.$",with:"",options:.regularExpression)
     }
     private func foodName(compact:Bool)->some View {
         Group {
@@ -631,6 +637,14 @@ struct FoodPortionView:View {
             }.padding(.horizontal,6)
         }.frame(maxWidth:.infinity).frame(minHeight:typeSize.isAccessibilitySize ? max(height,250):height)
             .clipShape(RoundedRectangle(cornerRadius:radius,style:.continuous))
+            // The decorative ZStack must not leave a narrow native text hit
+            // region at the bottom of the column. A tap anywhere in the
+            // editable column selects its actual focused TextField; scrolling
+            // remains owned by the surrounding ScrollView.
+            .contentShape(RoundedRectangle(cornerRadius:radius,style:.continuous))
+            .simultaneousGesture(TapGesture().onEnded {
+                if editable {focusedField=key.rawValue}
+            })
             .accessibilityElement(children:.contain)
     }
     @ViewBuilder private func nutrientValue(_ key:MacroKey?,size:CGFloat)->some View {
@@ -643,8 +657,10 @@ struct FoodPortionView:View {
                 .environment(\.layoutDirection,.leftToRight)
                 .accessibilityIdentifier("portion."+(key?.rawValue ?? "kcal"))
                 .accessibilityLabel(key?.label(diary.language) ?? diary.t("السعرات الحرارية","Calories"))
+                .contentShape(Rectangle())
+                .simultaneousGesture(TapGesture().onEnded {focusedField=key?.rawValue ?? "kcal"})
         } else {
-            Text(base == nil ? "—":decimal(key.map{total[$0]} ?? total.kcal,key == nil ? 0:1))
+            Text(base == nil ? "—":displayQuantity(key.map{total[$0]} ?? total.kcal,places:key == nil ? 0:1))
                 .luqmaFont(size:size,weight:.semibold,relativeTo:.title3).foregroundStyle(textColor).monospacedDigit()
                 .lineLimit(1).minimumScaleFactor(16/22).environment(\.layoutDirection,.leftToRight)
                 .accessibilityIdentifier("portion.total."+(key?.rawValue ?? "kcal"))
@@ -678,6 +694,7 @@ struct FoodPortionView:View {
             if showingOptions {
                 mealSelector
                 Text(referenceTitle).luqmaFont(.caption).foregroundStyle(secondaryColor).frame(maxWidth:.infinity,alignment:.leading)
+                    .accessibilityIdentifier("portion.reference")
                 if !manual {
                     Toggle(diary.t("تعديل القيم الغذائية","Edit nutrition values"),isOn:$editingNutrition)
                         .luqmaFont(.subheadline).tint(orange).foregroundStyle(textColor)
@@ -748,6 +765,11 @@ struct FoodPortionView:View {
         if !manual {loadBase();if portionFood.values(for:unit)==nil && !needsServingSize{editingNutrition=true}}
     }
     @ViewBuilder private var servingOptions:some View {
+        if unit == .serving && !needsServingSize && food.servingChoices.isEmpty && food.portionChoices.isEmpty,
+           let description=selectedServingDescription {
+            Text(description).luqmaFont(.subheadline).foregroundStyle(textColor)
+                .fixedSize(horizontal:false,vertical:true).accessibilityIdentifier("portion.serving.description")
+        }
         if unit == .serving && !food.servingChoices.isEmpty {
             Picker(diary.t("حجم الحصة","Serving size"),selection:$servingID){
                 if food.servingNutrition != nil {Text(DisplayFormat.westernDigits(food.serving ?? diary.t("الحصة المحفوظة","Saved serving"))).tag("")}
@@ -762,7 +784,23 @@ struct FoodPortionView:View {
             Text(diary.t("لا يحدد المصدر حجم الحصة. أدخله من الملصق أو اختر وحدة المنتج.","The source has no serving size. Enter it from the label, or choose the product's unit.")).luqmaFont(.caption).foregroundStyle(secondaryColor)
         }
     }
-    private var referenceTitle:String {unit == .serving ? diary.t("القيم للحصة الواحدة","Values per serving"):diary.t("القيم لكل 100","Values per 100")+" "+unit.label(diary.language)}
+    private var selectedServingDescription:String? {
+        let selected=portionFood
+        let rawLabel=selected.serving?.trimmingCharacters(in:.whitespacesAndNewlines) ?? ""
+        let label:String?=rawLabel.isEmpty ? nil:DisplayFormat.westernDigits(rawLabel)
+        guard let amount=selected.servingQuantity,amount.isFinite,amount>0,
+              let rawUnit=selected.servingUnit,!rawUnit.isEmpty else{return label}
+        let unitLabel=FoodUnit(rawValue:rawUnit)?.label(diary.language) ?? DisplayFormat.westernDigits(rawUnit)
+        let measurement=decimal(amount)+" "+unitLabel
+        guard let label else{return measurement}
+        let compactLabel=TextSearch.normalized(label).replacingOccurrences(of:" ",with:"")
+        let compactMeasurement=TextSearch.normalized(measurement).replacingOccurrences(of:" ",with:"")
+        return compactLabel.contains(compactMeasurement) ? label:label+" · "+measurement
+    }
+    private var referenceTitle:String {
+        let basis=unit == .serving ? diary.t("حصة واحدة","one serving"):"100 "+unit.label(diary.language)
+        return diary.t("القيم أعلاه لإجمالي الكمية المحددة. مرجع الحساب: ","Displayed values are for the selected amount. Reference basis: ")+basis
+    }
     private var saveButton:some View {
         Button{save()}label:{HStack(spacing:12){Text(diary.t("إضافة الوجبة","Add Meal"));Image(systemName:"plus").font(.system(size:21,weight:.semibold))}
             .luqmaFont(size:18,weight:.semibold,relativeTo:.headline).foregroundStyle(.white)

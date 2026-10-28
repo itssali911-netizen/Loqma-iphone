@@ -179,7 +179,7 @@ struct RootView:View {
         Group{
             switch route {
             case .goals:GoalEditor()
-            case .portion:FoodPortionView(food:previewPortionFood,initialMeal:ProcessInfo.processInfo.arguments.contains("-loqma-approved-capture") ? .lunch:nil){_,_,_,_ in false}
+            case .portion:FoodPortionView(food:previewPortionFood,initialMeal:ProcessInfo.processInfo.arguments.contains("-loqma-approved-capture") ? .lunch:nil,onAnalyze:{templatePreview=nil;photoPreview=true}){_,_,_,_ in false}
             case .recipe:RecipeEditor(recipe:previewRecipe)
             case .recipeDetail:RecipeDetailView(recipeID:previewRecipe.id,previewRecipe:previewRecipe)
             case .plan:NavigationStack{PlanView().navigationBarTitleDisplayMode(.inline)}

@@ -142,6 +142,12 @@ final class LuqmaInteractionTests:XCTestCase {
         replace(app.textFields["portion.amount"],with:"2")
         confirmPortionQuantity()
         assertPortionNutrition(kcal:200,protein:10,carbs:30,fat:4)
+        let options=app.buttons["portion.options"]
+        reveal(options);options.tap()
+        let reference=app.staticTexts["portion.reference"]
+        XCTAssertTrue(reference.waitForExistence(timeout:5))
+        XCTAssertTrue(reference.label.contains("selected amount") && reference.label.contains("one serving"),
+                      "Totals must not be mislabeled as the source reference values")
         let proof=XCTAttachment(screenshot:app.screenshot())
         proof.name="Actual stored-food grams and serving recalculation"
         proof.lifetime = .keepAlways;add(proof)
