@@ -296,6 +296,8 @@ def capture_component_cases(device: str, output: Path, report: dict, cases: list
         cases += [dict(state="long",width=width,language="ar",dynamic_type="large") for width in (320,390)]
         cases += [dict(state="partial",width=width,language="ar",dynamic_type="accessibility3") for width in (320,390)]
         cases += [dict(state=state,width=390,language="en",dynamic_type="large") for state in ("zero","partial")]
+        cases += [dict(state="extreme",width=width,language="ar",dynamic_type="accessibility3") for width in (320,390)]
+        cases += [dict(state="extreme",width=320,language="en",dynamic_type="accessibility3")]
     captures=output/"captures";captures.mkdir(exist_ok=True)
     container=Path(command(["xcrun","simctl","get_app_container",device,HOST_BUNDLE,"data"],output,"component-data-container",90).strip())
     if not container.is_absolute() or not container.is_dir():

@@ -110,22 +110,25 @@ struct DailyCalorieCard: View {
     }
     private var consumedNumber: some View {
         Text(number(current)).luqmaFont(size: 40, weight: .bold, relativeTo: .largeTitle).monospacedDigit()
-            .fixedSize().padding(.bottom, -6).accessibilityIdentifier("diary.summary.consumed")
+            .fixedSize(horizontal: false, vertical: true).multilineTextAlignment(.leading)
+            .padding(.bottom, -6).accessibilityIdentifier("diary.summary.consumed")
             .accessibilityHint(language.text("السعرات المستهلكة", "Calories consumed"))
     }
     private var goalAndUnit: some View {
         HStack(alignment: .firstTextBaseline, spacing: 4) {
-            Text("/").luqmaFont(size: 18, weight: .medium, relativeTo: .subheadline).accessibilityHidden(true)
+            Text("/").luqmaFont(size: 18, weight: .medium, relativeTo: .subheadline).fixedSize().accessibilityHidden(true)
             Text(number(target)).luqmaFont(size: 18, weight: .semibold, relativeTo: .subheadline)
-                .monospacedDigit().accessibilityIdentifier("diary.summary.target")
+                .monospacedDigit().fixedSize(horizontal: false, vertical: true).multilineTextAlignment(.leading)
+                .accessibilityIdentifier("diary.summary.target")
                 .accessibilityHint(language.text("هدف السعرات", "Calorie target"))
-            Text(language.text("سعرة", "kcal")).luqmaFont(size: 12, relativeTo: .caption)
-        }.foregroundStyle(CalorieCardStyle.secondary).fixedSize(horizontal: true, vertical: false)
+            Text(language.text("سعرة", "kcal")).luqmaFont(size: 12, relativeTo: .caption).fixedSize()
+        }.foregroundStyle(CalorieCardStyle.secondary).fixedSize(horizontal: false, vertical: true)
     }
     private var remainingGroup: some View {
         VStack(alignment: .trailing, spacing: 2) {
             Text(number(difference.map(abs))).luqmaFont(size: 29, weight: .bold, relativeTo: .largeTitle)
-                .monospacedDigit().foregroundStyle(CalorieCardStyle.accent).fixedSize()
+                .monospacedDigit().foregroundStyle(CalorieCardStyle.accent)
+                .fixedSize(horizontal: false, vertical: true).multilineTextAlignment(.trailing)
                 .accessibilityIdentifier("diary.summary.remaining")
                 .accessibilityHint(exceeded ? language.text("السعرات فوق الهدف", "Calories above target") : language.text("السعرات المتبقية", "Calories remaining"))
             Text(isLoading ? language.text("جارٍ التحميل", "Loading") : difference == nil

@@ -172,6 +172,48 @@ final class CalorieCardInteractionTests: XCTestCase {
         }
     }
 
+    func testFExtremeValuesRespectAccessibilityWidth() throws {
+        app.terminate()
+        let host = XCUIApplication(bundleIdentifier: "app.luqma.calorie-review")
+        defer { host.terminate() }
+        // Stress the exact production component in the separate native host.
+        // These synthetic quantities never enter the production diary.
+        let cases: [(language: String, width: CGFloat)] = [("ar", 320), ("ar", 390), ("en", 320)]
+        for testCase in cases {
+            host.launchArguments = ["--state", "extreme", "--width", String(Int(testCase.width)),
+                                    "--language", testCase.language, "--dynamic-type", "accessibility3"]
+            host.launch()
+            let fixture = testCase.language + "-" + String(Int(testCase.width)) + "-ax3"
+            let screen = host.frame
+            XCTAssertGreaterThanOrEqual(screen.width, testCase.width, fixture)
+            // The host centers a canvas padded16pt; the actual card adds13pt.
+            // Check scalar text against its content bounds, not just the card's
+            // outer background, which can conceal a child overflowing it.
+            let left = screen.minX + (screen.width - testCase.width) / 2 + 16 + 13
+            let right = screen.minX + (screen.width + testCase.width) / 2 - 16 - 13
+            for (identifier, expected) in [("diary.summary.consumed", "500000000"),
+                                           ("diary.summary.target", "1000000000"),
+                                           ("diary.summary.remaining", "500000000")] {
+                let node = host.descendants(matching: .any).matching(identifier: identifier).firstMatch
+                XCTAssertTrue(node.waitForExistence(timeout: 10), fixture + " " + identifier)
+                XCTAssertEqual(node.label, expected, "The complete quantity must remain accessible: " + fixture + " " + identifier)
+                let frame = node.frame
+                XCTAssertGreaterThan(frame.width, 0, fixture + " " + identifier)
+                XCTAssertGreaterThan(frame.height, 0, fixture + " " + identifier)
+                XCTAssertGreaterThanOrEqual(frame.minX, left - 1, "Text must stay inside the card content: " + fixture + " " + identifier)
+                XCTAssertLessThanOrEqual(frame.maxX, right + 1, "Text must stay inside the card content: " + fixture + " " + identifier)
+            }
+            let bar = host.descendants(matching: .any).matching(identifier: "diary.summary.progress").firstMatch
+            XCTAssertTrue(bar.waitForExistence(timeout: 10), fixture)
+            XCTAssertEqual(bar.value as? String, "50%", fixture)
+            let image = XCTAttachment(screenshot: host.screenshot())
+            image.name = "calorie-card-component-tested-extreme-" + fixture
+            image.lifetime = .keepAlways
+            add(image)
+            host.terminate()
+        }
+    }
+
     private func launchEnglish() {
         app.launchArguments = ["-loqma-ui-test-en", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()

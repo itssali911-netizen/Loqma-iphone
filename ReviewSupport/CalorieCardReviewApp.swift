@@ -21,6 +21,7 @@ private struct CalorieCardReviewCanvas: View {
         switch state {
         case "missing": return .zero
         case "long": return Nutrition(kcal: 100000,protein: 8000,carbs: 11600,fat: 2400)
+        case "extreme": return Nutrition(kcal: 1_000_000_000,protein: 80000,carbs: 116000,fat: 24000)
         default: return Nutrition(kcal: 1500,protein: 120,carbs: 174,fat: 36)
         }
     }
@@ -29,7 +30,7 @@ private struct CalorieCardReviewCanvas: View {
         case "partial", "missing": return Nutrition(kcal: 600,protein: 48,carbs: 69.6,fat: 14.4)
         case "met": return target
         case "exceeded": return target.scaled(1.2)
-        case "long": return target.scaled(0.5)
+        case "long", "extreme": return target.scaled(0.5)
         default: return .zero
         }
     }
