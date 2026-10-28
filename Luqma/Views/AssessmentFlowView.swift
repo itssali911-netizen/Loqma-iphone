@@ -30,8 +30,9 @@ struct CFARadioIndicator: View {
             RoundedRectangle(cornerRadius: 6, style: .continuous).stroke(Color.white, lineWidth: 2).frame(width: 22, height: 22)
             if isSelected {
                 RoundedRectangle(cornerRadius: 2.5, style: .continuous).fill(Color.white).frame(width: 9, height: 9)
+                    .luqmaMotionTransition()
             }
-        }.accessibilityHidden(true)
+        }.accessibilityHidden(true).luqmaMotion(.selection,value:isSelected)
     }
 }
 
@@ -44,6 +45,7 @@ struct ApprovedAssessmentButtonStyle: ButtonStyle {
             .background(Color(hex: 0xF97316), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
             .opacity(isEnabled ? 1 : 0.6)
             .scaleEffect(configuration.isPressed && !reduceMotion ? 0.985 : 1)
+            .animation(LuqmaMotion.animation(.press,reduceMotion:reduceMotion),value:configuration.isPressed)
     }
 }
 
@@ -95,6 +97,7 @@ struct SandowFitnessArcSlider: View {
                 }.position(thumb)
                 VStack(alignment: .trailing, spacing: 2) {
                     Text("\(level)").luqmaFont(size: 168, weight: .heavy, relativeTo: .largeTitle).foregroundStyle(Color.white).monospacedDigit()
+                        .luqmaNumericMotion(value:Double(level))
                     Text(label).luqmaFont(size: 20, weight: .bold, relativeTo: .title3).foregroundStyle(Color(hex: 0xD7D8D9))
                         .multilineTextAlignment(.trailing).fixedSize(horizontal: false, vertical: true)
                 }.padding(.trailing, 18).padding(.bottom, 18).allowsHitTesting(false)

@@ -37,7 +37,8 @@ struct FitnessAssessmentView: View {
                             .frame(maxWidth: .infinity).accessibilityAddTraits(.isHeader)
                             .accessibilityIdentifier("assessment.question").id("assessment.top")
                             .padding(.bottom, page == .goal ? 34 : 28)
-                        pageContent.id(page.rawValue).disabled(actionBusy)
+                        pageContent.id(page.rawValue).luqmaMotionTransition()
+                            .luqmaMotion(.content,value:page).disabled(actionBusy)
                             .frame(minHeight: max(0, geometry.size.height - 140), alignment: .top)
                         if let validation {
                             SandowStateAlert(text: validation).accessibilityIdentifier("assessment.validation")
@@ -77,6 +78,7 @@ struct FitnessAssessmentView: View {
                 Task { await diary.saveFitnessDraftInBackground(snapshot) }
             }
         }.foregroundStyle(Color.white).interactiveDismissDisabled(actionBusy)
+            .luqmaFeedback(.error,trigger:validation){_,message in message != nil}
     }
     private var header: some View {
         VStack(spacing: 0) {
@@ -86,7 +88,7 @@ struct FitnessAssessmentView: View {
                         .frame(width: 10, height: 18).scaleEffect(x: diary.language == .ar ? 1 : -1, y: 1)
                         .frame(width: 48, height: 48)
                         .background(Color(hex: 0x393C43), in: RoundedRectangle(cornerRadius: 18))
-                }.buttonStyle(.plain).disabled(actionBusy)
+                }.buttonStyle(LuqmaPressStyle()).disabled(actionBusy)
                     .accessibilityLabel(diary.t(page == .goal ? "إغلاق وحفظ المسودة" : "السابق", page == .goal ? "Close and save draft" : "Back"))
                     .accessibilityIdentifier("assessment.back")
                 Text(diary.t("تقييم اللياقة", "Assessment")).luqmaFont(size: 20, weight: .bold, relativeTo: .headline)
@@ -96,7 +98,7 @@ struct FitnessAssessmentView: View {
                     .luqmaFont(size: 14, weight: .semibold, relativeTo: .subheadline).monospacedDigit()
                     .foregroundStyle(Color(hex: 0x2563EB)).padding(.horizontal, 12).frame(height: 32)
                     .background(Color(hex: 0x172554), in: RoundedRectangle(cornerRadius: 11))
-                    .accessibilityIdentifier("assessment.step")
+                    .accessibilityIdentifier("assessment.step").luqmaNumericMotion(value:Double(page.index+1))
             }
         }.padding(.horizontal, 16).padding(.top, 12).padding(.bottom, 8).background(Color(hex: 0x111214))
     }
@@ -189,9 +191,10 @@ struct FitnessAssessmentView: View {
             }.padding(.horizontal,18).padding(.vertical, prefix == "goal" ? 0 : 12).frame(minHeight:56)
                 .background(selection.wrappedValue == option ? Color(hex:0x393C43):Color(hex:0x24262B),in:RoundedRectangle(cornerRadius:18))
                 .overlay{RoundedRectangle(cornerRadius:20).stroke(selection.wrappedValue == option ? Color(hex:0x81858D).opacity(0.28):Color.clear,lineWidth:4).padding(-2)}}
-                .buttonStyle(.plain).accessibilityAddTraits(selection.wrappedValue == option ? .isSelected:[])
+                .buttonStyle(LuqmaPressStyle()).accessibilityAddTraits(selection.wrappedValue == option ? .isSelected:[])
                 .accessibilityIdentifier("assessment.\(prefix).\(option.rawValue)")
-        }}
+        }}.luqmaMotion(.selection,value:selection.wrappedValue)
+            .luqmaFeedback(.selection,trigger:selection.wrappedValue){_,_ in !pickerInteraction}
     }
     private var gender:some View {
         VStack(spacing:12){ForEach(FitnessSex.allCases){sex in
@@ -215,7 +218,7 @@ struct FitnessAssessmentView: View {
                     .contentShape(RoundedRectangle(cornerRadius:24))
                     .overlay{RoundedRectangle(cornerRadius:24).stroke(answers.sex == sex ? Color(hex:0xF97316):Color.clear,lineWidth:1.5)}
                     .overlay{RoundedRectangle(cornerRadius:27).stroke(answers.sex == sex ? Color(hex:0x7C2D12).opacity(0.65):Color.clear,lineWidth:4).padding(-2)}
-            }.buttonStyle(.plain).accessibilityLabel(sex.title(diary.language))
+            }.buttonStyle(LuqmaPressStyle()).accessibilityLabel(sex.title(diary.language))
                 .accessibilityIdentifier("assessment.sex.\(sex.rawValue)").accessibilityAddTraits(answers.sex == sex ? .isSelected:[])
         }
             Spacer(minLength:20)
@@ -226,8 +229,9 @@ struct FitnessAssessmentView: View {
                 HStack(spacing:10){Text(diary.t("أفضل التخطي، شكراً!","Prefer to skip, thanks!"));Image(systemName:"xmark").font(.system(size:13,weight:.bold))}
                     .luqmaFont(size:16,weight:.semibold,relativeTo:.body).foregroundStyle(Color(hex:0xF97316))
                     .frame(maxWidth:.infinity,minHeight:52).background(Color(hex:0x431407),in:RoundedRectangle(cornerRadius:18))
-            }.buttonStyle(.plain).accessibilityIdentifier("assessment.sex.skip")
-        }
+            }.buttonStyle(LuqmaPressStyle()).accessibilityIdentifier("assessment.sex.skip")
+        }.luqmaMotion(.selection,value:answers.sex)
+            .luqmaFeedback(.selection,trigger:answers.sex)
     }
 
     private var targetAndPace: some View {
@@ -259,8 +263,9 @@ struct FitnessAssessmentView: View {
                         .background(selected ? Color(hex:0x393C43):Color(hex:0x24262B),in:RoundedRectangle(cornerRadius:20))
                         .overlay{RoundedRectangle(cornerRadius:20).stroke(selected ? Color.white:Color.clear,lineWidth:2)}
                         .overlay{RoundedRectangle(cornerRadius:22).stroke(selected ? Color(hex:0x81858D).opacity(0.5):Color.clear,lineWidth:3).padding(-2)}
-                }.buttonStyle(.plain).accessibilityIdentifier("assessment.pace.\(pace.rawValue)").accessibilityAddTraits(selected ? .isSelected:[])
-            }}
+                }.buttonStyle(LuqmaPressStyle()).accessibilityIdentifier("assessment.pace.\(pace.rawValue)").accessibilityAddTraits(selected ? .isSelected:[])
+            }}.luqmaMotion(.selection,value:answers.pace)
+                .luqmaFeedback(.selection,trigger:answers.pace)
             Text(diary.t("التعديل البسيط هو الافتراضي. يمكنك ترك وزن الهدف فارغًا؛ لا نحدد موعدًا مضمونًا للوصول إليه.","Smaller adjustment is the default. You can leave target weight blank; we do not promise a date to reach it."))
                 .luqmaFont(size:12,relativeTo:.caption).foregroundStyle(Color(hex:0x9EA0A5)).fixedSize(horizontal:false,vertical:true)
         }
@@ -304,8 +309,9 @@ struct FitnessAssessmentView: View {
                 HStack{dietIcon(option);Spacer();Image(answers.diet == option ? "AssessmentChecked":"AssessmentUnchecked").frame(width:24,height:24)}
             }.padding(16).background(answers.diet == option ? Theme.surface:Theme.card,in:RoundedRectangle(cornerRadius:24))
                 .overlay{RoundedRectangle(cornerRadius:24).stroke(answers.diet == option ? Theme.controlBorder:Color.clear,lineWidth:2)}}
-                .buttonStyle(.plain).accessibilityIdentifier("assessment.diet.\(option.rawValue)").accessibilityAddTraits(answers.diet == option ? .isSelected:[])
-        }}
+                .buttonStyle(LuqmaPressStyle()).accessibilityIdentifier("assessment.diet.\(option.rawValue)").accessibilityAddTraits(answers.diet == option ? .isSelected:[])
+        }}.luqmaMotion(.selection,value:answers.diet)
+            .luqmaFeedback(.selection,trigger:answers.diet)
     }
     private var review: some View {
         VStack(spacing: 16) {
@@ -350,7 +356,7 @@ struct FitnessAssessmentView: View {
                 Spacer()
                 Text(diary.t("تعديل", "Edit")).luqmaFont(.helper).foregroundStyle(Theme.link)
             }
-        }.buttonStyle(.plain).luqmaCard().disabled(actionBusy)
+        }.buttonStyle(LuqmaPressStyle()).luqmaCard().disabled(actionBusy)
             .accessibilityIdentifier("assessment.edit.\(target.rawValue)")
     }
     private func number(_ field: FitnessAssessmentNumberField, title: String, suffix: String, id: String, style: AssessmentNumberPicker.Style? = nil) -> some View {

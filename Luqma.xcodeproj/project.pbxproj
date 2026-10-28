@@ -642,6 +642,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = D0D2BB0D0785FDA6E470FE52;
 		};
+		"AE371458DEEF411F27451809" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "LuqmaMotion.swift";
+			"sourceTree" = "<group>";
+		};
+		"010C6F98A0FBC3F598F84F90" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = AE371458DEEF411F27451809;
+		};
 		"CB960EDC22452F5E65FA96A0" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -740,6 +750,7 @@
 				9DE364C98BA1E4B24E65F24A,
 				B83B7A704688598113640A1B,
 				D0D2BB0D0785FDA6E470FE52,
+				AE371458DEEF411F27451809,
 				CB960EDC22452F5E65FA96A0,
 				6CD3C28D868B51339DCFFE02,
 				F7C993B4C35DD313717C0FCC,
@@ -1211,6 +1222,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = 110A69DC2B0C1B39C63965B6;
 		};
+		"2D46157C2E316391A61CE9CD" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "MotionInteractionTests.swift";
+			"sourceTree" = "<group>";
+		};
+		"C5EC5412326B83BF13F78F24" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 2D46157C2E316391A61CE9CD;
+		};
 		"2676C1C3130EC43A71AB56D8" = {
 			"isa" = "PBXGroup";
 			"children" = (
@@ -1218,6 +1239,7 @@
 				C3F8B295CA4C8D0325CB8B7B,
 				A8CA97C9C396889CF0B7B755,
 				110A69DC2B0C1B39C63965B6,
+				2D46157C2E316391A61CE9CD,
 			);
 			"path" = "TestsUI";
 			"sourceTree" = "<group>";
@@ -1397,6 +1419,7 @@
 				A7BD3DF09ED09DC1D59F43D5,
 				A9F04ECC48344C3D042C9A1C,
 				A749EA7132C53F1EF78CE564,
+				010C6F98A0FBC3F598F84F90,
 				27B7062D81D79265FDB10249,
 				1B8F3822ACBFC365354FEB5F,
 				509FDDF0896EE88C4399B1B9,
@@ -1676,6 +1699,7 @@
 				D7BE33845969A81928D26DEE,
 				F7030A48D0B54D27869E5317,
 				529F5DF0462DAC3C0CEE547A,
+				C5EC5412326B83BF13F78F24,
 			);
 			"runOnlyForDeploymentPostprocessing" = 0;
 		};

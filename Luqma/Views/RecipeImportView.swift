@@ -44,18 +44,22 @@ import SwiftUI
                     }
                     if let error {
                         VStack(alignment: .leading, spacing: 12) {
-                            SandowStateAlert(text:error)
+                            SandowStateAlert(text:error).luqmaMotionTransition()
                             if let url = try? RecipeImport.canonicalURL(link) {
                                 Link(destination: url) { Label(diary.t("فتح المصدر ونسخ الوصفة", "Open source and copy recipe"), systemImage: "arrow.up.right.square") }
                                     .luqmaFont(.subheadline).foregroundStyle(Theme.link)
                             }
                         }
                     }
-                    if let draft { review(draft) }
+                    if let draft { review(draft).luqmaMotionTransition() }
                 }.padding(24)
+                    .luqmaMotion(.content,value:busy)
+                    .luqmaMotion(.content,value:error != nil)
+                    .luqmaMotion(.content,value:draft != nil)
             }.scrollDismissesKeyboard(.interactively).appBackground()
                 .sandowNavigation(diary.t("استيراد وصفة", "Import recipe"),backLabel:diary.t("إغلاق", "Close"),onBack:{cancel();dismiss()})
-        }.onAppear { loadPreviewFixture() }.onDisappear { cancel() }
+        }.luqmaFeedback(.success,trigger:saved){_,new in new}
+            .onAppear { loadPreviewFixture() }.onDisappear { cancel() }
     }
 
     private var sourceInput: some View {
@@ -80,7 +84,7 @@ import SwiftUI
                         .accessibilityLabel(diary.t("نص الوصفة", "Recipe text"))
                         .onChange(of: pastedText) { _, _ in if !busy { draft = nil; error = nil } }
                 }.padding(.top, 12)
-            }.luqmaFont(.subheadline)
+            }.luqmaFont(.subheadline).luqmaMotion(.content,value:showPaste)
             Text(diary.t("مواقع الوصفات، يوتيوب، تيك توك وإنستقرام. يجب أن تكون المقادير متاحة للعامة في الصفحة أو وصف المنشور.",
                 "Recipe websites, YouTube, TikTok and Instagram. Ingredients must be publicly available in the page or post description."))
                 .luqmaFont(.caption).foregroundStyle(Theme.muted)
@@ -141,9 +145,9 @@ import SwiftUI
                         if pending { pendingIngredientEdits.insert(id) } else { pendingIngredientEdits.remove(id) }
                     }, onRemove: { id in
                         draft?.ingredients.removeAll { $0.id == id }; pendingIngredientEdits.remove(id)
-                    })
+                    }).luqmaMotionTransition()
                 }
-            }
+            }.luqmaMotion(.content,value:result.ingredients.count)
 
             VStack(alignment: .leading, spacing: 16) {
                 LuqmaSectionHeader(title: diary.t("خطوات التحضير", "Preparation steps"))
@@ -302,7 +306,7 @@ import SwiftUI
                 Text("\(decimal(quantity)) \(unitLabel)").luqmaFont(.subheadline).foregroundStyle(Theme.muted)
             } else { Text(diary.t("المقدار غير محدد", "Quantity unspecified")).luqmaFont(.caption).foregroundStyle(Theme.warning) }
             if let nutrition = ingredient.nutrition {
-                HStack(alignment:.firstTextBaseline,spacing:5){Text(decimal(nutrition.kcal,0)).luqmaFont(size:24,weight:.bold,relativeTo:.title2).monospacedDigit().foregroundStyle(Theme.accent);Text(diary.t("سعرة","kcal")).luqmaFont(.caption).foregroundStyle(Theme.muted)}
+                HStack(alignment:.firstTextBaseline,spacing:5){Text(decimal(nutrition.kcal,0)).luqmaFont(size:24,weight:.bold,relativeTo:.title2).monospacedDigit().foregroundStyle(Theme.accent).luqmaNumericMotion(value:nutrition.kcal);Text(diary.t("سعرة","kcal")).luqmaFont(.caption).foregroundStyle(Theme.muted)}
                 HStack(spacing:12){ingredientMacro(diary.t("بروتين","Protein"),nutrition.protein);ingredientMacro(diary.t("كارب","Carbs"),nutrition.carbs);ingredientMacro(diary.t("دهون","Fat"),nutrition.fat)}.padding(12).background(Theme.surface,in:RoundedRectangle(cornerRadius:12))
             } else { Text(diary.t("القيم الغذائية غير مكتملة", "Nutrition is incomplete")).luqmaFont(.caption).foregroundStyle(Theme.warning) }
             if !ingredient.assumption.isEmpty { Text(DisplayFormat.westernDigits(ingredient.assumption)).luqmaFont(.caption).foregroundStyle(Theme.muted) }
@@ -331,13 +335,13 @@ import SwiftUI
                         }.luqmaFont(.caption)
                     }
                 }.padding(.top, 12)
-            }.luqmaFont(.subheadline)
+            }.luqmaFont(.subheadline).luqmaMotion(.content,value:editing)
         }.luqmaCard().onAppear(perform: loadNutrition)
             .onChange(of: ingredient.nutrition) { _, _ in loadNutrition() }
     }
 
     private func ingredientMacro(_ title:String,_ value:Double)->some View {
-        VStack(alignment:.leading,spacing:4){Text(title).luqmaFont(.caption).foregroundStyle(Theme.muted);Text(decimal(value)+" "+diary.t("جم","g")).luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline).monospacedDigit()}.frame(maxWidth:.infinity,alignment:.leading)
+        VStack(alignment:.leading,spacing:4){Text(title).luqmaFont(.caption).foregroundStyle(Theme.muted);Text(decimal(value)+" "+diary.t("جم","g")).luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline).monospacedDigit().luqmaNumericMotion(value:value)}.frame(maxWidth:.infinity,alignment:.leading)
     }
 
     private func nutrientInput(_ title: String, value: Binding<String>) -> some View {

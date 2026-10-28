@@ -81,6 +81,7 @@ struct LuqmaPrimaryButtonStyle:ButtonStyle {
             .frame(maxWidth:.infinity,minHeight:Theme.primaryButtonHeight)
             .background(Theme.accent,in:RoundedRectangle(cornerRadius:16,style:.continuous))
             .opacity(!isEnabled ? 0.4:configuration.isPressed ? 0.8:1)
+            .luqmaPressFeedback(configuration.isPressed)
     }
 }
 
@@ -91,6 +92,7 @@ struct LuqmaSecondaryButtonStyle:ButtonStyle {
             .frame(maxWidth:.infinity,minHeight:48)
             .background(Theme.surface,in:RoundedRectangle(cornerRadius:16,style:.continuous))
             .opacity(!isEnabled ? 0.4:configuration.isPressed ? 0.75:1)
+            .luqmaPressFeedback(configuration.isPressed)
     }
 }
 
@@ -105,6 +107,7 @@ struct LuqmaProgressRing:View {
                 Circle().trim(from:0,to:min(1,max(0,progress.isFinite ? progress:0)))
                     .stroke(color,style:StrokeStyle(lineWidth:lineWidth,lineCap:.round))
                     .rotationEffect(.degrees(-90))
+                    .luqmaMotion(.progress,value:progress)
             }
         }.accessibilityHidden(true)
     }
@@ -137,7 +140,8 @@ struct LuqmaPill:View {
             .padding(.horizontal,16).frame(minHeight:42)
             .foregroundStyle(selected ? Theme.background:Theme.muted)
             .background(selected ? Theme.text:Theme.card,in:Capsule())}
-            .buttonStyle(.plain).accessibilityAddTraits(selected ? .isSelected:[])
+            .buttonStyle(LuqmaPressStyle()).accessibilityAddTraits(selected ? .isSelected:[])
+            .luqmaMotion(.selection,value:selected)
     }
 }
 func decimal(_ value:Double,_ digits:Int=1) -> String {DisplayFormat.decimal(value,digits:digits)}
@@ -164,11 +168,11 @@ struct NutritionView:View {
     @EnvironmentObject var diary:DiaryStore
     var body:some View {
         VStack(alignment:.leading,spacing:16){
-            HStack(alignment:.firstTextBaseline){Text(decimal(value.kcal,0)).luqmaFont(large ? LTypography.Descriptor(size:38,weight:.heavy,relativeTo:.largeTitle):.title).monospacedDigit().foregroundStyle(Theme.accent);Text(diary.t("سعرة","kcal")).foregroundStyle(Theme.muted)}
+            HStack(alignment:.firstTextBaseline){Text(decimal(value.kcal,0)).luqmaFont(large ? LTypography.Descriptor(size:38,weight:.heavy,relativeTo:.largeTitle):.title).monospacedDigit().foregroundStyle(Theme.accent).luqmaNumericMotion(value:value.kcal);Text(diary.t("سعرة","kcal")).foregroundStyle(Theme.muted)}
             HStack(spacing:8){macro("البروتين","Protein",value.protein);macro("الكارب","Carbs",value.carbs);macro("الدهون","Fat",value.fat)}
         }
     }
-    private func macro(_ ar:String,_ en:String,_ n:Double) -> some View {VStack(alignment:.leading,spacing:6){Text(diary.t(ar,en)).luqmaFont(.caption).foregroundStyle(Theme.muted);Text(decimal(n)+" "+diary.t("جم","g")).luqmaFont(size:15,weight:.bold,relativeTo:.subheadline).monospacedDigit()}.frame(maxWidth:.infinity,alignment:.leading)}
+    private func macro(_ ar:String,_ en:String,_ n:Double) -> some View {VStack(alignment:.leading,spacing:6){Text(diary.t(ar,en)).luqmaFont(.caption).foregroundStyle(Theme.muted);Text(decimal(n)+" "+diary.t("جم","g")).luqmaFont(size:15,weight:.bold,relativeTo:.subheadline).monospacedDigit().luqmaNumericMotion(value:n)}.frame(maxWidth:.infinity,alignment:.leading)}
 }
 struct FoodRow:View {
     var food:Food;var action:()->Void
@@ -204,7 +208,7 @@ struct FoodRow:View {
             Image(systemName:"chevron.forward").font(.system(size:12,weight:.medium)).foregroundStyle(Theme.muted).frame(width:24,height:40).accessibilityHidden(true)
         }.padding(12).frame(maxWidth:.infinity,minHeight:64,alignment:.leading)
             .background(Theme.card,in:RoundedRectangle(cornerRadius:14,style:.continuous))
-            .contentShape(RoundedRectangle(cornerRadius:14,style:.continuous))}.buttonStyle(.plain)
+            .contentShape(RoundedRectangle(cornerRadius:14,style:.continuous))}.buttonStyle(LuqmaPressStyle())
             .accessibilityHint(diary.t("اختيار الطعام والكمية","Choose food and quantity"))
             .accessibilityIdentifier("food.result."+food.id)
     }
@@ -234,7 +238,7 @@ private struct SandowNavigationChrome:ViewModifier {
                                 .frame(width:30,height:30).foregroundStyle(Theme.text)
                                 .background(Theme.card,in:RoundedRectangle(cornerRadius:9))
                                 .frame(width:44,height:44).contentShape(Rectangle())
-                        }.buttonStyle(.plain).accessibilityLabel(backLabel).accessibilityIdentifier("navigation.back")
+                        }.buttonStyle(LuqmaPressStyle()).accessibilityLabel(backLabel).accessibilityIdentifier("navigation.back")
                         Spacer(minLength:0)
                     }.padding(.horizontal,10)
                 }.foregroundStyle(Theme.text).padding(.bottom,6).background(Theme.background.ignoresSafeArea(edges:.top))

@@ -40,14 +40,14 @@ struct ProgressViewScreen:View {
             }else{
                 Text(diary.t("تقييم قصير لتقدير التغذية والنشاط","A short assessment for nutrition and activity estimates")).luqmaFont(.footnote).foregroundStyle(Theme.muted)
             }
-        }.luqmaCard()}.buttonStyle(.plain).accessibilityIdentifier("progress.fitnessProfile")
+        }.luqmaCard()}.buttonStyle(LuqmaPressStyle()).accessibilityIdentifier("progress.fitnessProfile")
     }
     private var weightSummary:some View {VStack(alignment:.leading,spacing:16){
         if let latest=diary.state.weights.last {
             HStack(alignment:.center,spacing:12){
                 VStack(alignment:.leading,spacing:8){
                     Text(diary.t("آخر وزن","Latest weight")).luqmaFont(size:12,relativeTo:.caption).foregroundStyle(Theme.muted)
-                    HStack(alignment:.firstTextBaseline,spacing:6){Text(decimal(latest.kg)).luqmaFont(size:34,weight:.bold,relativeTo:.largeTitle).monospacedDigit();Text(diary.t("كجم","kg")).luqmaFont(size:12,relativeTo:.caption).foregroundStyle(Theme.muted)}
+                    HStack(alignment:.firstTextBaseline,spacing:6){Text(decimal(latest.kg)).luqmaFont(size:34,weight:.bold,relativeTo:.largeTitle).monospacedDigit().luqmaNumericMotion(value:latest.kg);Text(diary.t("كجم","kg")).luqmaFont(size:12,relativeTo:.caption).foregroundStyle(Theme.muted)}
                     Text(latest.day).luqmaFont(size:10,relativeTo:.caption2).monospacedDigit().foregroundStyle(Theme.muted).padding(.horizontal,8).padding(.vertical,4).background(Theme.surface,in:Capsule())
                 }
                 Spacer(minLength:0)
@@ -64,7 +64,7 @@ struct ProgressViewScreen:View {
         Button{adding=true}label:{Label(diary.t("تسجيل وزن","Log weight"),systemImage:"plus")
             .luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline)
             .frame(maxWidth:.infinity,minHeight:44).foregroundStyle(Theme.onAccent)
-            .background(Theme.accent,in:RoundedRectangle(cornerRadius:12,style:.continuous))}.buttonStyle(.plain)
+            .background(Theme.accent,in:RoundedRectangle(cornerRadius:12,style:.continuous))}.buttonStyle(LuqmaPressStyle())
     }.luqmaCard()}
     private var weightPlan:some View {VStack(alignment:.leading,spacing:12){
         NavigationLink{PlanView()}label:{HStack(spacing:10){
@@ -76,15 +76,15 @@ struct ProgressViewScreen:View {
             }
             Spacer(minLength:0)
             Image(systemName:"chevron.forward").font(.caption).foregroundStyle(Theme.muted)
-        }}.buttonStyle(.plain)
+        }}.buttonStyle(LuqmaPressStyle())
         if diary.state.weightPlan != nil {
             Divider().overlay(Theme.stroke)
-            Toggle(diary.t("تحديث السعرات مع الوزن","Update calories with weight"),isOn:Binding(get:{diary.state.adaptive},set:{value in diary.change{$0.adaptive=value};diary.adapt()})).luqmaFont(size:14,relativeTo:.body)
+            Toggle(diary.t("تحديث السعرات مع الوزن","Update calories with weight"),isOn:Binding(get:{diary.state.adaptive},set:{value in diary.change{$0.adaptive=value};diary.adapt()})).luqmaFont(size:14,relativeTo:.body).luqmaFeedback(.selection,trigger:diary.state.adaptive)
             let average=DiaryValidation.average(diary.state.weights,ending:DayKey.today)
-            if let kg=average.kg{Text("\(diary.t("متوسط الأسبوع","Weekly average")): \(decimal(kg)) \(diary.t("كجم","kg"))").luqmaFont(.footnote).foregroundStyle(Theme.muted)}
+            if let kg=average.kg{Text("\(diary.t("متوسط الأسبوع","Weekly average")): \(decimal(kg)) \(diary.t("كجم","kg"))").luqmaFont(.footnote).foregroundStyle(Theme.muted).luqmaNumericMotion(value:kg)}
             DisclosureGroup(diary.t("كيف يعمل التحديث؟","How does it work?"),isExpanded:$adaptiveDetails){
                 Notice(text:diary.adaptiveMessage ?? diary.t("يتطلب ٣ قراءات خلال أسبوع. يستخدم متوسط الوزن لتحديث السعرات حتى موعد الهدف.","Requires three readings this week. Uses your average weight to update calories through your target date.")).padding(.top,8)
-            }.luqmaFont(.footnote)
+            }.luqmaFont(.footnote).luqmaMotion(.content,value:adaptiveDetails)
         }
     }.luqmaCard()}
     @ViewBuilder private func weightHistory(_ readings:[WeightReading])->some View {
@@ -94,16 +94,17 @@ struct ProgressViewScreen:View {
             ForEach(Array(readings.reversed().prefix(30))){w in HStack(spacing:12){
                 VStack(alignment:.leading,spacing:4){Text(w.day).luqmaFont(size:13,relativeTo:.subheadline).monospacedDigit();if let source=w.source{Text(source=="Manual" ? diary.t("إدخال يدوي","Manual entry"):source).luqmaFont(size:10,relativeTo:.caption2).foregroundStyle(Theme.muted)}}
                 Spacer(minLength:0)
-                Text(decimal(w.kg)+" "+diary.t("كجم","kg")).luqmaFont(size:14,weight:.semibold,relativeTo:.body).monospacedDigit()
+                Text(decimal(w.kg)+" "+diary.t("كجم","kg")).luqmaFont(size:14,weight:.semibold,relativeTo:.body).monospacedDigit().luqmaNumericMotion(value:w.kg)
                 Button(role:.destructive){deleting=w}label:{Image(systemName:"trash").font(.system(size:16)).frame(minWidth:44,minHeight:44)}.accessibilityLabel(diary.t("حذف قراءة الوزن","Delete weight reading"))
             }.padding(.leading,2).padding(.trailing,0).padding(.vertical,3)
-                .overlay(alignment:.bottom){Rectangle().fill(Theme.stroke).frame(height:1)}}
-        }.luqmaCard()}
+                .overlay(alignment:.bottom){Rectangle().fill(Theme.stroke).frame(height:1)}.luqmaMotionTransition()}
+        }.luqmaCard().luqmaMotion(.content,value:readings.suffix(30).map(\.id))}
     }
     private func weightChart(_ snapshot:WeightProgressSnapshot)->some View {VStack(alignment:.leading,spacing:16){
         HStack(spacing:4){ForEach([7,30,90,0],id:\.self){value in
-            Button{range=value}label:{Text(rangeTitle(value)).luqmaFont(size:11,weight:.semibold,relativeTo:.caption).frame(maxWidth:.infinity,minHeight:36).foregroundStyle(range == value ? Theme.background:Theme.muted).background(range == value ? Theme.text:Theme.surface,in:RoundedRectangle(cornerRadius:9,style:.continuous))}.buttonStyle(.plain).accessibilityAddTraits(range == value ? .isSelected:[])
+            Button{range=value}label:{Text(rangeTitle(value)).luqmaFont(size:11,weight:.semibold,relativeTo:.caption).frame(maxWidth:.infinity,minHeight:36).foregroundStyle(range == value ? Theme.background:Theme.muted).background(range == value ? Theme.text:Theme.surface,in:RoundedRectangle(cornerRadius:9,style:.continuous))}.buttonStyle(LuqmaPressStyle()).accessibilityAddTraits(range == value ? .isSelected:[])
         }}.padding(4).background(Theme.surface,in:RoundedRectangle(cornerRadius:12,style:.continuous)).accessibilityLabel(diary.t("مدة الرسم","Chart range"))
+            .luqmaMotion(.selection,value:range).luqmaFeedback(.selection,trigger:range)
         if snapshot.points.isEmpty{Notice(text:diary.t("لا توجد قراءات في هذه المدة.","No readings in this range."))}
         else{Chart{
             ForEach(snapshot.points){point in
@@ -112,7 +113,8 @@ struct ProgressViewScreen:View {
                 PointMark(x:.value("Date",point.date),y:.value("Weight",point.reading.kg)).symbolSize(25).foregroundStyle(Theme.accent)
             }
             if let target=diary.state.weightPlan?.targetWeight{RuleMark(y:.value("Goal",target)).lineStyle(StrokeStyle(lineWidth:1,dash:[5])).foregroundStyle(Theme.secondaryAccent)}
-        }.chartYScale(domain:.automatic(includesZero:false)).chartLegend(.hidden).frame(height:225).accessibilityLabel(diary.t("رسم تغيّر الوزن بالكيلوجرام","Weight trend in kilograms"))}
+        }.chartYScale(domain:.automatic(includesZero:false)).chartLegend(.hidden).frame(height:225)
+            .luqmaMotion(.content,value:snapshot.readings).accessibilityLabel(diary.t("رسم تغيّر الوزن بالكيلوجرام","Weight trend in kilograms"))}
     }.luqmaCard()}
     private func rangeTitle(_ value:Int)->String {switch value{case 7:return diary.t("أسبوع","7d");case 30:return diary.t("شهر","30d");case 90:return diary.t("٣ شهور","90d");default:return diary.t("الكل","All")}}
 }

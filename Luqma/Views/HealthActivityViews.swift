@@ -18,6 +18,7 @@ struct HealthPrimaryButtonStyle: ButtonStyle {
         configuration.label.luqmaFont(.headline).frame(maxWidth: .infinity, minHeight: 48)
             .padding(.horizontal, 12).foregroundStyle(HealthPalette.background)
             .background(HealthPalette.accent.opacity(configuration.isPressed ? 0.8 : 1), in: RoundedRectangle(cornerRadius: 14))
+            .luqmaPressFeedback(configuration.isPressed)
     }
 }
 
@@ -28,6 +29,7 @@ struct HealthExtendedReadingsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text(status).luqmaFont(.headline).accessibilityIdentifier("health.syncStatus")
+                .contentTransition(.opacity).luqmaMotion(.content,value:status)
             if let date = health.lastSuccessfulSync {
                 Text(diary.t("آخر مزامنة بها بيانات: ", "Last sync with readings: ") + HealthCopy.date(date, diary.language))
                     .luqmaFont(.footnote).foregroundStyle(Theme.muted).accessibilityIdentifier("health.lastSuccessfulSync")
@@ -39,10 +41,10 @@ struct HealthExtendedReadingsView: View {
                             .frame(maxWidth: .infinity, minHeight: 44)
                             .background(health.historyDays == range.rawValue ? HealthPalette.accent : HealthPalette.background, in: RoundedRectangle(cornerRadius: 10))
                             .foregroundStyle(health.historyDays == range.rawValue ? HealthPalette.background : Theme.text)
-                    }.buttonStyle(.plain).disabled(health.isAuthorizing)
+                    }.buttonStyle(LuqmaPressStyle()).disabled(health.isAuthorizing)
                         .accessibilityIdentifier("health.range.\(range.rawValue)")
                 }
-            }
+            }.luqmaMotion(.selection,value:health.historyDays).luqmaFeedback(.selection,trigger:health.historyDays)
             Text(diary.t("القراءات على جهازك فقط. تُراجع الفترة عند فتح التطبيق أو التحديث اليدوي؛ التغييرات أثناء الاستخدام تُحدّث تدريجيًا.", "Readings stay on your device. Opening the app or refreshing rechecks this range; changes while in use update incrementally."))
                 .luqmaFont(.footnote).foregroundStyle(Theme.muted)
             HealthMetricRow(title: diary.t("مسافة اليوم", "Today's walking/running distance"), unit: diary.t("كم", "km"), field: scaled(daily(details.walkingDistance), by: 0.001), identifier: "health.distance.value", language: diary.language)
@@ -94,11 +96,12 @@ struct HealthWeightHistoryView: View {
                 if weights.count > 1 {
                     Chart(weights) { record in
                         LineMark(x: .value("Date", record.date), y: .value("kg", record.kg)).foregroundStyle(HealthPalette.accent)
-                    }.frame(height: 140).accessibilityLabel(diary.t("اتجاه قراءات الوزن المتاحة من صحتي", "Trend of available Health weight readings"))
+                    }.frame(height: 140).luqmaMotion(.content,value:weights).accessibilityLabel(diary.t("اتجاه قراءات الوزن المتاحة من صحتي", "Trend of available Health weight readings"))
                 }
                 if let latest = weights.last {
                     Text(DisplayFormat.decimal(latest.kg, digits: 1) + " " + diary.t("كجم", "kg") + " · " + HealthCopy.date(latest.date, diary.language))
                         .luqmaFont(.subheadline).monospacedDigit()
+                        .contentTransition(.opacity).luqmaMotion(.content,value:latest)
                 }
                 Text(diary.t("هذه قراءات صحتي؛ لا تستبدل سجل الوزن اليدوي أو تعدّل هدف السعرات.", "These Health readings do not replace manual weights or adjust calorie goals."))
                     .luqmaFont(.footnote).foregroundStyle(Theme.muted)
@@ -122,13 +125,15 @@ struct HealthWorkoutListView: View {
                         Text(title(record.kind)).luqmaFont(.subheadline)
                         Spacer(minLength: 8)
                         Text(DisplayFormat.decimal(record.durationSeconds/60, digits: 0) + " " + diary.t("دقيقة", "min")).luqmaFont(.subheadline).monospacedDigit()
+                            .luqmaNumericMotion(value:record.durationSeconds/60)
                     }
                     Text(HealthCopy.date(record.start, diary.language)).luqmaFont(.caption).foregroundStyle(Theme.muted)
-                }
+                }.luqmaMotionTransition()
             }
             Text(diary.t("لا نضيف سعرات التمرين إلى طاقة النشاط مرة ثانية.", "Workout energy is not added again to active-energy totals."))
                 .luqmaFont(.footnote).foregroundStyle(Theme.muted)
         }.healthCard().privacySensitive().accessibilityIdentifier("health.workouts")
+            .luqmaMotion(.content,value:workouts.suffix(20).map(\.id))
     }
     private func title(_ kind: HealthWorkoutKind) -> String {
         switch kind {
@@ -145,19 +150,22 @@ struct HealthWorkoutListView: View {
 
 struct HealthDailyHistoryView: View {
     @EnvironmentObject private var diary: DiaryStore
+    @State private var expanded = false
     let days: [HealthDailyActivity]
     var body: some View {
-        DisclosureGroup(diary.t("سجل النشاط اليومي", "Daily activity history")) {
+        DisclosureGroup(diary.t("سجل النشاط اليومي", "Daily activity history"),isExpanded:$expanded) {
             VStack(alignment: .leading, spacing: 12) {
                 ForEach(Array(days.reversed())) { day in
                     VStack(alignment: .leading, spacing: 4) {
                         Text(DisplayFormat.westernDigits(day.idDate)).luqmaFont(.caption).monospacedDigit()
                         Text(diary.t("الخطوات: ", "Steps: ") + value(day.steps, digits: 0) + " · " + diary.t("طاقة النشاط: ", "Active kcal: ") + value(day.activeEnergy, digits: 0))
                             .luqmaFont(.footnote).foregroundStyle(Theme.muted)
-                    }
+                            .contentTransition(.opacity).luqmaMotion(.content,value:day)
+                    }.luqmaMotionTransition()
                 }
-            }.padding(.top, 12)
+            }.padding(.top, 12).luqmaMotion(.content,value:days.map(\.id))
         }.luqmaFont(.headline).healthCard().privacySensitive().accessibilityIdentifier("health.dailyHistory")
+            .luqmaMotion(.content,value:expanded)
     }
     private func value(_ field: HealthReadField, digits: Int) -> String {
         field.measurement.map { DisplayFormat.decimal($0.value, digits: digits) } ?? diary.t("غير متاح", "Unavailable")
@@ -173,14 +181,16 @@ struct AppleHealthProgressCard: View {
                 NavigationLink { HealthSettingsView() } label: {
                     HStack { Label("Apple Health", systemImage: "heart.fill"); Spacer(); Image(systemName: "chevron.forward") }
                         .luqmaFont(.headline).foregroundStyle(HealthPalette.accent)
-                }.buttonStyle(.plain)
+                }.buttonStyle(LuqmaPressStyle())
                 HealthMetricRow(title: diary.t("خطوات اليوم", "Today's steps"), unit: diary.t("خطوة", "steps"), field: daily(health.snapshot?.steps), identifier: "progress.health.steps", language: diary.language, digits: 0)
                 HealthMetricRow(title: diary.t("طاقة النشاط", "Active energy"), unit: diary.t("سعرة", "kcal"), field: daily(health.snapshot?.activeEnergy), identifier: "progress.health.energy", language: diary.language)
                 if let value = daily(health.snapshot?.details.walkingDistance).measurement {
                     Text(diary.t("المسافة: ", "Distance: ") + DisplayFormat.decimal(value.value/1000, digits: 2) + " " + diary.t("كم", "km")).luqmaFont(.subheadline).monospacedDigit()
+                        .luqmaNumericMotion(value:value.value/1000)
                 }
                 if let weight = health.snapshot?.bodyMass.measurement {
                     Text(diary.t("آخر وزن من صحتي: ", "Latest Health weight: ") + DisplayFormat.decimal(weight.value, digits: 1) + " " + diary.t("كجم", "kg")).luqmaFont(.subheadline).monospacedDigit()
+                        .luqmaNumericMotion(value:weight.value)
                 }
                 Text(diary.t("الطاقة المحروقة مستقلة عن سعرات الطعام وهدفك اليومي.", "Energy burned is separate from food calories and your daily target."))
                     .luqmaFont(.footnote).foregroundStyle(Theme.muted)

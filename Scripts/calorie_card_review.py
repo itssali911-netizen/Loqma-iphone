@@ -163,6 +163,7 @@ def generate_host(folder: Path, root: Path = ROOT) -> dict:
     if not fonts or len(fonts) != len(set(fonts)) or not all(isinstance(name,str) and Path(name).name == name and (root/"Luqma/Resources"/name).is_file() for name in fonts):
         raise BuildError("The component review must use the application's actual registered bundled fonts.")
     sources = [*sorted((root/"Luqma/Core").glob("*.swift")), root/CARD, root/"Luqma/Views/LuqmaTypography.swift", host_source]
+    if (root/"Luqma/Views/LuqmaMotion.swift").exists():sources.append(root/"Luqma/Views/LuqmaMotion.swift")
     if any(not path.is_file() for path in sources): raise BuildError("An exact production source required by the host is unavailable.")
     folder.mkdir(parents=True)
     project = folder/"CalorieCardReview.xcodeproj";project.mkdir()
@@ -224,6 +225,7 @@ def host_source_hashes(root: Path = ROOT) -> dict:
     files=[*sorted((root/"Luqma/Core").glob("*.swift")),root/CARD,root/"Luqma/Views/LuqmaTypography.swift",root/HOST_SOURCE,root/ICON_LICENSE,
            *(root/"Luqma/Resources"/name for name in plistlib.loads((root/"Luqma/Info.plist").read_bytes())["UIAppFonts"]),
            *(root/path for path in sorted(NEW_ASSET_FILES))]
+    if (root/"Luqma/Views/LuqmaMotion.swift").exists():files.append(root/"Luqma/Views/LuqmaMotion.swift")
     return {file.relative_to(root).as_posix():hashlib.sha256(file.read_bytes()).hexdigest() for file in files}
 
 
@@ -448,6 +450,19 @@ def validate() -> dict:
             except (BuildError,OSError,ValueError) as error:
                 report["errors"].append("Separate native notification denial: "+str(error))
                 report["test_status"]="failed"
+        if os.environ.get("LUQMA_NATIVE_MOTION_REVIEW")=="1":
+            from ui_interactions import run_scenario
+            methods=tuple(re.findall(r"\bfunc\s+(test[A-Za-z0-9_]+)\s*\(",(ROOT/"TestsUI/MotionInteractionTests.swift").read_text("utf8")))
+            motion=dict(status="running",required_cases=list(methods),fresh_simulator=False,
+                        reduce_motion_scope="DEBUG SwiftUI accessibility environment, not physical OS Settings")
+            report["native_motion_scenario"]=motion
+            try:
+                if len(methods)!=2:raise BuildError("Both normal and Reduce Motion native scenarios are required")
+                run_scenario(output/"native-motion",packages,derived,runtime,methods,motion,
+                             os.environ.get("BUILD_NUMBER","123"),signing_settings=["CODE_SIGNING_ALLOWED=YES","CODE_SIGN_IDENTITY=-"],
+                             test_class="MotionInteractionTests",record_video=True)
+            except (BuildError,OSError,ValueError) as error:
+                report["errors"].append("Native motion scenario: "+str(error));report["test_status"]="failed"
         collect_attachments(output,report)
         report["tested_app"]=validate_app(app,APP_BUNDLE,output)
         report["simulator_executable_sha256"]=hashlib.sha256((app/"Luqma").read_bytes()).hexdigest()

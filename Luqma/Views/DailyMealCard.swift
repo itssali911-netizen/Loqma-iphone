@@ -47,7 +47,7 @@ struct DailyMealCard: View {
             .overlay { RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Color(hex: 0x35383F), lineWidth: 1) }
             .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(LuqmaPressStyle())
         .accessibilityIdentifier("diary.meal." + summary.meal.rawValue)
         .accessibilityLabel(language.text("إضافة إلى ", "Add to ") + mealTitle)
         .accessibilityValue(accessibilitySummary)
@@ -78,6 +78,7 @@ struct DailyMealCard: View {
                     .frame(width: 12, height: 12).foregroundStyle(Color(hex: 0xD78957))
                 Text(DisplayFormat.decimal(summary.nutrition.kcal, digits: 0))
                     .luqmaFont(size: 14, weight: .bold, relativeTo: .subheadline).monospacedDigit()
+                    .luqmaNumericMotion(value: summary.nutrition.kcal)
                     .fixedSize(horizontal: false, vertical: true)
                 Text(language.text("سعرة", "kcal")).luqmaFont(size: 12, relativeTo: .caption)
             }.environment(\.layoutDirection, direction).foregroundStyle(Color(hex: 0xF7F8FA))
@@ -124,6 +125,7 @@ struct DailyMealCard: View {
         HStack(alignment: .firstTextBaseline, spacing: 2) {
             Text(grams(summary.nutrition[key]))
                 .luqmaFont(size: 12, weight: .bold, relativeTo: .caption).monospacedDigit()
+                .luqmaNumericMotion(value: summary.nutrition[key])
             Text(language.text("جم", "g")).luqmaFont(size: 12, relativeTo: .caption)
         }.foregroundStyle(Color(hex: 0xF7F8FA))
     }

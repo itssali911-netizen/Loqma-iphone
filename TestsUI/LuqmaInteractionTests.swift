@@ -978,7 +978,20 @@ final class LuqmaInteractionTests:XCTestCase {
         let save=app.buttons["portion.save"]
         if save.exists{bottom=min(bottom,save.frame.minY)}
         let keyboard=app.keyboards.firstMatch
-        if keyboard.exists{bottom=min(bottom,keyboard.frame.minY)}
+        if keyboard.exists{
+            bottom=min(bottom,keyboard.frame.minY)
+            // iOS exposes the keyboard's accessory toolbar separately from
+            // Keyboard. Its transparent full-width hit region can cover a
+            // field even when that field is above Keyboard.frame.minY.
+            // The recorded native failure placed protein at y584.7...625.7,
+            // inside Toolbar y590...638, while Keyboard began at y655.
+            for toolbar in app.toolbars.allElementsBoundByIndex where toolbar.isHittable {
+                let frame=toolbar.frame.intersection(app.frame)
+                if !frame.isEmpty,frame.width>=viewport.width*0.75,frame.minY>viewport.minY+44 {
+                    bottom=min(bottom,frame.minY)
+                }
+            }
+        }
         return CGRect(x:viewport.minX,y:viewport.minY+8,width:viewport.width,height:max(0,bottom-viewport.minY-16))
     }
 
