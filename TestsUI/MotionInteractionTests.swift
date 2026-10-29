@@ -58,8 +58,24 @@ final class MotionInteractionTests:XCTestCase {
         XCTAssertTrue(done.waitForExistence(timeout:10));done.tap()
         // This exercises a real native guide sheet, not an authorization grant.
         XCTAssertTrue(manage.waitForExistence(timeout:10))
-        app.buttons["navigation.back"].tap()
-        XCTAssertTrue(app.buttons["settings.health"].waitForExistence(timeout:10))
+        // Health's screen identifier also labels its custom navigation chrome
+        // in the actual iOS hierarchy. Use the real, visible Back action rather
+        // than assuming its child identifier survives that container modifier.
+        let backButtons=app.buttons.matching(NSPredicate(format:"label == %@","Back"))
+        let backReady=XCTNSPredicateExpectation(predicate:NSPredicate { _,_ in
+            backButtons.allElementsBoundByIndex.contains { $0.exists && $0.isEnabled && $0.isHittable && $0.frame.maxY < manage.frame.minY }
+        },object:app)
+        XCTAssertEqual(XCTWaiter.wait(for:[backReady],timeout:10),.completed,"The actual Health header Back action must be visible")
+        guard let back=backButtons.allElementsBoundByIndex.first(where:{ $0.exists && $0.isEnabled && $0.isHittable && $0.frame.maxY < manage.frame.minY }) else {
+            XCTFail("The real Health Back action was not reachable.\n"+app.debugDescription)
+            return
+        }
+        back.tap()
+        let returned=XCTNSPredicateExpectation(predicate:NSPredicate { _,_ in
+            let row=self.app.buttons["settings.health"]
+            return row.exists && row.isHittable && (!manage.exists || !manage.isHittable)
+        },object:app)
+        XCTAssertEqual(XCTWaiter.wait(for:[returned],timeout:10),.completed,"Back must return to the real Settings list, not merely leave an offscreen element in the hierarchy")
     }
     private func capture(_ name:String) {
         let item=XCTAttachment(screenshot:app.screenshot());item.name=name;item.lifetime = .keepAlways;add(item)

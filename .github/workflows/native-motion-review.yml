@@ -13,6 +13,32 @@ env:
   BUNDLE_ID: app.luqma.diary
   BUILD_NUMBER: '123'
 jobs:
+  scope:
+    runs-on: ubuntu-latest
+    outputs:
+      app_unchanged: ${{ steps.scope.outputs.app_unchanged }}
+      followup: ${{ steps.scope.outputs.followup }}
+      paired: ${{ steps.scope.outputs.paired }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 30
+          persist-credentials: false
+      - id: scope
+        shell: python
+        run: |
+          import os,subprocess
+          verified='ef485cbae17c519809a6d8dde6ef790f4d7931bd'
+          inputs=['Luqma','Luqma.xcodeproj','Package.swift','Scripts/qwen3vl-compat.json','Scripts/vision_compat.py']
+          unchanged=subprocess.run(['git','diff','--quiet',verified,'HEAD','--',*inputs]).returncode==0
+          changed=subprocess.check_output(['git','diff','--name-only','HEAD^','HEAD'],text=True).splitlines()
+          followup=unchanged and any(p.startswith('TestsUI/') or p=='Scripts/motion_followup.py' for p in changed)
+          # Repeat the mixed-host comparison once on a single runner when this
+          # follow-up harness is first introduced, not on documentation pushes.
+          paired=followup and 'Scripts/motion_followup.py' in changed
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:
+              for k,v in [('app_unchanged',unchanged),('followup',followup),('paired',paired)]:
+                  f.write(k+'='+str(v).lower()+'\n')
   baseline-visual:
     # The immutable 9f source is already being captured in run 40778353065.
     # Preserve that independent job rather than recompiling the baseline on
@@ -46,6 +72,8 @@ jobs:
             Motion-Before-AR/font-audits/
           retention-days: 30
   native-validation:
+    needs: scope
+    if: needs.scope.outputs.app_unchanged != 'true' || github.event_name == 'workflow_dispatch'
     runs-on: macos-26
     timeout-minutes: 180
     env:
@@ -109,6 +137,8 @@ jobs:
             BuildOutput/CalorieCardReview/native-motion/interactions.xcresult/
           retention-days: 30
   performance:
+    needs: scope
+    if: needs.scope.outputs.app_unchanged != 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -143,4 +173,83 @@ jobs:
             Motion-Performance/*.log
             Motion-Performance-packages.log
             Motion-Performance-Package.resolved
+          retention-days: 30
+  followup-validation:
+    needs: scope
+    if: needs.scope.outputs.followup == 'true'
+    runs-on: macos-26
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 30
+          persist-credentials: false
+      - name: Rebuild and recheck real controls with corrected automation
+        run: python3 Scripts/motion_followup.py
+      - name: Preserve actual follow-up evidence and recording
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-Motion-Followup-${{ github.run_id }}
+          path: |
+            Motion-Followup/*.json
+            Motion-Followup/Package.resolved
+            Motion-Followup/*.log
+            Motion-Followup/*/*.json
+            Motion-Followup/*/*.log
+            Motion-Followup/*/*.mov
+          retention-days: 30
+      - name: Preserve native XCTest result bundles
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-Motion-Followup-XCTest-${{ github.run_id }}
+          path: Motion-Followup/*/interactions.xcresult/
+          retention-days: 30
+  paired-performance-confirmation:
+    needs: scope
+    if: needs.scope.outputs.paired == 'true'
+    runs-on: macos-26
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 9f567b449579d78c22833b06d9d0836bb37b833d
+          path: baseline
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          path: motion
+          persist-credentials: false
+      - name: Measure baseline then motion on the same actual CI Mac
+        run: |
+          python3 - <<'PY'
+          import os,subprocess
+          from pathlib import Path
+          root=Path.cwd()
+          for name,label in [('baseline','baseline'),('motion','optimized')]:
+              cwd=root/name
+              with (cwd/'paired-packages.log').open('w') as log:
+                  subprocess.run(['xcodebuild','-resolvePackageDependencies','-project','Luqma.xcodeproj','-scheme','Luqma','-clonedSourcePackagesDirPath',str(root/'SharedPackages')],cwd=cwd,stdout=log,stderr=subprocess.STDOUT,check=True)
+              lock=cwd/'Luqma.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved'
+              (cwd/'paired-Package.resolved').write_bytes(lock.read_bytes())
+              revision=subprocess.check_output(['git','rev-parse','HEAD'],cwd=cwd,text=True).strip()
+              env=dict(os.environ,GITHUB_SHA=revision)
+              code="import runpy,sys;sys.path.insert(0,'Scripts');sys.argv=['Scripts/performance_probe.py','--output','Paired-Performance','--label',"+repr(label)+",'--packages',"+repr(str(root/'SharedPackages'))+",'--expected-revision',"+repr(revision)+",'--timeout','5400'];runpy.run_path('Scripts/performance_probe.py',run_name='__main__')"
+              subprocess.run(['python3','-c',code],cwd=cwd,env=env,check=True)
+          if (root/'baseline/paired-Package.resolved').read_bytes()!=(root/'motion/paired-Package.resolved').read_bytes():
+              raise RuntimeError('Package resolutions differ; do not claim a comparable result.')
+          PY
+      - name: Preserve both raw measurements, including failures
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-Motion-Paired-Performance-${{ github.run_id }}
+          path: |
+            baseline/Paired-Performance/*.json
+            baseline/Paired-Performance/*.log
+            baseline/paired-*
+            motion/Paired-Performance/*.json
+            motion/Paired-Performance/*.log
+            motion/paired-*
           retention-days: 30

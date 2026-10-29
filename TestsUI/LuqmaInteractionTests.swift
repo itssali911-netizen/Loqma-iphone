@@ -955,6 +955,21 @@ final class LuqmaInteractionTests:XCTestCase {
         else if field.identifier.hasPrefix("portion."){focusPortionField(field)}
         else {reveal(field);field.tap()}
         let previous=field.value as? String ?? ""
+        if field.identifier == "portion.amount",previous == "0" {
+            // A recorded 0 -> 50 replacement put the centered caret before 0;
+            // deleting at that insertion point did nothing and produced 500.
+            // Select the one-digit value through native text editing instead.
+            // On a genuinely empty field, 0 can be the placeholder; typing
+            // then fills that same real field without deleting fake content.
+            field.doubleTap()
+            let selectAll=app.menuItems.matching(NSPredicate(format:"label == %@","Select All")).firstMatch
+            let selectAllButton=app.buttons.matching(NSPredicate(format:"label == %@","Select All")).firstMatch
+            if selectAll.exists && selectAll.isHittable {selectAll.tap()}
+            else if selectAllButton.exists && selectAllButton.isHittable {selectAllButton.tap()}
+            field.typeText(text)
+            XCTAssertEqual(field.value as? String,text,"Native selection must replace the actual quantity without retaining its zero.\n"+app.debugDescription)
+            return
+        }
         if !previous.isEmpty {
             // These numeric fields are trailing aligned. A center tap may leave
             // the caret inside 2000, so backspacing alone can produce 21002000.
