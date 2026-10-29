@@ -3,6 +3,7 @@
   "baseline": "798a0f4f45aad23fdeac235a417d345988cf5c34",
   "changed_application_files": [
     "Luqma.xcodeproj/project.pbxproj",
+    "Luqma/Views/FoodAddView.swift",
     "Luqma/Views/KitchenView.swift",
     "Luqma/Views/LuqmaMealCamera.swift",
     "Luqma/Views/LuqmaRefinedUI.swift",
@@ -21,22 +22,21 @@
     "Luqma/Views/DiaryView.swift": true,
     "Luqma/Views/DailyCalorieCard.swift": true,
     "Luqma/Views/DailyMealCard.swift": true,
-    "Luqma/Views/FoodAddView.swift": true,
     "Luqma/Info.plist": true,
     "Luqma/Luqma.entitlements": true
   },
   "changa_bold_sha256": "d2015fb807cdd2cdc4d2f539db75117f7f009e407fe9d4b3e7555d94c4ff2c9f",
   "expected_font_sha256": "d2015fb807cdd2cdc4d2f539db75117f7f009e407fe9d4b3e7555d94c4ff2c9f",
-  "native_build": "simulator_debug_passed",
-  "native_screenshots": "32_actual_framebuffers_captured",
-  "native_interactions": "4_actual_cases_passed_in_run_40882626673",
+  "native_build": "recipe_followup_simulator_debug_passed",
+  "native_screenshots": "4_accepted_actual_recipe_followup_frames",
+  "native_interactions": "recipe_controls_passed_in_run_40952995187; Arabic_draft_passed_in_run_40942555850",
   "physical_camera": "not_tested",
   "live_ai_service": "not_called",
   "visual_approval": "pending",
   "public_push": "published_with_explicit_user_authorization",
   "merged": false,
   "ipa_published": false,
-  "native_evidence_matches_current_application": true,
+  "native_evidence_matches_current_application": false,
   "native_evidence": {
     "run_id": 40875601612,
     "run_url": "https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/40875601612",
@@ -192,5 +192,255 @@
         ]
       }
     ]
-  }
+  },
+  "food_portion_only_optional_initial_unit_changed": true,
+  "recipe_detail_followup": {
+    "visual_approval": "pending",
+    "screenshots": [
+      {
+        "screen": "AR-compact",
+        "source_commit": "aa89e16033f0836a2a2b1f24e433e9b791215d42",
+        "simulator": {
+          "udid": "6AA2AA12-932E-4BAE-85F2-8444BD5383A1",
+          "device": "iPhone 13 mini",
+          "runtime": "iOS 26.5",
+          "runtime_id": "com.apple.CoreSimulator.SimRuntime.iOS-26-5"
+        },
+        "runtime_font_audits": [
+          {
+            "screen": "recipe-details",
+            "passed": true,
+            "process_id": 22309,
+            "roles_checked": 12,
+            "actual_postscript_fonts": [
+              "Changa-Bold"
+            ],
+            "content_size_category": "UICTContentSizeCategoryL",
+            "rendering_scope": "template",
+            "swiftui_dynamic_type_size": "large",
+            "swiftui_body_points": 16,
+            "swiftui_is_accessibility_size": false,
+            "swiftui_body_matches_role": true,
+            "accessibility_scaling_verified": false,
+            "zero_missing_glyphs": true,
+            "emoji_fonts": [
+              "AppleColorEmoji"
+            ],
+            "file": "font-audits/01-recipe-details.json",
+            "sha256": "41afa5de227fa49aa8945bd3d28e86ffb07e201ca41718ff9dbdf889e7298a62"
+          }
+        ],
+        "frame_sha256": "f02a70dedabbeaba205e6ab04524ddeaf310149023531d3f2f01d489d0583c48"
+      },
+      {
+        "screen": "AR-large",
+        "source_commit": "aa89e16033f0836a2a2b1f24e433e9b791215d42",
+        "simulator": {
+          "udid": "4557D91C-929D-48F7-8610-231512A51DD7",
+          "device": "iPhone 16 Pro Max",
+          "runtime": "iOS 26.5",
+          "runtime_id": "com.apple.CoreSimulator.SimRuntime.iOS-26-5"
+        },
+        "runtime_font_audits": [
+          {
+            "screen": "recipe-details",
+            "passed": true,
+            "process_id": 29413,
+            "roles_checked": 12,
+            "actual_postscript_fonts": [
+              "Changa-Bold"
+            ],
+            "content_size_category": "UICTContentSizeCategoryL",
+            "rendering_scope": "template",
+            "swiftui_dynamic_type_size": "large",
+            "swiftui_body_points": 16,
+            "swiftui_is_accessibility_size": false,
+            "swiftui_body_matches_role": true,
+            "accessibility_scaling_verified": false,
+            "zero_missing_glyphs": true,
+            "emoji_fonts": [
+              "AppleColorEmoji"
+            ],
+            "file": "font-audits/01-recipe-details.json",
+            "sha256": "f85e43676fb99c62df1ce37e8085a1557c3380546fa8a66c8700f146d1f8594b"
+          }
+        ],
+        "frame_sha256": "0d71bfa92cbf766b45c61633634f3e30f17daf0d7bb31b97146ff903c74262da"
+      },
+      {
+        "screen": "EN-compact",
+        "source_commit": "aa89e16033f0836a2a2b1f24e433e9b791215d42",
+        "simulator": {
+          "udid": "3616271F-5A9B-4117-AC2B-9963A65C9D52",
+          "device": "iPhone 13 mini",
+          "runtime": "iOS 26.5",
+          "runtime_id": "com.apple.CoreSimulator.SimRuntime.iOS-26-5"
+        },
+        "runtime_font_audits": [
+          {
+            "screen": "recipe-details",
+            "passed": true,
+            "process_id": 37665,
+            "roles_checked": 12,
+            "actual_postscript_fonts": [
+              "Changa-Bold"
+            ],
+            "content_size_category": "UICTContentSizeCategoryL",
+            "rendering_scope": "template",
+            "swiftui_dynamic_type_size": "large",
+            "swiftui_body_points": 16,
+            "swiftui_is_accessibility_size": false,
+            "swiftui_body_matches_role": true,
+            "accessibility_scaling_verified": false,
+            "zero_missing_glyphs": true,
+            "emoji_fonts": [
+              "AppleColorEmoji"
+            ],
+            "file": "font-audits/01-recipe-details.json",
+            "sha256": "97b8c68984cdee744ee4ea6c269bdaa8d96e90ea14d640f24ada40c7f69f8949"
+          }
+        ],
+        "frame_sha256": "fafc41c7b837c531199c5c95cbf288c6db4b44f590eed93f688fd7f27d43f574"
+      },
+      {
+        "screen": "AR-ingredient-details",
+        "source_commit": "a93b9e3d2e787462aa385e8dd6fc2ec5637e7bb1",
+        "simulator": {
+          "udid": "E091DE0E-FAF0-43EC-963E-6A4DD72505BA",
+          "device": "iPhone 13 mini",
+          "runtime": "iOS 26.5",
+          "runtime_id": "com.apple.CoreSimulator.SimRuntime.iOS-26-5"
+        },
+        "runtime_font_audits": [
+          {
+            "screen": "recipe-details",
+            "passed": true,
+            "process_id": 14851,
+            "roles_checked": 12,
+            "actual_postscript_fonts": [
+              "Changa-Bold"
+            ],
+            "content_size_category": "UICTContentSizeCategoryL",
+            "rendering_scope": "template",
+            "swiftui_dynamic_type_size": "large",
+            "swiftui_body_points": 16,
+            "swiftui_is_accessibility_size": false,
+            "swiftui_body_matches_role": true,
+            "accessibility_scaling_verified": false,
+            "zero_missing_glyphs": true,
+            "emoji_fonts": [
+              "AppleColorEmoji"
+            ],
+            "file": "font-audits/01-recipe-details.json",
+            "sha256": "65c4ba7460aa39653a5ae0ae5a6f2eb71a824538e2f7bee944925e454e509ade"
+          }
+        ],
+        "frame_sha256": "fd05e80efea8d2a51754e93442d56a0f5ffa7921753c8f463afbb5d1ba1a6ad6"
+      }
+    ],
+    "core_tests": {
+      "passed": 264,
+      "failures": 0
+    },
+    "build_tests": {
+      "passed": 170,
+      "skipped": 0,
+      "failures": 0
+    },
+    "native_interaction": "passed",
+    "physical_device_tested": false,
+    "live_ai_called": false,
+    "new_release_build_verified": false,
+    "accessibility_size_screenshots": false,
+    "source": "Luqma/Core/VisualDesignTokens.swift; Luqma/Views/Common.swift; Luqma/Views/LuqmaTypography.swift; approved DailyCalorieCard macro assets/colors",
+    "native_interaction_source": "e96942cf7701a48521f69ed49e46f8b3dffab20a",
+    "native_interaction_run": 40952995187,
+    "native_interaction_scenario": {
+      "status": "passed",
+      "synthetic_data": "Recipe entered through real controls on a disposable Simulator",
+      "live_ai_called": false,
+      "fresh_simulator": true,
+      "simulator": {
+        "udid": "CBC4AFCB-8EB4-4B2F-906C-060C4D5248F8",
+        "device": "iPhone 16 Pro Max",
+        "runtime": "iOS 26.5"
+      },
+      "preparation": {
+        "attempts": 1,
+        "reboot_performed": false,
+        "probe_bundle": "com.apple.Preferences",
+        "probe_pid": 10286,
+        "selected_simulator_app": "/Applications/Xcode_26.6.app/Contents/Developer/Applications/Simulator.app",
+        "failures": [],
+        "diagnostic_failures": [],
+        "boot_wait_handoffs": []
+      },
+      "result_bundle": "/Users/runner/work/Loqma-iphone/Loqma-iphone/RecipeControls/interaction/interactions.xcresult",
+      "passed_cases": [
+        "testRecipeDetailsIngredientDisclosureAndBothQuantityModes"
+      ]
+    },
+    "application_files_identical_since_corrected_capture": true,
+    "color_pixel_audit": {
+      "LUQMA-Recipe-Details.png": {
+        "background": 1324606,
+        "card": 772559,
+        "accent": 151536,
+        "accent_text": 7686,
+        "text": 29108,
+        "secondary_text": 16996,
+        "protein": 625,
+        "carbs": 735,
+        "fat": 389
+      },
+      "LUQMA-Ingredient-Details.png": {
+        "background": 1296692,
+        "card": 812591,
+        "accent": 151536,
+        "accent_text": 3368,
+        "text": 16924,
+        "secondary_text": 19119,
+        "protein": 1287,
+        "carbs": 1449,
+        "fat": 800
+      },
+      "LUQMA-Recipe-Large.png": {
+        "background": 1731804,
+        "card": 1486210,
+        "accent": 198333,
+        "accent_text": 12442,
+        "text": 42448,
+        "secondary_text": 26924,
+        "protein": 956,
+        "carbs": 1031,
+        "fat": 599
+      },
+      "LUQMA-Recipe-English.png": {
+        "background": 1431925,
+        "card": 657719,
+        "accent": 151157,
+        "accent_text": 6495,
+        "text": 34801,
+        "secondary_text": 17124,
+        "protein": 637,
+        "carbs": 729,
+        "fat": 396
+      }
+    },
+    "duplicate_test_only_expectation_rerun": {
+      "run": 40953130975,
+      "source": "a3fe04e929372e50f9a826d91ad0f7a41f69442c",
+      "status": "passed",
+      "application_changes": false,
+      "job": 123726195164,
+      "required_case": "testRecipeDetailsIngredientDisclosureAndBothQuantityModes"
+    },
+    "verification_history": "The two setup failures were resolved in the test harness: use established keyboard-safe numeric input; explicitly dismiss the recipe keyboard before configuring yield and entering ingredient search. The real app controls subsequently passed in run40952995187.",
+    "application_file_sha256": {
+      "Luqma/Views/KitchenView.swift": "58b2e98a8e51be978fa423246356f6d1d3856b8a554b5a1b6c0aa875af6b612d",
+      "Luqma/Views/FoodAddView.swift": "2209898f08e063f1fb76784266cb6acbaa6e63d5aae76b1bb06c40a860295a2c",
+      "Luqma/Resources/Changa-Bold.ttf": "d2015fb807cdd2cdc4d2f539db75117f7f009e407fe9d4b3e7555d94c4ff2c9f"
+    }
+  },
+  "historical_eight_screen_capture_revision": "bd661d731ccb7e1e089c251f5c4083699751c8e7"
 }

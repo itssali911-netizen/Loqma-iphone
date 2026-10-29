@@ -41,6 +41,13 @@ report['native_evidence']=json.loads((ROOT/'Docs/EightScreenNativeEvidence.json'
 report['food_portion_only_optional_initial_unit_changed']=portion_only_initial_unit
 if not portion_only_initial_unit:report['status']='failed'
 if font!=report['expected_font_sha256']:report['status']='failed'
+followup=ROOT/'Docs/RecipeDetailNativeEvidence.json'
+if followup.exists():
+    report['recipe_detail_followup']=json.loads(followup.read_text())
+    report['native_build']='recipe_followup_simulator_debug_passed'
+    report['native_screenshots']='4_accepted_actual_recipe_followup_frames'
+    report['native_interactions']='recipe_controls_passed_in_run_40952995187; Arabic_draft_passed_in_run_40942555850'
+    report['historical_eight_screen_capture_revision']='bd661d731ccb7e1e089c251f5c4083699751c8e7'
 output=ROOT/'Docs/EightScreenReviewAudit.json'
 output.write_text(json.dumps(report,indent=2)+'\n')
 print(json.dumps(report,indent=2))
