@@ -1,0 +1,47 @@
+name: LUQMA recipe detail interaction verification
+on:
+  push:
+    branches: [review/premium-eight-screens-20261029]
+    paths:
+      - 'TestsUI/LuqmaInteractionTests.swift'
+      - '.github/workflows/recipe-detail-functional.yml'
+permissions:
+  contents: read
+env:
+  DEVELOPER_DIR: ${{ vars.XCODE_DEVELOPER_DIR || '/Applications/Xcode_26.6.app/Contents/Developer' }}
+  BUNDLE_ID: app.luqma.diary
+  BUILD_NUMBER: '125'
+jobs:
+  native-recipe-controls:
+    runs-on: macos-26
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Build actual unchanged app and exercise real recipe controls
+        run: |
+          python3 - <<'PY'
+          import json,sys
+          from pathlib import Path
+          sys.path.insert(0,'Scripts')
+          from ui_preview import build_app,command,select_runtime
+          from ui_interactions import run_scenario
+          root=Path.cwd();out=root/'RecipeControls';out.mkdir()
+          (out/'source-revision.txt').write_text(command(['git','rev-parse','HEAD'],out,'source'))
+          app=build_app(out,root/'BuildOutput/Packages','app.luqma.diary')
+          runtime=select_runtime(json.loads(command(['xcrun','simctl','list','--json'],out,'inventory')))
+          cases=('testRecipeDetailsIngredientDisclosureAndBothQuantityModes',)
+          report={'status':'running','synthetic_data':'Recipe entered through real controls on a disposable Simulator','live_ai_called':False}
+          run_scenario(out/'interaction',root/'BuildOutput/Packages',out/'derived',runtime,cases,report,'125',signing_settings=['CODE_SIGNING_ALLOWED=YES','CODE_SIGN_IDENTITY=-'],test_class='LuqmaInteractionTests',timeout_seconds=1800)
+          PY
+      - name: Preserve XCTest, screenshots and exact source
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-recipe-controls-${{ github.run_id }}
+          path: |
+            RecipeControls/*.log
+            RecipeControls/source-revision.txt
+            RecipeControls/interaction/
+          retention-days: 30

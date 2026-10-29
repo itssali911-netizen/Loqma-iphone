@@ -167,6 +167,46 @@ final class LuqmaInteractionTests:XCTestCase {
         XCTAssertTrue(app.buttons["nav.today"].waitForExistence(timeout:10))
     }
 
+    func testRecipeDetailsIngredientDisclosureAndBothQuantityModes() {
+        app.buttons["nav.kitchen"].tap();app.buttons["kitchen.create"].tap()
+        let field=app.textFields["recipe.name"]
+        let name=field.waitForExistence(timeout:3) ? field:app.textViews["recipe.name"]
+        XCTAssertTrue(name.waitForExistence(timeout:10));name.tap();name.typeText("Recipe review")
+        reveal(app.buttons["recipe.addIngredient"]);app.buttons["recipe.addIngredient"].tap()
+        let personal=app.buttons["search.filter.3"]
+        XCTAssertTrue(personal.waitForExistence(timeout:15));personal.tap()
+        reveal(app.buttons["search.manual"]);app.buttons["search.manual"].tap()
+        let foodName=app.textFields["portion.name"]
+        XCTAssertTrue(foodName.waitForExistence(timeout:10));foodName.tap();foodName.typeText("Review ingredient")
+        for (key,value) in [("kcal","200"),("protein","10"),("carbs","30"),("fat","4")]{
+            reveal(app.textFields["portion."+key]);replace(app.textFields["portion."+key],with:value)
+        }
+        reveal(app.buttons["portion.save"]);app.buttons["portion.save"].tap()
+        XCTAssertTrue(app.buttons["recipe.addIngredient"].waitForExistence(timeout:15))
+        let toggle=app.switches["recipe.byWeight"]
+        reveal(toggle);toggle.switches.firstMatch.tap()
+        let cooked=app.textFields["Cooked weight"]
+        reveal(cooked);replace(cooked,with:"100")
+        app.buttons["navigation.primaryAction"].tap()
+        XCTAssertTrue(app.buttons["kitchen.create"].waitForExistence(timeout:15))
+        let recipe=app.buttons.matching(NSPredicate(format:"label CONTAINS %@","Recipe review")).firstMatch
+        reveal(recipe);recipe.tap()
+        let details=app.buttons.matching(NSPredicate(format:"identifier BEGINSWITH %@","recipeDetail.nutrition.")).firstMatch
+        reveal(details);XCTAssertEqual(details.value as? String,"Collapsed");details.tap()
+        XCTAssertEqual(details.value as? String,"Expanded")
+        XCTAssertTrue(app.staticTexts["For the quantity shown above"].exists)
+        let check=app.buttons.matching(NSPredicate(format:"identifier BEGINSWITH %@","recipeDetail.check.")).firstMatch
+        reveal(check);check.tap();XCTAssertTrue(check.isSelected)
+        let screenshot=XCTAttachment(screenshot:app.screenshot());screenshot.name="Recipe ingredient expanded actual controls";screenshot.lifetime = .keepAlways;add(screenshot)
+        app.buttons["recipeDetail.logServing"].tap()
+        XCTAssertTrue(app.buttons["portion.quantity"].waitForExistence(timeout:10));app.buttons["portion.quantity"].tap()
+        XCTAssertTrue(app.buttons["portion.unit.serving"].isSelected)
+        app.buttons["portion.quantity.confirm"].tap();app.buttons["portion.back"].tap()
+        XCTAssertTrue(app.buttons["recipeDetail.logGrams"].waitForExistence(timeout:10));app.buttons["recipeDetail.logGrams"].tap()
+        XCTAssertTrue(app.buttons["portion.quantity"].waitForExistence(timeout:10));app.buttons["portion.quantity"].tap()
+        XCTAssertTrue(app.buttons["portion.unit.g"].isSelected)
+    }
+
     func testRecipeDraftSurvivesIngredientSearch() throws {
         app.buttons["nav.kitchen"].tap()
         app.buttons["kitchen.create"].tap()
