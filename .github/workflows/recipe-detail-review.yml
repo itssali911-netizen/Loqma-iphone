@@ -1,0 +1,71 @@
+name: LUQMA refined recipe details native review
+on:
+  push:
+    branches: [review/premium-eight-screens-20261029]
+    paths:
+      - 'Luqma/Views/KitchenView.swift'
+      - '.github/workflows/recipe-detail-review.yml'
+permissions:
+  contents: read
+env:
+  DEVELOPER_DIR: ${{ vars.XCODE_DEVELOPER_DIR || '/Applications/Xcode_26.6.app/Contents/Developer' }}
+  BUNDLE_ID: app.luqma.diary
+  BUILD_NUMBER: '125'
+jobs:
+  recipe-review:
+    runs-on: macos-26
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Capture actual compact Arabic recipe screen and verify runtime Changa
+        run: |
+          git rev-parse HEAD > source-revision.txt
+          python3 Scripts/ui_preview.py --output Recipe-AR-Compact --language ar --device-type com.apple.CoreSimulator.SimDeviceType.iPhone-13-mini --screens recipe-details
+      - name: Capture actual expanded ingredient details, large Arabic and compact English
+        run: |
+          app=Recipe-AR-Compact/derived/Build/Products/Debug-iphonesimulator/Luqma.app
+          python3 Scripts/ui_preview.py --output Recipe-AR-Expanded --language ar --app "$app" --device-type com.apple.CoreSimulator.SimDeviceType.iPhone-13-mini --screens recipe-details --expanded-recipe
+          python3 Scripts/ui_preview.py --output Recipe-AR-Large --language ar --app "$app" --screens recipe-details
+          python3 Scripts/ui_preview.py --output Recipe-EN-Compact --language en --app "$app" --device-type com.apple.CoreSimulator.SimDeviceType.iPhone-13-mini --screens recipe-details
+      - name: Retain native framebuffer images and font evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-recipe-detail-visual-${{ github.run_id }}
+          path: |
+            source-revision.txt
+            Recipe-*/*.png
+            Recipe-*/*.json
+            Recipe-*/*.log
+            Recipe-*/font-audits/
+          retention-days: 30
+      - name: Verify Core calculations and build checks
+        run: |
+          swift test -j 2 > recipe-core-tests.log 2>&1
+          python3 -m unittest discover -s BuildTests -v > recipe-build-tests.log 2>&1
+      - name: Verify native recipe drafts and existing interactions
+        run: |
+          python3 - <<'PY'
+          import json,os,sys
+          from pathlib import Path
+          sys.path.insert(0,'Scripts')
+          from ui_preview import command,select_runtime
+          from ui_interactions import run_scenario
+          root=Path.cwd();out=root/'RecipeInteractions';out.mkdir()
+          runtime=select_runtime(json.loads(command(['xcrun','simctl','list','--json'],out,'inventory')))
+          cases=('testRecipeDetailsIngredientDisclosureAndBothQuantityModes','testArabicRecipeDraftReturnsFromIngredientSearch')
+          report={'status':'running','test_class':'EightScreenReviewTests','synthetic_data':'Manually entered disposable Simulator recipe only','live_ai_called':False}
+          run_scenario(out/'review',root/'BuildOutput/Packages',root/'Recipe-AR-Compact/derived',runtime,cases,report,'125',signing_settings=['CODE_SIGNING_ALLOWED=YES','CODE_SIGN_IDENTITY=-'],test_class='EightScreenReviewTests',timeout_seconds=1800)
+          PY
+      - name: Retain actual verification
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-recipe-detail-verification-${{ github.run_id }}
+          path: |
+            recipe-core-tests.log
+            recipe-build-tests.log
+            RecipeInteractions/
+          retention-days: 30

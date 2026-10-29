@@ -486,7 +486,7 @@ def collect_failure_diagnostics(output: Path, device: str, report: dict) -> None
 
 def capture(output: Path, packages: Path, prebuilt: Path | None,
             bundle: str, settle_seconds: float, device_type: str=DEVICE_TYPE,
-            language: str='ar', screens: list[str] | None=None, approved_capture: bool=False) -> None:
+            language: str='ar', screens: list[str] | None=None, approved_capture: bool=False, expanded_recipe: bool=False) -> None:
     if output.exists():
         raise BuildError("Choose a new UI preview output directory to avoid mixing screenshots.")
     output.mkdir(parents=True)
@@ -500,6 +500,7 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
         "expected_screenshot_count": len(screens) if screens else EXPECTED_SCREEN_COUNT,
         "language": language,
         "approved_reference_capture": approved_capture,
+        "recipe_nutrition_expanded": expanded_recipe,
         "fixture_labels_recorded_externally": approved_capture,
         "synthetic_photo_fixture": True,
         "synthetic_recipe_fixture": True,
@@ -581,6 +582,7 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
                                 device, bundle, *arguments,
                                 "-loqma-preview-font-audit",
                                 *(["-loqma-approved-capture"] if approved_capture else []),
+                                *(["-loqma-preview-recipe-nutrition"] if expanded_recipe else []),
                                 *(["-loqma-ui-test-en"] if language=='en' else []),
                                 "-AppleLanguages", "("+language+")", "-AppleLocale", "en_US" if language=='en' else "ar_SA"],
                                output, "preview-launch-" + screen, 300 if number == 1 else 120)
@@ -644,6 +646,7 @@ def main() -> int:
     parser.add_argument("--device-type",choices=[DEVICE_TYPE,REFERENCE_DEVICE_TYPE],default=DEVICE_TYPE)
     parser.add_argument("--language",choices=['ar','en'],default='ar')
     parser.add_argument("--screens",nargs='+',help='Optional subset of named native routes')
+    parser.add_argument("--expanded-recipe",action="store_true",help="Expand nutrition in the read-only recipe review fixture")
     parser.add_argument("--approved-capture",action="store_true",help="Clean native reference crop; synthetic fixture provenance remains in JSON")
     args = parser.parse_args()
     if not re.fullmatch(r"[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+", args.bundle_id):
@@ -655,7 +658,7 @@ def main() -> int:
     try:
         capture(args.output.resolve(), args.packages.resolve(),
                 args.app.resolve() if args.app else None, args.bundle_id, args.settle_seconds,
-                args.device_type,args.language,args.screens,args.approved_capture)
+                args.device_type,args.language,args.screens,args.approved_capture,args.expanded_recipe)
     except (BuildError, OSError, ValueError) as error:
         print("Luqma native UI preview:", str(error), file=sys.stderr)
         return 1

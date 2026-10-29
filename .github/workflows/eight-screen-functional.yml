@@ -14,6 +14,8 @@ env:
   BUILD_NUMBER: '124'
 jobs:
   native-functional:
+    if: >-
+      ${{ !startsWith(github.event.head_commit.message, 'design: recipe detail') }}
     runs-on: macos-26
     timeout-minutes: 65
     steps:
