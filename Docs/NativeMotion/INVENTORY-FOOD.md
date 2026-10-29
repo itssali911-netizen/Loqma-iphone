@@ -1,6 +1,6 @@
 # Food, analysis and recipe motion audit
 
-Status: read-only inventory and implementation plan. No production changes made by this audit. Parent controls baseline validation and start authorization.
+Status: historical initial read-only inventory and plan, recorded before baseline approval. The motion pass was subsequently implemented; the implementation notes below preserve that sequence. Current build, capture and functional outcomes are in [VALIDATION-AND-COVERAGE.md](VALIDATION-AND-COVERAGE.md).
 
 ## Source baseline
 
@@ -106,7 +106,7 @@ Approved central APIs:
 
 All effects must settle at identity transform, original opacity and original geometry. No fonts, colours, spacing, icons, images, card sizes or data calculations are changed. Reduce Motion, background/disappearance and Low Power handling live in the central layer. Native system navigation, keyboard, camera, menu, picker and sheet behaviour remains owned by iOS.
 
-## Verification required after start authorization
+## Historical verification plan before implementation
 
 - Source-scope and calculation/cancellation diffs.
 - Existing Core/BuildTests and SDK builds.
@@ -115,7 +115,7 @@ All effects must settle at identity transform, original opacity and original geo
 - Motion lifecycle/Reduce Motion checks and real loading-cancel paths.
 - No claims of physical-camera/remote AI speed or hardware FPS from Simulator artifacts.
 
-## Implemented native motion pass (2026-10-29; awaiting native CI)
+## Initial implemented native motion pass (recorded before native CI)
 
 Production changes limited to FoodAddView.swift, PhotoMealView.swift and RecipeImportView.swift. Explicit plain button styles now use the central identity-at-rest press style. Read-only numeric text/chips and existing progress fills use numeric/progress motion. Existing conditional/loading/error/disclosure state regions use small Boolean/count-driven content motion; no large result-ID arrays or request staggering. Existing camera glyph pulses only during the actual busy analysis state; camera service unchanged. Recipe success feedback uses its existing saved flag set only after a true repository save. No artificial confirmation delay.
 
@@ -123,4 +123,4 @@ Source safety verification: critical request/action/calculation methods are unch
 
 ### Confirmed native UI test obstruction
 
-Baseline run40749563514 native hierarchy proves the protein field y584.7...625.7 was covered by a separate full-width keyboard accessory Toolbar y590...638, while Keyboard itself began at y655. The old focus test helpers excluded only Keyboard, so they tapped the toolbar's transparent hit region and mistook the still-open kcal keyboard for protein focus. LuqmaInteractionTests.portionVisibleArea now excludes the actual visible bottom toolbar bounds before scrolling/tapping. This does not weaken any numerical, persistence or keyboard-visibility assertion. Parent owns the analogous CalorieCardInteractionTests helper fix. Native rerun required; no claim that baseline's five failing UI tests passed yet.
+Baseline run40749563514 native hierarchy proves the protein field y584.7...625.7 was covered by a separate full-width keyboard accessory Toolbar y590...638, while Keyboard itself began at y655. The old focus test helpers excluded only Keyboard, so they tapped the toolbar's transparent hit region and mistook the still-open kcal keyboard for protein focus. LuqmaInteractionTests.portionVisibleArea now excludes the actual visible bottom toolbar bounds before scrolling/tapping. This does not weaken any numerical, persistence or keyboard-visibility assertion. Parent owns the analogous CalorieCardInteractionTests helper fix. This records the initial obstruction, not a current five-failure count. Later native outcomes and the outstanding follow-up are documented in VALIDATION-AND-COVERAGE.md.

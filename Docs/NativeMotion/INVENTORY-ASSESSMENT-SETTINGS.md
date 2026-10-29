@@ -1,6 +1,6 @@
 # Native motion inventory: assessment, plans, settings and Health
 
-Read-only source audit for the requested native motion pass. Production changes are not authorized to start until the parent confirms the baseline build has passed.
+Historical initial read-only source audit, recorded before the baseline build passed and implementation began. The later implementation and cross-review notes below preserve that chronology. Current validation status is in [VALIDATION-AND-COVERAGE.md](VALIDATION-AND-COVERAGE.md).
 
 - Source checkpoint: `9f567b4`.
 - Review branch: `feature/native-motion-review-20261028`.
@@ -27,7 +27,7 @@ Other declared UI helpers: `ApprovedAssessmentButtonStyle`, `CFACrescentChevron`
 - AssessmentFlowView delegates to the existing FitnessAssessmentView. It must not create a parallel flow or duplicate entry animation.
 - CFARadioIndicator has an existing conditional selected-square layer. Suitable: scoped selection transition. Its final square geometry and stroke stay unchanged.
 - ApprovedAssessmentButtonStyle already has a Reduce Motion-aware pressed scale of 0.985. Suitable: central press timing; retain its exact existing font, fill, corner radius, minimum height and enabled opacity. Do not wrap it in another competing press style.
-- SandowFitnessArcSlider uses an existing 5-level arc, quadratic track, ticks, thumb and large numeric activity label. Suitable: short, scoped thumb-position settling and real numeric text change; a selection response only for discrete noncontinuous selection if it does not duplicate gesture feedback.
+- SandowFitnessArcSlider uses an existing 5-level arc, quadratic track, ticks, thumb and large numeric activity label. The initial audit considered thumb settling; cross-review removed it so the actual thumb follows the gesture immediately. Read-only numeric text motion remains, without continuous gesture haptics.
 - Arc interactions: high-priority drag, clamping, adjustable accessibility action, hasSelection flag, onChanged and onInteractionChanged. Do not alter the gesture, track mapping, selected value or interaction callbacks.
 - Shapes remain static render primitives. Do not animate them independently or redraw them with replacements.
 
@@ -268,7 +268,7 @@ Suitable: configured/message/disclosure state changes and existing button press 
 - Success feedback is conditional on actual apply/delete/credential/reminder outcomes. Health success observes the existing lastSuccessfulSync timestamp and requires snapshot.hasReadableData; empty authorization completion does not trigger success. Health cancellation does not trigger error feedback.
 - No service/core/signing, calculations, persistence, colors, fonts, assets, static dimensions, navigation routes or existing delays were changed by this worker.
 - Local git diff whitespace check passed. Source invariant comparison against 9f567b4 confirms identical string literals, color literals and luqmaFont calls in all 10 files. This is source evidence, not proof of runtime pixel equality.
-- Native compilation, final-state screenshot comparisons, motion UI regressions and physical haptic testing remain for the parent CI/device validation.
+- At this initial implementation checkpoint, native validation had not run. Subsequent SDK, screenshot and functional results, plus the remaining physical-device limits, are in VALIDATION-AND-COVERAGE.md.
 
 ## Cross-review refinements
 

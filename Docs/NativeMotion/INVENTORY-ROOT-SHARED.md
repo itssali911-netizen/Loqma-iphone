@@ -1,11 +1,13 @@
 # Root, shared components and native surfaces
 
+Historical discovery and initial implementation inventory. The table retains its original pre-CI status labels; use [VALIDATION-AND-COVERAGE.md](VALIDATION-AND-COVERAGE.md) for current measured outcomes and remaining limits.
+
 All files under `Luqma/Views`, the application root and SwiftUI imports in
 Core/Services were included in discovery. No Core model contains an overlooked
 product screen. The three companion inventories cover the feature Views and
 their nested editors, loading, empty, error and completion states.
 
-| Unit | Existing interaction / implementation | Runtime status at source commit |
+| Unit | Existing interaction / implementation | Initial pre-CI coverage status (historical) |
 |---|---|---|
 | RootView four tabs | Stable existing TabView/NavigationStack identity; selected icon/background/underline transition, press feedback, native selection feedback | Pending native suite |
 | Root add action | Same full-screen FoodAddView and commit closures; press feedback; no deferred action | Pending native suite |

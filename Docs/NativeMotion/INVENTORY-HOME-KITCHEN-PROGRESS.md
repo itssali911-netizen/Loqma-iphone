@@ -1,8 +1,8 @@
 # Implemented native motion — owned Home / Kitchen / Progress / Health surfaces
 
-Baseline `9f567b4`. All six source files retain the same static drawing calls; root source-freeze check passed. Actual modified Swift build, Simulator motion recordings, frame pacing and physical haptics remain unverified.
+Historical initial implementation inventory against baseline `9f567b4`. All six source files retained the same static drawing calls. The table below preserves the initial pre-CI verification labels; current native build/capture/functional outcomes are in [VALIDATION-AND-COVERAGE.md](VALIDATION-AND-COVERAGE.md). Physical haptic/frame-pacing limits still require hardware evidence.
 
-| Unit | Actual implementation | Status |
+| Unit | Actual implementation | Initial pre-CI status (historical) |
 |---|---|---|
 | DailyCalorieCard | Real nullable numbers use numericText only for available finite values; actual missing dash remains; existing history action press feedback. No card-wide model animation. | Implemented but Not Runtime-Tested |
 | CalorieCardBar | Retained native clipped zero-width fill is invisible at zero; real fraction animates width without fill identity resets. Same Capsule track and colors. | Implemented but Not Runtime-Tested |
