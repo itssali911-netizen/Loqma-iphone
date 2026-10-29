@@ -955,6 +955,21 @@ final class LuqmaInteractionTests:XCTestCase {
         else if field.identifier.hasPrefix("portion."){focusPortionField(field)}
         else {reveal(field);field.tap()}
         let previous=field.value as? String ?? ""
+        if field.identifier == "portion.amount",previous == "0" {
+            // A recorded 0 -> 50 replacement put the centered caret before 0;
+            // deleting at that insertion point did nothing and produced 500.
+            // Select the one-digit value through native text editing instead.
+            // On a genuinely empty field, 0 can be the placeholder; typing
+            // then fills that same real field without deleting fake content.
+            field.doubleTap()
+            let selectAll=app.menuItems.matching(NSPredicate(format:"label == %@","Select All")).firstMatch
+            let selectAllButton=app.buttons.matching(NSPredicate(format:"label == %@","Select All")).firstMatch
+            if selectAll.exists && selectAll.isHittable {selectAll.tap()}
+            else if selectAllButton.exists && selectAllButton.isHittable {selectAllButton.tap()}
+            field.typeText(text)
+            XCTAssertEqual(field.value as? String,text,"Native selection must replace the actual quantity without retaining its zero.\n"+app.debugDescription)
+            return
+        }
         if !previous.isEmpty {
             // These numeric fields are trailing aligned. A center tap may leave
             // the caret inside 2000, so backspacing alone can produce 21002000.
@@ -978,7 +993,20 @@ final class LuqmaInteractionTests:XCTestCase {
         let save=app.buttons["portion.save"]
         if save.exists{bottom=min(bottom,save.frame.minY)}
         let keyboard=app.keyboards.firstMatch
-        if keyboard.exists{bottom=min(bottom,keyboard.frame.minY)}
+        if keyboard.exists{
+            bottom=min(bottom,keyboard.frame.minY)
+            // iOS exposes the keyboard's accessory toolbar separately from
+            // Keyboard. Its transparent full-width hit region can cover a
+            // field even when that field is above Keyboard.frame.minY.
+            // The recorded native failure placed protein at y584.7...625.7,
+            // inside Toolbar y590...638, while Keyboard began at y655.
+            for toolbar in app.toolbars.allElementsBoundByIndex where toolbar.isHittable {
+                let frame=toolbar.frame.intersection(app.frame)
+                if !frame.isEmpty,frame.width>=viewport.width*0.75,frame.minY>viewport.minY+44 {
+                    bottom=min(bottom,frame.minY)
+                }
+            }
+        }
         return CGRect(x:viewport.minX,y:viewport.minY+8,width:viewport.width,height:max(0,bottom-viewport.minY-16))
     }
 

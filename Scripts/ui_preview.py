@@ -560,6 +560,18 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
                 output, "preview-status-bar")
         command(["xcrun", "simctl", "install", device, str(app)],
                 output, "preview-install", 180)
+        if os.environ.get("LUQMA_PREVIEW_REDUCE_MOTION")=="1":
+            # The Apple accessibility environment is read-only. Change the
+            # real preference through Settings on this newly created device;
+            # the runtime audit below must then observe the actual value.
+            command(["xcodebuild","-project",str(ROOT/"Luqma.xcodeproj"),"-scheme","Luqma",
+                     "-clonedSourcePackagesDirPath",str(packages),"-disableAutomaticPackageResolution",
+                     "-destination","id="+device,"-configuration","Debug","-derivedDataPath",str(app.parents[3]),
+                     "-resultBundlePath",str(output/"system-reduce-motion.xcresult"),
+                     "-parallel-testing-enabled","NO","-only-testing:LuqmaUITests/MotionSystemSettingsTests/testEnableSystemReduceMotion",
+                     "ARCHS=arm64","ONLY_ACTIVE_ARCH=YES","CODE_SIGNING_ALLOWED=YES","CODE_SIGN_IDENTITY=-",
+                     "CURRENT_PROJECT_VERSION="+os.environ.get("BUILD_NUMBER","123"),"test"],output,"preview-system-reduce-motion",900)
+            report["reduce_motion_setup"]="Actual Simulator Settings UI; runtime environment verification required"
         cases=[case for case in preview_cases() if not screens or case['screen'] in screens]
         if screens and len(cases)!=len(screens):
             raise BuildError('One or more requested screen names are unknown or duplicated.')
@@ -581,6 +593,11 @@ def capture(output: Path, packages: Path, prebuilt: Path | None,
             details = capture_screenshot(output, device, screen, pid, screenshot)
             font_details = collect_runtime_font_audit(output, device, bundle, screen, pid, number,
                                                       "-loqma-preview-accessibility" in arguments)
+            if os.environ.get("LUQMA_PREVIEW_REDUCE_MOTION")=="1":
+                audit=json.loads((output/font_details["file"]).read_text("utf8"))
+                policy=audit.get("motionPolicy",{})
+                if policy.get("actualSwiftUIReduceMotion") is not True or policy.get("customProgressAnimationEnabled") is not False:
+                    raise BuildError("The actual rendered SwiftUI environment did not receive the system Reduce Motion setting")
             report["runtime_font_audits"].append({"screen": screen, **font_details})
             report["screenshots"].append({"tab": tab, "screen": screen,
                                           "kind": "tab" if tab is not None else screen,

@@ -68,7 +68,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                         if tab==1 {barcodeContent}
                         if tab==2 && !productSelection {AnyView(PhotoMealView(initialMeal:initialMeal,onClose:{tab=0}){foods,meal in onPhoto(foods,meal)})}
                         if let notice,tab != 2 {
-                            if notice.isError{SandowStateAlert(text:notice.text)}else{Notice(text:notice.text)}
+                            if notice.isError{SandowStateAlert(text:notice.text).luqmaMotionTransition()}else{Notice(text:notice.text).luqmaMotionTransition()}
                             if notice.offersSettings{
                                 Button(diary.t("فتح الإعدادات","Open Settings")){if let url=URL(string:UIApplication.openSettingsURLString){openURL(url)}}
                                     .buttonStyle(LuqmaSecondaryButtonStyle())
@@ -77,10 +77,12 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                         if busy || choosingFood {
                             SandowOperationState(title:choosingFood ? diary.t("جلب تفاصيل المنتج…","Loading product details…"):
                                 diary.t(tab==1 ? "البحث عن المنتج…":"البحث عن المنتجات…",tab==1 ? "Looking up the product…":"Searching products…"),
-                                cancelLabel:diary.t("إلغاء","Cancel"),onCancel:{cancelOperation()})
+                                cancelLabel:diary.t("إلغاء","Cancel"),onCancel:{cancelOperation()}).luqmaMotionTransition()
                         }
                         resultsContent
                     }.padding(SearchLayout.margin)
+                        .luqmaMotion(.content,value:busy || choosingFood)
+                        .luqmaMotion(.content,value:notice != nil)
                 }.scrollDismissesKeyboard(.interactively)
                     .background(alignment:.top){
                         if tab==0{
@@ -93,7 +95,9 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                 .sheet(item:$selected){food in FoodPortionView(food:food,sourceBarcode:tab==1,initialMeal:initialMeal,onAnalyze:productSelection ? nil:{selected=nil;tab=2},onCommit:{f,a,u,m in if onCommit(f,a,u,m){dismiss();return true};return false})}
                 .sheet(isPresented:$manual){FoodPortionView(food:Food(name:""),manual:true,initialMeal:initialMeal,onAnalyze:productSelection ? nil:{manual=false;tab=2},onCommit:{f,a,u,m in if onCommit(f,a,u,m){dismiss();return true};return false})}
                 .sheet(isPresented:$scanning){NavigationStack{BarcodeCamera(language:diary.language,completion:{value in scanning=false;code=value;startLookup()},failed:{message in scanning=false;presentNotice(message,error:true,settings:cameraAccessBlocked)}).ignoresSafeArea().sandowNavigation(diary.t("مسح الباركود","Scan barcode"),backLabel:diary.t("إغلاق","Close"),onBack:{scanning=false})}}
-        }.onAppear{if let initial{selected=initial};if query.isEmpty && !initialQuery.isEmpty {query=initialQuery};refreshHistory();if tab==0 {searchTask=Task{await refreshLocal()}}}
+        }.luqmaFeedback(.selection,trigger:filter)
+            .luqmaFeedback(.error,trigger:notice?.isError == true){_,failed in failed}
+            .onAppear{if let initial{selected=initial};if query.isEmpty && !initialQuery.isEmpty {query=initialQuery};refreshHistory();if tab==0 {searchTask=Task{await refreshLocal()}}}
             .onChange(of:diary.state.entries){_,_ in refreshHistory()}
             .onChange(of:diary.state.customFoods){_,_ in refreshHistory()}
             .onChange(of:diary.state.products){_,_ in refreshHistory()}
@@ -112,7 +116,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                     Image(systemName:"chevron.backward").font(.system(size:13,weight:.semibold))
                         .frame(width:36,height:36).background((tab==0 ? Theme.onAccent:Theme.text).opacity(0.12),in:RoundedRectangle(cornerRadius:12,style:.continuous))
                         .frame(width:44,height:44).contentShape(Rectangle())
-                }.buttonStyle(.plain).accessibilityLabel(diary.t(tab==0 ? "إغلاق":"العودة للبحث",tab==0 ? "Close":"Back to search"))
+                }.buttonStyle(LuqmaPressStyle()).accessibilityLabel(diary.t(tab==0 ? "إغلاق":"العودة للبحث",tab==0 ? "Close":"Back to search"))
                     .accessibilityIdentifier("search.close")
                 Text(diary.t(tab==1 ? "باركود":tab==2 ? "تحليل الوجبة":productSelection ? "اختيار المنتج":"بحث",tab==1 ? "Barcode":tab==2 ? "Meal analysis":productSelection ? "Select a product":"Search"))
                     .luqmaFont(size:tab==0 ? 18:14,weight:.semibold,relativeTo:.headline)
@@ -120,14 +124,14 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                 Spacer(minLength:0)
                 if tab != 0{
                     Button{closeFoodAdd()}label:{Image(systemName:"xmark").font(.system(size:14,weight:.medium)).frame(width:44,height:44)}
-                        .buttonStyle(.plain).accessibilityLabel(diary.t("إغلاق","Close"))
+                        .buttonStyle(LuqmaPressStyle()).accessibilityLabel(diary.t("إغلاق","Close"))
                 }else{
                     HStack(spacing:0){
                         Button{tab=1}label:{Image(systemName:"barcode.viewfinder").font(.system(size:17,weight:.regular)).frame(width:44,height:44)}
-                            .buttonStyle(.plain).accessibilityLabel(diary.t("قارئ الباركود","Barcode reader"))
+                            .buttonStyle(LuqmaPressStyle()).accessibilityLabel(diary.t("قارئ الباركود","Barcode reader"))
                         if !productSelection{
                             Button{tab=2}label:{Image(systemName:"camera").font(.system(size:17,weight:.regular)).frame(width:44,height:44)}
-                                .buttonStyle(.plain).accessibilityLabel(diary.t("تحليل صورة الوجبة","Analyze a meal photo"))
+                                .buttonStyle(LuqmaPressStyle()).accessibilityLabel(diary.t("تحليل صورة الوجبة","Analyze a meal photo"))
                         }
                     }.disabled(choosingFood)
                 }
@@ -140,11 +144,11 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                         .accessibilityIdentifier("search.query")
                     if !query.isEmpty{
                         Button{query=""}label:{Image(systemName:"xmark.circle.fill").frame(width:44,height:44)}
-                            .buttonStyle(.plain).accessibilityLabel(diary.t("مسح البحث","Clear search"))
+                            .buttonStyle(LuqmaPressStyle()).accessibilityLabel(diary.t("مسح البحث","Clear search"))
                     }
                     if filter==0{
                         Button{startSearch()}label:{Image(systemName:"magnifyingglass").font(.system(size:18,weight:.regular)).frame(width:44,height:44)}
-                            .buttonStyle(.plain).accessibilityLabel(diary.t("بحث عن المنتجات","Search products"))
+                            .buttonStyle(LuqmaPressStyle()).accessibilityLabel(diary.t("بحث عن المنتجات","Search products"))
                             .disabled(term.isEmpty || busy || pageLoading || choosingFood)
                     }else{Image(systemName:"magnifyingglass").font(.system(size:18)).frame(width:44,height:44).accessibilityHidden(true)}
                 }.luqmaFont(size:14,relativeTo:.subheadline).foregroundStyle(Theme.text)
@@ -174,8 +178,9 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                 .background(filter==value ? Theme.onAccent.opacity(0.12):Color.clear,in:RoundedRectangle(cornerRadius:SearchLayout.chipRadius,style:.continuous))
                 .overlay{RoundedRectangle(cornerRadius:SearchLayout.chipRadius,style:.continuous).strokeBorder(Theme.onAccent,lineWidth:1)}
                 .frame(minHeight:44).contentShape(Rectangle())
-        }.buttonStyle(.plain).disabled(choosingFood).accessibilityAddTraits(filter==value ? .isSelected:[])
+        }.buttonStyle(LuqmaPressStyle()).disabled(choosingFood).accessibilityAddTraits(filter==value ? .isSelected:[])
             .accessibilityIdentifier("search.filter."+String(value))
+            .luqmaMotion(.selection,value:filter == value)
     }
     private func closeFoodAdd(){
         searchTask?.cancel();selectionTask?.cancel();barcodePhotoTask?.cancel();queryToken=UUID();photoToken=UUID();dismiss()
@@ -188,6 +193,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
         HStack(spacing:8){
             Text(diary.t(nearby ? "\(count) نتائج قريبة":"\(count) نتيجة معروضة",
                          nearby ? "\(count) nearby results":"\(count) results shown"))
+                .luqmaNumericMotion(value:Double(count))
                 .luqmaFont(size:12,weight:.semibold,relativeTo:.caption).foregroundStyle(Theme.text)
                 .accessibilityAddTraits(.isHeader)
             Spacer(minLength:0)
@@ -208,7 +214,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                     .background(Theme.background,in:RoundedRectangle(cornerRadius:6,style:.continuous))
                     .overlay{RoundedRectangle(cornerRadius:6,style:.continuous).strokeBorder(Theme.muted.opacity(0.35),lineWidth:1)}
                     .frame(minHeight:44).contentShape(Rectangle())
-            }.buttonStyle(.plain).disabled(choosingFood)
+            }.buttonStyle(LuqmaPressStyle()).disabled(choosingFood)
                 .accessibilityLabel(diary.t("تصفية قائمة الأطعمة","Filter food list"))
                 .accessibilityValue(!nearby && bestMatch != nil ? diary.t("أفضل تطابق","Best match"):sourceFilterTitle)
         }
@@ -242,7 +248,8 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                     if tab==0 && !productSelection {
                         Button {manual=true} label: {Label(diary.t("إضافة طعام يدويًا","Add food manually"),systemImage:"square.and.pencil").luqmaFont(size:13,weight:.medium,relativeTo:.subheadline).frame(minHeight:44)}.padding(.top,4).disabled(choosingFood).accessibilityIdentifier("search.manual")
                     }
-        }
+        }.luqmaMotion(.content,value:displayedResults.isEmpty)
+            .luqmaMotion(.content,value:nearbyResults.isEmpty)
     }
     private var searchContent:some View {
         Group{
@@ -260,7 +267,7 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                                         Image(systemName:"arrow.up.left").font(.system(size:12))
                                     }.luqmaFont(size:13,relativeTo:.subheadline).foregroundStyle(Theme.text)
                                         .padding(.horizontal,10).frame(minHeight:44).contentShape(Rectangle())
-                                }.buttonStyle(.plain).disabled(choosingFood)
+                                }.buttonStyle(LuqmaPressStyle()).disabled(choosingFood)
                             }
                         }.padding(6).background(Theme.card,in:RoundedRectangle(cornerRadius:14,style:.continuous))
                             .accessibilityElement(children:.contain).accessibilityLabel(diary.t("اقتراحات البحث","Suggested searches"))
@@ -537,7 +544,7 @@ struct FoodPortionView:View {
                         .frame(width:8,height:14).frame(width:40,height:40)
                         .background(sheetColor,in:RoundedRectangle(cornerRadius:14,style:.continuous))
                         .frame(minWidth:44,minHeight:44)
-                }.buttonStyle(.plain).accessibilityLabel(diary.t("رجوع","Back")).accessibilityIdentifier("portion.back")
+                }.buttonStyle(LuqmaPressStyle()).accessibilityLabel(diary.t("رجوع","Back")).accessibilityIdentifier("portion.back")
                 Text(diary.t("إضافة وجبة","Add Meal")).luqmaFont(size:18,weight:.semibold,relativeTo:.headline)
                     .foregroundStyle(textColor).accessibilityAddTraits(.isHeader)
                 Spacer(minLength:0)
@@ -548,14 +555,14 @@ struct FoodPortionView:View {
                         .luqmaFont(size:12,weight:.semibold,relativeTo:.caption)
                         .frame(maxWidth:.infinity,minHeight:40).foregroundStyle(textColor)
                         .background(sheetColor,in:RoundedRectangle(cornerRadius:9,style:.continuous))
-                }.buttonStyle(.plain).accessibilityAddTraits(.isSelected)
+                }.buttonStyle(LuqmaPressStyle()).accessibilityAddTraits(.isSelected)
                     .accessibilityIdentifier("portion.mode.manual")
                 if let onAnalyze {
                     Button{focusedField=nil;onAnalyze()}label:{
                         Label(diary.t("تحليل بالذكاء الاصطناعي","Meal analysis"),systemImage:"viewfinder")
                             .luqmaFont(size:12,weight:.semibold,relativeTo:.caption)
                             .foregroundStyle(secondaryColor).frame(maxWidth:.infinity,minHeight:40)
-                    }.buttonStyle(.plain).accessibilityIdentifier("portion.mode.analysis")
+                    }.buttonStyle(LuqmaPressStyle()).accessibilityIdentifier("portion.mode.analysis")
                 }
             }.padding(4).background(backgroundColor,in:RoundedRectangle(cornerRadius:12,style:.continuous))
         }.padding(.horizontal,20).padding(.top,8).padding(.bottom,16)
@@ -567,8 +574,8 @@ struct FoodPortionView:View {
             } label:{chipLabel(meal.label(diary.language))}
                 .accessibilityIdentifier("portion.meal").accessibilityLabel(diary.t("نوع الوجبة","Meal type"))
                 .accessibilityValue(meal.label(diary.language))
-            Button{focusedField=nil;showingQuantity=true}label:{chipLabel(quantityLabel)}
-                .buttonStyle(.plain).accessibilityIdentifier("portion.quantity")
+            Button{focusedField=nil;showingQuantity=true}label:{chipLabel(quantityLabel).luqmaNumericMotion(value:quantity ?? 0)}
+                .buttonStyle(LuqmaPressStyle()).accessibilityIdentifier("portion.quantity")
                 .accessibilityLabel(diary.t("تحديد الكمية","Set quantity")).accessibilityValue(quantityLabel)
         }.frame(maxWidth:.infinity).environment(\.layoutDirection,.leftToRight)
     }
@@ -664,6 +671,7 @@ struct FoodPortionView:View {
                 .luqmaFont(size:size,weight:.semibold,relativeTo:.title3).foregroundStyle(textColor).monospacedDigit()
                 .lineLimit(1).minimumScaleFactor(16/22).environment(\.layoutDirection,.leftToRight)
                 .accessibilityIdentifier("portion.total."+(key?.rawValue ?? "kcal"))
+                .luqmaNumericMotion(value:key.map{total[$0]} ?? total.kcal)
         }
     }
     private func totalBinding(_ key:MacroKey?)->Binding<String> {
@@ -686,10 +694,10 @@ struct FoodPortionView:View {
     }
     private var additionalOptions:some View {
         VStack(spacing:8) {
-            Button{withAnimation(reduceMotion ? nil:.easeInOut(duration:0.16)){showingOptions.toggle()}}label:{
+            Button{showingOptions.toggle()}label:{
                 HStack(spacing:7){Text(diary.t("خيارات إضافية","Additional options"));Image(systemName:showingOptions ? "chevron.up":"chevron.down").font(.system(size:10,weight:.semibold))}
                     .luqmaFont(size:13,relativeTo:.footnote).foregroundStyle(secondaryColor).frame(maxWidth:.infinity,minHeight:44)
-            }.buttonStyle(.plain).accessibilityIdentifier("portion.options")
+            }.buttonStyle(LuqmaPressStyle()).accessibilityIdentifier("portion.options")
                 .accessibilityValue(diary.t(showingOptions ? "مفتوحة":"مغلقة",showingOptions ? "Expanded":"Collapsed"))
             if showingOptions {
                 mealSelector
@@ -702,7 +710,7 @@ struct FoodPortionView:View {
                 if base==nil {Text(diary.t("أكمل قيم السعرات والبروتين والكارب والدهون قبل الإضافة.","Complete calories, protein, carbs and fat before adding.")).luqmaFont(.caption).foregroundStyle(secondaryColor)}
                 if let brand=food.brand,!brand.isEmpty {Text(DisplayFormat.westernDigits(brand)).luqmaFont(.caption).foregroundStyle(secondaryColor)}
             }
-        }
+        }.luqmaMotion(.content,value:showingOptions)
     }
     private var mealSelector:some View {
         ViewThatFits(in:.horizontal) {
@@ -715,7 +723,8 @@ struct FoodPortionView:View {
             .foregroundStyle(meal == value ? Color(hex:0xFFB580):secondaryColor).frame(maxWidth:.infinity,minHeight:44)
             .padding(.horizontal,2).background(meal == value ? Color(hex:0x392416):.clear,in:RoundedRectangle(cornerRadius:11))
             .overlay{RoundedRectangle(cornerRadius:11).strokeBorder(meal == value ? Color(hex:0xAA551C):Color(hex:0x45474E),lineWidth:1)}
-        }.buttonStyle(.plain).accessibilityIdentifier("portion.meal."+value.rawValue).accessibilityAddTraits(meal == value ? .isSelected:[])
+        }.buttonStyle(LuqmaPressStyle()).accessibilityIdentifier("portion.meal."+value.rawValue).accessibilityAddTraits(meal == value ? .isSelected:[])
+            .luqmaMotion(.selection,value:meal == value)
     }
     private var quantityEditor:some View {
         NavigationStack {
@@ -726,7 +735,8 @@ struct FoodPortionView:View {
                             Button{selectUnit(value)}label:{Text(value.label(diary.language)).luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline)
                                 .foregroundStyle(unit == value ? textColor:secondaryColor).frame(maxWidth:.infinity,minHeight:40)
                                 .background(unit == value ? sheetColor:.clear,in:RoundedRectangle(cornerRadius:9))
-                            }.buttonStyle(.plain).accessibilityIdentifier("portion.unit."+value.rawValue).accessibilityAddTraits(unit == value ? .isSelected:[])
+                            }.buttonStyle(LuqmaPressStyle()).accessibilityIdentifier("portion.unit."+value.rawValue).accessibilityAddTraits(unit == value ? .isSelected:[])
+                                .luqmaMotion(.selection,value:unit == value)
                         }
                     }.padding(4).background(backgroundColor,in:RoundedRectangle(cornerRadius:12))
                     HStack(alignment:.firstTextBaseline,spacing:12) {
@@ -745,7 +755,7 @@ struct FoodPortionView:View {
                     Button{focusedField=nil;showingQuantity=false}label:{Text(diary.t("تأكيد الكمية","Confirm quantity"))
                         .luqmaFont(size:16,weight:.semibold,relativeTo:.headline).foregroundStyle(.white)
                         .frame(maxWidth:.infinity,minHeight:52).background(orange,in:RoundedRectangle(cornerRadius:14))
-                    }.buttonStyle(.plain).disabled(!quantityIsValid).opacity(quantityIsValid ? 1:0.45).accessibilityIdentifier("portion.quantity.confirm")
+                    }.buttonStyle(LuqmaPressStyle()).disabled(!quantityIsValid).opacity(quantityIsValid ? 1:0.45).accessibilityIdentifier("portion.quantity.confirm")
                 }.padding(20)
             }.background(chromeColor.ignoresSafeArea()).navigationTitle(diary.t("تحديد الكمية","Set quantity"))
                 .navigationBarTitleDisplayMode(.inline)
@@ -806,7 +816,7 @@ struct FoodPortionView:View {
             .luqmaFont(size:18,weight:.semibold,relativeTo:.headline).foregroundStyle(.white)
             .padding(.horizontal,16).padding(.vertical,12).frame(maxWidth:.infinity,minHeight:60)
             .background(orange,in:RoundedRectangle(cornerRadius:20,style:.continuous))
-        }.buttonStyle(.plain).disabled(!canSave).opacity(canSave ? 1:0.45).accessibilityIdentifier("portion.save")
+        }.buttonStyle(LuqmaPressStyle()).disabled(!canSave).opacity(canSave ? 1:0.45).accessibilityIdentifier("portion.save")
     }
     private func loadBase(){let n=portionFood.values(for:unit);kcal=n.map{decimal($0.kcal,2)} ?? "";protein=n.map{decimal($0.protein,3)} ?? "";carbs=n.map{decimal($0.carbs,3)} ?? "";fat=n.map{decimal($0.fat,3)} ?? ""}
     private func save(){

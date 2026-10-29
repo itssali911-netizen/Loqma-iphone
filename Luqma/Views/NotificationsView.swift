@@ -23,6 +23,7 @@ struct RemindersView:View {
                     Text(diary.t("التذكيرات المجدولة على هذا الجهاز","Reminders scheduled on this device")).luqmaFont(size:13,relativeTo:.footnote)
                     Spacer(minLength:4)
                     Text(String(reminders.pendingCount)).luqmaFont(size:16,weight:.bold,relativeTo:.headline).monospacedDigit()
+                        .luqmaNumericMotion(value:Double(reminders.pendingCount))
                         .accessibilityIdentifier("reminders.pendingCount")
                 }.foregroundStyle(Theme.muted)
             }
@@ -33,6 +34,7 @@ struct RemindersView:View {
         }.padding(16).padding(.vertical,8)}.appBackground()
             .sandowNavigation(diary.t("التذكيرات","Reminders"),backLabel:diary.t("رجوع","Back"))
             .task{await reminders.refresh(language:diary.language)}
+            .luqmaFeedback(.success,trigger:confirmation){_,message in message != nil}
             .sheet(item:$editing){reminder in ReminderTimeEditor(reminder:reminder){confirmation=diary.t("حُفظ وقت التذكير.","Reminder time saved.")}}
             .confirmationDialog(diary.t("إعادة ضبط التذكيرات؟","Reset reminders?"),isPresented:$confirmRecovery,titleVisibility:.visible){
                 Button(diary.t("إعادة الضبط","Reset"),role:.destructive){Task{if await reminders.recoverPreferences(language:diary.language){confirmation=diary.t("أُعيد ضبط التذكيرات وهي معطّلة.","Reminders were reset and are switched off.")}}}
@@ -87,7 +89,7 @@ struct RemindersView:View {
                     Text(String(format:"%02d:%02d",reminder.hour,reminder.minute)).luqmaFont(size:16,weight:.bold,relativeTo:.headline).monospacedDigit().environment(\.layoutDirection,.leftToRight)
                     Image("SandowClock").frame(width:24,height:24)
                 }.foregroundStyle(Theme.background).padding(.horizontal,10).frame(minHeight:44).background(Theme.accent,in:RoundedRectangle(cornerRadius:12))}
-                    .buttonStyle(.plain).accessibilityLabel(diary.t("تعديل الوقت — ","Edit time — ")+reminder.kind.label(diary.language))
+                    .buttonStyle(LuqmaPressStyle()).accessibilityLabel(diary.t("تعديل الوقت — ","Edit time — ")+reminder.kind.label(diary.language))
                     .accessibilityValue(String(format:"%02d:%02d",reminder.hour,reminder.minute))
                     .accessibilityIdentifier("reminders.time."+reminder.kind.rawValue).disabled(reminders.isWorking)
             }
@@ -134,6 +136,7 @@ struct NotificationsView:View {
             HStack(alignment:.firstTextBaseline){
                 Text(diary.t("الإشعارات","Notifications")).luqmaFont(size:24,weight:.bold,relativeTo:.title2).accessibilityAddTraits(.isHeader)
                 Text(String(reminders.deliveredNotifications.count)).luqmaFont(size:12,weight:.semibold,relativeTo:.caption).foregroundStyle(Theme.muted)
+                    .luqmaNumericMotion(value:Double(reminders.deliveredNotifications.count))
                 Spacer(minLength:0)
                 if !reminders.deliveredNotifications.isEmpty{Button(diary.t("مسح الكل","Clear all")){confirmClear=true}.luqmaFont(size:12,weight:.semibold,relativeTo:.caption).foregroundStyle(Theme.muted)}
             }
@@ -153,10 +156,10 @@ struct NotificationsView:View {
                         Text(notification.body).luqmaFont(size:12,relativeTo:.caption).foregroundStyle(Theme.muted).fixedSize(horizontal:false,vertical:true)
                         Text(DisplayFormat.date(notification.deliveredAt,template:"MMMdhm",language:diary.language)).luqmaFont(size:10,relativeTo:.caption2).foregroundStyle(Theme.muted)
                     }.frame(maxWidth:.infinity,alignment:.leading)
-                }.padding(12).background(Theme.card,in:RoundedRectangle(cornerRadius:20))}.buttonStyle(.plain)}
+                }.padding(12).background(Theme.card,in:RoundedRectangle(cornerRadius:20))}.buttonStyle(LuqmaPressStyle()).luqmaMotionTransition()}
             }
             if let error=reminders.error{SandowStateAlert(text:error)}
-        }.padding(16).padding(.vertical,8)}.appBackground()
+        }.padding(16).padding(.vertical,8).luqmaMotion(.content,value:selected).luqmaMotion(.content,value:reminders.deliveredNotifications.count)}.appBackground()
             .sandowNavigation(diary.t("الإشعارات","Notifications"),backLabel:diary.t("رجوع","Back"))
             .task{await reminders.refresh(language:diary.language)}.refreshable{await reminders.refresh(language:diary.language)}
             .confirmationDialog(diary.t("مسح الإشعارات التي وصلت؟","Clear delivered notifications?"),isPresented:$confirmClear,titleVisibility:.visible){

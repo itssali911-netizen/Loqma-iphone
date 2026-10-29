@@ -34,7 +34,7 @@ struct SettingsView:View {
                 NavigationLink{AboutLuqmaView()}label:{settingsRow(diary.t("حول لُقمة والخصوصية","About Luqma and privacy"),symbol:"info.circle")}
             }
             settingsFooter
-        }.buttonStyle(.plain).padding(16).padding(.top,4)}.appBackground().navigationTitle(diary.t("الإعدادات","Settings"))
+        }.buttonStyle(LuqmaPressStyle()).padding(16).padding(.top,4)}.appBackground().navigationTitle(diary.t("الإعدادات","Settings"))
             .toolbar(.hidden,for:.navigationBar)
             .safeAreaInset(edge:.top,spacing:0){settingsHeader}
             .sheet(isPresented:$goals){GoalEditor()}
@@ -47,7 +47,7 @@ struct SettingsView:View {
                     .foregroundStyle(Theme.text).frame(width:34,height:34)
                     .background(Theme.card,in:RoundedRectangle(cornerRadius:12))
                     .frame(width:44,height:44).contentShape(Rectangle())}
-                    .buttonStyle(.plain).accessibilityLabel(diary.t("رجوع","Back")).accessibilityIdentifier("settings.back")
+                    .buttonStyle(LuqmaPressStyle()).accessibilityLabel(diary.t("رجوع","Back")).accessibilityIdentifier("settings.back")
             }
             Text(diary.t("الإعدادات","Settings")).luqmaFont(size:24,weight:.bold,relativeTo:.title2)
                 .foregroundStyle(Theme.text).accessibilityAddTraits(.isHeader)
@@ -99,12 +99,13 @@ struct LuqmaLanguageView:View {
                 languageHeading(diary.t("اللغات المتاحة","Available languages"))
                 ForEach(AppLanguage.allCases.filter{$0 != diary.language},id:\.self){language in languageOption(language,selected:false)}
             }
-        }.padding(16).padding(.top,20).padding(.bottom,24)}.appBackground()
+        }.padding(16).padding(.top,20).padding(.bottom,24)
+            .luqmaFeedback(.selection,trigger:diary.language)}.appBackground()
             .navigationTitle(diary.t("اللغة","Language")).toolbar(.hidden,for:.navigationBar)
             .safeAreaInset(edge:.top,spacing:0){
                 HStack(spacing:12){
                     Button{dismiss()}label:{Image(systemName:"chevron.backward").font(.system(size:14,weight:.medium)).foregroundStyle(Theme.text).frame(width:40,height:40).background(Theme.surface,in:RoundedRectangle(cornerRadius:12)).frame(width:44,height:44)}
-                        .buttonStyle(.plain).accessibilityLabel(diary.t("رجوع","Back")).accessibilityIdentifier("language.back")
+                        .buttonStyle(LuqmaPressStyle()).accessibilityLabel(diary.t("رجوع","Back")).accessibilityIdentifier("language.back")
                     Text(diary.t("اللغة","Language")).luqmaFont(size:20,weight:.bold,relativeTo:.title3).accessibilityAddTraits(.isHeader)
                     Spacer(minLength:0)
                 }.padding(.horizontal,16).frame(minHeight:Theme.navigationHeight).background(Theme.background)
@@ -120,7 +121,8 @@ struct LuqmaLanguageView:View {
                 Spacer(minLength:8)
                 Image(systemName:selected ? "checkmark.square.fill":"square").font(.system(size:18)).foregroundStyle(selected ? Theme.onAccent:Theme.text).accessibilityHidden(true)
             }.padding(12).frame(maxWidth:.infinity,minHeight:68).background(selected ? Theme.accent:Theme.card,in:RoundedRectangle(cornerRadius:22,style:.continuous)).contentShape(Rectangle())
-        }.buttonStyle(.plain).accessibilityAddTraits(selected ? .isSelected:[]).accessibilityIdentifier("language.option."+language.rawValue)
+        }.buttonStyle(LuqmaPressStyle()).accessibilityAddTraits(selected ? .isSelected:[]).accessibilityIdentifier("language.option."+language.rawValue)
+            .luqmaMotion(.selection,value:selected)
     }
 }
 struct BackupSettingsView:View {
@@ -135,7 +137,7 @@ struct BackupSettingsView:View {
             Section(diary.t("بياناتي","My data")){
                 Button{do{document=BackupDocument(data:try Backup.encode(diary.state));exporting=true}catch{diary.report(error)}}label:{Label(diary.t("تصدير نسخة احتياطية","Export backup"),systemImage:"square.and.arrow.up")}.buttonStyle(LuqmaPrimaryButtonStyle())
                 Button{importing=true}label:{Label(diary.t("استيراد نسخة من الموقع أو التطبيق","Import a website or app backup"),systemImage:"square.and.arrow.down")}.buttonStyle(LuqmaSecondaryButtonStyle()).disabled(importingBusy)
-                if importingBusy{ProgressView()}
+                if importingBusy{ProgressView().luqmaMotionTransition()}
             }.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
             Section{
                 Notice(text:diary.t("صدّر نسخة لحفظ بياناتك أو نقلها إلى جهاز آخر. عند الاستيراد تُدمج البيانات، وتُحدَّث السجلات المطابقة دون حذف باقي سجلك.","Export a backup to save your data or move it to another device. Import merges the data and updates matching records without deleting the rest of your diary."))
@@ -144,6 +146,7 @@ struct BackupSettingsView:View {
                 }
             }.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
         }.sandowForm().sandowNavigation(diary.t("النسخ الاحتياطي","Backup"),backLabel:diary.t("رجوع","Back"))
+            .luqmaMotion(.content,value:importingBusy)
             .fileExporter(isPresented:$exporting,document:document,contentType:.json,defaultFilename:"luqma-backup-"+DayKey.today){if case let .failure(error)=$0{diary.report(error)}}
             .fileImporter(isPresented:$importing,allowedContentTypes:[.json],allowsMultipleSelection:false){result in
                 switch result{case .success(let urls):if let url=urls.first{read(url)};case .failure(let error):diary.report(error)}
@@ -216,5 +219,5 @@ struct ImportPreview:View {
             actionLabel:diary.t("تأكيد الاستيراد","Confirm import"),onAction:{if apply(){dismiss()}})
         }
     }
-    private func row(_ title:String,_ n:Int) -> some View {HStack{Text(title);Spacer();Text(String(n)).foregroundStyle(.secondary)}}
+    private func row(_ title:String,_ n:Int) -> some View {HStack{Text(title);Spacer();Text(String(n)).foregroundStyle(.secondary).luqmaNumericMotion(value:Double(n))}}
 }

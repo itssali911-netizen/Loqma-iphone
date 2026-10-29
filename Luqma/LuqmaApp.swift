@@ -49,7 +49,7 @@ import UIKit
     }
     var body:some Scene {
         WindowGroup {
-            RootView().luqmaFont(.body).foregroundStyle(Theme.text).environmentObject(diary).environmentObject(reminders).environmentObject(health)
+            RootView().modifier(LuqmaLaunchMotion()).luqmaFont(.body).foregroundStyle(Theme.text).environmentObject(diary).environmentObject(reminders).environmentObject(health)
                 .environment(\.layoutDirection,diary.language == .ar ? .rightToLeft:.leftToRight)
                 .environment(\.locale,DisplayFormat.locale(diary.language))
                 .environment(\.calendar,DisplayFormat.calendar(diary.language))
@@ -76,6 +76,7 @@ import UIKit
 struct RootView:View {
     @EnvironmentObject var diary:DiaryStore
     @EnvironmentObject var reminders:ReminderService
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var tab:Int
     @State private var adding=false
     @State private var addingMeal:Meal?
@@ -119,6 +120,11 @@ struct RootView:View {
             NavigationStack{ProgressViewScreen().toolbar(.hidden,for:.tabBar)}.tabItem{Label(diary.t("تقدّمي","Progress"),systemImage:"chart.bar")}.tag(2)
             NavigationStack{SettingsView(onBack:{tab=0}).toolbar(.hidden,for:.tabBar)}.tabItem{Label(diary.t("الإعدادات","Settings"),systemImage:"gearshape")}.tag(3)
         }.toolbar(.hidden,for:.tabBar)
+            .luqmaFeedback(.selection,trigger:tab)
+            .luqmaFeedback(.success,trigger:diary.state.entries.count){old,new in new>old}
+            .transaction { transaction in
+                if reduceMotion { transaction.animation=nil;transaction.disablesAnimations=true }
+            }
             #if DEBUG && targetEnvironment(simulator)
             .modifier(LuqmaPerformanceMarker())
             #endif
@@ -276,7 +282,7 @@ struct RootView:View {
         HStack(alignment:.center,spacing:4){
             navigationButton(0,title:diary.t("اليوم","Today"),symbol:"house")
             navigationButton(1,title:diary.t("مطبخي","Kitchen"),symbol:"fork.knife")
-            Button{addingMeal=nil;adding=true}label:{Image(systemName:"plus").font(.system(size:27,weight:.medium)).foregroundStyle(Theme.onAccent).frame(width:Theme.bottomBarItemHeight,height:Theme.bottomBarItemHeight).background(Theme.accent,in:RoundedRectangle(cornerRadius:17,style:.continuous))}.buttonStyle(.plain).frame(maxWidth:.infinity,minHeight:Theme.bottomBarItemHeight).accessibilityLabel(diary.t("إضافة طعام إلى اليوم","Add food to today")).accessibilityIdentifier("nav.add")
+            Button{addingMeal=nil;adding=true}label:{Image(systemName:"plus").font(.system(size:27,weight:.medium)).foregroundStyle(Theme.onAccent).frame(width:Theme.bottomBarItemHeight,height:Theme.bottomBarItemHeight).background(Theme.accent,in:RoundedRectangle(cornerRadius:17,style:.continuous))}.buttonStyle(LuqmaPressStyle()).frame(maxWidth:.infinity,minHeight:Theme.bottomBarItemHeight).accessibilityLabel(diary.t("إضافة طعام إلى اليوم","Add food to today")).accessibilityIdentifier("nav.add")
             navigationButton(2,title:diary.t("تقدّمي","Progress"),symbol:"chart.bar")
             navigationButton(3,title:diary.t("الإعدادات","Settings"),symbol:"gearshape")
         }.padding(.horizontal,10).padding(.vertical,Theme.bottomBarPadding)
@@ -288,9 +294,36 @@ struct RootView:View {
             Image(systemName:tab == value && value == 0 ? "house.fill":symbol).font(.system(size:21,weight:.regular))
                 .foregroundStyle(tab == value ? Theme.text:Theme.muted).frame(width:44,height:34)
                 .background(tab == value ? Theme.background:Color.clear,in:RoundedRectangle(cornerRadius:12,style:.continuous))
+                .contentTransition(reduceMotion ? .identity:.symbolEffect(.replace))
+                .luqmaMotion(.selection,value:tab == value)
             Capsule().fill(tab == value ? Theme.accent:Color.clear).frame(width:18,height:3)
-        }.frame(maxWidth:.infinity,minHeight:Theme.bottomBarItemHeight).contentShape(Rectangle())}.buttonStyle(.plain).accessibilityLabel(title).accessibilityAddTraits(tab == value ? .isSelected:[])
+                .luqmaMotion(.selection,value:tab == value)
+        }.frame(maxWidth:.infinity,minHeight:Theme.bottomBarItemHeight).contentShape(Rectangle())}.buttonStyle(LuqmaPressStyle()).accessibilityLabel(title).accessibilityAddTraits(tab == value ? .isSelected:[])
             .accessibilityIdentifier(["nav.today","nav.kitchen","nav.progress","nav.settings"][value])
+    }
+}
+
+/// The original 96pt launch mark fades over the real first frame. It never
+/// takes input or delays app initialization, navigation, or network operations.
+private struct LuqmaLaunchMotion:ViewModifier {
+    @State private var showing=true
+    @State private var fading=false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    func body(content:Content)->some View {
+        content.overlay {
+            if showing && !reduceMotion {
+                ZStack {
+                    Theme.background.ignoresSafeArea()
+                    Image("LuqmaMark").resizable().scaledToFit().frame(width:96,height:96)
+                        .scaleEffect(fading ? 1.02:1)
+                }.opacity(fading ? 0:1).accessibilityHidden(true).allowsHitTesting(false)
+            }
+        }.onAppear {
+            guard showing else{return}
+            guard !reduceMotion else{showing=false;return}
+            withAnimation(.easeOut(duration:0.20),completionCriteria:.logicallyComplete){fading=true}
+                completion:{showing=false}
+        }.onChange(of:reduceMotion){_,reduced in if reduced{showing=false}}
     }
 }
 
@@ -324,6 +357,7 @@ private struct NativePreviewFontAudit:ViewModifier {
     let scope:String
     var enabled=true
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ScaledMetric(relativeTo:.body) private var bodyPoints:CGFloat=16
 
     func body(content:Content)->some View {
@@ -357,7 +391,10 @@ private struct NativePreviewFontAudit:ViewModifier {
                 "fontAudit":audit,"contrastAudit":contrasts,"renderingScope":scope,
                 "swiftUIDynamicTypeSize":observedSize.name,
                 "swiftUIIsAccessibilitySize":typeSize.isAccessibilitySize,
-                "swiftUIBodyPoints":Double(bodyPoints)
+                "swiftUIBodyPoints":Double(bodyPoints),
+                "motionPolicy":["actualSwiftUIReduceMotion":reduceMotion,
+                                "customProgressAnimationEnabled":LuqmaMotion.animation(.progress,reduceMotion:reduceMotion) != nil,
+                                "source":"Actual rendered SwiftUI accessibility environment; system preference is read-only"]
             ]
             let encoded=try JSONSerialization.data(withJSONObject:envelope,options:[.prettyPrinted,.sortedKeys])
             let folder=FileManager.default.urls(for:.documentDirectory,in:.userDomainMask)[0]

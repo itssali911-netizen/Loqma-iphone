@@ -131,7 +131,7 @@ struct DiaryView:View {
                     Button{selectingDate=true}label:{
                         HStack(spacing:4){Text(localizedDate(date,"d MMMM yyyy")).luqmaFont(size:11,weight:.medium,relativeTo:.caption2);Image(systemName:"chevron.down").font(.system(size:8,weight:.semibold))}
                             .foregroundStyle(Theme.text.opacity(0.82))
-                    }.buttonStyle(.plain).accessibilityLabel(diary.t("اختيار التاريخ","Choose date"))
+                    }.buttonStyle(LuqmaPressStyle()).accessibilityLabel(diary.t("اختيار التاريخ","Choose date"))
                         .accessibilityValue(localizedDate(date,"EEEE, d MMMM yyyy"))
                     Text(diary.t("يومك مع لُقمة","Your day with Luqma"))
                         .luqmaFont(size:19,weight:.bold,relativeTo:.headline).foregroundStyle(Theme.text).accessibilityAddTraits(.isHeader)
@@ -141,11 +141,11 @@ struct DiaryView:View {
                     Button{showingNotifications=true}label:{
                         Image(systemName:"bell").font(.system(size:15,weight:.medium)).frame(width:38,height:38)
                             .foregroundStyle(Theme.text).background(Theme.text.opacity(0.08),in:RoundedRectangle(cornerRadius:12))
-                    }.buttonStyle(.plain).accessibilityLabel(diary.t("الإشعارات","Notifications"))
+                    }.buttonStyle(LuqmaPressStyle()).accessibilityLabel(diary.t("الإشعارات","Notifications"))
                     Button{goals=true}label:{
                         Image(systemName:"gearshape").font(.system(size:16,weight:.medium)).frame(width:38,height:38)
                             .foregroundStyle(Theme.text).background(Theme.text.opacity(0.08),in:RoundedRectangle(cornerRadius:12))
-                    }.buttonStyle(.plain).accessibilityLabel(diary.t("أهداف السعرات والماكروز","Calorie and macro goals")).accessibilityIdentifier("diary.goals")
+                    }.buttonStyle(LuqmaPressStyle()).accessibilityLabel(diary.t("أهداف السعرات والماكروز","Calorie and macro goals")).accessibilityIdentifier("diary.goals")
                 }
             }
             HStack{Spacer(minLength:0);compactPersonalizedPlanBadge}
@@ -154,7 +154,7 @@ struct DiaryView:View {
                     .foregroundStyle(Theme.text.opacity(0.85)).padding(.horizontal,16).frame(minHeight:46)
                     .background(Theme.background,in:RoundedRectangle(cornerRadius:12))
                     .overlay{RoundedRectangle(cornerRadius:12).strokeBorder(Theme.stroke,lineWidth:1)}
-            }.buttonStyle(.plain).accessibilityIdentifier("diary.search")
+            }.buttonStyle(LuqmaPressStyle()).accessibilityIdentifier("diary.search")
         }.padding(16).background{Theme.surface.clipShape(UnevenRoundedRectangle(bottomLeadingRadius:24,bottomTrailingRadius:24,style:.continuous)).ignoresSafeArea(edges:.top)}
     }
     private var compactPersonalizedPlanBadge:some View {
@@ -165,13 +165,13 @@ struct DiaryView:View {
                 Image(systemName:"chevron.forward").font(.system(size:9,weight:.bold)).foregroundStyle(Theme.accent)
             }.padding(.horizontal,10).padding(.vertical,6).background(Theme.background.opacity(0.88),in:Capsule())
                 .overlay{Capsule().strokeBorder(Theme.accent.opacity(0.55),lineWidth:1)}
-        }.buttonStyle(.plain).accessibilityIdentifier("diary.fitnessProfile")
+        }.buttonStyle(LuqmaPressStyle()).accessibilityIdentifier("diary.fitnessProfile")
             .accessibilityLabel(diary.t("خطتك الشخصية — ملف اللياقة","Personal plan — Fitness profile"))
     }
     private func openSearch(_ query:String="",meal:Meal?=nil){searchQuery=query;chosenMeal=meal;adding=true}
     private var foodCategories:some View {
         VStack(alignment:.leading,spacing:10){
-            HStack{Text(diary.t("بحث سريع","Quick search")).luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline);Spacer();Button{openSearch()}label:{Text(diary.t("عرض الكل","See all")).luqmaFont(size:11,weight:.medium,relativeTo:.caption).foregroundStyle(Theme.link)}.buttonStyle(.plain)}
+            HStack{Text(diary.t("بحث سريع","Quick search")).luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline);Spacer();Button{openSearch()}label:{Text(diary.t("عرض الكل","See all")).luqmaFont(size:11,weight:.medium,relativeTo:.caption).foregroundStyle(Theme.link)}.buttonStyle(LuqmaPressStyle())}
             ScrollView(.horizontal,showsIndicators:false){HStack(spacing:6){
                 categoryChip("vegetables",ar:"خيار",en:"Cucumber",symbol:"carrot",query:diary.t("خيار","cucumber"))
                 categoryChip("meat",ar:"دجاج",en:"Chicken",symbol:"fork.knife",query:diary.t("دجاج","chicken"))
@@ -181,7 +181,8 @@ struct DiaryView:View {
         }
     }
     private func categoryChip(_ id:String,ar:String,en:String,symbol:String,query:String)->some View {
-        Button{category=id;openSearch(query)}label:{Label(diary.t(ar,en),systemImage:symbol).luqmaFont(size:11,weight:.semibold,relativeTo:.caption).foregroundStyle(Theme.text).padding(.horizontal,10).frame(minHeight:36).background(category == id ? Theme.secondaryAccent:Theme.card,in:RoundedRectangle(cornerRadius:9,style:.continuous))}.buttonStyle(.plain)
+        Button{category=id;openSearch(query)}label:{Label(diary.t(ar,en),systemImage:symbol).luqmaFont(size:11,weight:.semibold,relativeTo:.caption).foregroundStyle(Theme.text).padding(.horizontal,10).frame(minHeight:36).background(category == id ? Theme.secondaryAccent:Theme.card,in:RoundedRectangle(cornerRadius:9,style:.continuous))
+            .luqmaMotion(.selection,value:category == id)}.buttonStyle(LuqmaPressStyle())
     }
     private func dailyRoutine(_ summaries:[MealDiarySummary])->some View {
         VStack(alignment:.leading,spacing:10){
@@ -190,6 +191,7 @@ struct DiaryView:View {
                 DisclosureGroup(diary.t("عرض الوجبات الأربع","Show the four meals"),isExpanded:$expandedRoutine){
                     VStack(spacing:10){ForEach(summaries){routineCard($0)}}.padding(.top,10)
                 }.luqmaFont(.subheadline).tint(Theme.accent)
+                    .luqmaMotion(.content,value:expandedRoutine)
             }else{
                 #if DEBUG
                 if routinePreviewMeal != nil{
@@ -259,6 +261,7 @@ struct DiaryView:View {
                                 .foregroundStyle(Theme.text.opacity(0.8))
                         }
                         Label(decimal(summary.nutrition.kcal,0)+" "+diary.t("سعرة","kcal"),systemImage:"flame.fill")
+                            .luqmaNumericMotion(value:summary.nutrition.kcal)
                             .luqmaFont(size:11,weight:.medium,relativeTo:.caption)
                             .foregroundStyle(Theme.text.opacity(0.8))
                     }
@@ -273,7 +276,7 @@ struct DiaryView:View {
                         }
                     }else{Theme.card}
                 }.clipShape(RoundedRectangle(cornerRadius:18,style:.continuous))
-        }.buttonStyle(.plain).accessibilityLabel(diary.t("إضافة إلى ","Add to ")+summary.meal.label(diary.language))
+        }.buttonStyle(LuqmaPressStyle()).accessibilityLabel(diary.t("إضافة إلى ","Add to ")+summary.meal.label(diary.language))
             .accessibilityValue(summary.entries.isEmpty ? diary.t("صورة توضيحية. سجّل وجبتك.","Illustrative photo. Log your meal."):decimal(summary.nutrition.kcal,0)+" "+diary.t("سعرة","kcal"))
     }
     private func routineArtwork(_ meal:Meal)->EditorialArtwork {
@@ -304,7 +307,7 @@ struct DiaryView:View {
             HStack(spacing:12){
                 Text(diary.t("اليوم المختار","Selected day")).luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline).foregroundStyle(Theme.text)
                 Spacer(minLength:0)
-                Button{selectingDate=true}label:{HStack(spacing:7){Text(day.replacingOccurrences(of:"-",with:"/")).luqmaFont(size:12,weight:.light,relativeTo:.caption).monospacedDigit();Image(systemName:"calendar").luqmaFont(size:15)}.foregroundStyle(Theme.muted).frame(minHeight:44)}.buttonStyle(.plain).accessibilityLabel(diary.t("اختيار التاريخ","Choose date"))
+                Button{selectingDate=true}label:{HStack(spacing:7){Text(day.replacingOccurrences(of:"-",with:"/")).luqmaFont(size:12,weight:.light,relativeTo:.caption).monospacedDigit();Image(systemName:"calendar").luqmaFont(size:15)}.foregroundStyle(Theme.muted).frame(minHeight:44)}.buttonStyle(LuqmaPressStyle()).accessibilityLabel(diary.t("اختيار التاريخ","Choose date"))
                     .accessibilityValue(localizedDate(date,"EEEE, d MMMM yyyy"))
             }
             if typeSize.isAccessibilitySize{
@@ -315,13 +318,15 @@ struct DiaryView:View {
                 HStack(spacing:6){ForEach(weekDates,id:\.self){dayPill($0)}}
             }
         }.padding(12).background(Theme.card,in:RoundedRectangle(cornerRadius:20,style:.continuous))
+            .luqmaFeedback(.selection,trigger:day)
     }
     private func dayPill(_ value:Date)->some View {
         let selected=DayKey.string(value)==day
         return Button{date=value}label:{VStack(spacing:7){
             Text(localizedDate(value,"EEEEE")).luqmaFont(size:11,relativeTo:.caption).foregroundStyle(selected ? Theme.background:Theme.muted)
             Text(localizedDate(value,"d")).luqmaFont(size:15,weight:.semibold,relativeTo:.subheadline).monospacedDigit().foregroundStyle(selected ? Theme.background:Theme.text)
-        }.frame(maxWidth:.infinity,minHeight:48).background(selected ? Theme.accent:Theme.surface,in:RoundedRectangle(cornerRadius:12,style:.continuous))}.buttonStyle(.plain)
+        }.frame(maxWidth:.infinity,minHeight:48).background(selected ? Theme.accent:Theme.surface,in:RoundedRectangle(cornerRadius:12,style:.continuous))
+            .luqmaMotion(.selection,value:selected)}.buttonStyle(LuqmaPressStyle())
             .accessibilityLabel(localizedDate(value,"EEEE, d MMMM"))
             .accessibilityAddTraits(selected ? .isSelected:[])
     }
@@ -359,14 +364,16 @@ struct DiaryView:View {
                         VStack(alignment:.leading,spacing:5){Text(DisplayFormat.westernDigits(entry.name)).luqmaFont(.subheadline).foregroundStyle(Theme.text);Text("\(decimal(entry.amount)) × \(entry.unitLabel(diary.language))").luqmaFont(.caption).foregroundStyle(Theme.muted)}
                         Spacer(minLength:8)
                         Text(decimal(entry.kcal,0)).luqmaFont(size:15,weight:.heavy,relativeTo:.subheadline).monospacedDigit().foregroundStyle(Theme.text)
+                            .luqmaNumericMotion(value:entry.kcal)
                         Image(systemName:"chevron.forward").luqmaFont(.caption2).foregroundStyle(Theme.muted)
-                    }.padding(.vertical,12).contentShape(Rectangle())}.buttonStyle(.plain).accessibilityHint(diary.t("تعديل الكمية","Edit quantity"))
+                    }.padding(.vertical,12).contentShape(Rectangle())}.buttonStyle(LuqmaPressStyle()).accessibilityHint(diary.t("تعديل الكمية","Edit quantity"))
                         .accessibilityIdentifier("diary.entry."+entry.id.uuidString).accessibilityLabel(DisplayFormat.westernDigits(entry.name))
+                        .luqmaMotionTransition()
                     if entry.id != summary.entries.last?.id{Divider()}
                 }
-            }.padding(.top,6)
+            }.padding(.top,6).luqmaMotion(.content,value:summary.entries.count)
         }label:{
-            HStack(spacing:8){Text(diary.t("تفاصيل الأطعمة","Food details")).luqmaFont(size:13,weight:.medium,relativeTo:.subheadline);Spacer(minLength:0);Text(decimal(Double(summary.entries.count),0)).luqmaFont(.caption).monospacedDigit().foregroundStyle(Theme.muted)}
+            HStack(spacing:8){Text(diary.t("تفاصيل الأطعمة","Food details")).luqmaFont(size:13,weight:.medium,relativeTo:.subheadline);Spacer(minLength:0);Text(decimal(Double(summary.entries.count),0)).luqmaFont(.caption).monospacedDigit().foregroundStyle(Theme.muted).luqmaNumericMotion(value:Double(summary.entries.count))}
                 .foregroundStyle(Theme.text).frame(minHeight:30)
         }.tint(Theme.accent)
             // Keep the disclosure and each real row as separate AX actions.
@@ -374,6 +381,7 @@ struct DiaryView:View {
             // the lazy rows, obscuring otherwise visible entry hit targets.
             .accessibilityElement(children:.contain)
             .accessibilityIdentifier("diary.details."+summary.meal.rawValue)
+            .luqmaMotion(.content,value:expandedMeals.contains(summary.meal))
     }
 
 }
@@ -434,6 +442,7 @@ struct CalorieIntakeDetailView: View {
     }
 
     var body: some View {
+        let chartItems = sevenDayItems
         let item = selectedItem
         let goals = diary.dailyGoals(item.dayKey)
         let remaining = goals.kcal - item.kcal
@@ -458,7 +467,7 @@ struct CalorieIntakeDetailView: View {
                                 .frame(width: 10, height: 18).scaleEffect(x:-1,y:1)
                         }
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(LuqmaPressStyle())
                     .accessibilityLabel(diary.t("رجوع", "Back")).accessibilityIdentifier("calorie.back")
 
                     Spacer()
@@ -481,7 +490,7 @@ struct CalorieIntakeDetailView: View {
                                 .foregroundStyle(Color.white)
                         }
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(LuqmaPressStyle())
                     .accessibilityLabel(diary.t("إعدادات هدف السعرات", "Calorie Goal Settings"))
                 }
                 .environment(\.layoutDirection,.leftToRight)
@@ -496,6 +505,7 @@ struct CalorieIntakeDetailView: View {
                             .foregroundStyle(Color(hex: 0xF97316))
                         Text(decimal(item.kcal, 0))
                             .accessibilityIdentifier("calorie.consumed")
+                            .luqmaNumericMotion(value:item.kcal)
                             .luqmaFont(size: 64, weight: .heavy, relativeTo: .largeTitle)
                             .monospacedDigit()
                             .foregroundStyle(Color.white)
@@ -511,6 +521,7 @@ struct CalorieIntakeDetailView: View {
                     )
                     .luqmaFont(size: 16, weight: .semibold, relativeTo: .body)
                     .accessibilityIdentifier("calorie.remaining")
+                    .luqmaNumericMotion(value:abs(remaining))
                     .foregroundStyle(Color(hex: 0xD7D8D9))
 
                     Button {
@@ -534,7 +545,7 @@ struct CalorieIntakeDetailView: View {
                                 .fill(Color(hex: 0x24262B))
                         )
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(LuqmaPressStyle())
                     .accessibilityIdentifier("calorie.date")
                     .padding(.top, 6)
                 }
@@ -546,7 +557,7 @@ struct CalorieIntakeDetailView: View {
                 ZStack(alignment: .bottom) {
                     VStack(spacing: 0) {
                         Chart {
-                            ForEach(sevenDayItems) { point in
+                            ForEach(chartItems) { point in
                                 AreaMark(
                                     x: .value("Day", point.dayKey),
                                     y: .value("Calories", point.kcal)
@@ -626,6 +637,7 @@ struct CalorieIntakeDetailView: View {
                         .frame(height: 360)
                         .contentShape(Rectangle())
                         .chartXSelection(value: $activeDayKey)
+                        .luqmaMotion(.content,value:chartItems.map(\.kcal))
                         .accessibilityIdentifier("calorie.chart")
                     }
                     .padding(.bottom, 54)
@@ -693,7 +705,7 @@ struct CalorieIntakeDetailView: View {
             Text("\(decimal(grams, 0))" + diary.t("جم", "g"))
                 .luqmaFont(size: 28, weight: .heavy, relativeTo: .title)
                 .accessibilityIdentifier("calorie.macro." + (iconName == "DNMCarbsToastIcon" ? "carbs" : iconName == "DNMProteinBlueIcon" ? "protein" : "fat"))
-                .monospacedDigit()
+                .monospacedDigit().luqmaNumericMotion(value:grams)
                 .foregroundStyle(Color.white)
             Text(title)
                 .luqmaFont(size: 13, weight: .medium, relativeTo: .caption)

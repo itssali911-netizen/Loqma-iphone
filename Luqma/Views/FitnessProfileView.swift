@@ -46,9 +46,11 @@ struct FitnessProfileView: View {
                 // Pushed TabView destinations can extend behind the custom
                 // bar. Let the final control scroll above its actual height.
                 .padding(.bottom, Theme.bottomBarHeight)
+                .luqmaMotion(.content,value:diary.state.fitnessProfile != nil)
         }.appBackground().accessibilityIdentifier("fitness.profile")
             .sandowNavigation(diary.t("ملف اللياقة", "Fitness profile"), backLabel: diary.t("رجوع", "Back"))
             .sheet(isPresented: $editing) { FitnessAssessmentView() }
+            .luqmaFeedback(.success,trigger:deleted){_,didDelete in didDelete}
             .alert(diary.t("حذف بيانات تقييم اللياقة؟", "Delete fitness assessment data?"), isPresented: $confirmingDelete) {
                 Button(diary.t("حذف ملف اللياقة", "Delete fitness profile"), role: .destructive) {
                     deleted = diary.deleteFitnessProfile()
@@ -222,6 +224,8 @@ struct FitnessPlanReviewView: View {
                         .background(Color(hex:0x111214))
                 }
             }
+            .luqmaMotion(.success,value:applied)
+            .luqmaFeedback(.success,trigger:applied){_,didApply in didApply}
             .onChange(of:plan?.id){_,_ in calorieOverride=nil}
     }
     private var approvedPlanHeader:some View {
@@ -230,7 +234,7 @@ struct FitnessPlanReviewView: View {
                 CFACrescentChevron().stroke(Color.white,style:StrokeStyle(lineWidth:2.2,lineCap:.round,lineJoin:.round))
                     .frame(width:10,height:18).scaleEffect(x:diary.language == .ar ? 1:-1,y:1)
                     .frame(width:48,height:48).background(Color(hex:0x393C43),in:RoundedRectangle(cornerRadius:18))
-            }.buttonStyle(.plain).accessibilityLabel(diary.t("رجوع","Back")).accessibilityIdentifier("navigation.back")
+            }.buttonStyle(LuqmaPressStyle()).accessibilityLabel(diary.t("رجوع","Back")).accessibilityIdentifier("navigation.back")
             Text(diary.t("تقييم اللياقة","Assessment")).luqmaFont(size:20,weight:.bold,relativeTo:.title3)
             Spacer(minLength:0)
             Text(diary.t("11 من 11","11 of 11")).luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline)
@@ -251,15 +255,18 @@ struct FitnessPlanReviewView: View {
                         .foregroundStyle(calorieUnit == unit ? Color.white:Color(hex:0x9EA0A5))
                         .frame(maxWidth:.infinity,minHeight:56)
                         .background(calorieUnit == unit ? Color(hex:0x676C75):Color.clear,in:RoundedRectangle(cornerRadius:16))
-                }.buttonStyle(.plain).accessibilityAddTraits(calorieUnit == unit ? .isSelected:[])
+                }.buttonStyle(LuqmaPressStyle()).accessibilityAddTraits(calorieUnit == unit ? .isSelected:[])
                     .accessibilityIdentifier("fitness.plan.unit.\(unit.rawValue)")
             }}.padding(4).background(Color(hex:0x24262B),in:RoundedRectangle(cornerRadius:20))
                 .environment(\.layoutDirection,.leftToRight)
+                .luqmaMotion(.selection,value:calorieUnit)
+                .luqmaFeedback(.selection,trigger:calorieUnit)
             Spacer(minLength:28)
             Text(calorieUnit.value(for:goals.kcal).formatted(.number.grouping(.automatic).precision(.fractionLength(0)).locale(Locale(identifier:"en_US"))))
                 .luqmaFont(size:96,weight:.heavy,relativeTo:.largeTitle).foregroundStyle(Color.white).monospacedDigit()
                 .lineLimit(1).minimumScaleFactor(0.4).frame(maxWidth:.infinity)
                 .accessibilityIdentifier("fitness.plan.calories")
+                .luqmaNumericMotion(value:calorieUnit.value(for:goals.kcal))
             Text(calorieUnit == .kcal ? diary.t("سعرة حرارية يومياً","calories daily"):diary.t("جول يومياً","joules daily"))
                 .luqmaFont(size:22,weight:.medium,relativeTo:.title3).foregroundStyle(Color(hex:0xD7D8D9)).padding(.top,4)
             if diary.state.proposedFitnessPlan != nil {
@@ -283,7 +290,7 @@ struct FitnessPlanReviewView: View {
                 .foregroundStyle(increasing ? Color.white:Color(hex:0xD7D8D9)).frame(width:114,height:72)
                 .background(increasing ? Color(hex:0xF97316):Color(hex:0x393C43),in:RoundedRectangle(cornerRadius:20))
                 .overlay{RoundedRectangle(cornerRadius:23).stroke(increasing ? Color(hex:0x7C2D12).opacity(0.65):Color.clear,lineWidth:4).padding(-2)}
-        }.buttonStyle(.plain).disabled(increasing ? target>=10000:target<=ApprovedPlanGoals.minimumCalories(for:plan))
+        }.buttonStyle(LuqmaPressStyle()).disabled(increasing ? target>=10000:target<=ApprovedPlanGoals.minimumCalories(for:plan))
             .accessibilityLabel(diary.t(increasing ? "زيادة هدف السعرات 50 سعرة":"تقليل هدف السعرات 50 سعرة",increasing ? "Increase calorie target by 50 kcal":"Decrease calorie target by 50 kcal"))
             .accessibilityIdentifier("fitness.plan.\(increasing ? "increase":"decrease")")
     }
@@ -321,9 +328,11 @@ struct FitnessPlanReviewView: View {
     private func diffValues(key: String, current: Double, proposed: Double, unit: String, digits: Int) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             Text(DisplayFormat.decimal(current, digits: digits)).foregroundStyle(Theme.muted)
+                .luqmaNumericMotion(value:current)
                 .accessibilityIdentifier("fitness.review." + key + ".current")
             Image(systemName: "arrow.forward").font(.system(size: 12)).foregroundStyle(Theme.muted).accessibilityHidden(true)
             Text(DisplayFormat.decimal(proposed, digits: digits)).foregroundStyle(Theme.text)
+                .luqmaNumericMotion(value:proposed)
                 .accessibilityIdentifier("fitness.review." + key + ".proposed")
             Text(unit).foregroundStyle(Theme.muted)
         }.luqmaFont(.footnote).monospacedDigit()
@@ -368,7 +377,7 @@ struct FitnessPlanReviewView: View {
                 sourceLinks
             }.padding(.top, 12)
         } label: { Text(diary.t("كيف حُسبت الخطة؟", "How was the plan calculated?")).luqmaFont(.headline).foregroundStyle(Theme.text) }
-            .tint(Theme.link).luqmaCard()
+            .tint(Theme.link).luqmaCard().luqmaMotion(.content,value:assumptionsExpanded)
     }
     private var sourceLinks: some View {
         VStack(alignment: .leading, spacing: 8) {

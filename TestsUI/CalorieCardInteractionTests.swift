@@ -385,6 +385,13 @@ final class CalorieCardInteractionTests: XCTestCase {
         var top = viewport.minY + 8, bottom = viewport.maxY - 8
         let keyboard = app.keyboards.firstMatch
         if keyboard.exists { bottom = min(bottom, keyboard.frame.minY - 8) }
+        // The accessory toolbar can extend above the keyboard's AX frame.
+        // A visible field underneath it is not a tappable input target.
+        if keyboard.exists {
+            for toolbar in app.toolbars.allElementsBoundByIndex where toolbar.exists && toolbar.isHittable {
+                if toolbar.frame.minY > viewport.midY { bottom = min(bottom, toolbar.frame.minY - 8) }
+            }
+        }
         for identifier in ["diary.search", "navigation.back"] {
             let node = app.buttons.matching(identifier: identifier).allElementsBoundByIndex.first { $0.isHittable }
             if let node, node.frame.maxY < viewport.midY { top = max(top, node.frame.maxY + 8) }
@@ -432,9 +439,14 @@ final class CalorieCardInteractionTests: XCTestCase {
         guard area.height > 60 else { return }
         let up = !node.exists || node.frame.isEmpty || node.frame.midY > area.midY
         let origin = app.coordinate(withNormalizedOffset: .zero)
-        let x = area.minX + 8 - app.frame.minX
-        let start = up ? area.maxY - 12 : area.minY + 12
-        let end = up ? area.minY + 12 : area.maxY - 12
+        // Drag inside the actual scroll content, not the 16pt outer margin.
+        // Move only the necessary distance to avoid oscillating past a card.
+        let x = area.midX - app.frame.minX
+        let overflow = node.exists && !node.frame.isEmpty
+            ? (up ? node.frame.maxY - area.maxY : area.minY - node.frame.minY) : area.height * 0.5
+        let distance = min(area.height * 0.65, max(60, overflow + 24))
+        let start = up ? area.maxY - 24 : area.minY + 24
+        let end = up ? start - distance : start + distance
         origin.withOffset(CGVector(dx: x, dy: start - app.frame.minY)).press(forDuration: 0.05,
             thenDragTo: origin.withOffset(CGVector(dx: x, dy: end - app.frame.minY)))
     }

@@ -39,6 +39,7 @@ struct HealthMetricRow: View {
             if let reading = field.measurement {
                 HStack(alignment: .firstTextBaseline, spacing: 5) {
                     Text(DisplayFormat.decimal(reading.value, digits: digits)).monospacedDigit().luqmaFont(size: 22, weight: .bold, relativeTo: .title2)
+                        .luqmaNumericMotion(value:reading.value)
                     Text(unit).luqmaFont(size: 12, relativeTo: .caption).foregroundStyle(Theme.muted)
                 }.environment(\.layoutDirection, .leftToRight).accessibilityElement(children: .combine)
                     .accessibilityIdentifier(identifier)
@@ -63,7 +64,7 @@ struct HealthSettingsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 explanation
-                actions
+                actions.luqmaMotion(.content,value:health.isWorking)
                 if let issue = health.availabilityIssue ?? health.issue {
                     SandowStateAlert(text: HealthCopy.issue(issue, diary.language)).accessibilityIdentifier("health.issue")
                 }
@@ -73,6 +74,8 @@ struct HealthSettingsView: View {
             }.padding(16).padding(.bottom, 20)
         }.background(HealthPalette.background.ignoresSafeArea()).sandowNavigation(diary.t("صحتي", "Apple Health"), backLabel: diary.t("رجوع", "Back"))
             .accessibilityIdentifier("health.screen")
+            .luqmaFeedback(.success,trigger:health.lastSuccessfulSync){_,date in date != nil && health.snapshot?.hasReadableData == true}
+            .luqmaFeedback(.error,trigger:health.issue){_,issue in issue != nil && issue != .cancelled}
             .sheet(isPresented: $showingAccessGuide) {
                 NavigationStack {
                     ScrollView { accessGuide.padding(16) }

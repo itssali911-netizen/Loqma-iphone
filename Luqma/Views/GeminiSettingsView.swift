@@ -43,6 +43,9 @@ struct GeminiSettingsView: View {
                     Link(diary.t("سياسة خدمة التحليل", "Analysis service policy"), destination: URL(string: "https://ai.google.dev/gemini-api/terms")!)
                 }.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
             }.sandowForm().sandowNavigation(diary.t("تحليل الوجبة", "Meal analysis"),backLabel:diary.t("تم", "Done"),onBack:{dismiss()})
+                .luqmaMotion(.content,value:configured).luqmaMotion(.content,value:message)
+                .luqmaFeedback(.success,trigger:configured){_,ready in ready}
+                .luqmaFeedback(.error,trigger:message){_,text in text != nil && !configured}
         }
         .confirmationDialog(diary.t("إعادة ضبط اتصال التحليل؟", "Reset the analysis connection?"), isPresented: $resetting, titleVisibility: .visible) {
             Button(diary.t("إعادة ضبط", "Reset"), role: .destructive) {

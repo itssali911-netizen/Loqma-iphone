@@ -73,12 +73,14 @@ struct AssessmentNumberPicker: View {
                         .foregroundStyle(displayUnit == option ? Color.white : Color(hex: 0x9EA0A5))
                         .frame(maxWidth: .infinity, minHeight: 44)
                         .background(displayUnit == option ? Color(hex: 0x2563EB) : Color.clear, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                }.buttonStyle(.plain)
+                }.buttonStyle(LuqmaPressStyle())
                     .accessibilityAddTraits(displayUnit == option ? .isSelected : [])
                     .accessibilityIdentifier("\(identifier).unit.\(option.rawValue)")
             }
         }.padding(4).background(Color(hex: 0x24262B), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
             .environment(\.layoutDirection, .leftToRight)
+            .luqmaMotion(.selection,value:displayUnit)
+            .luqmaFeedback(.selection,trigger:displayUnit)
     }
 
     private var readout: some View {
@@ -138,7 +140,7 @@ struct AssessmentNumberPicker: View {
             Text(DisplayFormat.decimal(displayUnit.displayed(neighbour, field: field)))
                 .luqmaFont(size: 14, weight: .semibold, relativeTo: .subheadline).foregroundStyle(Color(hex: 0x9EA0A5))
                 .frame(minWidth: 44, minHeight: 44)
-        }.buttonStyle(.plain).disabled(value.map { increasing ? $0 >= field.range.upperBound : $0 <= field.range.lowerBound } ?? false)
+        }.buttonStyle(LuqmaPressStyle()).disabled(value.map { increasing ? $0 >= field.range.upperBound : $0 <= field.range.lowerBound } ?? false)
             .accessibilityLabel(arabic ? (increasing ? "زيادة \(title)" : "تقليل \(title)") : (increasing ? "Increase \(title)" : "Decrease \(title)"))
             .accessibilityIdentifier("\(identifier).\(increasing ? "increase" : "decrease")")
     }
@@ -176,7 +178,7 @@ struct AssessmentNumberPicker: View {
             Button { focused = false; setValue(Double(proposed)) } label: {
                 Text("\(proposed)").luqmaFont(size: fontSize, weight: .heavy, relativeTo: .title)
                     .foregroundStyle(color).frame(minHeight: 36)
-            }.buttonStyle(.plain)
+            }.buttonStyle(LuqmaPressStyle())
                 .accessibilityLabel(arabic ? "العمر \(proposed) سنة" : "Age \(proposed) years")
                 .accessibilityIdentifier(abs(offset) == 1 ? "\(identifier).\(offset > 0 ? "increase" : "decrease")" : "\(identifier).neighbour.\(offset)")
         } else {

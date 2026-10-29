@@ -72,7 +72,7 @@ struct DailyCalorieCard: View {
     @ViewBuilder private var header: some View {
         if showHistory {
             Button(action: onHistory) { heading }
-                .buttonStyle(.plain).accessibilityIdentifier("diary.calorieDetails")
+                .buttonStyle(LuqmaPressStyle()).accessibilityIdentifier("diary.calorieDetails")
                 .accessibilityLabel(language.text("ملخص السعرات اليوم", "Daily calorie summary"))
                 .accessibilityHint(language.text("عرض استهلاك آخر 7 أيام", "View the last seven days"))
         } else { heading }
@@ -110,6 +110,7 @@ struct DailyCalorieCard: View {
     }
     private var consumedNumber: some View {
         Text(number(current)).luqmaFont(size: 40, weight: .bold, relativeTo: .largeTitle).monospacedDigit()
+            .luqmaNumericMotion(value: current ?? .nan)
             .fixedSize(horizontal: false, vertical: true).multilineTextAlignment(.leading)
             .padding(.bottom, -6).accessibilityIdentifier("diary.summary.consumed")
             .accessibilityHint(language.text("السعرات المستهلكة", "Calories consumed"))
@@ -118,6 +119,7 @@ struct DailyCalorieCard: View {
         HStack(alignment: .firstTextBaseline, spacing: 4) {
             Text("/").luqmaFont(size: 18, weight: .medium, relativeTo: .subheadline).fixedSize().accessibilityHidden(true)
             Text(number(target)).luqmaFont(size: 18, weight: .semibold, relativeTo: .subheadline)
+                .luqmaNumericMotion(value: target ?? .nan)
                 .monospacedDigit().fixedSize(horizontal: false, vertical: true).multilineTextAlignment(.leading)
                 .accessibilityIdentifier("diary.summary.target")
                 .accessibilityHint(language.text("هدف السعرات", "Calorie target"))
@@ -127,6 +129,7 @@ struct DailyCalorieCard: View {
     private var remainingGroup: some View {
         VStack(alignment: .trailing, spacing: 2) {
             Text(number(difference.map(abs))).luqmaFont(size: 29, weight: .bold, relativeTo: .largeTitle)
+                .luqmaNumericMotion(value: difference.map(abs) ?? .nan)
                 .monospacedDigit().foregroundStyle(CalorieCardStyle.accent)
                 .fixedSize(horizontal: false, vertical: true).multilineTextAlignment(.trailing)
                 .accessibilityIdentifier("diary.summary.remaining")
@@ -150,6 +153,7 @@ struct DailyCalorieCard: View {
                 macroRatio(key).fixedSize(horizontal: true, vertical: false)
                 VStack(alignment: .leading, spacing: 3) {
                     Text(number(available(consumed[key]))).luqmaFont(size: 14, weight: .medium, relativeTo: .headline)
+                        .luqmaNumericMotion(value: available(consumed[key]) ?? .nan)
                         .monospacedDigit().accessibilityIdentifier("diary.summary."+key.rawValue+".consumed")
                     macroTarget(key)
                 }
@@ -162,6 +166,7 @@ struct DailyCalorieCard: View {
     private func macroRatio(_ key: MacroKey) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 3) {
             Text(number(available(consumed[key]))).luqmaFont(size: 14, weight: .medium, relativeTo: .headline)
+                .luqmaNumericMotion(value: available(consumed[key]) ?? .nan)
                 .monospacedDigit().accessibilityIdentifier("diary.summary."+key.rawValue+".consumed")
             macroTarget(key)
         }
@@ -170,6 +175,7 @@ struct DailyCalorieCard: View {
         HStack(alignment: .firstTextBaseline, spacing: 3) {
             Text("/").luqmaFont(size: 13, relativeTo: .caption).accessibilityHidden(true)
             Text(number(available(goals[key]))).luqmaFont(size: 14, weight: .semibold, relativeTo: .headline)
+                .luqmaNumericMotion(value: available(goals[key]) ?? .nan)
                 .monospacedDigit().accessibilityIdentifier("diary.summary."+key.rawValue+".target")
             Text(language.text("جم", "g")).luqmaFont(size: 12, relativeTo: .caption)
         }
@@ -194,7 +200,11 @@ private struct CalorieCardBar: View {
     var body: some View {
         GeometryReader { geometry in
             Capsule().fill(CalorieCardStyle.track).overlay(alignment: .leading) {
-                if fraction > 0 { Capsule().fill(color).frame(width: geometry.size.width*fraction) }
+                // Retain the same native fill while its width changes. A zero
+                // width is clipped and invisible, without a fake colored dot.
+                Capsule().fill(color).frame(width: geometry.size.width*fraction)
+                    .clipped().opacity(fraction > 0 ? 1 : 0)
+                    .luqmaMotion(.progress, value: fraction)
             }
         }.frame(height: height).accessibilityElement(children: .ignore)
             .accessibilityLabel(label).accessibilityValue(loading || value == nil || goal == nil ? "—" : DisplayFormat.decimal(fraction*100, digits: 0)+"%")

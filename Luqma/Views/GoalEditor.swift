@@ -37,10 +37,10 @@ struct GoalEditor:View {
             Image(systemName:"flame.fill").font(.system(size:23)).foregroundStyle(Theme.accent).accessibilityHidden(true)
             Button{editingCalories=true}label:{
                 VStack(spacing:6){
-                    Text(decimal(goals.kcal,0)).luqmaFont(size:44,weight:.bold,relativeTo:.largeTitle).monospacedDigit()
+                    Text(decimal(goals.kcal,0)).luqmaFont(size:44,weight:.bold,relativeTo:.largeTitle).monospacedDigit().luqmaNumericMotion(value:goals.kcal)
                     Text(diary.t("سعرة حرارية","kilo calories")).luqmaFont(size:18,relativeTo:.title3).foregroundStyle(Theme.muted)
                 }.foregroundStyle(Theme.text).frame(maxWidth:.infinity,minHeight:92)
-            }.buttonStyle(.plain).accessibilityLabel(diary.t("تعديل هدف السعرات","Edit calorie goal"))
+            }.buttonStyle(LuqmaPressStyle()).accessibilityLabel(diary.t("تعديل هدف السعرات","Edit calorie goal"))
                 .accessibilityValue(decimal(goals.kcal,0)).accessibilityIdentifier("goals.editCalories")
         }.frame(maxWidth:.infinity)
     }
@@ -62,14 +62,14 @@ struct GoalEditor:View {
             VStack(spacing:10){
                 VStack(spacing:5){
                     Text(decimal(goals[key])+" "+diary.t("جم","g"))
-                        .luqmaFont(size:18,weight:.bold,relativeTo:.headline).monospacedDigit()
+                        .luqmaFont(size:18,weight:.bold,relativeTo:.headline).monospacedDigit().luqmaNumericMotion(value:goals[key])
                     Text(key.label(diary.language)).luqmaFont(size:11,relativeTo:.caption)
                 }.foregroundStyle(Theme.text).frame(maxWidth:.infinity,minHeight:94)
                     .background(Theme.card,in:RoundedRectangle(cornerRadius:20,style:.continuous))
                 RoundedRectangle(cornerRadius:5).fill(macroColor(key)).frame(width:15,height:15)
                     .overlay{RoundedRectangle(cornerRadius:5).strokeBorder(Theme.background,lineWidth:2)}
             }.contentShape(Rectangle())
-        }.buttonStyle(.plain).accessibilityLabel(diary.t("تعديل ","Edit ")+key.label(diary.language))
+        }.buttonStyle(LuqmaPressStyle()).accessibilityLabel(diary.t("تعديل ","Edit ")+key.label(diary.language))
             .accessibilityValue(decimal(goals[key])+" "+diary.t("جم","g"))
             .accessibilityIdentifier("goals.macro."+key.rawValue)
     }
@@ -81,13 +81,14 @@ struct GoalEditor:View {
             .padding(.horizontal,12).padding(.vertical,10).frame(maxWidth:.infinity,alignment:.leading)
             .background(canSave ? Theme.success.opacity(0.08):Theme.card,in:RoundedRectangle(cornerRadius:12,style:.continuous))
             .overlay{RoundedRectangle(cornerRadius:12).strokeBorder(canSave ? Theme.success:Theme.warning,lineWidth:1)}
+            .luqmaMotion(.selection,value:canSave)
     }
     private var saveButton:some View {
         Button{if diary.setGoals(goals){dismiss()}}label:{
             HStack(spacing:12){Text(diary.t("حفظ هدف السعرات","Set calorie goal"));Image(systemName:"checkmark").font(.system(size:15,weight:.medium))}
                 .luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline).foregroundStyle(Theme.background)
                 .frame(maxWidth:.infinity,minHeight:56).background(Theme.text,in:RoundedRectangle(cornerRadius:12,style:.continuous))
-        }.buttonStyle(.plain).disabled(!canSave).opacity(canSave ? 1:0.4).accessibilityIdentifier("goals.save")
+        }.buttonStyle(LuqmaPressStyle()).disabled(!canSave).opacity(canSave ? 1:0.4).accessibilityIdentifier("goals.save")
     }
     private var calorieEditor:some View {
         NavigationStack{Form{

@@ -32,8 +32,8 @@ struct KitchenView:View {
                 SandowEmptyState(title:diary.t("لا توجد نتائج","No results"),message:diary.t("جرّب اسمًا آخر أو غيّر نوع المحفوظات.","Try another name or change the saved-item type."),
                     actionLabel:diary.t("عرض جميع المحفوظات","Show all saved items"),onAction:{query="";filter="all"})
             }
-            ForEach(filteredRecipes){r in recipeCard(r)}
-        }.padding(.horizontal,16).padding(.top,16).padding(.bottom,24)}.scrollDismissesKeyboard(.interactively).appBackground()
+            ForEach(filteredRecipes){r in recipeCard(r).luqmaMotionTransition()}
+        }.luqmaMotion(.content,value:diary.state.recipes.count).luqmaMotion(.content,value:filter).padding(.horizontal,16).padding(.top,16).padding(.bottom,24)}.scrollDismissesKeyboard(.interactively).appBackground()
             .navigationTitle(diary.t("مطبخي","My kitchen"))
             .toolbar(.hidden,for:.navigationBar)
             .safeAreaInset(edge:.top,spacing:0){kitchenHeader}
@@ -52,9 +52,9 @@ struct KitchenView:View {
                 TextField(diary.t("ابحث في محفوظاتك","Search your saved items"),text:$query,prompt:Text(diary.t("ابحث في محفوظاتك","Search your saved items")).foregroundColor(Theme.muted))
                     .luqmaFont(size:13,relativeTo:.subheadline).submitLabel(.search)
                     .accessibilityLabel(diary.t("البحث في وصفاتك ووجباتك","Search your recipes and meals"))
-                if !query.isEmpty{Button{query=""}label:{Image(systemName:"xmark.circle.fill").foregroundStyle(Theme.muted).frame(minWidth:32,minHeight:44)}.buttonStyle(.plain).accessibilityLabel(diary.t("مسح البحث","Clear search"))}
+                if !query.isEmpty{Button{query=""}label:{Image(systemName:"xmark.circle.fill").foregroundStyle(Theme.muted).frame(minWidth:32,minHeight:44)}.buttonStyle(LuqmaPressStyle()).accessibilityLabel(diary.t("مسح البحث","Clear search")).luqmaMotionTransition()}
                 Image(systemName:"magnifyingglass").font(.system(size:16)).foregroundStyle(Theme.text.opacity(0.85)).accessibilityHidden(true)
-            }.padding(.horizontal,14).frame(minHeight:44)
+            }.luqmaMotion(.content,value:query.isEmpty).padding(.horizontal,14).frame(minHeight:44)
                 .background(Theme.background,in:RoundedRectangle(cornerRadius:12,style:.continuous))
         }.padding(16).background{UnevenRoundedRectangle(bottomLeadingRadius:24,bottomTrailingRadius:24,style:.continuous).fill(Theme.surface).ignoresSafeArea(edges:.top)}
     }
@@ -64,6 +64,7 @@ struct KitchenView:View {
                 LazyVGrid(columns:Array(repeating:GridItem(.flexible(),spacing:4),count:2),spacing:4){categoryItems}
             }else{HStack(spacing:4){categoryItems}}
         }.padding(4).background(Theme.surface,in:RoundedRectangle(cornerRadius:14,style:.continuous))
+            .luqmaMotion(.selection,value:filter).luqmaFeedback(.selection,trigger:filter)
     }
     @ViewBuilder private var categoryItems:some View {
         category(diary.t("الكل","All"),id:"all")
@@ -76,13 +77,13 @@ struct KitchenView:View {
             .foregroundStyle(filter == id ? Theme.background:Theme.text.opacity(0.8))
             .padding(.horizontal,6).frame(maxWidth:.infinity,minHeight:36)
             .background(filter == id ? Theme.text:Color.clear,in:RoundedRectangle(cornerRadius:10,style:.continuous))
-        }.buttonStyle(.plain).accessibilityAddTraits(filter == id ? .isSelected:[])
+        }.buttonStyle(LuqmaPressStyle()).accessibilityAddTraits(filter == id ? .isSelected:[])
     }
     private func kitchenAction(_ title:String,symbol:String,primary:Bool,action:@escaping()->Void)->some View {
         Button(action:action){Label(title,systemImage:symbol).luqmaFont(size:13,weight:.semibold,relativeTo:.subheadline)
             .foregroundStyle(primary ? Theme.onAccent:Theme.text).padding(.horizontal,10).frame(maxWidth:.infinity,minHeight:44)
             .background(primary ? Theme.accent:Theme.card,in:RoundedRectangle(cornerRadius:12,style:.continuous))
-        }.buttonStyle(.plain)
+        }.buttonStyle(LuqmaPressStyle())
     }
     private func recipeCard(_ recipe:Recipe)->some View {
         let total=recipe.total
@@ -101,7 +102,7 @@ struct KitchenView:View {
                         Spacer(minLength:0)
                         Image(systemName:"chevron.forward").font(.system(size:11,weight:.semibold)).foregroundStyle(Theme.muted)
                     }.frame(maxWidth:.infinity,minHeight:44,alignment:.leading).contentShape(Rectangle())
-                }.buttonStyle(.plain).accessibilityHint(diary.t("عرض المكونات والتفاصيل وخطوات التحضير","View ingredients, details and preparation steps"))
+                }.buttonStyle(LuqmaPressStyle()).accessibilityHint(diary.t("عرض المكونات والتفاصيل وخطوات التحضير","View ingredients, details and preparation steps"))
                 recipeMenu(recipe)
             }
             recipeServingLine(recipe,kcal:perServing.kcal)
@@ -136,7 +137,9 @@ struct KitchenView:View {
     }
     @ViewBuilder private func recipeServingLabels(_ recipe:Recipe,kcal:Double)->some View {
         Label(decimal(kcal,0)+" "+diary.t("سعرة للحصة","kcal per serving"),systemImage:"flame.fill")
+            .luqmaNumericMotion(value:kcal)
         Label(decimal(recipe.portions)+" "+diary.t("حصص","servings"),systemImage:"square.stack")
+            .luqmaNumericMotion(value:recipe.portions)
     }
     private var kitchenEmptyState:some View {
         VStack(spacing:0){
@@ -153,6 +156,7 @@ struct KitchenView:View {
             LuqmaProgressRing(progress:ratio,color:Theme.text.opacity(0.85),lineWidth:4).frame(width:24,height:24)
             VStack(alignment:.leading,spacing:3){
                 Text(decimal(nutrition[key])+" "+diary.t("جم","g")).luqmaFont(size:12,weight:.bold,relativeTo:.caption).monospacedDigit()
+                    .luqmaNumericMotion(value:nutrition[key])
                 Text(key.label(diary.language)).luqmaFont(size:10,relativeTo:.caption2).foregroundStyle(Theme.muted)
             }
         }.frame(maxWidth:.infinity,alignment:.leading).accessibilityElement(children:.combine)
@@ -181,6 +185,7 @@ struct RecipeDetailView:View {
                                 .multilineTextAlignment(.center).accessibilityAddTraits(.isHeader)
                             Label(decimal(recipe.total.kcal/max(recipe.portions,0.001),0)+" "+diary.t("سعرة للحصة","kcal per serving"),systemImage:"flame.fill")
                                 .luqmaFont(.caption).foregroundStyle(Theme.muted)
+                                .luqmaNumericMotion(value:recipe.total.kcal/max(recipe.portions,0.001))
                             Button{editing=true}label:{Label(diary.t("تعديل الوصفة","Edit recipe"),systemImage:"square.and.pencil")}
                                 .buttonStyle(LuqmaSecondaryButtonStyle())
                         }.frame(maxWidth:.infinity)
@@ -199,6 +204,7 @@ struct RecipeDetailView:View {
                                     HStack(alignment:.top,spacing:10){
                                         Image(systemName:checked.contains(ingredient.id) ? "checkmark.square.fill":"square")
                                             .foregroundStyle(checked.contains(ingredient.id) ? Theme.secondaryAccent:Theme.muted)
+                                            .luqmaMotion(.selection,value:checked.contains(ingredient.id))
                                         VStack(alignment:.leading,spacing:4){
                                             Text(DisplayFormat.westernDigits(ingredient.name)).luqmaFont(.subheadline).foregroundStyle(Theme.text)
                                             Text(decimal(ingredient.amount)+" "+DisplayFormat.westernDigits(recipe.importInfo?.ingredientUnitLabels[ingredient.id.uuidString] ?? ingredient.unit.label(diary.language))+" · "+decimal(ingredient.kcal,0)+" "+diary.t("سعرة","kcal"))
@@ -206,7 +212,7 @@ struct RecipeDetailView:View {
                                         }
                                         Spacer(minLength:0)
                                     }.frame(maxWidth:.infinity,minHeight:44,alignment:.leading).contentShape(Rectangle())
-                                }.buttonStyle(.plain).accessibilityAddTraits(checked.contains(ingredient.id) ? .isSelected:[])
+                                }.buttonStyle(LuqmaPressStyle()).accessibilityAddTraits(checked.contains(ingredient.id) ? .isSelected:[])
                             }
                         }
                         if let info=recipe.importInfo{
@@ -229,6 +235,7 @@ struct RecipeDetailView:View {
                             ForEach(info.assumptions,id:\.self){Notice(text:$0)}
                         }
                     }.padding(16).padding(.bottom,16)
+                        .luqmaFeedback(.selection,trigger:checked)
                 }else{
                     SandowEmptyState(title:diary.t("الوصفة غير متاحة","Recipe unavailable"),message:diary.t("ربما حُذفت هذه الوصفة. ارجع إلى مطبخك للاطلاع على المحفوظات.","This recipe may have been deleted. Return to your kitchen to view saved items."),
                         actionLabel:diary.t("العودة إلى مطبخي","Back to my kitchen"),onAction:{dismiss()}).padding(16)
@@ -270,14 +277,14 @@ struct RecipeEditor:View {
                     recipe.importInfo?.ingredientUnitLabels=recipe.importInfo?.ingredientUnitLabels.filter{remaining.contains($0.key)} ?? [:]
                 }
                 Button{adding=true}label:{Label(diary.t("إضافة مكوّن","Add ingredient"),systemImage:"plus")}.disabled(recipe.ingredients.count>=80).accessibilityIdentifier("recipe.addIngredient")
-            }.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
+            }.luqmaMotion(.content,value:recipe.ingredients.map(\.id)).listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
             Section(diary.t("الحصص والوزن","Servings and weight")){
                 NumericInput(title:diary.t("عدد الحصص","Number of servings"),value:$recipe.portions)
                 Toggle(diary.t("حساب بالوزن بعد الطبخ","Use final cooked weight"),isOn:$byWeight).accessibilityIdentifier("recipe.byWeight")
                 if byWeight{NumericInput(title:diary.t("الوزن بعد الطبخ","Cooked weight"),value:Binding(get:{recipe.cookedWeight ?? 0},set:{recipe.cookedWeight=$0}),suffix:diary.t("جم","g"));Notice(text:diary.t("أدخل الوزن النهائي لحساب أي كمية بالجرام. الماء يغيّر الوزن دون تغيير مجموع السعرات.","Enter the final weight to calculate any gram portion. Water changes weight without changing total calories."))}
-            }.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
+            }.luqmaMotion(.content,value:byWeight).listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
             if !recipe.ingredients.isEmpty{Section(diary.t("لكل حصة","Per serving")){NutritionView(value:recipe.total.scaled(1/max(recipe.portions,0.001)))}.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke);if byWeight,let w=recipe.cookedWeight,w>0{Section(diary.t("لكل ١٠٠ جم بعد الطبخ","Per 100 g cooked")){NutritionView(value:recipe.total.scaled(100/w))}.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)}}
-            Section{DisclosureGroup(diary.t("ملاحظات اختيارية","Optional notes"),isExpanded:$showingNotes){TextField(diary.t("ملاحظاتك","Your notes"),text:$recipe.notes,prompt:Text(diary.t("ملاحظاتك","Your notes")).foregroundColor(Theme.muted),axis:.vertical).lineLimit(2...5)}}.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
+            Section{DisclosureGroup(diary.t("ملاحظات اختيارية","Optional notes"),isExpanded:$showingNotes){TextField(diary.t("ملاحظاتك","Your notes"),text:$recipe.notes,prompt:Text(diary.t("ملاحظاتك","Your notes")).foregroundColor(Theme.muted),axis:.vertical).lineLimit(2...5)}.luqmaMotion(.content,value:showingNotes)}.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
             if let info=recipe.importInfo{
                 Section(diary.t("خطوات التحضير","Preparation steps")){ForEach(Array(info.steps.enumerated()),id:\.offset){index,step in Text("\(index+1). "+DisplayFormat.westernDigits(step))}}.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
                 Section(diary.t("المصدر والتقدير","Source and estimate")){
