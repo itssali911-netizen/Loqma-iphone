@@ -172,6 +172,15 @@ final class LuqmaInteractionTests:XCTestCase {
         let field=app.textFields["recipe.name"]
         let name=field.waitForExistence(timeout:3) ? field:app.textViews["recipe.name"]
         XCTAssertTrue(name.waitForExistence(timeout:10));name.tap();name.typeText("Recipe review")
+        let keyboardDone=app.buttons["Dismiss keyboard"]
+        XCTAssertTrue(keyboardDone.waitForExistence(timeout:5));keyboardDone.tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout:5))
+        let toggle=app.switches["recipe.byWeight"]
+        reveal(toggle);toggle.switches.firstMatch.tap()
+        let cooked=app.textFields["Cooked weight"]
+        reveal(cooked);replace(cooked,with:"100")
+        XCTAssertTrue(keyboardDone.waitForExistence(timeout:5));keyboardDone.tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout:5))
         reveal(app.buttons["recipe.addIngredient"]);app.buttons["recipe.addIngredient"].tap()
         let personal=app.buttons["search.filter.3"]
         XCTAssertTrue(personal.waitForExistence(timeout:15));personal.tap()
@@ -183,10 +192,8 @@ final class LuqmaInteractionTests:XCTestCase {
         }
         reveal(app.buttons["portion.save"]);app.buttons["portion.save"].tap()
         XCTAssertTrue(app.buttons["recipe.addIngredient"].waitForExistence(timeout:15))
-        let toggle=app.switches["recipe.byWeight"]
-        reveal(toggle);toggle.switches.firstMatch.tap()
-        let cooked=app.textFields["Cooked weight"]
-        reveal(cooked);replace(cooked,with:"100")
+        XCTAssertEqual(toggle.value as? String,"1","The actual cooked-weight choice must survive ingredient entry")
+        XCTAssertEqual(Double(cooked.value as? String ?? ""),100,"The entered cooked weight must survive ingredient entry")
         app.buttons["navigation.primaryAction"].tap()
         XCTAssertTrue(app.buttons["kitchen.create"].waitForExistence(timeout:15))
         let recipe=app.buttons.matching(NSPredicate(format:"label CONTAINS %@","Recipe review")).firstMatch

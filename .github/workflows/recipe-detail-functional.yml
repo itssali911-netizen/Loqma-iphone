@@ -25,11 +25,13 @@ jobs:
           import json,sys
           from pathlib import Path
           sys.path.insert(0,'Scripts')
-          from ui_preview import build_app,command,select_runtime
+          from ui_preview import command,select_runtime
+          from vision_compat import apply_vision_compat
           from ui_interactions import run_scenario
           root=Path.cwd();out=root/'RecipeControls';out.mkdir()
           (out/'source-revision.txt').write_text(command(['git','rev-parse','HEAD'],out,'source'))
-          app=build_app(out,root/'BuildOutput/Packages','app.luqma.diary')
+          command(['xcodebuild','-project','Luqma.xcodeproj','-scheme','Luqma','-clonedSourcePackagesDirPath',str(root/'BuildOutput/Packages'),'-resolvePackageDependencies'],out,'packages',600)
+          apply_vision_compat(root/'BuildOutput/Packages')
           runtime=select_runtime(json.loads(command(['xcrun','simctl','list','--json'],out,'inventory')))
           cases=('testRecipeDetailsIngredientDisclosureAndBothQuantityModes',)
           report={'status':'running','synthetic_data':'Recipe entered through real controls on a disposable Simulator','live_ai_called':False}
