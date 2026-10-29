@@ -11,7 +11,7 @@ ALLOWED={
  'Luqma/Views/KitchenView.swift','Luqma/Views/ProgressView.swift',
  'Luqma/Views/PlanView.swift','Luqma/Views/PhotoMealView.swift',
  'Luqma/Views/LuqmaRefinedUI.swift','Luqma/Views/LuqmaMealCamera.swift',
- 'Luqma.xcodeproj/project.pbxproj',
+ 'Luqma.xcodeproj/project.pbxproj','Luqma/Views/FoodAddView.swift',
 }
 def git(*args):return subprocess.check_output(['git',*args],cwd=ROOT,text=True)
 changed=set(git('diff','--name-only',BASE,'--','Luqma/','Luqma.xcodeproj/').splitlines())
@@ -20,8 +20,13 @@ violations=sorted(changed-ALLOWED)
 protected=['Luqma/Core','Luqma/Services','Luqma/Resources','Luqma/LuqmaApp.swift',
            'Luqma/Views/LuqmaTypography.swift','Luqma/Views/Common.swift',
            'Luqma/Views/DiaryView.swift','Luqma/Views/DailyCalorieCard.swift',
-           'Luqma/Views/DailyMealCard.swift','Luqma/Views/FoodAddView.swift',
+           'Luqma/Views/DailyMealCard.swift',
            'Luqma/Info.plist','Luqma/Luqma.entitlements']
+# The recipe gram action exposed the default-serving selection. Only an
+# optional initial unit was added; all existing call sites keep the same default.
+original_portion=git('show',BASE+':Luqma/Views/FoodAddView.swift')
+expected_portion=original_portion.replace('    var initialMeal:Meal?=nil\n    var onAnalyze:', '    var initialMeal:Meal?=nil\n    var initialUnit:FoodUnit?=nil\n    var onAnalyze:').replace('unit=food.defaultAdditionUnit;name=food.label(diary.language);amount="1"','unit=initialUnit ?? food.defaultAdditionUnit;name=food.label(diary.language);amount="1"')
+portion_only_initial_unit=(ROOT/'Luqma/Views/FoodAddView.swift').read_text()==expected_portion
 unchanged={p:not bool(git('diff','--name-only',BASE,'--',p).strip()) for p in protected}
 font=hashlib.sha256((ROOT/'Luqma/Resources/Changa-Bold.ttf').read_bytes()).hexdigest()
 report=dict(status='passed' if not violations and all(unchanged.values()) else 'failed',
@@ -33,6 +38,8 @@ report=dict(status='passed' if not violations and all(unchanged.values()) else '
  public_push='published_with_explicit_user_authorization',merged=False,ipa_published=False)
 report['native_evidence_matches_current_application']=not bool(git('diff','--name-only','bd661d731ccb7e1e089c251f5c4083699751c8e7','--','Luqma/','Luqma.xcodeproj/').strip())
 report['native_evidence']=json.loads((ROOT/'Docs/EightScreenNativeEvidence.json').read_text())
+report['food_portion_only_optional_initial_unit_changed']=portion_only_initial_unit
+if not portion_only_initial_unit:report['status']='failed'
 if font!=report['expected_font_sha256']:report['status']='failed'
 output=ROOT/'Docs/EightScreenReviewAudit.json'
 output.write_text(json.dumps(report,indent=2)+'\n')

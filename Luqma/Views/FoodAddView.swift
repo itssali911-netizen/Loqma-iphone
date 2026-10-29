@@ -447,6 +447,7 @@ struct FoodPortionView:View {
     let food:Food
     var manual=false,sourceBarcode=false
     var initialMeal:Meal?=nil
+    var initialUnit:FoodUnit?=nil
     var onAnalyze:(()->Void)?=nil
     var onCommit:FoodCommit
     @EnvironmentObject var diary:DiaryStore
@@ -524,7 +525,7 @@ struct FoodPortionView:View {
         .onAppear {
             guard !initialized else{return};initialized=true
             if let initialMeal{meal=initialMeal}
-            unit=food.defaultAdditionUnit;name=food.label(diary.language);amount="1"
+            unit=initialUnit ?? food.defaultAdditionUnit;name=food.label(diary.language);amount="1"
             portionID=food.selectedPortionID ?? food.portionChoices.first?.id ?? ""
             if food.servingNutrition==nil{servingID=food.servingChoices.first?.id ?? ""}
             loadBase();editingNutrition=manual || (portionFood.per100==nil && portionFood.servingNutrition==nil)

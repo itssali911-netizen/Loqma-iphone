@@ -167,6 +167,7 @@ struct RecipeDetailView:View {
     private var recipe:Recipe? {diary.state.recipes.first{$0.id==recipeID} ?? previewRecipe}
     var body:some View {
         NavigationStack{
+            ScrollViewReader{scroll in
             ScrollView{
                 if let recipe{
                     VStack(alignment:.leading,spacing:20){
@@ -181,7 +182,7 @@ struct RecipeDetailView:View {
                                     if index < recipe.ingredients.count-1{Rectangle().fill(Theme.stroke).frame(height:0.5).padding(.vertical,12)}
                                 }
                             }.luqmaCard()
-                        }
+                        }.id("recipe-detail-ingredients")
                         if !recipe.notes.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty{
                             VStack(alignment:.leading,spacing:8){
                                 LuqmaSectionHeader(title:diary.t("ملاحظات الوصفة","Recipe notes"))
@@ -238,10 +239,19 @@ struct RecipeDetailView:View {
                     }
                 }
                 .sheet(isPresented:$editing){if let recipe{RecipeEditor(recipe:recipe)}}
-                .sheet(item:$selected){food in FoodPortionView(food:food){value,amount,unit,meal in
+                .sheet(item:$selected){food in FoodPortionView(food:food,initialUnit:food.unit){value,amount,unit,meal in
                     do{return diary.add([try DiaryEntry(food:value,amount:amount,unit:unit,meal:meal,day:DayKey.today,language:diary.language)],foods:[value])}
                     catch{diary.report(error);return false}
                 }}
+                #if DEBUG
+                .task{
+                    if previewRecipe != nil,ProcessInfo.processInfo.arguments.contains("-loqma-preview-recipe-nutrition"){
+                        try? await Task.sleep(for:.milliseconds(300))
+                        scroll.scrollTo("recipe-detail-ingredients",anchor:.top)
+                    }
+                }
+                #endif
+            }
         }
     }
     private func recipeHeader(_ recipe:Recipe)->some View {
