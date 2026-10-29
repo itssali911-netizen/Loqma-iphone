@@ -56,7 +56,15 @@ final class EightScreenReviewTests:XCTestCase {
         XCTAssertTrue(button.waitForExistence(timeout:10));if !button.isHittable{app.swipeDown()};button.tap()
     }
     private func replace(_ field:XCUIElement,_ text:String){
+        XCTAssertTrue(field.waitForExistence(timeout:10))
         field.tap();let current=field.value as? String ?? ""
-        field.typeText(String(repeating:XCUIKeyboardKey.delete.rawValue,count:current == "—" ? 0:current.count)+text)
+        if !current.isEmpty,current != "—"{
+            // Reuse the existing native-test caret policy. Tapping a centered
+            // numeric field can leave the caret inside the previous number.
+            field.coordinate(withNormalizedOffset:CGVector(dx:0.98,dy:0.5)).tap()
+            field.typeText(String(repeating:XCUIKeyboardKey.delete.rawValue,count:current.count))
+        }
+        field.typeText(text)
+        XCTAssertEqual(field.value as? String,text,"Verify the real field contains the intended input before asserting validation")
     }
 }
