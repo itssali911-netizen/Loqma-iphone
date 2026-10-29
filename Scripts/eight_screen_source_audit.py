@@ -28,9 +28,10 @@ report=dict(status='passed' if not violations and all(unchanged.values()) else '
  baseline=BASE,changed_application_files=sorted(changed),scope_violations=violations,
  byte_identical_protected_paths=unchanged,changa_bold_sha256=font,
  expected_font_sha256='d2015fb807cdd2cdc4d2f539db75117f7f009e407fe9d4b3e7555d94c4ff2c9f',
- native_build='simulator_debug_passed',native_screenshots='32_actual_framebuffers_captured',native_interactions='pending',
+ native_build='simulator_debug_passed',native_screenshots='32_actual_framebuffers_captured',native_interactions='4_actual_cases_passed_in_run_40882626673',
  physical_camera='not_tested',live_ai_service='not_called',visual_approval='pending',
  public_push='published_with_explicit_user_authorization',merged=False,ipa_published=False)
+report['native_evidence_matches_current_application']=not bool(git('diff','--name-only','bd661d731ccb7e1e089c251f5c4083699751c8e7','--','Luqma/','Luqma.xcodeproj/').strip())
 report['native_evidence']=json.loads((ROOT/'Docs/EightScreenNativeEvidence.json').read_text())
 if font!=report['expected_font_sha256']:report['status']='failed'
 output=ROOT/'Docs/EightScreenReviewAudit.json'

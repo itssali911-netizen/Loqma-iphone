@@ -29,13 +29,14 @@
   "expected_font_sha256": "d2015fb807cdd2cdc4d2f539db75117f7f009e407fe9d4b3e7555d94c4ff2c9f",
   "native_build": "simulator_debug_passed",
   "native_screenshots": "32_actual_framebuffers_captured",
-  "native_interactions": "pending",
+  "native_interactions": "4_actual_cases_passed_in_run_40882626673",
   "physical_camera": "not_tested",
   "live_ai_service": "not_called",
   "visual_approval": "pending",
   "public_push": "published_with_explicit_user_authorization",
   "merged": false,
   "ipa_published": false,
+  "native_evidence_matches_current_application": true,
   "native_evidence": {
     "run_id": 40875601612,
     "run_url": "https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/40875601612",
@@ -135,13 +136,61 @@
         ]
       }
     ],
-    "iphone_release_build": "pending",
-    "functional_tests": "pending",
+    "iphone_release_build": "passed",
+    "functional_tests": {
+      "run": 40882626673,
+      "commit": "94373b9506333f16d9ec4680d0b0c79ced89c4e8",
+      "status": "passed",
+      "passed": 4,
+      "failed": 0,
+      "application_identical_to_capture": true
+    },
     "physical_camera": "not_tested",
     "live_ai": "not_called",
     "dynamic_type_accessibility_sizes": "not_captured_in_this_run",
     "system_reduce_motion": "policy_reused_not_native_tested_in_this_run",
     "native_picker_internals": "system_rendered",
-    "visual_approval": "pending_user_review"
+    "visual_approval": "pending_user_review",
+    "core_tests": {
+      "run": 40875601612,
+      "passed": 264,
+      "failed": 0
+    },
+    "build_validation_tests": {
+      "run": 40875601612,
+      "passed": 170,
+      "skipped": 0,
+      "failed": 0
+    },
+    "initial_ui_harness_failure": {
+      "run": 40875601612,
+      "reason": "Restored weight was correctly 82.60; the test incorrectly required the literal string 82.6",
+      "application_change_needed": false
+    },
+    "additional_caret_assertion_run": {
+      "run": 40883328892,
+      "status": "passed",
+      "application_changed": false,
+      "passed": 4,
+      "failed": 0
+    },
+    "functional_scenarios": [
+      {
+        "scenario": "review",
+        "status": "passed",
+        "passed_cases": [
+          "testWeightValidationSameDayReplacementAndRelaunch",
+          "testArabicRecipeDraftReturnsFromIngredientSearch"
+        ]
+      },
+      {
+        "scenario": "existing",
+        "status": "passed",
+        "passed_cases": [
+          "testRecipeDraftSurvivesIngredientSearch",
+          "testTabNavigationAndGoalsPersistAfterRelaunch"
+        ]
+      }
+    ]
   }
 }
