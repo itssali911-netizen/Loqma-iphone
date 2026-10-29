@@ -46,7 +46,7 @@ if followup.exists():
     report['recipe_detail_followup']=json.loads(followup.read_text())
     report['native_build']='recipe_followup_simulator_debug_passed'
     report['native_screenshots']='4_accepted_actual_recipe_followup_frames'
-    report['native_interactions']='recipe_controls_passed_in_run_40952995187; Arabic_draft_passed_in_run_40942555850'
+    report['native_interactions']='recipe_controls_passed_in_run_40969034440; historical_Arabic_draft_passed_in_run_40942555850'
     report['historical_eight_screen_capture_revision']='bd661d731ccb7e1e089c251f5c4083699751c8e7'
 output=ROOT/'Docs/EightScreenReviewAudit.json'
 output.write_text(json.dumps(report,indent=2)+'\n')
