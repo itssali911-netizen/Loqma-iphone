@@ -41,14 +41,20 @@ def main():
         apply_vision_compat(packages)
         inventory=json.loads(command(['xcrun','simctl','list','--json'],output,'simulator-inventory'))
         runtime=select_runtime(inventory)
-        # Every legacy method except denial runs on one new device. Denial was
-        # already verified independently; never reset native permission state.
-        legacy=tuple(n for n in re.findall(r'\bfunc\s+(test\w+)\s*\(',
+        # Six other legacy methods already passed against these exact app
+        # inputs. The test correction is isolated to portion.amount == 0, so
+        # re-exercise that complete grams/serving/persistence case rather than
+        # repeating unrelated language, recipe and notification scenarios.
+        legacy_inventory=tuple(n for n in re.findall(r'\bfunc\s+(test\w+)\s*\(',
                          (ROOT/'TestsUI/LuqmaInteractionTests.swift').read_text('utf8'))
                      if n!='testNotificationDeniedDoesNotClaimDelivery')
+        legacy=('testGramAndServingQuantityRecalculateStoredFood',)
         motion=tuple(re.findall(r'\bfunc\s+(test\w+)\s*\(',
                          (ROOT/'TestsUI/MotionInteractionTests.swift').read_text('utf8')))
-        if len(legacy)!=7 or len(motion)!=2:raise BuildError('Unexpected test inventory; inspect before changing coverage.')
+        if len(legacy_inventory)!=7 or legacy[0] not in legacy_inventory or len(motion)!=2:
+            raise BuildError('Unexpected test inventory; inspect before changing coverage.')
+        report['other_legacy_cases_previously_passed_run']=40780795084
+        report['focused_followup_reason']='Only the zero-value amount replacement and Health Back locator changed; all numeric assertions are retained.'
         failures=[]
         for name,methods,test_class,record in [('legacy',legacy,'LuqmaInteractionTests',False),
                                               ('native-motion',motion,'MotionInteractionTests',True)]:
