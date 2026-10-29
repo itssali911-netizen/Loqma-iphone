@@ -1,0 +1,97 @@
+name: LUQMA eight-screen visual approval
+on:
+  push:
+    branches: [review/premium-eight-screens-20261029]
+    paths:
+      - 'Luqma/**'
+      - 'Luqma.xcodeproj/**'
+      - 'TestsUI/EightScreenReviewTests.swift'
+      - 'Scripts/eight_screen_native_tests.py'
+      - '.github/workflows/eight-screen-review.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: luqma-eight-screen-${{ github.sha }}
+  cancel-in-progress: false
+env:
+  DEVELOPER_DIR: ${{ vars.XCODE_DEVELOPER_DIR || '/Applications/Xcode_26.6.app/Contents/Developer' }}
+  BUNDLE_ID: app.luqma.diary
+  BUILD_NUMBER: '124'
+jobs:
+  native-review:
+    strategy:
+      fail-fast: false
+      matrix:
+        revision: [before, after]
+    runs-on: macos-26
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ matrix.revision == 'before' && '798a0f4f45aad23fdeac235a417d345988cf5c34' || github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Record actual source and Apple tools
+        run: |
+          git rev-parse HEAD > source-revision.txt
+          xcodebuild -version
+          python3 -c "import os,subprocess;print(subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip())"
+      - name: Compile and capture all eight real SwiftUI screens in Arabic
+        run: |
+          export GITHUB_SHA="$(git rev-parse HEAD)"
+          python3 Scripts/ui_preview.py --output Review-AR-Compact --language ar --device-type com.apple.CoreSimulator.SimDeviceType.iPhone-13-mini --screens kitchen progress weight-plan recipe-details recipe-editor photo-components approved-scan weight-editor
+      - name: Retain Arabic reference-size screenshots and runtime font evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-eight-${{ matrix.revision }}-AR-compact-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            source-revision.txt
+            Review-AR-Compact/*.png
+            Review-AR-Compact/*.json
+            Review-AR-Compact/*.log
+            Review-AR-Compact/font-audits/
+          retention-days: 30
+      - name: Verify large iPhone Arabic and compact English layouts
+        if: matrix.revision == 'after'
+        run: |
+          python3 Scripts/ui_preview.py --output Review-AR-Large --language ar --app Review-AR-Compact/derived/Build/Products/Debug-iphonesimulator/Luqma.app --screens kitchen progress weight-plan recipe-details recipe-editor photo-components approved-scan weight-editor
+          python3 Scripts/ui_preview.py --output Review-EN-Compact --language en --device-type com.apple.CoreSimulator.SimDeviceType.iPhone-13-mini --app Review-AR-Compact/derived/Build/Products/Debug-iphonesimulator/Luqma.app --screens kitchen progress weight-plan recipe-details recipe-editor photo-components approved-scan weight-editor
+      - name: Retain other sizes and languages
+        if: always() && matrix.revision == 'after'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-eight-after-layouts-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            Review-AR-Large/*.png
+            Review-AR-Large/*.json
+            Review-AR-Large/*.log
+            Review-AR-Large/font-audits/
+            Review-EN-Compact/*.png
+            Review-EN-Compact/*.json
+            Review-EN-Compact/*.log
+            Review-EN-Compact/font-audits/
+          retention-days: 30
+      - name: Build the actual iPhone Release target without signing
+        if: matrix.revision == 'after'
+        run: xcodebuild -project Luqma.xcodeproj -scheme Luqma -clonedSourcePackagesDirPath BuildOutput/Packages -disableAutomaticPackageResolution -destination 'generic/platform=iOS' -configuration Release -derivedDataPath ReviewDeviceDerived CODE_SIGNING_ALLOWED=NO build > device-build.log 2>&1
+      - name: Run unchanged Core and build validation suites
+        if: matrix.revision == 'after'
+        run: |
+          swift test -j 2 > core-tests.log 2>&1
+          python3 -m unittest discover -s BuildTests -v > build-tests.log 2>&1
+      - name: Exercise actual weight, recipe draft and existing navigation controls
+        if: matrix.revision == 'after'
+        run: python3 Scripts/eight_screen_native_tests.py
+      - name: Retain functional verification, including failures
+        if: always() && matrix.revision == 'after'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-eight-functional-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            core-tests.log
+            build-tests.log
+            device-build.log
+            EightScreenTests/
+          retention-days: 30

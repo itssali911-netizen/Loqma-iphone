@@ -15,7 +15,9 @@ import AVFoundation
     @State private var item:PhotosPickerItem?
     @State private var imageData:Data?
     @State private var preview:UIImage?
-    @State private var camera=false
+    @State private var liveCamera=false
+    @State private var captureID=0
+    @State private var analyzingCapture=false
     @State private var busy=false
     @State private var showingSetup=false
     @State private var showingPhotoInput=false
@@ -73,8 +75,9 @@ import AVFoundation
         .luqmaMotion(.content,value:parts.isEmpty)
         .luqmaMotion(.content,value:loadingPhoto)
         .luqmaMotion(.content,value:busy)
+        .luqmaFeedback(.light,trigger:captureID)
+        .luqmaFeedback(.success,trigger:parts.isEmpty){old,new in old && !new}
         .luqmaFeedback(.error,trigger:error){_,message in message != nil}
-        .sheet(isPresented:$camera){CameraPhoto{data in camera=false;if let data{photoGeneration=UUID();photoLoadTask?.cancel();loadingPhoto=false;imageData=data;parts=[];error=nil}}.ignoresSafeArea()}
         .sheet(isPresented:$showingSetup,onDismiss:{ready=GeminiCredentialStore.isConfigured}){GeminiSettingsView()}
         .sheet(item:$editing){request in PhotoEstimateEditor(title:componentName(request.id),estimate:request.estimate){updated in
             guard let index=parts.firstIndex(where:{$0.id==request.id}) else{return false}
@@ -92,15 +95,16 @@ import AVFoundation
             };products[request.id]=(food,amount,unit);selection=nil;return true
         })}
         .onChange(of:item){_,value in loadPhoto(value)}
-        .onChange(of:imageData){_,data in analysisGeneration=UUID();analysisTask?.cancel();analysisTask=nil;busy=false;parts=[];products.removeAll();detailedComponents=false;showingPhotoInput=false;preparePhotoPreview(data)}
+        .onChange(of:imageData){_,data in analysisGeneration=UUID();analysisTask?.cancel();analysisTask=nil;busy=false;parts=[];products.removeAll();detailedComponents=false;showingPhotoInput=false;preparePhotoPreview(data);if analyzingCapture{analyzingCapture=false;if ready{analyze()}else{showingSetup=true}}}
         .onChange(of:phase){_,value in
             if value != .active,busy{cancellationMessage=diary.t("توقف التحليل عند مغادرة الشاشة. افتح التطبيق وحاول مجددًا.","Analysis stopped when the app left the foreground. Reopen the app and retry.");analysisTask?.cancel()}
-            if value == .active,cameraAccessBlocked,AVCaptureDevice.authorizationStatus(for:.video) == .authorized{cameraAccessBlocked=false;cameraMessage=nil}
+            if value == .active,AVCaptureDevice.authorizationStatus(for:.video) == .authorized,UIImagePickerController.isSourceTypeAvailable(.camera){cameraAccessBlocked=false;cameraMessage=nil;liveCamera=true}
         }
         .onReceive(NotificationCenter.default.publisher(for:UIApplication.didReceiveMemoryWarningNotification)){_ in if busy{cancellationMessage=diary.t("توقف التحليل بسبب ضغط الذاكرة. حاول مجددًا.","Analysis stopped because of memory pressure. Retry.");analysisTask?.cancel()}}
         .onAppear{
             if !initialized{initialized=true;if let initialMeal{meal=initialMeal}}
             ready=GeminiCredentialStore.isConfigured
+            liveCamera=UIImagePickerController.isSourceTypeAvailable(.camera) && AVCaptureDevice.authorizationStatus(for:.video) == .authorized
             #if DEBUG
             if ProcessInfo.processInfo.arguments.contains("-loqma-approved-photo-results"),parts.isEmpty{prepareApprovedPreview()}
             else if ProcessInfo.processInfo.arguments.contains("-loqma-preview-photo"),parts.isEmpty{preparePreview()}
@@ -110,21 +114,15 @@ import AVFoundation
         .onDisappear{photoGeneration=UUID();analysisGeneration=UUID();previewGeneration=UUID();photoLoadTask?.cancel();analysisTask?.cancel();previewTask?.cancel();previewTask=nil}
     }
     private var analysisHeader:some View {
-        HStack {
-            Button{closeAnalysis()}label:{
-                CFACrescentChevron().stroke(Color.white,style:StrokeStyle(lineWidth:2.2,lineCap:.round,lineJoin:.round))
-                    .frame(width:10,height:18).scaleEffect(x:-1,y:1).frame(width:48,height:48)
-                    .background(Color(hex:0x393C43),in:RoundedRectangle(cornerRadius:18,style:.continuous))
-            }.buttonStyle(LuqmaPressStyle()).accessibilityLabel(diary.t("رجوع","Back"))
-            Spacer(minLength:12)
-            Text(diary.t("تحليل الطعام","Food Analysis")).luqmaFont(size:18,weight:.bold,relativeTo:.headline)
-                .foregroundStyle(.white).accessibilityAddTraits(.isHeader)
-            Spacer(minLength:12)
-            Button{showingSetup=true}label:{
-                Image(systemName:"gearshape").font(.system(size:18,weight:.semibold)).foregroundStyle(.white)
-                    .frame(width:48,height:48).background(Color(hex:0x393C43),in:RoundedRectangle(cornerRadius:18,style:.continuous))
-            }.buttonStyle(LuqmaPressStyle()).accessibilityLabel(diary.t("إعدادات خدمة التحليل","Analysis Settings"))
-        }.environment(\.layoutDirection,.leftToRight)
+        HStack(spacing:8){
+            Button{closeAnalysis()}label:{Image(systemName:"chevron.backward").font(.system(size:16,weight:.semibold))
+                .frame(width:44,height:44).background(Theme.card,in:RoundedRectangle(cornerRadius:12))}
+                .buttonStyle(LuqmaPressStyle()).accessibilityLabel(diary.t("رجوع","Back"))
+            LuqmaCompactTitle(title:diary.t("تحليل الوجبة","Meal analysis"))
+            Button{showingSetup=true}label:{Image(systemName:"gearshape").font(.system(size:18,weight:.regular))
+                .frame(width:44,height:44).background(Theme.card,in:RoundedRectangle(cornerRadius:12))}
+                .buttonStyle(LuqmaPressStyle()).accessibilityLabel(diary.t("إعدادات خدمة التحليل","Analysis settings"))
+        }.foregroundStyle(Theme.text)
     }
     private func closeAnalysis(){if let onClose{onClose()}else{dismiss()}}
     private var approvedScanPreview:Bool {
@@ -146,24 +144,23 @@ import AVFoundation
             scanViewfinder
             HStack(alignment:.bottom,spacing:32) {
                 PhotosPicker(selection:$item,matching:.images) {
-                    cameraControl("slider.horizontal.3",size:68,radius:20)
+                    cameraControl("photo.on.rectangle",size:48,radius:16)
                 }.buttonStyle(LuqmaPressStyle()).disabled(busy).accessibilityLabel(diary.t("رفع صورة","Choose photo"))
                 Button {
                     if imageData != nil {if ready{analyze()}else{showingSetup=true}}
-                    else{openCamera()}
+                    else if liveCamera{captureID += 1}else{openCamera()}
                 }label:{
-                    cameraControl("camera.fill",size:96,radius:28)
-                        .overlay{RoundedRectangle(cornerRadius:31,style:.continuous).stroke(Color(hex:0x393C43),lineWidth:4).padding(-2)}
-                }.buttonStyle(LuqmaPressStyle()).padding(.bottom,16).disabled(busy || loadingPhoto)
+                    ZStack{
+                        Circle().strokeBorder(Theme.text,lineWidth:3).frame(width:72,height:72)
+                        Circle().fill(Theme.text).frame(width:56,height:56)
+                        Image(systemName:imageData == nil ? "camera":"sparkles").font(.system(size:22,weight:.regular)).foregroundStyle(Theme.background)
+                    }
+                }.buttonStyle(LuqmaPressStyle()).disabled(busy || loadingPhoto)
                     .accessibilityLabel(imageData == nil ? diary.t("الكاميرا","Camera"):diary.t("تحليل الوجبة","Meal analysis"))
                     .accessibilityIdentifier("photo.shutter")
-                Button{showingSetup=true}label:{cameraControl("gearshape",size:68,radius:20)}
-                    .buttonStyle(LuqmaPressStyle()).disabled(busy).accessibilityLabel(diary.t("إعدادات خدمة التحليل","Analysis Settings"))
+                Button{imageData=nil;error=nil;openCamera()}label:{cameraControl("arrow.triangle.2.circlepath.camera",size:48,radius:16)}
+                    .buttonStyle(LuqmaPressStyle()).disabled(busy || loadingPhoto).accessibilityLabel(diary.t("إعادة التصوير","Retake photo"))
             }.frame(maxWidth:.infinity).environment(\.layoutDirection,.leftToRight)
-            if preview == nil && imageData == nil && !approvedCapture {
-                Text(diary.t("صورة توضيحية — صوّر وجبتك أو اختر صورتها لبدء التحليل.","Illustration — take or choose your own meal photo to begin analysis."))
-                    .luqmaFont(.caption).foregroundStyle(Theme.muted).fixedSize(horizontal:false,vertical:true)
-            }
             if let cameraMessage{
                 SandowStateAlert(text:cameraMessage)
                 if cameraAccessBlocked{
@@ -171,70 +168,68 @@ import AVFoundation
                         .buttonStyle(LuqmaSecondaryButtonStyle())
                 }
             }
+            if !ready{Notice(text:diary.t("اربط خدمة التحليل من الإعدادات لبدء تحليل صورتك. لا تظهر النتائج قبل اكتمال التحليل الفعلي.","Connect the analysis service in Settings to analyze your photo. Results appear only after actual analysis."))}
+            DisclosureGroup(diary.t("الوصف والخصوصية","Description and privacy")){
             VStack(alignment:.leading,spacing:8){
                 Text(diary.t("وصف الوجبة (اختياري)","Meal description (optional)")).luqmaFont(size:15,weight:.bold,relativeTo:.subheadline)
                 TextField(diary.t("مثلاً: الوزن، طريقة الطبخ وكمية الزيت","For example: weight, cooking method and oil amount"),text:$description,prompt:Text(diary.t("مثلاً: الوزن، طريقة الطبخ وكمية الزيت","For example: weight, cooking method and oil amount")).foregroundColor(Theme.muted),axis:.vertical).focused($descriptionFocused).lineLimit(2...4).padding(16).background(Theme.card,in:RoundedRectangle(cornerRadius:16)).accessibilityLabel(diary.t("وصف الوجبة الاختياري","Optional meal description")).disabled(busy)
                 Notice(text:diary.t("تُرسل الصورة والوصف لخدمة التحليل. الوزن والزيت والصلصات تؤثر في التقدير؛ أضف ما تعرفه لتحسينه.","The photo and description are sent to the analysis service. Weight, oil and sauces affect the estimate; add what you know to improve it."))
             }
+            }.luqmaFont(.subheadline)
+            Notice(text:diary.t("تُرسل الصورة والوصف إلى خدمة التحليل فقط؛ يبقى سجلك على جهازك.","Only the photo and description are sent to the analysis service; your diary stays on your device."))
             if loadingPhoto{SandowOperationState(title:diary.t("تجهيز الصورة…","Preparing photo…"),cancelLabel:diary.t("إلغاء","Cancel"),onCancel:{cancelPhotoLoad()})}
             if busy{SandowOperationState(title:diary.t("تقدير المكونات والسعرات…","Estimating components and calories…"),cancelLabel:diary.t("إلغاء","Cancel"),onCancel:{analysisTask?.cancel()})}
             if let error{SandowStateAlert(text:error).luqmaMotionTransition()}
         }
     }
     private func cameraControl(_ symbol:String,size:CGFloat,radius:CGFloat)->some View {
-        Image(systemName:symbol).font(.system(size:size>70 ? 26:20,weight:.bold)).foregroundStyle(Color(hex:0x111214))
+        Image(systemName:symbol).font(.system(size:size>70 ? 26:20,weight:.regular)).foregroundStyle(Theme.text)
             .luqmaLoadingPulse(active:busy && symbol == "camera.fill")
-            .frame(width:size,height:size).background(.white,in:RoundedRectangle(cornerRadius:radius,style:.continuous))
+            .frame(width:size,height:size).background(Theme.card,in:RoundedRectangle(cornerRadius:radius,style:.continuous))
     }
     private var scanViewfinder:some View {
         GeometryReader{geometry in
-            let width=geometry.size.width
-            let height=width*1540/1125
-            let illustration=(preview == nil && imageData == nil) || approvedScanPreview
-            ZStack(alignment:.top) {
-                Group {
-                    if illustration {Image("DNMMandarinScanHero").resizable().scaledToFit()}
-                    else if let preview {Image(uiImage:preview).resizable().scaledToFill()}
-                    else {Color(hex:0x111214)}
-                }.frame(width:width,height:height).clipped()
-                if illustration {
-                    // This supplied raster already contains its brackets, beam
-                    // and bubble. Localize its text in place; do not draw a
-                    // second set of scanning chrome over the original artwork.
-                    Text(busy || approvedScanPreview ? diary.t("جارٍ المسح...","Scanning..."):diary.t("جاهز للمسح","Ready to scan"))
-                        .luqmaFont(size:12,weight:.bold,relativeTo:.caption).foregroundStyle(.white)
-                        .frame(width:width*0.25,height:width*0.075)
-                        .background(Color(hex:0xF97316),in:RoundedRectangle(cornerRadius:8))
-                        .position(x:width*0.5,y:height*0.11)
-                } else {
-                    CFAScanBracketsShape().stroke(Color.white,style:StrokeStyle(lineWidth:6,lineCap:.round,lineJoin:.round))
-                        .frame(width:width*0.78,height:height*0.69).padding(.top,height*0.16)
-                    VStack(spacing:0) {
-                        Spacer().frame(height:height*0.47)
-                        RoundedRectangle(cornerRadius:2.5).fill(.white).frame(height:5)
-                        LinearGradient(colors:[Color.white.opacity(0.45),Color.white.opacity(0)],startPoint:.top,endPoint:.bottom).frame(height:height*0.23)
-                        Spacer(minLength:0)
-                    }.frame(width:width*0.78,height:height)
-                        .luqmaScanSweep(active:busy,travel:height*0.22)
-                    VStack(spacing:-2) {
-                        Text(busy ? diary.t("جارٍ المسح...","Scanning..."):diary.t("جاهز للمسح","Ready to scan"))
-                            .luqmaFont(size:13,weight:.bold,relativeTo:.caption).foregroundStyle(.white)
-                            .padding(.horizontal,16).frame(height:34)
-                            .background(Color(hex:0xF97316),in:RoundedRectangle(cornerRadius:12,style:.continuous))
-                        Image(systemName:"arrowtriangle.down.fill").font(.system(size:9)).foregroundStyle(Color(hex:0xF97316))
-                    }.padding(.top,height*0.08)
+            let width=geometry.size.width,height=geometry.size.height
+            ZStack{
+                Theme.card
+                if let preview{Image(uiImage:preview).resizable().scaledToFill().frame(width:width,height:height).clipped()}
+                else if imageData == nil,liveCamera{
+                    LuqmaMealCamera(captureID:captureID,active:phase == .active,onCapture:{data in
+                        photoGeneration=UUID();photoLoadTask?.cancel();loadingPhoto=false;error=nil
+                        analyzingCapture=true;imageData=data
+                    },onFailure:{
+                        liveCamera=false
+                        cameraMessage=diary.t("تعذّر تشغيل الكاميرا. حاول مجددًا أو اختر صورة من المكتبة.","The camera could not start. Retry or choose a library photo.")
+                    })
+                }else{
+                    VStack(spacing:16){
+                        Image(systemName:"camera").font(.system(size:36,weight:.regular)).foregroundStyle(Theme.muted)
+                        Text(imageData != nil ? diary.t("تجهيز الصورة…","Preparing photo…"):diary.t("صوّر وجبتك","Photograph your meal")).luqmaFont(.title3)
+                        if imageData == nil{
+                            Text(UIImagePickerController.isSourceTypeAvailable(.camera) ? diary.t("افتح الكاميرا أو اختر صورة واضحة لوجبتك من الألبوم.","Open the camera or choose a clear meal photo from your library."):diary.t("الكاميرا غير متاحة على هذا الجهاز. اختر صورة من الألبوم.","The camera is unavailable on this device. Choose a library photo."))
+                                .luqmaFont(.footnote).foregroundStyle(Theme.muted).multilineTextAlignment(.center)
+                            Button(diary.t("فتح الكاميرا","Open camera")){openCamera()}.buttonStyle(LuqmaSecondaryButtonStyle())
+                        }
+                    }.padding(24)
                 }
-            }.frame(maxWidth:.infinity)
-                .accessibilityElement(children:.ignore)
-                .accessibilityLabel(diary.t(illustration ? "صورة توضيحية لإطار مسح الوجبة":preview == nil ? "تجهيز صورة الوجبة":"صورة وجبتك داخل إطار المسح",illustration ? "Illustrative meal scanning viewfinder":preview == nil ? "Preparing your meal photo":"Your meal photo in the viewfinder"))
-                .accessibilityAddTraits(.isImage)
-        }.aspectRatio(1125.0/1540.0,contentMode:.fit).padding(.horizontal,-16)
+                if preview != nil || liveCamera{
+                    CFAScanBracketsShape().stroke(Theme.text,style:StrokeStyle(lineWidth:2,lineCap:.round,lineJoin:.round))
+                        .frame(width:width*0.78,height:height*0.69).allowsHitTesting(false).accessibilityHidden(true)
+                    if busy{
+                        Rectangle().fill(Theme.accent).frame(width:width*0.78,height:2)
+                            .luqmaScanSweep(active:busy,travel:height*0.22).allowsHitTesting(false).accessibilityHidden(true)
+                        VStack{Text(diary.t("جارٍ التحليل…","Analyzing…")).luqmaFont(.caption)
+                            .padding(12).foregroundStyle(Theme.onAccent).background(Theme.accent,in:Capsule());Spacer()}.padding(16)
+                    }
+                }
+            }.frame(width:width,height:height).clipShape(RoundedRectangle(cornerRadius:Theme.cardRadius,style:.continuous))
+        }.aspectRatio(1125.0/1540.0,contentMode:.fit)
     }
     private var review:some View {
         let summary=total
         return VStack(alignment:.leading,spacing:16){
             VStack(spacing:0){
-                resultHero.padding(.bottom,-24)
+                resultHero
                 resultPanel(summary)
             }.padding(.horizontal,-16)
             if let summary{calorieContribution(summary.kcal)}
@@ -243,7 +238,7 @@ import AVFoundation
             mealChoice
             VStack(alignment:.leading,spacing:10){
                 LuqmaSectionHeader(title:diary.t("المكونات","Components"),detail:typeSize.isAccessibilitySize ? nil:diary.t("الوزن والسعرات لكل مكوّن","Weight and calories per component"))
-                HStack(spacing:8){componentMode(diary.t("مختصر","Compact"),detailed:false);componentMode(diary.t("تفصيلي","Detailed"),detailed:true)}
+                LuqmaReviewSegments(options:[false,true],selection:$detailedComponents){$0 ? diary.t("تفصيلي","Detailed"):diary.t("مختصر","Compact")}
             }.id("photo-components")
             ForEach(parts){part in component(part).luqmaMotionTransition()}
             Button{selection=ProductSelection(id:UUID(),name:"")}label:{Label(diary.t("إضافة مكوّن","Add component"),systemImage:"plus.circle")}.buttonStyle(LuqmaSecondaryButtonStyle())
@@ -268,7 +263,7 @@ import AVFoundation
                 Button{closeAnalysis()}label:{
                     CFACrescentChevron().stroke(Color.white,style:StrokeStyle(lineWidth:2.2,lineCap:.round,lineJoin:.round))
                         .frame(width:10,height:18).scaleEffect(x:-1,y:1).frame(width:48,height:48)
-                        .background(Color(hex:0x393C43).opacity(approvedResultPreview ? 1:0.6),in:RoundedRectangle(cornerRadius:18,style:.continuous))
+                        .background(Theme.surface.opacity(approvedResultPreview ? 1:0.6),in:RoundedRectangle(cornerRadius:18,style:.continuous))
                 }.buttonStyle(LuqmaPressStyle()).padding(16).accessibilityLabel(diary.t("رجوع","Back"))
             }
         }.environment(\.layoutDirection,.leftToRight).aspectRatio(resultHeroAspect,contentMode:.fit)
@@ -302,7 +297,7 @@ import AVFoundation
     private func resultChip(_ title:String)->some View {
         Text(title).luqmaFont(size:12,weight:.bold,relativeTo:.caption).foregroundStyle(.white)
             .padding(.horizontal,14).frame(minHeight:30)
-            .overlay{RoundedRectangle(cornerRadius:10,style:.continuous).stroke(Color(hex:0x676C75),lineWidth:1)}
+            .overlay{RoundedRectangle(cornerRadius:10,style:.continuous).stroke(Theme.muted,lineWidth:1)}
     }
     private var knownMealWeight:Double? {
         var grams=0.0
@@ -317,28 +312,21 @@ import AVFoundation
     }
     private func resultPanel(_ nutrition:Nutrition?)->some View {
         VStack(alignment:.center,spacing:18) {
-            Capsule().fill(Color(hex:0x393C43)).frame(width:48,height:4).accessibilityHidden(true)
             resultTitle
             if let nutrition {
-                calorieValue(nutrition.kcal)
-                if typeSize.isAccessibilitySize{
-                    VStack(spacing:16){ForEach(MacroKey.allCases){key in macroGoal(key,nutrition:nutrition)}}
-                }else{
-                    HStack(alignment:.bottom,spacing:10){ForEach([MacroKey.protein,MacroKey.carbs,MacroKey.fat]){key in macroColumn(key,nutrition:nutrition)}}
-                        .environment(\.layoutDirection,.leftToRight)
-                }
+                LuqmaReviewNutrition(value:nutrition,detail:diary.t("تقدير الصورة · راجع الكميات","Photo estimate · review quantities"))
             }else{
                 Notice(text:diary.t("أكمل بيانات جميع المكونات لعرض إجمالي الوجبة وحفظها.","Complete every component to see and log the meal total."))
             }
             Button{logMeal()}label:{
                 HStack(spacing:10){Text(diary.t("إضافة الوجبة","Log meal"));Image(systemName:"plus").font(.system(size:16,weight:.bold))}
-                    .luqmaFont(size:16,weight:.bold,relativeTo:.headline).foregroundStyle(.white)
-                    .frame(maxWidth:.infinity,minHeight:56)
-                    .background(Color(hex:0xF97316),in:RoundedRectangle(cornerRadius:18,style:.continuous))
+                    .luqmaFont(size:16,weight:.bold,relativeTo:.headline).foregroundStyle(Theme.onAccent)
+                    .frame(maxWidth:.infinity,minHeight:Theme.primaryButtonHeight)
+                    .background(Theme.accent,in:RoundedRectangle(cornerRadius:18,style:.continuous))
             }.buttonStyle(LuqmaPressStyle()).disabled(nutrition==nil || busy || loadingPhoto).accessibilityIdentifier("photo.logMeal")
         }.padding(.horizontal,16).padding(.top,12).padding(.bottom,16)
-            .frame(maxWidth:.infinity,minHeight:typeSize.isAccessibilitySize ? nil:498,alignment:.top)
-            .background(Color(hex:0x111214),in:UnevenRoundedRectangle(topLeadingRadius:34,topTrailingRadius:34,style:.continuous))
+            .frame(maxWidth:.infinity,alignment:.top)
+            .background(Theme.background,in:UnevenRoundedRectangle(topLeadingRadius:34,topTrailingRadius:34,style:.continuous))
     }
     private func logMeal(){
         guard total != nil else{return};let values=parts.compactMap{products[$0.id]};guard values.count==parts.count else{return}
@@ -349,7 +337,7 @@ import AVFoundation
             Text(diary.t("تقدير الصورة","Photo estimate"))
             Text("·").accessibilityHidden(true)
             Text(decimal(kcal,0)+" "+diary.t("سعرة","kcal")).monospacedDigit().luqmaNumericMotion(value:kcal)
-        }.luqmaFont(size:15,weight:.medium,relativeTo:.subheadline).foregroundStyle(Color(hex:0xD7D8D9)).accessibilityElement(children:.combine)
+        }.luqmaFont(size:15,weight:.medium,relativeTo:.subheadline).foregroundStyle(Theme.textSecondary).accessibilityElement(children:.combine)
     }
     private func calorieContribution(_ kcal:Double)->some View {
         VStack(alignment:.leading,spacing:8){
@@ -365,9 +353,9 @@ import AVFoundation
     }
     private func macroColor(_ key:MacroKey)->Color {
         switch key {
-        case .protein:return Color(hex:0x676C75)
-        case .carbs:return Color(hex:0xF97316)
-        case .fat:return Color(hex:0x2563EB)
+        case .protein:return Theme.muted
+        case .carbs:return Theme.accent
+        case .fat:return Theme.secondaryAccent
         }
     }
     private func macroColumn(_ key:MacroKey,nutrition:Nutrition)->some View {
@@ -376,12 +364,12 @@ import AVFoundation
         let fraction=largest>0 && amount>0 ? min(0.72,amount/largest*0.72):0
         return GeometryReader{geometry in
             ZStack(alignment:.bottom) {
-                RoundedRectangle(cornerRadius:24,style:.continuous).fill(Color(hex:0x393C43))
+                RoundedRectangle(cornerRadius:24,style:.continuous).fill(Theme.surface)
                 RoundedRectangle(cornerRadius:24,style:.continuous).fill(macroColor(key))
                     .frame(height:geometry.size.height*CGFloat(fraction)).luqmaMotion(.progress,value:fraction)
                 VStack {
                     Image(macroIcon(key)).renderingMode(.original).resizable().scaledToFit().frame(width:20,height:20)
-                        .foregroundStyle(Color(hex:0xD7D8D9)).padding(.top,16)
+                        .foregroundStyle(Theme.textSecondary).padding(.top,16)
                     Spacer(minLength:0)
                 }.accessibilityHidden(true)
                 VStack(spacing:2) {
@@ -456,9 +444,9 @@ import AVFoundation
                 Rectangle().fill(Theme.stroke).frame(height:1)
                 if let nutrition{
                     if typeSize.isAccessibilitySize{
-                        VStack(spacing:12){componentMacro(diary.t("بروتين","Protein"),nutrition.protein);componentMacro(diary.t("كارب","Carbs"),nutrition.carbs);componentMacro(diary.t("دهون","Fat"),nutrition.fat)}
+                        VStack(spacing:12){LuqmaReviewMacro(key:.protein,amount:nutrition.protein);LuqmaReviewMacro(key:.carbs,amount:nutrition.carbs);LuqmaReviewMacro(key:.fat,amount:nutrition.fat)}
                     }else{
-                        HStack(spacing:12){componentMacro(diary.t("بروتين","Protein"),nutrition.protein);componentMacro(diary.t("كارب","Carbs"),nutrition.carbs);componentMacro(diary.t("دهون","Fat"),nutrition.fat)}
+                        HStack(spacing:12){LuqmaReviewMacro(key:.protein,amount:nutrition.protein);LuqmaReviewMacro(key:.carbs,amount:nutrition.carbs);LuqmaReviewMacro(key:.fat,amount:nutrition.fat)}
                     }
                 }
                 if let product,MealPhotoEstimate.isValidPhotoEstimate(product.0),let estimate=part.mealEstimate{
@@ -490,7 +478,7 @@ import AVFoundation
     private func componentCalories(_ nutrition:Nutrition?)->some View {
         VStack(alignment:.trailing,spacing:2){
             if let nutrition{
-                Text(decimal(nutrition.kcal,0)).luqmaFont(size:23,weight:.bold,relativeTo:.title2).monospacedDigit().foregroundStyle(Theme.accent).luqmaNumericMotion(value:nutrition.kcal)
+                Text(decimal(nutrition.kcal,0)).luqmaFont(.title3).monospacedDigit().foregroundStyle(Theme.accentText).luqmaNumericMotion(value:nutrition.kcal)
                 Text(diary.t("سعرة","kcal")).luqmaFont(.caption2).foregroundStyle(Theme.muted)
             }else{Text(diary.t("غير مكتمل","Incomplete")).luqmaFont(.caption).foregroundStyle(Theme.muted)}
         }.fixedSize(horizontal:true,vertical:false).accessibilityElement(children:.combine)
@@ -528,7 +516,7 @@ import AVFoundation
             cameraMessage=diary.t("لا توجد كاميرا متاحة على هذا الجهاز. اختر صورة من المكتبة.","No camera is available on this device. Choose a photo from your library.");return
         }
         Task{
-            if await CameraAccess.request(){camera=true;return}
+            if await CameraAccess.request(){guard phase == .active else{return};liveCamera=true;return}
             switch AVCaptureDevice.authorizationStatus(for:.video){
             case .denied:
                 cameraAccessBlocked=true

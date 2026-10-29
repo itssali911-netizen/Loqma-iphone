@@ -1,0 +1,39 @@
+{
+  "status": "passed",
+  "baseline": "798a0f4f45aad23fdeac235a417d345988cf5c34",
+  "changed_application_files": [
+    "Luqma.xcodeproj/project.pbxproj",
+    "Luqma/Views/KitchenView.swift",
+    "Luqma/Views/LuqmaMealCamera.swift",
+    "Luqma/Views/LuqmaRefinedUI.swift",
+    "Luqma/Views/PhotoMealView.swift",
+    "Luqma/Views/PlanView.swift",
+    "Luqma/Views/ProgressView.swift"
+  ],
+  "scope_violations": [],
+  "byte_identical_protected_paths": {
+    "Luqma/Core": true,
+    "Luqma/Services": true,
+    "Luqma/Resources": true,
+    "Luqma/LuqmaApp.swift": true,
+    "Luqma/Views/LuqmaTypography.swift": true,
+    "Luqma/Views/Common.swift": true,
+    "Luqma/Views/DiaryView.swift": true,
+    "Luqma/Views/DailyCalorieCard.swift": true,
+    "Luqma/Views/DailyMealCard.swift": true,
+    "Luqma/Views/FoodAddView.swift": true,
+    "Luqma/Info.plist": true,
+    "Luqma/Luqma.entitlements": true
+  },
+  "changa_bold_sha256": "d2015fb807cdd2cdc4d2f539db75117f7f009e407fe9d4b3e7555d94c4ff2c9f",
+  "expected_font_sha256": "d2015fb807cdd2cdc4d2f539db75117f7f009e407fe9d4b3e7555d94c4ff2c9f",
+  "native_build": "not_run",
+  "native_screenshots": "not_captured",
+  "native_interactions": "not_run",
+  "physical_camera": "not_tested",
+  "live_ai_service": "not_called",
+  "visual_approval": "pending",
+  "public_push": "blocked_by_automatic_approval_review",
+  "merged": false,
+  "ipa_published": false
+}
