@@ -174,13 +174,13 @@ final class LuqmaInteractionTests:XCTestCase {
         XCTAssertTrue(name.waitForExistence(timeout:10));name.tap();name.typeText("Recipe review")
         let keyboardDone=app.buttons["Dismiss keyboard"]
         XCTAssertTrue(keyboardDone.waitForExistence(timeout:5));keyboardDone.tap()
-        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout:5))
+        XCTAssertEqual(XCTWaiter.wait(for:[XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == false"),object:app.keyboards.firstMatch)],timeout:5),.completed)
         let toggle=app.switches["recipe.byWeight"]
         reveal(toggle);toggle.switches.firstMatch.tap()
         let cooked=app.textFields["Cooked weight"]
         reveal(cooked);replace(cooked,with:"100")
         XCTAssertTrue(keyboardDone.waitForExistence(timeout:5));keyboardDone.tap()
-        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout:5))
+        XCTAssertEqual(XCTWaiter.wait(for:[XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == false"),object:app.keyboards.firstMatch)],timeout:5),.completed)
         reveal(app.buttons["recipe.addIngredient"]);app.buttons["recipe.addIngredient"].tap()
         let personal=app.buttons["search.filter.3"]
         XCTAssertTrue(personal.waitForExistence(timeout:15));personal.tap()
