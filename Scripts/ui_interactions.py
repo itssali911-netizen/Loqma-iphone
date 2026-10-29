@@ -34,7 +34,8 @@ TESTS = PRIMARY_TESTS + DENIED_TESTS + FITNESS_TESTS
 def run_scenario(output: Path, packages: Path, derived: Path, runtime: dict,
                  methods: tuple[str, ...], report: dict, build_number: str,
                  signing_settings: list[str] | None = None,
-                 test_class: str = 'LuqmaInteractionTests', record_video: bool = False) -> None:
+                 test_class: str = 'LuqmaInteractionTests', record_video: bool = False,
+                 timeout_seconds: int = 1500) -> None:
     """Use a separately created device for each OS notification permission choice.
 
     simctl has no supported notifications privacy reset. A denied permission is
@@ -67,7 +68,7 @@ def run_scenario(output: Path, packages: Path, derived: Path, runtime: dict,
                      '-resultBundlePath',str(result),'-parallel-testing-enabled','NO',
                      *selection,'ARCHS=arm64','ONLY_ACTIVE_ARCH=YES',
                      *(signing_settings if signing_settings is not None else ['CODE_SIGNING_ALLOWED=NO']),'CURRENT_PROJECT_VERSION='+build_number,
-                     'test'],output,'native-interactions',1500)
+                     'test'],output,'native-interactions',timeout_seconds)
         # An empty XCTest run or successful rendering is not functional evidence.
         passed=[name for name in methods if re.search(r"Test Case '.*"+re.escape(name)+r".*' passed",log)]
         report['passed_cases']=passed

@@ -23,6 +23,7 @@ def main():
     output.mkdir()
     report=dict(status='running',verified_production_revision=VERIFIED,
                 revision=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
+                workflow_run_id=os.environ.get('GITHUB_RUN_ID'),
                 earlier_run=40780795084,scenarios=[],physical_device_tested=False,
                 fps='Not Measured',ipa_exported=False,merged=False)
     try:
@@ -51,12 +52,17 @@ def main():
         failures=[]
         for name,methods,test_class,record in [('legacy',legacy,'LuqmaInteractionTests',False),
                                               ('native-motion',motion,'MotionInteractionTests',True)]:
-            item=dict(name=name,status='running',required_cases=list(methods));report['scenarios'].append(item)
+            # The standalone job starts with empty DerivedData. Its first
+            # xcodebuild includes a full native app/dependency compilation;
+            # the existing 25-minute limit assumed a prebuilt app. Keep every
+            # assertion and allow compilation plus the complete legacy flow.
+            timeout=2700 if name=='legacy' else 1500
+            item=dict(name=name,status='running',required_cases=list(methods),command_timeout_seconds=timeout);report['scenarios'].append(item)
             try:
                 run_scenario(output/name,packages,derived,runtime,methods,item,
                              os.environ.get('BUILD_NUMBER','123'),
                              signing_settings=['CODE_SIGNING_ALLOWED=YES','CODE_SIGN_IDENTITY=-'],
-                             test_class=test_class,record_video=record)
+                             test_class=test_class,record_video=record,timeout_seconds=timeout)
             except (BuildError,OSError,ValueError) as error:failures.append(str(error))
         if failures:raise BuildError('; '.join(failures))
         report['status']='passed'

@@ -6,7 +6,9 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: luqma-native-motion-revision-${{ github.ref }}
+  # Preserve the already-running same-Mac pair in run 40820331550 while the
+  # standalone functional runner receives its cold-build time budget.
+  group: luqma-native-motion-followup-v2-${{ github.ref }}
   cancel-in-progress: true
 env:
   DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
@@ -35,7 +37,8 @@ jobs:
           followup=unchanged and any(p.startswith('TestsUI/') or p=='Scripts/motion_followup.py' for p in changed)
           # Repeat the mixed-host comparison once on a single runner when this
           # follow-up harness is first introduced, not on documentation pushes.
-          paired=followup and 'Scripts/motion_followup.py' in changed
+          added=subprocess.check_output(['git','diff','--diff-filter=A','--name-only','HEAD^','HEAD'],text=True).splitlines()
+          paired=followup and 'Scripts/motion_followup.py' in added
           with open(os.environ['GITHUB_OUTPUT'],'a') as f:
               for k,v in [('app_unchanged',unchanged),('followup',followup),('paired',paired)]:
                   f.write(k+'='+str(v).lower()+'\n')
