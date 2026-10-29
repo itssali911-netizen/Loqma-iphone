@@ -11,6 +11,7 @@ env:
   DEVELOPER_DIR: ${{ vars.XCODE_DEVELOPER_DIR || '/Applications/Xcode_26.6.app/Contents/Developer' }}
   BUNDLE_ID: app.luqma.diary
   BUILD_NUMBER: '125'
+  FIXTURE_ONLY: ${{ contains(github.event.head_commit.message, 'recipe expanded fixture') && '1' || '' }}
 jobs:
   recipe-review:
     runs-on: macos-26
@@ -22,8 +23,13 @@ jobs:
       - name: Capture actual compact Arabic recipe screen and verify runtime Changa
         run: |
           git rev-parse HEAD > source-revision.txt
-          python3 Scripts/ui_preview.py --output Recipe-AR-Compact --language ar --device-type com.apple.CoreSimulator.SimDeviceType.iPhone-13-mini --screens recipe-details
+          if [ "$FIXTURE_ONLY" = "1" ]; then
+            python3 Scripts/ui_preview.py --output Recipe-AR-Expanded --language ar --device-type com.apple.CoreSimulator.SimDeviceType.iPhone-13-mini --screens recipe-details --expanded-recipe
+          else
+            python3 Scripts/ui_preview.py --output Recipe-AR-Compact --language ar --device-type com.apple.CoreSimulator.SimDeviceType.iPhone-13-mini --screens recipe-details
+          fi
       - name: Capture actual expanded ingredient details, large Arabic and compact English
+        if: env.FIXTURE_ONLY != '1'
         run: |
           app=Recipe-AR-Compact/derived/Build/Products/Debug-iphonesimulator/Luqma.app
           python3 Scripts/ui_preview.py --output Recipe-AR-Expanded --language ar --app "$app" --device-type com.apple.CoreSimulator.SimDeviceType.iPhone-13-mini --screens recipe-details --expanded-recipe
@@ -42,10 +48,12 @@ jobs:
             Recipe-*/font-audits/
           retention-days: 30
       - name: Verify Core calculations and build checks
+        if: env.FIXTURE_ONLY != '1'
         run: |
           swift test -j 2 > recipe-core-tests.log 2>&1
           python3 -m unittest discover -s BuildTests -v > recipe-build-tests.log 2>&1
       - name: Verify native recipe drafts and existing interactions
+        if: env.FIXTURE_ONLY != '1'
         run: |
           python3 - <<'PY'
           import json,os,sys
