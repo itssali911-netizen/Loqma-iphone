@@ -20,6 +20,7 @@ env:
   BUILD_NUMBER: '124'
 jobs:
   native-review:
+    if: ${{ !startsWith(github.event.head_commit.message, 'test: eight-screen follow-up') }}
     strategy:
       fail-fast: false
       matrix:

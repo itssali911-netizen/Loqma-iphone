@@ -30,7 +30,10 @@ final class EightScreenReviewTests:XCTestCase {
         XCTAssertTrue(app.buttons["progress.logWeight"].waitForExistence(timeout:10))
         app.terminate();app.launch();app.buttons["nav.progress"].tap();openWeight()
         let restored=app.textFields["weight.value"]
-        XCTAssertTrue(restored.waitForExistence(timeout:10));XCTAssertEqual(restored.value as? String,"82.6")
+        XCTAssertTrue(restored.waitForExistence(timeout:10))
+        let restoredNumber=Double(restored.value as? String ?? "")
+        XCTAssertNotNil(restoredNumber)
+        XCTAssertEqual(restoredNumber ?? 0,82.6,accuracy:0.0001,"Compare the persisted number; the approved formatter may display 82.60")
         app.buttons["Cancel"].tap()
         XCTAssertFalse(app.staticTexts["82.4 kg"].exists,"The earlier same-day reading must be replaced")
     }

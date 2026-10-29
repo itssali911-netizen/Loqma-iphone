@@ -1,0 +1,50 @@
+name: LUQMA eight-screen native functional follow-up
+on:
+  push:
+    branches: [review/premium-eight-screens-20261029]
+    paths:
+      - 'TestsUI/EightScreenReviewTests.swift'
+      - 'Scripts/eight_screen_native_tests.py'
+      - '.github/workflows/eight-screen-functional.yml'
+permissions:
+  contents: read
+env:
+  DEVELOPER_DIR: ${{ vars.XCODE_DEVELOPER_DIR || '/Applications/Xcode_26.6.app/Contents/Developer' }}
+  BUNDLE_ID: app.luqma.diary
+  BUILD_NUMBER: '124'
+jobs:
+  native-functional:
+    runs-on: macos-26
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Verify the actual application remains identical to the captured revision
+        run: |
+          git fetch --depth=1 origin bd661d731ccb7e1e089c251f5c4083699751c8e7
+          git diff --exit-code bd661d731ccb7e1e089c251f5c4083699751c8e7 HEAD -- Luqma/ Luqma.xcodeproj/
+          git rev-parse HEAD > functional-source-revision.txt
+      - name: Build the real Debug app and reuse it for native interaction checks
+        run: |
+          python3 - <<'PY'
+          import os,runpy,sys
+          from pathlib import Path
+          sys.path.insert(0,'Scripts')
+          from ui_preview import build_app
+          root=Path.cwd()
+          prep=root/'EightScreenTestPrep';prep.mkdir()
+          build_app(prep,root/'BuildOutput/Packages','app.luqma.diary')
+          os.environ['LUQMA_REVIEW_DERIVED']=str(prep/'derived')
+          runpy.run_path('Scripts/eight_screen_native_tests.py',run_name='__main__')
+          PY
+      - name: Preserve actual XCTest evidence, including any failures
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-eight-functional-followup-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            functional-source-revision.txt
+            EightScreenTestPrep/*.log
+            EightScreenTests/
+          retention-days: 30
