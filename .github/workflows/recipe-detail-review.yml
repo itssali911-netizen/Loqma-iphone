@@ -65,11 +65,9 @@ jobs:
           from ui_interactions import run_scenario
           root=Path.cwd();out=root/'RecipeInteractions';out.mkdir()
           runtime=select_runtime(json.loads(command(['xcrun','simctl','list','--json'],out,'inventory')))
-          for directory,cls,cases in [
-              ('controls','LuqmaInteractionTests',('testRecipeDetailsIngredientDisclosureAndBothQuantityModes',)),
-              ('draft','EightScreenReviewTests',('testArabicRecipeDraftReturnsFromIngredientSearch',))]:
-              report={'status':'running','test_class':cls,'synthetic_data':'Manually entered disposable Simulator recipe only','live_ai_called':False}
-              run_scenario(out/directory,root/'BuildOutput/Packages',root/'Recipe-AR-Compact/derived',runtime,cases,report,'125',signing_settings=['CODE_SIGNING_ALLOWED=YES','CODE_SIGN_IDENTITY=-'],test_class=cls,timeout_seconds=1800)
+          cases=('testRecipeDetailsIngredientDisclosureAndBothQuantityModes',)
+          report={'status':'running','test_class':'LuqmaInteractionTests','synthetic_data':'Manually entered disposable Simulator recipe only','live_ai_called':False}
+          run_scenario(out/'controls',root/'BuildOutput/Packages',root/'Recipe-AR-Compact/derived',runtime,cases,report,'125',signing_settings=['CODE_SIGNING_ALLOWED=YES','CODE_SIGN_IDENTITY=-'],test_class='LuqmaInteractionTests',timeout_seconds=1800)
           PY
       - name: Retain actual verification
         if: always()

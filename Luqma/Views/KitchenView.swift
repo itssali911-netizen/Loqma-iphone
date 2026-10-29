@@ -173,7 +173,7 @@ struct RecipeDetailView:View {
                     VStack(alignment:.leading,spacing:20){
                         recipeHeader(recipe)
                         nutritionSummary(recipe)
-                        VStack(alignment:.leading,spacing:12){
+                        VStack(alignment:.leading,spacing:8){
                             LuqmaSectionHeader(title:diary.t("المكونات","Ingredients"),detail:String(recipe.ingredients.count)+" "+diary.t("مكونات","items"))
                             Text(diary.t("المقادير للوصفة كاملة","Quantities for the whole recipe")).luqmaFont(.caption).foregroundStyle(Theme.muted)
                             VStack(spacing:0){
@@ -218,15 +218,9 @@ struct RecipeDetailView:View {
             }.appBackground().sandowNavigation(diary.t("تفاصيل الوصفة","Recipe details"),backLabel:diary.t("إغلاق","Close"),onBack:{dismiss()})
                 .safeAreaInset(edge:.bottom,spacing:0){
                     if let recipe{
-                        VStack(spacing:8){
-                            Button{select(recipe,false)}label:{Label(diary.t("إضافة حصة","Log serving"),systemImage:"plus")}.buttonStyle(LuqmaPrimaryButtonStyle())
-                                .accessibilityIdentifier("recipeDetail.logServing")
-                            if recipe.cookedWeight != nil{
-                                Button{select(recipe,true)}label:{
-                                    Label(diary.t("إضافة كمية بالجرام","Log a gram quantity"),systemImage:"scalemass")
-                                        .luqmaFont(.footnote).foregroundStyle(Theme.textSecondary).frame(maxWidth:.infinity,minHeight:44)
-                                }.buttonStyle(LuqmaPressStyle()).accessibilityIdentifier("recipeDetail.logGrams")
-                            }
+                        Group{
+                            if detailTypeSize.isAccessibilitySize{VStack(spacing:8){recipeActions(recipe)}}
+                            else{HStack(spacing:12){recipeActions(recipe)}}
                         }.padding(.horizontal,16).padding(.top,12).padding(.bottom,8).background(Theme.background)
                     }
                 }
@@ -246,43 +240,48 @@ struct RecipeDetailView:View {
             }
         }
     }
-    private func recipeHeader(_ recipe:Recipe)->some View {
-        VStack(alignment:.leading,spacing:8){
-            HStack(alignment:.firstTextBaseline,spacing:12){
-                Text(diary.t("من مطبخي","From my kitchen")).luqmaFont(.caption).foregroundStyle(Theme.accentText)
-                Spacer(minLength:8)
-                Button{editing=true}label:{Label(diary.t("تعديل","Edit"),systemImage:"square.and.pencil")
-                    .luqmaFont(.footnote).foregroundStyle(Theme.textSecondary).frame(minHeight:44)}
-                    .buttonStyle(LuqmaPressStyle()).accessibilityLabel(diary.t("تعديل الوصفة","Edit recipe"))
-                    .accessibilityIdentifier("recipeDetail.edit")
-            }
-            Text(DisplayFormat.westernDigits(recipe.name)).luqmaFont(.title2)
-                .frame(maxWidth:.infinity,alignment:.leading).fixedSize(horizontal:false,vertical:true).accessibilityAddTraits(.isHeader)
-            ViewThatFits(in:.horizontal){
-                HStack(spacing:12){recipeYield(recipe)}
-                VStack(alignment:.leading,spacing:6){recipeYield(recipe)}
-            }
+    @ViewBuilder private func recipeActions(_ recipe:Recipe)->some View {
+        Button{select(recipe,false)}label:{Label(diary.t("إضافة حصة","Log serving"),systemImage:"plus")}
+            .buttonStyle(LuqmaPrimaryButtonStyle()).accessibilityIdentifier("recipeDetail.logServing")
+        if recipe.cookedWeight != nil{
+            Button{select(recipe,true)}label:{
+                Label(diary.t("بالجرام","Grams"),systemImage:"scalemass")
+                    .luqmaFont(.footnote).foregroundStyle(Theme.textSecondary)
+                    .padding(.horizontal,16).frame(minHeight:Theme.primaryButtonHeight)
+                    .background(Theme.card,in:RoundedRectangle(cornerRadius:16,style:.continuous))
+            }.buttonStyle(LuqmaPressStyle()).accessibilityLabel(diary.t("إضافة كمية بالجرام","Log a gram quantity"))
+                .accessibilityIdentifier("recipeDetail.logGrams")
         }
     }
-    @ViewBuilder private func recipeYield(_ recipe:Recipe)->some View {
-        Label(decimal(recipe.portions)+" "+diary.t("حصص","servings"),systemImage:"fork.knife")
-            .luqmaFont(.caption).foregroundStyle(Theme.muted)
-        if let weight=recipe.cookedWeight{
-            Label(decimal(weight)+" "+diary.t("جم بعد الطبخ","g cooked"),systemImage:"scalemass")
-                .luqmaFont(.caption).foregroundStyle(Theme.muted)
+    private func recipeHeader(_ recipe:Recipe)->some View {
+        VStack(alignment:.leading,spacing:8){
+            HStack(alignment:.top,spacing:12){
+                Text(DisplayFormat.westernDigits(recipe.name)).luqmaFont(.title2)
+                    .frame(maxWidth:.infinity,alignment:.leading).fixedSize(horizontal:false,vertical:true).accessibilityAddTraits(.isHeader)
+                Button{editing=true}label:{
+                    Image(systemName:"square.and.pencil").font(.system(size:16,weight:.regular))
+                        .foregroundStyle(Theme.muted).frame(width:44,height:44).contentShape(Rectangle())
+                }.buttonStyle(LuqmaPressStyle()).accessibilityLabel(diary.t("تعديل الوصفة","Edit recipe"))
+                    .accessibilityIdentifier("recipeDetail.edit")
+            }
+            Text(recipeYield(recipe)).luqmaFont(.caption).foregroundStyle(Theme.muted)
+                .fixedSize(horizontal:false,vertical:true)
         }
+    }
+    private func conciseAmount(_ value:Double)->String {decimal(value,value.rounded()==value ? 0:1)}
+    private func recipeYield(_ recipe:Recipe)->String {
+        var text=conciseAmount(recipe.portions)+" "+diary.t("حصص","servings")
+        if let weight=recipe.cookedWeight{text += " · "+conciseAmount(weight)+" "+diary.t("جم بعد الطبخ","g cooked")}
+        return DisplayFormat.westernDigits(text)
     }
     private func nutritionSummary(_ recipe:Recipe)->some View {
         let value=recipe.total.scaled(1/max(recipe.portions,0.001))
         return VStack(alignment:.leading,spacing:12){
             HStack(alignment:.center,spacing:12){
-                VStack(alignment:.leading,spacing:2){
-                    Text(diary.t("القيم الغذائية","Nutrition")).luqmaFont(.subheadline)
-                    Text(diary.t("لكل حصة","Per serving")).luqmaFont(.caption).foregroundStyle(Theme.muted)
-                }
+                Text(diary.t("لكل حصة","Per serving")).luqmaFont(.caption).foregroundStyle(Theme.muted)
                 Spacer(minLength:8)
                 HStack(alignment:.firstTextBaseline,spacing:5){
-                    Text(decimal(value.kcal,0)).luqmaFont(.metric).monospacedDigit().foregroundStyle(Theme.accentText)
+                    Text(decimal(value.kcal,0)).luqmaFont(.metric).monospacedDigit().foregroundStyle(Theme.text)
                     Text(diary.t("سعرة","kcal")).luqmaFont(.caption).foregroundStyle(Theme.muted)
                 }.accessibilityElement(children:.combine)
             }
@@ -306,42 +305,45 @@ struct RecipeDetailView:View {
         return false
         #endif
     }
+    private func ingredientQuantity(_ ingredient:Ingredient,recipe:Recipe)->String {
+        conciseAmount(ingredient.amount)+" "+DisplayFormat.westernDigits(recipe.importInfo?.ingredientUnitLabels[ingredient.id.uuidString] ?? ingredient.unit.label(diary.language))
+    }
     private func ingredientRow(_ ingredient:Ingredient,recipe:Recipe)->some View {
         let isChecked=checked.contains(ingredient.id)
         let isExpanded=expandedIngredients.contains(ingredient.id) || expandedReviewFixture
-        return VStack(alignment:.leading,spacing:10){
-            HStack(alignment:.top,spacing:8){
+        return VStack(alignment:.leading,spacing:12){
+            HStack(alignment:.center,spacing:8){
                 Button{if isChecked{checked.remove(ingredient.id)}else{checked.insert(ingredient.id)}}label:{
-                    Image(systemName:isChecked ? "checkmark.circle.fill":"circle")
-                        .font(.system(size:20,weight:.regular)).foregroundStyle(isChecked ? Theme.accentText:Theme.muted)
-                        .frame(width:44,height:44).contentShape(Rectangle())
-                }.buttonStyle(LuqmaPressStyle()).accessibilityLabel(DisplayFormat.westernDigits(ingredient.name))
+                    HStack(spacing:12){
+                        Image(systemName:isChecked ? "checkmark.circle.fill":"circle")
+                            .font(.system(size:20,weight:.regular)).foregroundStyle(isChecked ? Theme.accentText:Theme.muted)
+                        VStack(alignment:.leading,spacing:4){
+                            Text(DisplayFormat.westernDigits(ingredient.name)).luqmaFont(.subheadline).foregroundStyle(Theme.text)
+                                .fixedSize(horizontal:false,vertical:true)
+                            Text(ingredientQuantity(ingredient,recipe:recipe))
+                                .luqmaFont(.caption).foregroundStyle(Theme.muted).monospacedDigit()
+                        }.frame(maxWidth:.infinity,alignment:.leading)
+                    }.frame(minHeight:44).contentShape(Rectangle())
+                }.buttonStyle(LuqmaPressStyle()).accessibilityLabel(DisplayFormat.westernDigits(ingredient.name)+", "+ingredientQuantity(ingredient,recipe:recipe))
                     .accessibilityValue(isChecked ? diary.t("محدد","Checked"):diary.t("غير محدد","Unchecked"))
                     .accessibilityAddTraits(isChecked ? .isSelected:[]).accessibilityIdentifier("recipeDetail.check."+ingredient.id.uuidString)
-                VStack(alignment:.leading,spacing:5){
-                    Text(DisplayFormat.westernDigits(ingredient.name)).luqmaFont(.subheadline).foregroundStyle(Theme.text)
-                        .fixedSize(horizontal:false,vertical:true)
-                    Text(decimal(ingredient.amount)+" "+DisplayFormat.westernDigits(recipe.importInfo?.ingredientUnitLabels[ingredient.id.uuidString] ?? ingredient.unit.label(diary.language)))
-                        .luqmaFont(.caption).foregroundStyle(Theme.muted).monospacedDigit()
-                }.frame(maxWidth:.infinity,alignment:.leading)
                 VStack(alignment:.trailing,spacing:2){
-                    Text(decimal(ingredient.kcal,0)).luqmaFont(.headline).foregroundStyle(Theme.text).monospacedDigit()
+                    Text(decimal(ingredient.kcal,0)).luqmaFont(.subheadline).foregroundStyle(Theme.text).monospacedDigit()
                     Text(diary.t("سعرة","kcal")).luqmaFont(.caption).foregroundStyle(Theme.muted)
                 }.accessibilityElement(children:.combine)
+                Button{if isExpanded{expandedIngredients.remove(ingredient.id)}else{expandedIngredients.insert(ingredient.id)}}label:{
+                    Image(systemName:isExpanded ? "chevron.up":"chevron.down")
+                        .font(.system(size:12,weight:.medium)).foregroundStyle(Theme.muted)
+                        .frame(width:44,height:44).contentShape(Rectangle())
+                }.buttonStyle(LuqmaPressStyle()).accessibilityLabel(diary.t("التفاصيل الغذائية","Nutrition details"))
+                    .accessibilityValue(isExpanded ? diary.t("موسّع","Expanded"):diary.t("مطوي","Collapsed"))
+                    .accessibilityIdentifier("recipeDetail.nutrition."+ingredient.id.uuidString)
             }
-            Button{if isExpanded{expandedIngredients.remove(ingredient.id)}else{expandedIngredients.insert(ingredient.id)}}label:{
-                HStack(spacing:6){
-                    Text(diary.t("التفاصيل الغذائية","Nutrition details")).luqmaFont(.caption)
-                    Image(systemName:isExpanded ? "chevron.up":"chevron.down").font(.system(size:10,weight:.semibold))
-                    Spacer(minLength:0)
-                }.foregroundStyle(Theme.accentText).frame(minHeight:44).contentShape(Rectangle())
-            }.buttonStyle(LuqmaPressStyle()).accessibilityValue(isExpanded ? diary.t("موسّع","Expanded"):diary.t("مطوي","Collapsed"))
-                .accessibilityIdentifier("recipeDetail.nutrition."+ingredient.id.uuidString)
             if isExpanded{
-                VStack(alignment:.leading,spacing:8){
+                VStack(alignment:.leading,spacing:12){
                     Text(diary.t("للكمية الموضحة أعلاه","For the quantity shown above")).luqmaFont(.caption).foregroundStyle(Theme.muted)
                     macroGrid(ingredient.nutrition)
-                }.padding(12).background(Theme.background,in:RoundedRectangle(cornerRadius:LuqmaReviewStyle.controlRadius,style:.continuous))
+                }.padding(.top,4).padding(.bottom,8)
             }
         }.luqmaMotion(.content,value:isExpanded).luqmaMotion(.selection,value:isChecked)
     }
