@@ -1,0 +1,108 @@
+{
+  "run_id": 40875601612,
+  "run_url": "https://github.com/itssali911-netizen/Loqma-iphone/actions/runs/40875601612",
+  "built_application_commit": "bd661d731ccb7e1e089c251f5c4083699751c8e7",
+  "simulator_debug_build": "passed",
+  "captures": [
+    {
+      "variant": "before/Review-AR-Compact",
+      "commit": "798a0f4f45aad23fdeac235a417d345988cf5c34",
+      "status": "captured",
+      "count": 8,
+      "language": "ar",
+      "device": "iPhone 13 mini",
+      "runtime": "iOS 26.5",
+      "fonts_verified": true,
+      "actual_fonts": [
+        "Changa-Bold"
+      ],
+      "screens": [
+        "kitchen",
+        "progress",
+        "recipe-editor",
+        "recipe-details",
+        "weight-plan",
+        "weight-editor",
+        "approved-scan",
+        "photo-components"
+      ]
+    },
+    {
+      "variant": "after/Review-AR-Compact",
+      "commit": "bd661d731ccb7e1e089c251f5c4083699751c8e7",
+      "status": "captured",
+      "count": 8,
+      "language": "ar",
+      "device": "iPhone 13 mini",
+      "runtime": "iOS 26.5",
+      "fonts_verified": true,
+      "actual_fonts": [
+        "Changa-Bold"
+      ],
+      "screens": [
+        "kitchen",
+        "progress",
+        "recipe-editor",
+        "recipe-details",
+        "weight-plan",
+        "weight-editor",
+        "approved-scan",
+        "photo-components"
+      ]
+    },
+    {
+      "variant": "layouts/Review-EN-Compact",
+      "commit": "bd661d731ccb7e1e089c251f5c4083699751c8e7",
+      "status": "captured",
+      "count": 8,
+      "language": "en",
+      "device": "iPhone 13 mini",
+      "runtime": "iOS 26.5",
+      "fonts_verified": true,
+      "actual_fonts": [
+        "Changa-Bold"
+      ],
+      "screens": [
+        "kitchen",
+        "progress",
+        "recipe-editor",
+        "recipe-details",
+        "weight-plan",
+        "weight-editor",
+        "approved-scan",
+        "photo-components"
+      ]
+    },
+    {
+      "variant": "layouts/Review-AR-Large",
+      "commit": "bd661d731ccb7e1e089c251f5c4083699751c8e7",
+      "status": "captured",
+      "count": 8,
+      "language": "ar",
+      "device": "iPhone 16 Pro Max",
+      "runtime": "iOS 26.5",
+      "fonts_verified": true,
+      "actual_fonts": [
+        "Changa-Bold"
+      ],
+      "screens": [
+        "kitchen",
+        "progress",
+        "recipe-editor",
+        "recipe-details",
+        "weight-plan",
+        "weight-editor",
+        "approved-scan",
+        "photo-components"
+      ]
+    }
+  ],
+  "iphone_release_build": "pending",
+  "functional_tests": "pending",
+  "physical_camera": "not_tested",
+  "live_ai": "not_called",
+  "dynamic_type_accessibility_sizes": "not_captured_in_this_run",
+  "system_reduce_motion": "policy_reused_not_native_tested_in_this_run",
+  "native_picker_internals": "system_rendered",
+  "visual_approval": "pending_user_review"
+}

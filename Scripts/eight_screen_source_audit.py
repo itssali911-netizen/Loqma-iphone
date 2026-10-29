@@ -28,9 +28,10 @@ report=dict(status='passed' if not violations and all(unchanged.values()) else '
  baseline=BASE,changed_application_files=sorted(changed),scope_violations=violations,
  byte_identical_protected_paths=unchanged,changa_bold_sha256=font,
  expected_font_sha256='d2015fb807cdd2cdc4d2f539db75117f7f009e407fe9d4b3e7555d94c4ff2c9f',
- native_build='not_run',native_screenshots='not_captured',native_interactions='not_run',
+ native_build='simulator_debug_passed',native_screenshots='32_actual_framebuffers_captured',native_interactions='pending',
  physical_camera='not_tested',live_ai_service='not_called',visual_approval='pending',
- public_push='blocked_by_automatic_approval_review',merged=False,ipa_published=False)
+ public_push='published_with_explicit_user_authorization',merged=False,ipa_published=False)
+report['native_evidence']=json.loads((ROOT/'Docs/EightScreenNativeEvidence.json').read_text())
 if font!=report['expected_font_sha256']:report['status']='failed'
 output=ROOT/'Docs/EightScreenReviewAudit.json'
 output.write_text(json.dumps(report,indent=2)+'\n')
