@@ -51,6 +51,68 @@ final class EightScreenReviewTests:XCTestCase {
         XCTAssertTrue(app.buttons["search.close"].waitForExistence(timeout:15));app.buttons["search.close"].tap()
         XCTAssertTrue(name.waitForExistence(timeout:10));XCTAssertEqual(name.value as? String,"Review recipe")
     }
+    /// Only native controls on an initially empty disposable diary. The test
+    /// opens the real importer but deliberately makes no remote request.
+    func testKitchenCategoriesSearchAndActionsRemainUsable() {
+        app.buttons["nav.kitchen"].tap()
+        let create=app.buttons["kitchen.create"]
+        let search=app.textFields["Search your recipes and meals"]
+        XCTAssertTrue(create.waitForExistence(timeout:10));XCTAssertTrue(create.isHittable)
+        XCTAssertTrue(search.waitForExistence(timeout:10));XCTAssertTrue(search.isHittable)
+        let controls:[(String,XCUIElement)]=[
+            ("search",search),("create",create),("import",app.buttons["Import link"]),
+            ("all",app.buttons["All"]),("recipes",app.buttons["Recipes"]),
+            ("meals",app.buttons["Meals"]),("prep",app.buttons["Meal prep"]),
+            ("tab.kitchen",app.buttons["nav.kitchen"]),("tab.add",app.buttons["nav.add"])]
+        var geometry:[[String:Any]]=[]
+        for (name,control) in controls {
+            XCTAssertTrue(control.exists && control.isEnabled && control.isHittable,"Unusable Kitchen control: \(name)")
+            geometry.append(["control":name,"x":control.frame.minX,"y":control.frame.minY,
+                             "width":control.frame.width,"height":control.frame.height])
+        }
+        if let bytes=try? JSONSerialization.data(withJSONObject:geometry,options:[.sortedKeys]),let json=String(data:bytes,encoding:.utf8) {
+            print("LUQMA_KITCHEN_ACTUAL_CONTROL_FRAMES "+json)
+            let item=XCTAttachment(data:bytes,uniformTypeIdentifier:"public.json");item.name="Actual Kitchen control geometry";item.lifetime = .keepAlways;add(item)
+        }
+        for label in ["Recipes","Meals","Meal prep","All"] {
+            let segment=app.buttons[label];segment.tap();XCTAssertTrue(segment.isSelected)
+        }
+        let mealSegment=app.buttons["Meals"];mealSegment.tap();XCTAssertTrue(mealSegment.isSelected)
+        search.tap();search.typeText("Kitchen query")
+        XCTAssertEqual(search.value as? String,"Kitchen query")
+        let clear=app.buttons["Clear search"]
+        XCTAssertTrue(clear.waitForExistence(timeout:5));XCTAssertTrue(clear.isHittable);clear.tap()
+        XCTAssertNotEqual(search.value as? String,"Kitchen query")
+        search.tap();search.typeText("Draft filter")
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout:5))
+        XCTAssertTrue(create.isHittable,"The decorative background must not intercept the action while typing")
+        create.tap()
+        let nameField=app.textFields["recipe.name"]
+        let name=nameField.waitForExistence(timeout:3) ? nameField:app.textViews["recipe.name"]
+        XCTAssertTrue(name.waitForExistence(timeout:10))
+        XCTAssertTrue(app.buttons["Cancel"].isHittable);app.buttons["Cancel"].tap()
+        XCTAssertTrue(create.waitForExistence(timeout:10))
+        XCTAssertEqual(search.value as? String,"Draft filter","Presenting and cancelling a recipe must preserve the real search state")
+        XCTAssertTrue(mealSegment.isSelected)
+        let importer=app.buttons["Import link"]
+        XCTAssertTrue(importer.isHittable);importer.tap()
+        let link=app.textFields["Recipe link"]
+        XCTAssertTrue(link.waitForExistence(timeout:10));link.tap();link.typeText("https://example.invalid/recipe")
+        XCTAssertEqual(link.value as? String,"https://example.invalid/recipe")
+        let close=app.buttons["Close"]
+        XCTAssertTrue(close.isHittable);close.tap()
+        XCTAssertTrue(create.waitForExistence(timeout:10));XCTAssertTrue(create.isHittable)
+        XCTAssertEqual(search.value as? String,"Draft filter")
+        XCTAssertTrue(mealSegment.isSelected)
+        XCTAssertTrue(clear.isHittable);clear.tap()
+        app.buttons["All"].tap()
+        for identifier in ["nav.today","nav.kitchen"] {
+            let tab=app.buttons[identifier];XCTAssertTrue(tab.isHittable);tab.tap();XCTAssertTrue(tab.isSelected)
+        }
+        XCTAssertTrue(create.waitForExistence(timeout:10));XCTAssertTrue(create.isHittable)
+        XCTAssertTrue(app.buttons["All"].isSelected)
+        let item=XCTAttachment(screenshot:app.screenshot());item.name="Actual Kitchen after native controls and cancellations";item.lifetime = .keepAlways;add(item)
+    }
     private func openWeight(){
         let button=app.buttons["progress.logWeight"]
         XCTAssertTrue(button.waitForExistence(timeout:10));if !button.isHittable{app.swipeDown()};button.tap()

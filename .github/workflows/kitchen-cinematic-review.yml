@@ -1,0 +1,110 @@
+name: Luqma isolated cinematic Kitchen review
+# Exact original photograph recovered from the supplied Kitchen integration archive.
+on:
+  push:
+    branches: [feature/kitchen-cinematic-review-20261030]
+  workflow_dispatch:
+    inputs:
+      original_asset_path:
+        description: Project-relative path of the supplied original kitchen photograph
+        required: true
+        type: string
+      original_asset_sha256:
+        description: Independently recorded SHA-256 of that original photograph
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: luqma-kitchen-review-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+  BUNDLE_ID: app.luqma.diary
+  BUILD_NUMBER: '123'
+jobs:
+  original-photo-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Verify supplied original artwork before spending native build time
+        env:
+          ORIGINAL_ASSET: ${{ inputs.original_asset_path || 'Luqma/Resources/Assets.xcassets/Editorial/KitchenFullBackground.imageset/KitchenFullBackground.png' }}
+          ORIGINAL_SHA256: ${{ inputs.original_asset_sha256 || '79682f5b4533057e6f1d25c0f86766012f2ad8db3022934bec87a162cc9aa083' }}
+        run: python3 Scripts/kitchen_cinematic_review.py verify-reference --asset-path "$ORIGINAL_ASSET" --asset-sha256 "$ORIGINAL_SHA256"
+      - name: Preserve exact asset identity gate
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-Kitchen-Reference-${{ github.run_id }}
+          path: Kitchen-Reference-Gate.json
+          retention-days: 30
+  baseline:
+    needs: original-photo-gate
+    runs-on: macos-26
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: cc282f58be1aa562f3e9da6e22151d9cc298acef
+          persist-credentials: false
+      - name: Capture immutable pre-change native Kitchen
+        run: |
+          export GITHUB_SHA="$(git rev-parse HEAD)"
+          python3 Scripts/ui_preview.py --screens kitchen --language ar --output Kitchen-Before-AR
+          python3 Scripts/ui_preview.py --screens kitchen --language ar --device-type com.apple.CoreSimulator.SimDeviceType.iPhone-13-mini --app Kitchen-Before-AR/derived/Build/Products/Debug-iphonesimulator/Luqma.app --output Kitchen-Before-Compact
+          python3 Scripts/ui_preview.py --screens kitchen --language en --app Kitchen-Before-AR/derived/Build/Products/Debug-iphonesimulator/Luqma.app --output Kitchen-Before-EN
+      - name: Preserve actual before screenshots and font evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-Kitchen-Before-${{ github.run_id }}
+          path: |
+            Kitchen-Before-*/*.png
+            Kitchen-Before-*/*.json
+            Kitchen-Before-*/*.log
+            Kitchen-Before-*/font-audits/
+          retention-days: 30
+  implementation:
+    needs: original-photo-gate
+    runs-on: macos-26
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Compile device Release and Simulator Debug and run available checks
+        run: python3 Scripts/build_ios.py check --output BuildOutput
+      - name: Exercise native Kitchen categories, keyboard, actions, navigation and recipe draft
+        run: python3 Scripts/kitchen_cinematic_review.py controls
+      - name: Capture actual Arabic common and compact plus English layouts
+        if: success() || failure()
+        run: |
+          python3 Scripts/ui_preview.py --screens kitchen --language ar --app BuildOutput/simulator-derived/Build/Products/Debug-iphonesimulator/Luqma.app --output Kitchen-After-AR
+          python3 Scripts/ui_preview.py --screens kitchen --language ar --device-type com.apple.CoreSimulator.SimDeviceType.iPhone-13-mini --app BuildOutput/simulator-derived/Build/Products/Debug-iphonesimulator/Luqma.app --output Kitchen-After-Compact
+          python3 Scripts/ui_preview.py --screens kitchen --language en --app BuildOutput/simulator-derived/Build/Products/Debug-iphonesimulator/Luqma.app --output Kitchen-After-EN
+      - name: Preserve native build results, tests, and unedited screenshots
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-Kitchen-After-${{ github.run_id }}
+          path: |
+            BuildOutput/build-summary.json
+            BuildOutput/*.log
+            Kitchen-Controls/*.json
+            Kitchen-Controls/*.log
+            Kitchen-Controls/*/*.json
+            Kitchen-Controls/*/*.log
+            Kitchen-After-*/*.png
+            Kitchen-After-*/*.json
+            Kitchen-After-*/*.log
+            Kitchen-After-*/font-audits/
+          retention-days: 30
+      - name: Preserve original XCTest result bundle
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-Kitchen-XCTest-${{ github.run_id }}
+          path: Kitchen-Controls/*/interactions.xcresult/
+          retention-days: 30

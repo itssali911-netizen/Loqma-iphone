@@ -20,25 +20,31 @@ struct KitchenView:View {
     }
     var body:some View {
         let filteredRecipes=recipes
-        return ScrollView{LazyVStack(alignment:.leading,spacing:16){
+        return GeometryReader{viewport in
+        ScrollView{LazyVStack(alignment:.leading,spacing:16){
             categoryBar
             HStack(spacing:10){
                 kitchenAction(diary.t("وصفة جديدة","New recipe"),symbol:"plus",primary:true){creating=true}.accessibilityIdentifier("kitchen.create")
                 kitchenAction(diary.t("استيراد رابط","Import link"),symbol:"link",primary:false){importingRecipe=true}
             }
             LuqmaSectionHeader(title:diary.t("محفوظاتك","Your saved items"),detail:decimal(Double(filteredRecipes.count),0))
-            if diary.state.recipes.isEmpty{kitchenEmptyState}
+            if diary.state.recipes.isEmpty{
+                kitchenEmptyState.frame(minHeight:max(0,viewport.size.height-188),alignment:.bottom)
+            }
             else if filteredRecipes.isEmpty{
                 SandowEmptyState(title:diary.t("لا توجد نتائج","No results"),message:diary.t("جرّب اسمًا آخر أو غيّر نوع المحفوظات.","Try another name or change the saved-item type."),
                     actionLabel:diary.t("عرض جميع المحفوظات","Show all saved items"),onAction:{query="";filter="all"})
             }
             ForEach(filteredRecipes){r in recipeCard(r).luqmaMotionTransition()}
-        }.luqmaMotion(.content,value:diary.state.recipes.count).luqmaMotion(.content,value:filter).padding(.horizontal,16).padding(.top,16).padding(.bottom,24)}.scrollDismissesKeyboard(.interactively).appBackground()
+        }.luqmaMotion(.content,value:diary.state.recipes.count).luqmaMotion(.content,value:filter).padding(.horizontal,16).padding(.top,16).padding(.bottom,24)}
+        .scrollDismissesKeyboard(.interactively).scrollContentBackground(.hidden).luqmaFont(.body)
+        }
             .navigationTitle(diary.t("مطبخي","My kitchen"))
             .luqmaFeedback(.light,trigger:creating){_,value in value}
             .luqmaFeedback(.success,trigger:diary.state.recipes.count){old,new in new>old}
             .toolbar(.hidden,for:.navigationBar)
             .safeAreaInset(edge:.top,spacing:0){kitchenHeader}
+            .background{KitchenCinematicBackgroundView()}
             .sheet(isPresented:$creating){RecipeEditor(recipe:Recipe(id:UUID(),name:"",type:"recipe",ingredients:[],portions:1,cookedWeight:nil,notes:""))}
             .sheet(isPresented:$importingRecipe){RecipeImportView()}
             .sheet(item:$editing){RecipeEditor(recipe:$0)}
@@ -61,7 +67,6 @@ struct KitchenView:View {
                 .background(Theme.card,in:RoundedRectangle(cornerRadius:LuqmaReviewStyle.controlRadius,style:.continuous))
                 .luqmaMotion(.content,value:query.isEmpty)
         }.padding(.horizontal,LuqmaReviewStyle.margin).padding(.bottom,8)
-            .background(Theme.background.ignoresSafeArea(edges:.top))
     }
     private var categoryBar:some View {
         LuqmaReviewSegments(options:["all","recipe","meal","prep"],selection:$filter){value in
@@ -132,9 +137,8 @@ struct KitchenView:View {
     }
     private var kitchenEmptyState:some View {
         VStack(spacing:16){
-            EditorialPanel(artwork:.kitchen,height:112).frame(maxWidth:240)
-            Text(diary.t("مطبخك يبدأ هنا","Your kitchen starts here")).luqmaFont(.title3).accessibilityAddTraits(.isHeader)
-            Text(diary.t("احفظ وصفاتك واحسب حصصها بسهولة. ابدأ بوصفة جديدة أو استورد رابطًا من الأعلى.","Save recipes and calculate their servings. Start a new recipe or import a link above."))
+            Text(diary.t("مطبخك يبدأ هنا","Your kitchen starts here")).luqmaFont(.title3).foregroundStyle(Theme.text).accessibilityAddTraits(.isHeader)
+            Text(diary.t("احفظ وصفاتك واحسب حصصها بسهولة. ابدأ بوصفة جديدة أو استورد رابطاً من الأعلى.","Save recipes and calculate their servings. Start a new recipe or import a link above."))
                 .luqmaFont(.footnote).foregroundStyle(Theme.muted).fixedSize(horizontal:false,vertical:true)
         }.multilineTextAlignment(.center).frame(maxWidth:.infinity).padding(.vertical,24)
     }
@@ -151,6 +155,46 @@ struct KitchenView:View {
     }
     private func recipeKind(_ type:String)->String {switch type{case "meal":return diary.t("وجبة محفوظة","Saved meal");case "prep":return diary.t("تحضير وجبات","Meal prep");default:return diary.t("وصفة","Recipe")}}
     private func select(_ r:Recipe,_ weighted:Bool){do{selected=try r.food(byWeight:weighted)}catch{diary.report(error)}}
+}
+
+/// The original supplied photograph is decorative, never recipe/user data.
+/// All shading is confined here; foreground controls keep their opaque fills.
+struct KitchenCinematicBackgroundView:View {
+    private let charcoal=Theme.background
+    private let globalDarkening=0.20
+    // Effective CENTER alpha, including the global layer (not additive opacities).
+    // The faint vignette adds at most 3.6 percentage points at the edges.
+    private let centerStops:[(location:CGFloat,darkening:Double)]=[
+        (0.00,0.65),(0.12,0.68),(0.20,0.70),(0.32,0.70),
+        (0.42,0.58),(0.50,0.55),(0.60,0.56),(0.69,0.68),
+        (0.73,0.74),(0.755,0.825),(0.81,0.875),(0.86,0.90),
+        (0.92,0.925),(1.00,0.95)
+    ]
+    var body:some View {
+        GeometryReader{geometry in
+            ZStack {
+                charcoal
+                // Width-fit/bottom anchoring reproduces the reference's whole
+                // spoon and bowl; a height-fill crop would enlarge/cut them.
+                Image("KitchenFullBackground").resizable().scaledToFit()
+                    .frame(width:geometry.size.width,height:geometry.size.height,alignment:.bottom)
+                    .clipped()
+                charcoal.opacity(globalDarkening)
+                LinearGradient(stops:centerStops.map{stop in
+                    .init(color:charcoal.opacity((stop.darkening-globalDarkening)/(1-globalDarkening)),location:stop.location)
+                },startPoint:.top,endPoint:.bottom)
+                // Elliptical, almost imperceptible edge falloff; no blur/glow.
+                EllipticalGradient(stops:[
+                    .init(color:.clear,location:0.00),
+                    .init(color:.clear,location:0.50),
+                    .init(color:charcoal.opacity(0.04),location:0.76),
+                    .init(color:charcoal.opacity(0.08),location:1.00)
+                ],center:UnitPoint(x:0.5,y:0.48),startRadiusFraction:0,endRadiusFraction:0.72)
+            }.frame(width:geometry.size.width,height:geometry.size.height)
+        }.ignoresSafeArea().allowsHitTesting(false).accessibilityHidden(true)
+            // Photography has physical direction; RTL must not mirror its objects.
+            .environment(\.layoutDirection,.leftToRight)
+    }
 }
 /// N11's ingredient/instruction structure uses real saved recipe data.
 /// The unavailable reference photo/gallery/rating assets are not fabricated.
