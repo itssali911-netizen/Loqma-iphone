@@ -59,11 +59,27 @@ final class EightScreenReviewTests:XCTestCase {
         let search=app.textFields["Search your recipes and meals"]
         XCTAssertTrue(create.waitForExistence(timeout:10));XCTAssertTrue(create.isHittable)
         XCTAssertTrue(search.waitForExistence(timeout:10));XCTAssertTrue(search.isHittable)
+        // A successful control flow is insufficient if the cinematic composition
+        // pushes its approved copy below the viewport. Inspect actual native
+        // frames before any keyboard or scroll changes the available height.
+        let emptyHeading=app.staticTexts["Your kitchen starts here"]
+        let emptyDescription=app.staticTexts["Save recipes and calculate their servings. Start a new recipe or import a link above."]
+        XCTAssertTrue(emptyHeading.waitForExistence(timeout:10));XCTAssertTrue(emptyHeading.isHittable)
+        XCTAssertTrue(emptyDescription.exists)
+        let add=app.buttons["nav.add"]
+        XCTAssertTrue(add.isHittable)
+        for text in [emptyHeading,emptyDescription] {
+            XCTAssertGreaterThan(text.frame.minY,create.frame.maxY,"Empty-state text must remain below the existing controls")
+            XCTAssertLessThanOrEqual(text.frame.maxY,add.frame.minY-8,"The whole approved copy must be visible above the unchanged tab bar")
+            XCTAssertGreaterThan(text.frame.height,0)
+            XCTAssertTrue(app.frame.contains(text.frame),"The actual native text frame must not extend below or outside the viewport")
+        }
         let controls:[(String,XCUIElement)]=[
             ("search",search),("create",create),("import",app.buttons["Import link"]),
             ("all",app.buttons["All"]),("recipes",app.buttons["Recipes"]),
             ("meals",app.buttons["Meals"]),("prep",app.buttons["Meal prep"]),
-            ("tab.kitchen",app.buttons["nav.kitchen"]),("tab.add",app.buttons["nav.add"])]
+            ("tab.kitchen",app.buttons["nav.kitchen"]),("tab.add",app.buttons["nav.add"]),
+            ("empty.heading",emptyHeading),("empty.description",emptyDescription)]
         var geometry:[[String:Any]]=[]
         for (name,control) in controls {
             XCTAssertTrue(control.exists && control.isEnabled && control.isHittable,"Unusable Kitchen control: \(name)")

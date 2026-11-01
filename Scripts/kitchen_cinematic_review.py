@@ -15,7 +15,7 @@ import os
 import re
 import subprocess
 import sys
-from build_ios import BuildError, require_mac
+from build_ios import BuildError, require_mac, run
 from ui_interactions import run_scenario
 from ui_preview import command, select_runtime
 from vision_compat import apply_vision_compat
@@ -42,6 +42,69 @@ def verify_reference(relative_path: str, expected_sha256: str) -> dict:
         raise BuildError('The kitchen photograph differs from the recorded original; do not substitute or regenerate it.')
     return dict(original_asset=relative.as_posix(),original_asset_sha256=actual,bytes=len(data),
                 screenshot_is_original_artwork=False,visual_match_verified=False)
+
+
+VERIFIED_CHECKS_REVISION='a56ea3ff148c78ef069f91874ca1e318dff09159'
+VERIFIED_CHECKS_RUN=41075370035
+
+
+def focused_build(output: Path) -> None:
+    """Repeat both real SDK builds without rerunning unchanged Core/test inputs.
+
+    Previous actual Core/BuildTests evidence is explicitly attributed to its
+    immutable run; this invocation never invents or repeats its pass counts.
+    """
+    require_mac(26)
+    if output.exists():
+        raise BuildError('Choose a clean build output; do not mix native results.')
+    output.mkdir(parents=True)
+    report=dict(mode='kitchen-focused-sdk-check',status='running',
+                revision=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
+                sdk_builds=[],signed=False,apple_signed=False,ipa_exported=False,
+                core_tests_executed_this_run=False,build_tests_executed_this_run=False,
+                preceding_core_and_buildtests_run=VERIFIED_CHECKS_RUN,
+                preceding_core_and_buildtests_revision=VERIFIED_CHECKS_REVISION)
+    try:
+        # BuildTests also inspect resources, project metadata, and helper scripts.
+        # Permit only this isolated follow-up instead of an incomplete input list.
+        followup_files={'.github/workflows/kitchen-cinematic-review.yml',
+                        'Luqma/Views/KitchenView.swift',
+                        'Scripts/kitchen_cinematic_review.py',
+                        'TestsUI/EightScreenReviewTests.swift'}
+        changed=subprocess.check_output(['git','diff','--name-only',VERIFIED_CHECKS_REVISION,'--'],cwd=ROOT,text=True).splitlines()
+        report['changes_since_preceding_checks']=changed
+        changed_inputs=sorted(set(changed)-followup_files)
+        report['changes_in_reused_check_inputs']=changed_inputs
+        if changed_inputs:
+            raise BuildError('Previously tested Core/check inputs changed; run the full check instead of reusing earlier evidence.')
+        packages=output/'Packages'
+        run(['xcodebuild','-resolvePackageDependencies','-project','Luqma.xcodeproj','-scheme','Luqma',
+             '-clonedSourcePackagesDirPath',str(packages)],output/'packages.log')
+        apply_vision_compat(packages)
+        common=['xcodebuild','-project','Luqma.xcodeproj','-scheme','Luqma',
+                '-clonedSourcePackagesDirPath',str(packages),'-disableAutomaticPackageResolution']
+        bundle=os.environ.get('BUNDLE_ID','app.luqma.diary')
+        number=os.environ.get('BUILD_NUMBER','123')
+        if not re.fullmatch(r'[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+',bundle) or not re.fullmatch(r'[1-9][0-9]{0,8}',number):
+            raise BuildError('Invalid existing bundle/build configuration.')
+        for name,destination,configuration in [('simulator','generic/platform=iOS Simulator','Debug'),
+                                                ('device','generic/platform=iOS','Release')]:
+            run(common+['-destination',destination,'-configuration',configuration,
+                        '-derivedDataPath',str(output/(name+'-derived')),
+                        '-resultBundlePath',str(output/(name+'.xcresult')),
+                        'CODE_SIGNING_ALLOWED=NO','PRODUCT_BUNDLE_IDENTIFIER='+bundle,
+                        'CURRENT_PROJECT_VERSION='+number,'build'],output/(name+'.log'))
+            product=output/(name+'-derived')/'Build/Products'/('Debug-iphonesimulator' if name=='simulator' else 'Release-iphoneos')/'Luqma.app'
+            if not product.is_dir():
+                raise BuildError('The '+name+' SDK build did not produce Luqma.app.')
+            report['sdk_builds'].append(dict(platform=name,configuration=configuration,status='passed'))
+        apply_vision_compat(packages,verify_only=True)
+        report['status']='passed'
+    except BaseException as error:
+        report.update(status='failed',error=str(error))
+        raise
+    finally:
+        (output/'build-summary.json').write_text(json.dumps(report,indent=2)+'\n',encoding='utf8')
 
 
 def controls(output: Path, packages: Path, derived: Path) -> None:
@@ -81,6 +144,8 @@ def main():
     gate.add_argument('--asset-path',required=True)
     gate.add_argument('--asset-sha256',required=True)
     gate.add_argument('--output',type=Path,default=Path('Kitchen-Reference-Gate.json'))
+    build=commands.add_parser('build-focused')
+    build.add_argument('--output',type=Path,default=Path('BuildOutput'))
     test=commands.add_parser('controls')
     test.add_argument('--output',type=Path,default=Path('Kitchen-Controls'))
     test.add_argument('--packages',type=Path,default=Path('BuildOutput/Packages'))
@@ -90,6 +155,8 @@ def main():
         report=verify_reference(args.asset_path,args.asset_sha256)
         args.output.write_text(json.dumps(report,indent=2)+'\n',encoding='utf8')
         print('Original photograph byte identity verified; visual review remains required.')
+    elif args.mode=='build-focused':
+        focused_build(args.output.resolve())
     else:
         controls(args.output.resolve(),args.packages.resolve(),args.derived.resolve())
 

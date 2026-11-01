@@ -21,6 +21,10 @@ struct KitchenView:View {
     var body:some View {
         let filteredRecipes=recipes
         return GeometryReader{viewport in
+        // GeometryReader includes the inset header region; ScrollView avoids it.
+        // Size the empty composition from the SAME visible region, so its
+        // description remains above the unchanged bottom navigation.
+        let visibleHeight=max(0,viewport.size.height-viewport.safeAreaInsets.top-viewport.safeAreaInsets.bottom)
         ScrollView{LazyVStack(alignment:.leading,spacing:16){
             categoryBar
             HStack(spacing:10){
@@ -29,7 +33,7 @@ struct KitchenView:View {
             }
             LuqmaSectionHeader(title:diary.t("محفوظاتك","Your saved items"),detail:decimal(Double(filteredRecipes.count),0))
             if diary.state.recipes.isEmpty{
-                kitchenEmptyState.frame(minHeight:max(0,viewport.size.height-188),alignment:.bottom)
+                kitchenEmptyState.frame(minHeight:max(0,visibleHeight-212),alignment:.bottom)
             }
             else if filteredRecipes.isEmpty{
                 SandowEmptyState(title:diary.t("لا توجد نتائج","No results"),message:diary.t("جرّب اسمًا آخر أو غيّر نوع المحفوظات.","Try another name or change the saved-item type."),
@@ -166,8 +170,8 @@ struct KitchenCinematicBackgroundView:View {
     // The faint vignette adds at most 3.6 percentage points at the edges.
     private let centerStops:[(location:CGFloat,darkening:Double)]=[
         (0.00,0.65),(0.12,0.68),(0.20,0.70),(0.32,0.70),
-        (0.42,0.58),(0.50,0.55),(0.60,0.56),(0.69,0.68),
-        (0.73,0.74),(0.755,0.825),(0.81,0.875),(0.86,0.90),
+        (0.42,0.58),(0.50,0.55),(0.58,0.60),(0.62,0.67),
+        (0.69,0.72),(0.73,0.75),(0.755,0.825),(0.81,0.875),(0.86,0.90),
         (0.92,0.925),(1.00,0.95)
     ]
     var body:some View {
