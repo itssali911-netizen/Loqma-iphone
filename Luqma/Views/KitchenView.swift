@@ -20,11 +20,12 @@ struct KitchenView:View {
     }
     var body:some View {
         let filteredRecipes=recipes
-        return GeometryReader{viewport in
-        // GeometryReader includes the inset header region; ScrollView avoids it.
-        // Size the empty composition from the SAME visible region, so its
-        // description remains above the unchanged bottom navigation.
-        let visibleHeight=max(0,viewport.size.height-viewport.safeAreaInsets.top-viewport.safeAreaInsets.bottom)
+        return VStack(spacing:0){
+        // Keep the original header's intrinsic height and zero inter-container
+        // gap. The reader now measures only the space BELOW that header,
+        // avoiding duplicate safe-area accounting in the scroll composition.
+        kitchenHeader.fixedSize(horizontal:false,vertical:true)
+        GeometryReader{viewport in
         ScrollView{LazyVStack(alignment:.leading,spacing:16){
             categoryBar
             HStack(spacing:10){
@@ -33,7 +34,7 @@ struct KitchenView:View {
             }
             LuqmaSectionHeader(title:diary.t("محفوظاتك","Your saved items"),detail:decimal(Double(filteredRecipes.count),0))
             if diary.state.recipes.isEmpty{
-                kitchenEmptyState.frame(minHeight:max(0,visibleHeight-212),alignment:.bottom)
+                kitchenEmptyState.frame(minHeight:max(0,viewport.size.height-212),alignment:.bottom)
             }
             else if filteredRecipes.isEmpty{
                 SandowEmptyState(title:diary.t("لا توجد نتائج","No results"),message:diary.t("جرّب اسمًا آخر أو غيّر نوع المحفوظات.","Try another name or change the saved-item type."),
@@ -43,11 +44,11 @@ struct KitchenView:View {
         }.luqmaMotion(.content,value:diary.state.recipes.count).luqmaMotion(.content,value:filter).padding(.horizontal,16).padding(.top,16).padding(.bottom,24)}
         .scrollDismissesKeyboard(.interactively).scrollContentBackground(.hidden).luqmaFont(.body)
         }
+        }
             .navigationTitle(diary.t("مطبخي","My kitchen"))
             .luqmaFeedback(.light,trigger:creating){_,value in value}
             .luqmaFeedback(.success,trigger:diary.state.recipes.count){old,new in new>old}
             .toolbar(.hidden,for:.navigationBar)
-            .safeAreaInset(edge:.top,spacing:0){kitchenHeader}
             .background{KitchenCinematicBackgroundView()}
             .sheet(isPresented:$creating){RecipeEditor(recipe:Recipe(id:UUID(),name:"",type:"recipe",ingredients:[],portions:1,cookedWeight:nil,notes:""))}
             .sheet(isPresented:$importingRecipe){RecipeImportView()}
