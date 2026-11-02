@@ -26,6 +26,10 @@ struct KitchenView:View {
         // avoiding duplicate safe-area accounting in the scroll composition.
         kitchenHeader.fixedSize(horizontal:false,vertical:true)
         GeometryReader{viewport in
+        // The root's custom tab inset is respected by ScrollView, while the
+        // reader proposal still includes it. Subtract that existing token once;
+        // subtracting all inherited safe-area insets also counted the header.
+        let visibleHeight=max(0,viewport.size.height-Theme.bottomBarHeight)
         ScrollView{LazyVStack(alignment:.leading,spacing:16){
             categoryBar
             HStack(spacing:10){
@@ -34,7 +38,7 @@ struct KitchenView:View {
             }
             LuqmaSectionHeader(title:diary.t("محفوظاتك","Your saved items"),detail:decimal(Double(filteredRecipes.count),0))
             if diary.state.recipes.isEmpty{
-                kitchenEmptyState.frame(minHeight:max(0,viewport.size.height-212),alignment:.bottom)
+                kitchenEmptyState.frame(minHeight:max(0,visibleHeight-212),alignment:.bottom)
             }
             else if filteredRecipes.isEmpty{
                 SandowEmptyState(title:diary.t("لا توجد نتائج","No results"),message:diary.t("جرّب اسمًا آخر أو غيّر نوع المحفوظات.","Try another name or change the saved-item type."),

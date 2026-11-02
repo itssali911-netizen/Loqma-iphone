@@ -66,11 +66,11 @@ final class EightScreenReviewTests:XCTestCase {
         let emptyDescription=app.staticTexts["Save recipes and calculate their servings. Start a new recipe or import a link above."]
         XCTAssertTrue(emptyHeading.waitForExistence(timeout:10));XCTAssertTrue(emptyHeading.isHittable)
         XCTAssertTrue(emptyDescription.exists)
-        let add=app.buttons["nav.add"]
-        XCTAssertTrue(add.isHittable)
+        let addButton=app.buttons["nav.add"]
+        XCTAssertTrue(addButton.isHittable)
         for text in [emptyHeading,emptyDescription] {
             XCTAssertGreaterThan(text.frame.minY,create.frame.maxY,"Empty-state text must remain below the existing controls")
-            XCTAssertLessThanOrEqual(text.frame.maxY,add.frame.minY-8,"The whole approved copy must be visible above the unchanged tab bar")
+            XCTAssertLessThanOrEqual(text.frame.maxY,addButton.frame.minY-8,"The whole approved copy must be visible above the unchanged tab bar")
             XCTAssertGreaterThan(text.frame.height,0)
             XCTAssertTrue(app.frame.contains(text.frame),"The actual native text frame must not extend below or outside the viewport")
         }
