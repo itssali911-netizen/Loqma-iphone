@@ -1,0 +1,93 @@
+name: Luqma current app screenshots and re-signable IPA
+on:
+  push:
+    branches: [distribution/all-screens-ipa-20261102]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: luqma-screen-delivery-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+  BUNDLE_ID: app.luqma.diary
+  BUILD_NUMBER: '124'
+jobs:
+  delivery:
+    runs-on: macos-26
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+      - name: Build current iPhone and Simulator applications and run Core and BuildTests
+        run: python3 Scripts/build_ios.py check --output BuildOutput
+      - name: Package and inspect the real iPhoneOS application for subsequent re-signing
+        run: python3 Scripts/screen_delivery.py
+      - name: Preserve the actual IPA and signing inspection immediately
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-IPA-${{ github.run_id }}
+          path: Delivery/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Capture all existing native Arabic routes and their font audits
+        if: success()
+        run: python3 Scripts/ui_preview.py --output AllScreens-AR --language ar --app BuildOutput/simulator-derived/Build/Products/Debug-iphonesimulator/Luqma.app
+      - name: Preserve actual Arabic screenshots
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-AllScreens-AR-${{ github.run_id }}
+          path: |
+            AllScreens-AR/*.png
+            AllScreens-AR/*.json
+            AllScreens-AR/*.log
+            AllScreens-AR/font-audits/
+          retention-days: 30
+      - name: Capture all existing native English routes and their font audits
+        if: ${{ !cancelled() }}
+        run: python3 Scripts/ui_preview.py --output AllScreens-EN --language en --app BuildOutput/simulator-derived/Build/Products/Debug-iphonesimulator/Luqma.app
+      - name: Preserve actual English screenshots
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-AllScreens-EN-${{ github.run_id }}
+          path: |
+            AllScreens-EN/*.png
+            AllScreens-EN/*.json
+            AllScreens-EN/*.log
+            AllScreens-EN/font-audits/
+          retention-days: 30
+      - name: Exercise and capture real Health settings without fabricated Health records
+        if: ${{ !cancelled() }}
+        run: python3 Scripts/healthkit_ui_validation.py validate
+      - name: Preserve genuine native Health UI results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-HealthScreens-${{ github.run_id }}
+          path: |
+            HealthValidation/*.json
+            HealthValidation/*.log
+            HealthValidation/captures/
+          retention-days: 30
+      - name: Recheck current Kitchen controls and recipe draft persistence
+        if: ${{ !cancelled() }}
+        run: python3 Scripts/kitchen_cinematic_review.py controls
+      - name: Preserve build and native interaction reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-Delivery-Checks-${{ github.run_id }}
+          path: |
+            BuildOutput/build-summary.json
+            BuildOutput/toolchain.json
+            BuildOutput/*.log
+            Kitchen-Controls/*.json
+            Kitchen-Controls/*.log
+            Kitchen-Controls/*/*.json
+            Kitchen-Controls/*/*.log
+          retention-days: 30
