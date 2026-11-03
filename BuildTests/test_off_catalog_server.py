@@ -143,6 +143,36 @@ class OFFFullCatalogServerTests(unittest.TestCase):
         self.assertNotIn("servingNutrition", food)
         self.assertEqual(food["servingUnit"], "ml")
 
+    def test_authoritative_serving_quantity_updates_native_label_but_keeps_raw_label(self):
+        row = product(serving_size="250 ml")
+        declaration = {"source": "packaging", "preparation": "as_sold", "per": "serving",
+                       "per_quantity": 100, "per_unit": "ml", "nutrients": row["nutrition"]["input_sets"][0]["nutrients"]}
+        row["nutrition"]["input_sets"].append(declaration)
+        self.ingest(self.dump([row]))
+        with closing(catalog.connect(self.db, True)) as db:
+            food = catalog.lookup(db, row["code"])["food"]
+            self.assertEqual((food["serving"], food["servingQuantity"], food["servingUnit"]), ("100 ml", 100, "ml"))
+            self.assertEqual(food["servingNutrition"]["kcal"], 62)
+            raw = db.execute("SELECT raw_zlib FROM products WHERE code=?", (row["code"],)).fetchone()[0]
+            self.assertEqual(json.loads(zlib.decompress(raw))["serving_size"], "250 ml")
+        # Serving-only input follows the same label reconciliation path.
+        row["nutrition"]["input_sets"] = [declaration]
+        food = catalog.native_food(row, "test", "today")
+        self.assertEqual((food["serving"], food["servingQuantity"]), ("100 ml", 100))
+
+    def test_empty_finalization_does_not_retire_existing_records_or_commit_completion(self):
+        self.ingest(self.dump([product(), product("00123457")]))
+        with closing(catalog.connect(self.db, True)) as db:
+            before = [tuple(row) for row in db.execute("SELECT code,raw_sha256,active FROM products ORDER BY code")]
+        empty = self.dump([], "empty.jsonl.gz")
+        with self.assertRaisesRegex(ValueError, "empty export"):
+            self.ingest(empty, "empty", finalize=True)
+        with closing(catalog.connect(self.db, True)) as db:
+            after = [tuple(row) for row in db.execute("SELECT code,raw_sha256,active FROM products ORDER BY code")]
+            state = db.execute("SELECT completed,finalized,retired FROM imports WHERE export_id='empty'").fetchone()
+            self.assertEqual(before, after)
+            self.assertEqual(tuple(state), (0, 0, 0))
+
     def test_legacy_kj_requires_explicit_unit_and_missing_is_nil(self):
         row = product(nutrition=None, nutrition_data_per="100g", nutriments={"energy_100g": 418.4,
                      "proteins_100g": 2, "carbohydrates_100g": 0, "fat_100g": 1})
@@ -167,6 +197,22 @@ class OFFFullCatalogServerTests(unittest.TestCase):
             rejected = db.execute("SELECT reason,raw_zlib FROM import_rejections").fetchall()
             self.assertEqual(len(rejected), 2)
             self.assertTrue(all(x[0] == "missing-or-invalid-string-code" for x in rejected))
+
+    def test_lone_surrogate_is_rejected_before_accepted_counters_change(self):
+        invalid = product(name="\ud800")
+        valid = product("00123457", "Valid milk")
+        path = self.directory / "invalid-utf8.jsonl"
+        # Escaped JSON can decode a lone surrogate despite valid ASCII bytes.
+        raw = (json.dumps(invalid) + "\n").encode("ascii")
+        path.write_bytes(raw + (json.dumps(valid) + "\n").encode("ascii"))
+        report = self.ingest(path)
+        self.assertEqual((report["records_read"], report["inserted"], report["updated"], report["unchanged"], report["rejected"]),
+                         (2, 1, 0, 0, 1))
+        with closing(catalog.connect(self.db, True)) as db:
+            self.assertEqual(db.execute("SELECT count(*) FROM products").fetchone()[0], 1)
+            self.assertIsNone(catalog.lookup(db, "00123456")["food"])
+            rejection = db.execute("SELECT raw_zlib FROM import_rejections").fetchone()[0]
+            self.assertEqual(zlib.decompress(rejection), raw)
 
     def test_explicit_complete_snapshot_retirement_and_failed_import_guard(self):
         self.ingest(self.dump([product(), product("00123457")]))

@@ -2,6 +2,15 @@ name: Luqma approved recipe card and macro review
 on:
   push:
     branches: [feature/recipe-macros-catalog-20261103]
+    paths:
+      - 'Luqma/**'
+      - 'Luqma.xcodeproj/**'
+      - 'Package.swift'
+      - 'Tests/**'
+      - 'TestsUI/**'
+      - 'Scripts/**'
+      - 'BuildTests/**'
+      - '!BuildTests/test_off_catalog_server.py'
   workflow_dispatch:
 permissions:
   contents: read

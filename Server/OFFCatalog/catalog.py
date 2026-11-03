@@ -136,11 +136,15 @@ def nutrition(product):
                 per100 = scale(values, 100 / amount)
             if raw["per"] == "serving":
                 serving = values
+                if amount and basis and (quantity != amount or portion_unit != basis):
+                    serving_text = format(amount, ".15g") + " " + basis
                 quantity, portion_unit = amount, basis
             else:
                 matching = next((x for x in candidates if x[0]["per"] == "serving" and
                                  x[0]["source"] == raw["source"] and x[1] == basis and complete(x[3])), None)
                 if matching:
+                    if matching[2] and matching[1] and (quantity != matching[2] or portion_unit != matching[1]):
+                        serving_text = format(matching[2], ".15g") + " " + matching[1]
                     _, portion_unit, quantity, serving, _ = matching
         else:
             aggregate = current.get("aggregated_set", {})
@@ -346,9 +350,13 @@ def import_dump(path, db_path, export_id, export_date, source_url=OFF_EXPORT_URL
                         if not isinstance(code, str) or not CODE.fullmatch(code):
                             raise ValueError("missing-or-invalid-string-code")
                         food = native_food(product, export_id, now)
-                        # canonical() also refuses NaN/Infinity anywhere in raw
-                        # metadata, rather than silently dropping invalid fields.
-                        canonical(product)
+                        # Refuse NaN/Infinity and lone surrogates before any
+                        # accepted-record counters change. SQLite binds UTF-8;
+                        # malformed source text belongs in raw rejections only.
+                        canonical(product).encode("utf-8")
+                        food_json = canonical(food) if food else None
+                        if food_json is not None:
+                            food_json.encode("utf-8")
                         raw_digest = hashlib.sha256(raw).hexdigest()
                         existing = db.execute("SELECT raw_sha256 FROM products WHERE code=?", (code,)).fetchone()
                         if existing is None:
@@ -363,14 +371,14 @@ def import_dump(path, db_path, export_id, export_date, source_url=OFF_EXPORT_URL
                             # Avoid re-compressing and rebuilding the FTS row
                             # for unchanged source content on daily snapshots.
                             db.execute("UPDATE products SET food_json=?,export_id=?,active=1 WHERE code=?",
-                                       (canonical(food) if food else None, export_id, code))
+                                       (food_json, export_id, code))
                         else:
                             db.execute("""INSERT INTO products(code,raw_zlib,raw_sha256,food_json,search_text,source_modified,export_id,active)
                                 VALUES(?,?,?,?,?,?,?,1) ON CONFLICT(code) DO UPDATE SET
                                 raw_zlib=excluded.raw_zlib,raw_sha256=excluded.raw_sha256,food_json=excluded.food_json,
                                 search_text=excluded.search_text,source_modified=excluded.source_modified,
                                 export_id=excluded.export_id,active=1""",
-                                       (code, zlib.compress(raw), raw_digest, canonical(food) if food else None,
+                                       (code, zlib.compress(raw), raw_digest, food_json,
                                         search_content(product), str(product.get("last_modified_t", "")), export_id))
                     except (ValueError, TypeError, UnicodeError, OverflowError) as error:
                         state["rejected"] += 1
@@ -412,6 +420,8 @@ def _checkpoint(db, state):
 
 
 def _finalize(db, state):
+    if state["records_read"] == 0:
+        raise ValueError("Cannot finalize an empty export")
     if not state["completed"] or state["rejected"]:
         raise ValueError("Cannot finalize an incomplete export or export with rejected rows")
     # Finalizing an old completed snapshot must never hide a newer import.

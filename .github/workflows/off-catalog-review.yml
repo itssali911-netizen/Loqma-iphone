@@ -1,0 +1,29 @@
+name: Luqma OFF catalogue importer and API checks
+on:
+  push:
+    branches: [feature/recipe-macros-catalog-20261103]
+    paths:
+      - 'Server/OFFCatalog/**'
+      - 'BuildTests/test_off_catalog_server.py'
+      - '.github/workflows/off-catalog-review.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  catalogue-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Test resumable import, units, snapshot integrity and actual local HTTP API
+        run: python3 -B -m unittest BuildTests.test_off_catalog_server BuildTests.test_food_catalog -v > off-catalog-tests.log 2>&1
+      - name: Retain actual test results without asserting a full production import
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-OFF-Catalogue-Checks-${{ github.run_id }}
+          path: off-catalog-tests.log
+          if-no-files-found: error
+          retention-days: 30
