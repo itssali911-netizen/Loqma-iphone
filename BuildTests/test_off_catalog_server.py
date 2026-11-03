@@ -256,6 +256,16 @@ class OFFFullCatalogServerTests(unittest.TestCase):
         with closing(sqlite3.connect(self.db)) as database:
             self.assertEqual(database.execute("SELECT personal FROM diary").fetchone()[0], "do-not-touch")
 
+    def test_localized_only_name_is_searchable_without_invented_translation(self):
+        source = product(product_name="", product_name_fr="Fromage affiné", lang="fr")
+        report = self.ingest(self.dump([source]))
+        self.assertEqual(report["unnamed"], 0)
+        with closing(catalog.connect(self.db, True)) as db:
+            food = catalog.lookup(db, source["code"])["food"]
+            self.assertEqual(food["name"], "Fromage affiné")
+            self.assertNotIn("nameEn", food)
+            self.assertEqual(catalog.search(db, "fromage")["foods"][0]["name"], "Fromage affiné")
+
     def test_original_real_snapshot_normalizes_source_nutrition(self):
         snapshot = json.loads((ROOT / "Scripts/Data/off-products-snapshot.json").read_text(encoding="utf-8"))
         rows = [json.loads(x["raw"])["product"] for x in snapshot["responses"] if x["included"]]

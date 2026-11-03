@@ -179,6 +179,13 @@ def native_food(product, export_id, retrieved_at):
     code = product["code"]
     name = text(product, "product_name_ar") or text(product, "product_name") or text(product, "product_name_en")
     if not name:
+        # A source product can have only a localized name. Keep that genuine
+        # name rather than excluding a named product or inventing a translation.
+        language = text(product, "lang")
+        name = text(product, "product_name_" + language) if language else None
+        name = name or next((text(product, key) for key in sorted(product)
+            if re.fullmatch(r"product_name_[a-z]{2,3}", key) and text(product, key)), None)
+    if not name:
         # Retained and indexed on the server, but no invented product name is
         # sent to the native Food model, whose name is mandatory.
         return None
