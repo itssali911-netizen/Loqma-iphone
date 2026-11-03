@@ -4,7 +4,6 @@ import Charts
 struct ProgressViewScreen:View {
     @EnvironmentObject var diary:DiaryStore
     @State private var range=90
-    @State private var selectedChartDate:Date?
     @State private var adding=false
     @State private var adaptiveDetails=false
     @State private var deleting:WeightReading?
@@ -15,7 +14,7 @@ struct ProgressViewScreen:View {
             AppleHealthProgressCard()
             Text(diary.t("اتجاه الوزن","Weight trend")).luqmaFont(size:13,weight:.semibold,relativeTo:.subheadline)
                 .accessibilityAddTraits(.isHeader)
-            weightChart(snapshot)
+            ProgressWeightChart(snapshot:snapshot,range:$range)
             fitnessProfile
             weightPlan
             weightHistory(snapshot.readings)
@@ -102,7 +101,16 @@ struct ProgressViewScreen:View {
                 .overlay(alignment:.bottom){Rectangle().fill(Theme.stroke).frame(height:1)}.luqmaMotionTransition()}
         }.luqmaCard().luqmaMotion(.content,value:readings.suffix(30).map(\.id))}
     }
-    private func weightChart(_ snapshot:WeightProgressSnapshot)->some View {
+}
+
+/// Selection redraws the chart; it does not rebuild the screen's history snapshot.
+private struct ProgressWeightChart:View {
+    let snapshot:WeightProgressSnapshot
+    @Binding var range:Int
+    @EnvironmentObject private var diary:DiaryStore
+    @State private var selectedChartDate:Date?
+
+    var body:some View {
         let chosen=selectedChartDate.flatMap{date in snapshot.points.min{abs($0.date.timeIntervalSince(date))<abs($1.date.timeIntervalSince(date))}}
         return VStack(alignment:.leading,spacing:16){
         LuqmaReviewSegments(options:[7,30,90,0],selection:$range,label:rangeTitle)
@@ -140,11 +148,10 @@ struct ProgressViewScreen:View {
             .chartXSelection(value:$selectedChartDate)
             .luqmaMotion(.selection,value:chosen?.id)
             .luqmaFeedback(.selection,trigger:chosen?.id){_,id in id != nil}
-            .onChange(of:range){_,_ in selectedChartDate=nil}
             .luqmaMotion(.content,value:snapshot.readings.count)
             .luqmaMotion(.content,value:snapshot.readings.last)
             .accessibilityLabel(diary.t("رسم تغيّر الوزن بالكيلوجرام","Weight trend in kilograms"))}
-    }.luqmaCard()}
+    }.luqmaCard().onChange(of:range){_,_ in selectedChartDate=nil}}
     private func rangeTitle(_ value:Int)->String {switch value{case 7:return diary.t("أسبوع","7d");case 30:return diary.t("شهر","30d");case 90:return diary.t("٣ شهور","90d");default:return diary.t("الكل","All")}}
 }
 struct WeightEditor:View {
