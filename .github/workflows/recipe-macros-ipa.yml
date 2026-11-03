@@ -18,11 +18,38 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-          fetch-depth: 2
+          fetch-depth: 0
       - name: Preserve the exact reviewed application and test source
         run: git diff --exit-code 781c63a729c4e60389581111017a064100a82d92 HEAD -- Luqma Luqma.xcodeproj Package.swift Tests TestsUI Scripts
-      - name: Run Core and BuildTests then build and package the real iPhone Release target
-        run: python3 Scripts/build_ios.py sideload --output BuildOutput
+      - name: Build and package the reviewed iPhone Release target without a Simulator dependency
+        run: |
+          python3 - <<'PY'
+          import os,sys
+          from pathlib import Path
+          sys.path.insert(0,'Scripts')
+          from build_ios import require_mac,run,prepare_sideload,result_summary
+          from vision_compat import apply_vision_compat
+          require_mac(26)
+          output=Path('BuildOutput').resolve()
+          output.mkdir()
+          packages=output/'Packages'
+          run(['xcodebuild','-resolvePackageDependencies','-project','Luqma.xcodeproj','-scheme','Luqma',
+              '-clonedSourcePackagesDirPath',str(packages)],output/'packages.log')
+          apply_vision_compat(packages)
+          run(['xcodebuild','-project','Luqma.xcodeproj','-scheme','Luqma',
+              '-clonedSourcePackagesDirPath',str(packages),'-disableAutomaticPackageResolution',
+              '-destination','generic/platform=iOS','-configuration','Release',
+              '-derivedDataPath',str(output/'device-derived'),'-resultBundlePath',str(output/'device.xcresult'),
+              'CODE_SIGNING_ALLOWED=NO','PRODUCT_BUNDLE_IDENTIFIER=app.luqma.diary','CURRENT_PROJECT_VERSION=125','build'],output/'device.log')
+          apply_vision_compat(packages,verify_only=True)
+          prepare_sideload(output/'device-derived/Build/Products/Release-iphoneos/Luqma.app',output,'app.luqma.diary')
+          result_summary(output,'sideload','app.luqma.diary',signed=False,apple_signed=False,
+              requires_personal_resigning=True,uploaded=False,
+              prior_verified_application_commit='781c63a729c4e60389581111017a064100a82d92',
+              prior_native_card_run=41621787608,prior_native_production_flow_run=41630524283,
+              repeated_simulator_font_probe_run=41673271941,repeated_simulator_font_probe_status='INFRASTRUCTURE_BOOT_FAILURE',
+              current_run_scope='iPhone Release build, resource verification and local signature integrity; no Simulator tests rerun')
+          PY
       - name: Verify the actual device IPA and prepare the download
         run: |
           python3 - <<'PY'
