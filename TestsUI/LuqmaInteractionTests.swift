@@ -23,6 +23,24 @@ final class LuqmaInteractionTests:XCTestCase {
         }
     }
 
+    func testHomeKeepsMealLoggingWithoutSupplementarySections() throws {
+        let mainMeal=app.buttons["diary.meal.breakfast"]
+        reveal(mainMeal)
+        XCTAssertTrue(mainMeal.exists,"The real primary meal cards must remain available")
+        for _ in 0..<5 {app.swipeUp()}
+        XCTAssertFalse(app.staticTexts["Quick search"].exists)
+        XCTAssertFalse(app.staticTexts["Daily routine"].exists)
+        XCTAssertTrue(app.buttons["nav.add"].isHittable)
+        XCTAssertTrue(app.buttons["diary.search"].isHittable,"The fixed original search must survive pruning the supplementary sections")
+        let proof=XCTAttachment(screenshot:app.screenshot())
+        proof.name="Actual home after removal of supplementary sections"
+        proof.lifetime = .keepAlways;add(proof)
+        app.buttons["diary.search"].tap()
+        XCTAssertTrue(app.textFields["search.query"].waitForExistence(timeout:10))
+        XCTAssertTrue(app.buttons["search.filter.1"].exists)
+        app.buttons["search.close"].tap()
+    }
+
     func testFoodAddResizePersistenceAndDelete() throws {
         app.buttons["nav.add"].tap()
         // The initial catalog load can move rows. Use the real empty personal list
@@ -122,7 +140,13 @@ final class LuqmaInteractionTests:XCTestCase {
         app.buttons["nav.add"].tap()
         XCTAssertTrue(personal.waitForExistence(timeout:10));personal.tap()
         let product=app.buttons.matching(NSPredicate(format:"label CONTAINS %@",name)).firstMatch
-        reveal(product);product.tap()
+        reveal(product)
+        XCTAssertFalse(product.label.contains("Your private food"),"Search rows must hide the provider metadata without removing the remembered food")
+        XCTAssertFalse(product.descendants(matching:.staticText).matching(NSPredicate(format:"label CONTAINS %@","Your private food")).firstMatch.exists)
+        let searchProof=XCTAttachment(screenshot:app.screenshot())
+        searchProof.name="Actual remembered-food search with source label hidden"
+        searchProof.lifetime = .keepAlways;add(searchProof)
+        product.tap()
         openPortionQuantity()
         XCTAssertTrue(app.buttons["portion.unit.serving"].isSelected)
         app.buttons["portion.unit.g"].tap()
@@ -196,7 +220,7 @@ final class LuqmaInteractionTests:XCTestCase {
         XCTAssertEqual(Double(cooked.value as? String ?? ""),100,"The entered cooked weight must survive ingredient entry")
         app.buttons["navigation.primaryAction"].tap()
         XCTAssertTrue(app.buttons["kitchen.create"].waitForExistence(timeout:15))
-        let recipe=app.buttons.matching(NSPredicate(format:"label CONTAINS %@","Recipe review")).firstMatch
+        let recipe=app.buttons.matching(NSPredicate(format:"identifier BEGINSWITH %@","recipeCard.details.")).firstMatch
         reveal(recipe);recipe.tap()
         let details=app.buttons.matching(NSPredicate(format:"identifier BEGINSWITH %@","recipeDetail.nutrition.")).firstMatch
         reveal(details);XCTAssertEqual(details.value as? String,"Collapsed");details.tap()

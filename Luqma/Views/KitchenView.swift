@@ -89,60 +89,10 @@ struct KitchenView:View {
         }.buttonStyle(LuqmaPressStyle())
     }
     private func recipeCard(_ recipe:Recipe)->some View {
-        let total=recipe.total
-        let perServing=total.scaled(1/max(recipe.portions,0.001))
-        return VStack(alignment:.leading,spacing:14){
-            HStack(alignment:.top,spacing:10){
-                Button{viewing=recipe}label:{
-                    HStack(spacing:12){
-                        VStack(alignment:.leading,spacing:6){
-                            Text(DisplayFormat.westernDigits(recipe.name))
-                                .luqmaFont(size:17,weight:.bold,relativeTo:.headline)
-                                .fixedSize(horizontal:false,vertical:true)
-                            Text(recipeKind(recipe.type)).luqmaFont(size:10,weight:.medium,relativeTo:.caption2)
-                                .foregroundStyle(Theme.muted)
-                        }
-                        Spacer(minLength:0)
-                        Image(systemName:"chevron.forward").font(.system(size:11,weight:.semibold)).foregroundStyle(Theme.muted)
-                    }.frame(maxWidth:.infinity,minHeight:44,alignment:.leading).contentShape(Rectangle())
-                }.buttonStyle(LuqmaPressStyle()).accessibilityHint(diary.t("عرض المكونات والتفاصيل وخطوات التحضير","View ingredients, details and preparation steps"))
-                recipeMenu(recipe)
-            }
-            recipeServingLine(recipe,kcal:perServing.kcal)
-            if typeSize.isAccessibilitySize{
-                VStack(spacing:12){ForEach(MacroKey.allCases){key in recipeMacro(key,perServing)}}
-            }else{
-                HStack(spacing:10){ForEach(MacroKey.allCases){key in recipeMacro(key,perServing)}}
-            }
-            HStack(spacing:10){
-                kitchenAction(diary.t("إضافة حصة","Log serving"),symbol:"plus",primary:true){select(recipe,false)}
-                if recipe.cookedWeight != nil{kitchenAction(diary.t("بالجرام","By weight"),symbol:"scalemass",primary:false){select(recipe,true)}}
-            }
-        }.padding(16).frame(maxWidth:.infinity,alignment:.leading)
-            .foregroundStyle(Theme.text).background(Theme.card)
-            .clipShape(RoundedRectangle(cornerRadius:20,style:.continuous))
-    }
-    private func recipeMenu(_ recipe:Recipe)->some View {
-        Menu{
-            Button(diary.t("تعديل","Edit")){editing=recipe}
-            Button(diary.t("حذف","Delete"),role:.destructive){deleting=recipe}
-        }label:{
-            Image(systemName:"ellipsis").font(.system(size:18,weight:.semibold))
-                .foregroundStyle(Theme.text).frame(width:44,height:44)
-                .background(Theme.background.opacity(0.6),in:RoundedRectangle(cornerRadius:12))
-        }.accessibilityLabel(diary.t("خيارات ","Options for ")+recipe.name)
-    }
-    private func recipeServingLine(_ recipe:Recipe,kcal:Double)->some View {
-        ViewThatFits(in:.horizontal){
-            HStack(spacing:12){recipeServingLabels(recipe,kcal:kcal)}
-            VStack(alignment:.leading,spacing:6){recipeServingLabels(recipe,kcal:kcal)}
-        }.luqmaFont(size:11,weight:.medium,relativeTo:.caption).foregroundStyle(Theme.text.opacity(0.85))
-    }
-    @ViewBuilder private func recipeServingLabels(_ recipe:Recipe,kcal:Double)->some View {
-        Label(decimal(kcal,0)+" "+diary.t("سعرة للحصة","kcal per serving"),systemImage:"flame.fill")
-            .luqmaNumericMotion(value:kcal)
-        Label(decimal(recipe.portions)+" "+diary.t("حصص","servings"),systemImage:"square.stack")
-            .luqmaNumericMotion(value:recipe.portions)
+        RecipeNutritionCard(recipe:recipe,language:diary.language,
+            onDetails:{guard viewing == nil else{return};viewing=recipe},
+            onEdit:{guard editing == nil else{return};editing=recipe},
+            onDelete:{deleting=recipe},onAdd:{select(recipe,false)})
     }
     private var kitchenEmptyState:some View {
         VStack(spacing:16){
@@ -151,19 +101,12 @@ struct KitchenView:View {
                 .luqmaFont(.footnote).foregroundStyle(Theme.muted).fixedSize(horizontal:false,vertical:true)
         }.multilineTextAlignment(.center).frame(maxWidth:.infinity).padding(.vertical,24)
     }
-    private func recipeMacro(_ key:MacroKey,_ nutrition:Nutrition)->some View {
-        let ratio=nutrition.macroCalories>0 ? nutrition[key]*key.energy/nutrition.macroCalories:0
-        return HStack(spacing:7){
-            LuqmaProgressRing(progress:ratio,color:Theme.text.opacity(0.85),lineWidth:4).frame(width:24,height:24)
-            VStack(alignment:.leading,spacing:3){
-                Text(decimal(nutrition[key])+" "+diary.t("جم","g")).luqmaFont(size:12,weight:.bold,relativeTo:.caption).monospacedDigit()
-                    .luqmaNumericMotion(value:nutrition[key])
-                Text(key.label(diary.language)).luqmaFont(size:10,relativeTo:.caption2).foregroundStyle(Theme.muted)
-            }
-        }.frame(maxWidth:.infinity,alignment:.leading).accessibilityElement(children:.combine)
+    private func select(_ r:Recipe,_ weighted:Bool){
+        // Setting the sheet selection is synchronous. A repeated tap while it
+        // is already presenting must not construct another food/quantity flow.
+        guard selected == nil else{return}
+        do{selected=try r.food(byWeight:weighted)}catch{diary.report(error)}
     }
-    private func recipeKind(_ type:String)->String {switch type{case "meal":return diary.t("وجبة محفوظة","Saved meal");case "prep":return diary.t("تحضير وجبات","Meal prep");default:return diary.t("وصفة","Recipe")}}
-    private func select(_ r:Recipe,_ weighted:Bool){do{selected=try r.food(byWeight:weighted)}catch{diary.report(error)}}
 }
 
 /// The original supplied photograph is decorative, never recipe/user data.

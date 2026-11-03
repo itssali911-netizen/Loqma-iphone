@@ -66,14 +66,12 @@ struct GoalEditor:View {
                     Text(key.label(diary.language)).luqmaFont(size:11,relativeTo:.caption)
                 }.foregroundStyle(Theme.text).frame(maxWidth:.infinity,minHeight:94)
                     .background(Theme.card,in:RoundedRectangle(cornerRadius:20,style:.continuous))
-                RoundedRectangle(cornerRadius:5).fill(macroColor(key)).frame(width:15,height:15)
-                    .overlay{RoundedRectangle(cornerRadius:5).strokeBorder(Theme.background,lineWidth:2)}
+                LuqmaMacroIcon(key:key,size:15)
             }.contentShape(Rectangle())
         }.buttonStyle(LuqmaPressStyle()).accessibilityLabel(diary.t("تعديل ","Edit ")+key.label(diary.language))
             .accessibilityValue(decimal(goals[key])+" "+diary.t("جم","g"))
             .accessibilityIdentifier("goals.macro."+key.rawValue)
     }
-    private func macroColor(_ key:MacroKey)->Color {key == .protein ? Theme.accent:key == .carbs ? Theme.secondaryAccent:Theme.text}
     private var goalStatus:some View {
         Label(canSave ? diary.t("هدفك جاهز للحفظ","Your goal is ready to save"):diary.t("أدخل هدفًا بين 500 و10000 سعرة","Enter a goal from 500 to 10,000 kcal"),systemImage:canSave ? "checkmark.circle.fill":"exclamationmark.circle")
             .luqmaFont(size:12,weight:.medium,relativeTo:.caption)

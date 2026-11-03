@@ -174,7 +174,10 @@ struct AboutLuqmaView:View {
             }
             aboutCard(diary.t("مصادر الطعام","Food sources"),symbol:"fork.knife"){
                 Notice(text:diary.t("٧٤٤ طعامًا من ملف MyFitnessPal الذي أضفته. هذه عينة محلية؛ البيانات الناقصة تحتاج مراجعة الملصق.","744 foods from your supplied MyFitnessPal file. This is a local sample; incomplete values need label review."))
-                aboutLink("Open Food Facts",url:"https://world.openfoodfacts.org")
+                NavigationLink{FoodDataAttributionView()}label:{
+                    Label(diary.t("بيانات المنتجات والترخيص","Product data & licence"),systemImage:"info.circle")
+                        .luqmaFont(.caption).foregroundStyle(Theme.text).frame(minHeight:44)
+                }.buttonStyle(LuqmaPressStyle())
             }
             aboutCard(diary.t("التصميم","Design"),symbol:"paintpalette.fill"){
                 aboutLink("Sandow · Figma Community",url:"https://www.figma.com/design/IfMCdTI3FcvXpNFy79PRUA?node-id=2-606")
@@ -202,6 +205,30 @@ struct AboutLuqmaView:View {
         }.foregroundStyle(Theme.text).frame(minHeight:32)}
     }
 }
+/// Dedicated attribution, separate from compact food search result metadata.
+struct FoodDataAttributionView:View {
+    @EnvironmentObject var diary:DiaryStore
+    var body:some View {
+        ScrollView{
+            VStack(alignment:.leading,spacing:16){
+                Text(diary.t("تتضمن بيانات المنتجات Open Food Facts. قاعدة البيانات متاحة بموجب ODbL؛ والمحتويات الفردية بموجب DbCL. يبقى المصدر ومعرّف المنتج محفوظين حتى عندما يُخفى سطر المصدر من نتائج البحث.",
+                    "Product data includes Open Food Facts. The database is available under ODbL and individual database contents under DbCL. Source and product identifiers are retained when source labels are hidden in search results."))
+                    .luqmaFont(.body).fixedSize(horizontal:false,vertical:true)
+                Link("Open Food Facts",destination:URL(string:"https://world.openfoodfacts.org")!)
+                Link("Open Database License (ODbL) 1.0",destination:URL(string:"https://opendatacommons.org/licenses/odbl/1-0/")!)
+                Link("Database Contents License (DbCL) 1.0",destination:URL(string:"https://opendatacommons.org/licenses/dbcl/1-0/")!)
+                Text(diary.t("صور المنتجات، عند عرضها من المصدر، لها ترخيص منفصل CC BY-SA مع الحقوق الأخرى المنطبقة. صور وجبات لقمة التوضيحية ليست صور منتجات Open Food Facts.",
+                    "Source product images have a separate CC BY-SA licence and other applicable rights. Luqma's illustrative meal photographs are not Open Food Facts product images."))
+                    .luqmaFont(.footnote).foregroundStyle(Theme.muted).fixedSize(horizontal:false,vertical:true)
+                Link(diary.t("دليل المصدر والتراخيص","Source and licence guide"),destination:URL(string:"https://openfoodfacts.github.io/openfoodfacts-server/api/tutorials/license-be-on-the-legal-side/")!)
+                Text(diary.t("القيم غير المتاحة ليست أصفارًا. راجع الملصق عند نقص البيانات. سجل وجباتك ووصفاتك منفصل عن كتالوج المنتجات ولا يُنشر ضمن قاعدة البيانات.",
+                    "Missing values are not zero. Check the label when data is incomplete. Your diary and recipes remain separate from the product catalogue and are not published as catalogue data."))
+                    .luqmaFont(.footnote).foregroundStyle(Theme.muted).fixedSize(horizontal:false,vertical:true)
+            }.padding(16).frame(maxWidth:.infinity,alignment:.leading)
+        }.appBackground().sandowNavigation(diary.t("بيانات المنتجات والترخيص","Product data & licence"),backLabel:diary.t("رجوع","Back"))
+    }
+}
+
 struct ImportPreview:View {
     let snapshot:DiarySnapshot;let apply:()->Bool
     @EnvironmentObject var diary:DiaryStore

@@ -57,6 +57,27 @@ final class OpenFoodFactsProductTests: XCTestCase {
         XCTAssertEqual(food.servingUnit, "ml")
     }
 
+    func testGenericLegacyEnergyNeedsAnExplicitUnit() throws {
+        var raw: [String: Any] = ["code": "12345678", "product_name": "Milk", "nutrition_data_per": "100g"]
+        var nutrients: [String: Any] = ["energy_100g": 418.4, "proteins_100g": 2, "carbohydrates_100g": 0, "fat_100g": 3]
+        raw["nutriments"] = nutrients
+        XCTAssertNil(try XCTUnwrap(OpenFoodFactsProduct.parse(raw)).per100)
+        nutrients["energy_unit"] = "kJ"; raw["nutriments"] = nutrients
+        XCTAssertEqual(try XCTUnwrap(OpenFoodFactsProduct.parse(raw)).per100?.kcal ?? -1, 100, accuracy: 0.000001)
+        nutrients["energy_unit"] = "kcal"; raw["nutriments"] = nutrients
+        XCTAssertEqual(try XCTUnwrap(OpenFoodFactsProduct.parse(raw)).per100?.kcal, 418.4)
+    }
+
+    func testNoNutritionMarkerDoesNotReviveStaleSourceValues() throws {
+        var current = product()
+        current["no_nutrition_data"] = "on"
+        XCTAssertNil(try XCTUnwrap(OpenFoodFactsProduct.parse(current)).per100)
+        XCTAssertNil(try XCTUnwrap(OpenFoodFactsProduct.parse(current)).servingNutrition)
+        let legacy: [String: Any] = ["code": "12345678", "product_name": "Milk", "no_nutrition_data": "on",
+            "nutriments": ["energy-kcal_100g": 100, "proteins_100g": 2, "carbohydrates_100g": 0, "fat_100g": 3]]
+        XCTAssertNil(try XCTUnwrap(OpenFoodFactsProduct.parse(legacy)).per100)
+    }
+
     func testSourceFilteringPreservesPrivateFoodsAndOriginalDiaryHistory() throws {
         let off = try XCTUnwrap(OpenFoodFactsProduct.parse(product()))
         var personal = Food(catalogID: "manual:one", name: "My recipe", nutrition: .initial, source: "Your food")

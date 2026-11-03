@@ -83,10 +83,7 @@ ASSESSMENT_ACCESSIBILITY_ROUTES = (("accessibility-assessment-goal", 0),
                                   ("accessibility-assessment-age", 3),
                                   ("accessibility-assessment-safety", 1))
 VARIANT_ROUTES = (("accessibility-today", ("-loqma-preview-overview", "-loqma-preview-accessibility")),
-                  ("photo-components", ("-loqma-preview-photo", "-loqma-preview-photo-detailed")),
-                  ("editorial-dinner", ("-loqma-preview-routine-dinner",)),
-                  ("editorial-snack", ("-loqma-preview-routine-snack",)),
-                  ("accessibility-editorial", ("-loqma-preview-accessibility", "-loqma-preview-editorial-expanded")))
+                  ("photo-components", ("-loqma-preview-photo", "-loqma-preview-photo-detailed")))
 EXPECTED_SCREEN_COUNT = len(SCREENS) + 2 + len(EXTRA_ROUTES) + len(TEMPLATE_ROUTES) + len(VARIANT_ROUTES) + len(FITNESS_ROUTES) + len(ASSESSMENT_EXTRA_ROUTES) + len(ASSESSMENT_ACCESSIBILITY_ROUTES)
 MAX_EMPTY_FRAME_RETRIES = 2
 EMPTY_FRAME_RETRY_SECONDS = 5.0

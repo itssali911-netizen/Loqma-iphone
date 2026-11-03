@@ -23,6 +23,9 @@ sys.path.insert(0, str(ROOT / "Scripts"))
 from simulator_support import collect_startup_diagnostics, prepare_created_simulator
 
 FONT_SHA256 = {
+    "Changa-Regular.ttf": "27433e2f33264d55309323b706fdcfb231569b1fa49d6688f5cbadaff49646c4",
+    "Changa-Medium.ttf": "9399974a6951736969345fc957ec6053f6167625c29603199f1a4820cd07e819",
+    "Changa-SemiBold.ttf": "529aa4d9e954e0592fc73400222238e7a3e8d45b833262956573b2ac699573ff",
     "Changa-Bold.ttf": "d2015fb807cdd2cdc4d2f539db75117f7f009e407fe9d4b3e7555d94c4ff2c9f",
     "Tajawal-Light.ttf": "ab26ed3e0c5af2c71b469b5780decff8088d290ab91aa29b07321580136e813a",
     "Tajawal-Regular.ttf": "6882892da3e03527d5db2bbab3b48bde6ef2e878a43f522d1a4eebda90010a19",

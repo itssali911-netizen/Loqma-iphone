@@ -1,0 +1,2041 @@
+{
+  "version": 1,
+  "updatedAt": "2026-11-03",
+  "source": {
+    "fileKey": "Z2I5PPVetCiST3TboyYTx4",
+    "nodeId": "3:122",
+    "url": "https://www.figma.com/design/Z2I5PPVetCiST3TboyYTx4?node-id=3-122"
+  },
+  "layout": {
+    "direction": "rtl",
+    "card": {
+      "width": 390,
+      "height": 272,
+      "radius": 16,
+      "padding": 20,
+      "gap": 16
+    },
+    "narrowVerifiedWidth": 320,
+    "macros": {
+      "orderRightToLeft": [
+        "protein",
+        "carbs",
+        "fat"
+      ],
+      "labelAboveAmount": true,
+      "iconSize": 20,
+      "labelToAmountGap": 4,
+      "columnHeight": 56,
+      "separator": {
+        "width": 1,
+        "height": 30
+      }
+    },
+    "button": {
+      "width": "fill available width",
+      "height": 48,
+      "radius": 12
+    },
+    "secondaryActionTouchTarget": 44
+  },
+  "content": {
+    "title": "صوص رانش دايت",
+    "type": "وصفة",
+    "servings": 1,
+    "servingsDisplay": "1.0",
+    "calories": 588,
+    "protein": {
+      "value": 35.9,
+      "display": "35.9",
+      "unit": "جم"
+    },
+    "carbs": {
+      "value": 26,
+      "display": "26.0",
+      "unit": "جم"
+    },
+    "fat": {
+      "value": 36.5,
+      "display": "36.5",
+      "unit": "جم"
+    },
+    "action": "إضافة حصة"
+  },
+  "colors": {
+    "background": "#111214",
+    "surface": "#24262B",
+    "divider": "#393C43",
+    "textPrimary": "#F3F3F4",
+    "textSecondary": "#BABBBE",
+    "button": "#F97316",
+    "buttonPressed": "#EA580C",
+    "protein": "#EF798E",
+    "carbs": "#E8B34C",
+    "fat": "#8FBE63",
+    "calories": "#E1945C"
+  },
+  "typography": {
+    "title": {
+      "family": "Changa",
+      "weight": 700,
+      "size": 18,
+      "lineHeight": 30
+    },
+    "label": {
+      "family": "Changa",
+      "weight": 500,
+      "size": 13,
+      "lineHeight": 24
+    },
+    "caption": {
+      "family": "Changa",
+      "weight": 400,
+      "size": 12,
+      "lineHeight": 22
+    },
+    "button": {
+      "family": "Changa",
+      "weight": 600,
+      "size": 15,
+      "lineHeight": 26
+    },
+    "amount": {
+      "family": "Work Sans",
+      "weight": 600,
+      "size": 20,
+      "lineHeight": 26
+    },
+    "servings": {
+      "family": "Work Sans",
+      "weight": 500,
+      "size": 14,
+      "lineHeight": 22
+    }
+  },
+  "notes": {
+    "icons": "Vector traces from supplied JPEG references; original SVG sources were not supplied.",
+    "calorieColor": "Sampled from the supplied flame JPEG.",
+    "sourceFile": "Linked Figma document retains components, auto layout, variables and styles. SVG is an editable vector/text export, not a native .fig file."
+  },
+  "figmaTree": {
+    "id": "3:122",
+    "name": "Recipe / Nutrition card",
+    "type": "COMPONENT",
+    "x": 0,
+    "y": 500,
+    "width": 390,
+    "height": 272,
+    "fills": [
+      {
+        "type": "SOLID",
+        "visible": true,
+        "opacity": 1,
+        "blendMode": "NORMAL",
+        "color": {
+          "r": 0.1411764770746231,
+          "g": 0.14901961386203766,
+          "b": 0.16862745583057404
+        },
+        "boundVariables": {
+          "color": {
+            "type": "VARIABLE_ALIAS",
+            "id": "VariableID:3:60"
+          }
+        }
+      }
+    ],
+    "layout": {
+      "direction": "VERTICAL",
+      "gap": 16,
+      "padding": {
+        "top": 20,
+        "right": 20,
+        "bottom": 20,
+        "left": 20
+      },
+      "primaryAlign": "MIN",
+      "crossAlign": "MIN"
+    },
+    "radius": 16,
+    "children": [
+      {
+        "id": "3:123",
+        "name": "Header",
+        "type": "FRAME",
+        "x": 20,
+        "y": 20,
+        "width": 350,
+        "height": 52,
+        "fills": [],
+        "layout": {
+          "direction": "HORIZONTAL",
+          "gap": 12,
+          "padding": {
+            "top": 0,
+            "right": 0,
+            "bottom": 0,
+            "left": 0
+          },
+          "primaryAlign": "MIN",
+          "crossAlign": "CENTER"
+        },
+        "radius": 0,
+        "children": [
+          {
+            "id": "3:124",
+            "name": "Secondary actions",
+            "type": "FRAME",
+            "x": 0,
+            "y": 4,
+            "width": 96,
+            "height": 44,
+            "fills": [],
+            "layout": {
+              "direction": "HORIZONTAL",
+              "gap": 8,
+              "padding": {
+                "top": 0,
+                "right": 0,
+                "bottom": 0,
+                "left": 0
+              },
+              "primaryAlign": "MIN",
+              "crossAlign": "CENTER"
+            },
+            "radius": 0,
+            "children": [
+              {
+                "id": "3:125",
+                "name": "المزيد من الخيارات",
+                "type": "INSTANCE",
+                "x": 0,
+                "y": 0,
+                "width": 44,
+                "height": 44,
+                "fills": [],
+                "layout": {
+                  "direction": "HORIZONTAL",
+                  "gap": 0,
+                  "padding": {
+                    "top": 0,
+                    "right": 0,
+                    "bottom": 0,
+                    "left": 0
+                  },
+                  "primaryAlign": "CENTER",
+                  "crossAlign": "CENTER"
+                },
+                "radius": 0,
+                "children": [
+                  {
+                    "id": "I3:125;3:101",
+                    "name": "Recipe / Icon / More",
+                    "type": "INSTANCE",
+                    "x": 12,
+                    "y": 12,
+                    "width": 20,
+                    "height": 20,
+                    "fills": [],
+                    "layout": {
+                      "direction": "NONE",
+                      "gap": 0,
+                      "padding": {
+                        "top": 0,
+                        "right": 0,
+                        "bottom": 0,
+                        "left": 0
+                      },
+                      "primaryAlign": "MIN",
+                      "crossAlign": "MIN"
+                    },
+                    "radius": 0,
+                    "children": [
+                      {
+                        "id": "I3:125;3:101;3:87",
+                        "name": "Frame",
+                        "type": "FRAME",
+                        "x": 0,
+                        "y": 0,
+                        "width": 20,
+                        "height": 20,
+                        "fills": [
+                          {
+                            "type": "SOLID",
+                            "visible": false,
+                            "opacity": 1,
+                            "blendMode": "NORMAL",
+                            "color": {
+                              "r": 1,
+                              "g": 1,
+                              "b": 1
+                            },
+                            "boundVariables": {}
+                          }
+                        ],
+                        "layout": {
+                          "direction": "NONE",
+                          "gap": 0,
+                          "padding": {
+                            "top": 0,
+                            "right": 0,
+                            "bottom": 0,
+                            "left": 0
+                          },
+                          "primaryAlign": "MIN",
+                          "crossAlign": "MIN"
+                        },
+                        "radius": 0,
+                        "children": [
+                          {
+                            "id": "I3:125;3:101;3:88",
+                            "name": "Vector",
+                            "type": "VECTOR",
+                            "x": 3,
+                            "y": 8.833333969116211,
+                            "width": 2.3333334922790527,
+                            "height": 2.3333325386047363,
+                            "fills": [
+                              {
+                                "type": "SOLID",
+                                "visible": true,
+                                "opacity": 1,
+                                "blendMode": "NORMAL",
+                                "color": {
+                                  "r": 0.9529411792755127,
+                                  "g": 0.9529411792755127,
+                                  "b": 0.95686274766922
+                                },
+                                "boundVariables": {
+                                  "color": {
+                                    "type": "VARIABLE_ALIAS",
+                                    "id": "VariableID:3:64"
+                                  }
+                                }
+                              }
+                            ]
+                          },
+                          {
+                            "id": "I3:125;3:101;3:89",
+                            "name": "Vector",
+                            "type": "VECTOR",
+                            "x": 8.833333969116211,
+                            "y": 8.833333969116211,
+                            "width": 2.3333325386047363,
+                            "height": 2.3333325386047363,
+                            "fills": [
+                              {
+                                "type": "SOLID",
+                                "visible": true,
+                                "opacity": 1,
+                                "blendMode": "NORMAL",
+                                "color": {
+                                  "r": 0.9529411792755127,
+                                  "g": 0.9529411792755127,
+                                  "b": 0.95686274766922
+                                },
+                                "boundVariables": {
+                                  "color": {
+                                    "type": "VARIABLE_ALIAS",
+                                    "id": "VariableID:3:64"
+                                  }
+                                }
+                              }
+                            ]
+                          },
+                          {
+                            "id": "I3:125;3:101;3:90",
+                            "name": "Vector",
+                            "type": "VECTOR",
+                            "x": 14.666666984558105,
+                            "y": 8.833333969116211,
+                            "width": 2.3333325386047363,
+                            "height": 2.3333325386047363,
+                            "fills": [
+                              {
+                                "type": "SOLID",
+                                "visible": true,
+                                "opacity": 1,
+                                "blendMode": "NORMAL",
+                                "color": {
+                                  "r": 0.9529411792755127,
+                                  "g": 0.9529411792755127,
+                                  "b": 0.95686274766922
+                                },
+                                "boundVariables": {
+                                  "color": {
+                                    "type": "VARIABLE_ALIAS",
+                                    "id": "VariableID:3:64"
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "3:135",
+                "name": "تفاصيل الوصفة",
+                "type": "INSTANCE",
+                "x": 52,
+                "y": 0,
+                "width": 44,
+                "height": 44,
+                "fills": [],
+                "layout": {
+                  "direction": "HORIZONTAL",
+                  "gap": 0,
+                  "padding": {
+                    "top": 0,
+                    "right": 0,
+                    "bottom": 0,
+                    "left": 0
+                  },
+                  "primaryAlign": "CENTER",
+                  "crossAlign": "CENTER"
+                },
+                "radius": 0,
+                "children": [
+                  {
+                    "id": "I3:135;3:101",
+                    "name": "Recipe / Icon / Chevron",
+                    "type": "INSTANCE",
+                    "x": 12,
+                    "y": 12,
+                    "width": 20,
+                    "height": 20,
+                    "fills": [],
+                    "layout": {
+                      "direction": "NONE",
+                      "gap": 0,
+                      "padding": {
+                        "top": 0,
+                        "right": 0,
+                        "bottom": 0,
+                        "left": 0
+                      },
+                      "primaryAlign": "MIN",
+                      "crossAlign": "MIN"
+                    },
+                    "radius": 0,
+                    "children": [
+                      {
+                        "id": "I3:135;3:101;3:92",
+                        "name": "Frame",
+                        "type": "FRAME",
+                        "x": 0,
+                        "y": 0,
+                        "width": 20,
+                        "height": 20,
+                        "fills": [
+                          {
+                            "type": "SOLID",
+                            "visible": false,
+                            "opacity": 1,
+                            "blendMode": "NORMAL",
+                            "color": {
+                              "r": 1,
+                              "g": 1,
+                              "b": 1
+                            },
+                            "boundVariables": {}
+                          }
+                        ],
+                        "layout": {
+                          "direction": "NONE",
+                          "gap": 0,
+                          "padding": {
+                            "top": 0,
+                            "right": 0,
+                            "bottom": 0,
+                            "left": 0
+                          },
+                          "primaryAlign": "MIN",
+                          "crossAlign": "MIN"
+                        },
+                        "radius": 0,
+                        "children": [
+                          {
+                            "id": "I3:135;3:101;3:93",
+                            "name": "Vector",
+                            "type": "VECTOR",
+                            "x": 7.5,
+                            "y": 5.833333492279053,
+                            "width": 4.166666507720947,
+                            "height": 8.333333015441895,
+                            "fills": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "3:143",
+            "name": "Recipe name",
+            "type": "FRAME",
+            "x": 108,
+            "y": 0,
+            "width": 242,
+            "height": 52,
+            "fills": [],
+            "layout": {
+              "direction": "VERTICAL",
+              "gap": 0,
+              "padding": {
+                "top": 0,
+                "right": 0,
+                "bottom": 0,
+                "left": 0
+              },
+              "primaryAlign": "MIN",
+              "crossAlign": "MAX"
+            },
+            "radius": 0,
+            "children": [
+              {
+                "id": "3:144",
+                "name": "Title",
+                "type": "TEXT",
+                "x": 0,
+                "y": 0,
+                "width": 242,
+                "height": 30,
+                "text": "صوص رانش دايت",
+                "font": {
+                  "family": "Changa",
+                  "style": "Bold",
+                  "variationSettings": {
+                    "wght": 700
+                  }
+                },
+                "fontSize": 18,
+                "lineHeight": {
+                  "unit": "PIXELS",
+                  "value": 30
+                },
+                "textAlign": "RIGHT",
+                "fills": [
+                  {
+                    "type": "SOLID",
+                    "visible": true,
+                    "opacity": 1,
+                    "blendMode": "NORMAL",
+                    "color": {
+                      "r": 0.9529411792755127,
+                      "g": 0.9529411792755127,
+                      "b": 0.95686274766922
+                    },
+                    "boundVariables": {
+                      "color": {
+                        "type": "VARIABLE_ALIAS",
+                        "id": "VariableID:3:64"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "3:145",
+                "name": "Type",
+                "type": "TEXT",
+                "x": 209,
+                "y": 30,
+                "width": 33,
+                "height": 22,
+                "text": "وصفة",
+                "font": {
+                  "family": "Changa",
+                  "style": "Regular",
+                  "variationSettings": {
+                    "wght": 400
+                  }
+                },
+                "fontSize": 12,
+                "lineHeight": {
+                  "unit": "PIXELS",
+                  "value": 22
+                },
+                "textAlign": "RIGHT",
+                "fills": [
+                  {
+                    "type": "SOLID",
+                    "visible": true,
+                    "opacity": 1,
+                    "blendMode": "NORMAL",
+                    "color": {
+                      "r": 0.729411780834198,
+                      "g": 0.7333333492279053,
+                      "b": 0.7450980544090271
+                    },
+                    "boundVariables": {
+                      "color": {
+                        "type": "VARIABLE_ALIAS",
+                        "id": "VariableID:3:66"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "3:146",
+        "name": "Serving summary",
+        "type": "FRAME",
+        "x": 20,
+        "y": 88,
+        "width": 350,
+        "height": 26,
+        "fills": [],
+        "layout": {
+          "direction": "HORIZONTAL",
+          "gap": 0,
+          "padding": {
+            "top": 0,
+            "right": 0,
+            "bottom": 0,
+            "left": 0
+          },
+          "primaryAlign": "SPACE_BETWEEN",
+          "crossAlign": "CENTER"
+        },
+        "radius": 0,
+        "children": [
+          {
+            "id": "3:147",
+            "name": "Servings",
+            "type": "FRAME",
+            "x": 0,
+            "y": 2,
+            "width": 46,
+            "height": 22,
+            "fills": [],
+            "layout": {
+              "direction": "HORIZONTAL",
+              "gap": 4,
+              "padding": {
+                "top": 0,
+                "right": 0,
+                "bottom": 0,
+                "left": 0
+              },
+              "primaryAlign": "MIN",
+              "crossAlign": "CENTER"
+            },
+            "radius": 0,
+            "children": [
+              {
+                "id": "3:148",
+                "name": "Serving unit",
+                "type": "TEXT",
+                "x": 0,
+                "y": 0,
+                "width": 24,
+                "height": 22,
+                "text": "حصة",
+                "font": {
+                  "family": "Changa",
+                  "style": "Regular",
+                  "variationSettings": {
+                    "wght": 400
+                  }
+                },
+                "fontSize": 12,
+                "lineHeight": {
+                  "unit": "PIXELS",
+                  "value": 22
+                },
+                "textAlign": "RIGHT",
+                "fills": [
+                  {
+                    "type": "SOLID",
+                    "visible": true,
+                    "opacity": 1,
+                    "blendMode": "NORMAL",
+                    "color": {
+                      "r": 0.729411780834198,
+                      "g": 0.7333333492279053,
+                      "b": 0.7450980544090271
+                    },
+                    "boundVariables": {
+                      "color": {
+                        "type": "VARIABLE_ALIAS",
+                        "id": "VariableID:3:66"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "3:149",
+                "name": "Portions",
+                "type": "TEXT",
+                "x": 28,
+                "y": 0,
+                "width": 18,
+                "height": 22,
+                "text": "1.0",
+                "font": {
+                  "family": "Work Sans",
+                  "style": "Medium",
+                  "variationSettings": {
+                    "wght": 500
+                  }
+                },
+                "fontSize": 14,
+                "lineHeight": {
+                  "unit": "PIXELS",
+                  "value": 22
+                },
+                "textAlign": "RIGHT",
+                "fills": [
+                  {
+                    "type": "SOLID",
+                    "visible": true,
+                    "opacity": 1,
+                    "blendMode": "NORMAL",
+                    "color": {
+                      "r": 0.729411780834198,
+                      "g": 0.7333333492279053,
+                      "b": 0.7450980544090271
+                    },
+                    "boundVariables": {
+                      "color": {
+                        "type": "VARIABLE_ALIAS",
+                        "id": "VariableID:3:66"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "3:150",
+            "name": "Calories per serving",
+            "type": "FRAME",
+            "x": 212,
+            "y": 0,
+            "width": 138,
+            "height": 26,
+            "fills": [],
+            "layout": {
+              "direction": "HORIZONTAL",
+              "gap": 8,
+              "padding": {
+                "top": 0,
+                "right": 0,
+                "bottom": 0,
+                "left": 0
+              },
+              "primaryAlign": "MIN",
+              "crossAlign": "CENTER"
+            },
+            "radius": 0,
+            "children": [
+              {
+                "id": "3:151",
+                "name": "Calories unit",
+                "type": "TEXT",
+                "x": 0,
+                "y": 2,
+                "width": 65,
+                "height": 22,
+                "text": "سعرة للحصة",
+                "font": {
+                  "family": "Changa",
+                  "style": "Regular",
+                  "variationSettings": {
+                    "wght": 400
+                  }
+                },
+                "fontSize": 12,
+                "lineHeight": {
+                  "unit": "PIXELS",
+                  "value": 22
+                },
+                "textAlign": "RIGHT",
+                "fills": [
+                  {
+                    "type": "SOLID",
+                    "visible": true,
+                    "opacity": 1,
+                    "blendMode": "NORMAL",
+                    "color": {
+                      "r": 0.729411780834198,
+                      "g": 0.7333333492279053,
+                      "b": 0.7450980544090271
+                    },
+                    "boundVariables": {
+                      "color": {
+                        "type": "VARIABLE_ALIAS",
+                        "id": "VariableID:3:66"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "3:152",
+                "name": "Calories",
+                "type": "TEXT",
+                "x": 73,
+                "y": 0,
+                "width": 37,
+                "height": 26,
+                "text": "588",
+                "font": {
+                  "family": "Work Sans",
+                  "style": "SemiBold",
+                  "variationSettings": {
+                    "wght": 600
+                  }
+                },
+                "fontSize": 20,
+                "lineHeight": {
+                  "unit": "PIXELS",
+                  "value": 26
+                },
+                "textAlign": "RIGHT",
+                "fills": [
+                  {
+                    "type": "SOLID",
+                    "visible": true,
+                    "opacity": 1,
+                    "blendMode": "NORMAL",
+                    "color": {
+                      "r": 0.9529411792755127,
+                      "g": 0.9529411792755127,
+                      "b": 0.95686274766922
+                    },
+                    "boundVariables": {
+                      "color": {
+                        "type": "VARIABLE_ALIAS",
+                        "id": "VariableID:3:64"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "3:153",
+                "name": "Recipe / Icon / Flame",
+                "type": "INSTANCE",
+                "x": 118,
+                "y": 3,
+                "width": 20,
+                "height": 20,
+                "fills": [],
+                "layout": {
+                  "direction": "NONE",
+                  "gap": 0,
+                  "padding": {
+                    "top": 0,
+                    "right": 0,
+                    "bottom": 0,
+                    "left": 0
+                  },
+                  "primaryAlign": "MIN",
+                  "crossAlign": "MIN"
+                },
+                "radius": 0,
+                "children": [
+                  {
+                    "id": "I3:153;6:149",
+                    "name": "Frame",
+                    "type": "FRAME",
+                    "x": 0,
+                    "y": 0,
+                    "width": 20,
+                    "height": 20,
+                    "fills": [
+                      {
+                        "type": "SOLID",
+                        "visible": false,
+                        "opacity": 1,
+                        "blendMode": "NORMAL",
+                        "color": {
+                          "r": 1,
+                          "g": 1,
+                          "b": 1
+                        },
+                        "boundVariables": {}
+                      }
+                    ],
+                    "layout": {
+                      "direction": "NONE",
+                      "gap": 0,
+                      "padding": {
+                        "top": 0,
+                        "right": 0,
+                        "bottom": 0,
+                        "left": 0
+                      },
+                      "primaryAlign": "MIN",
+                      "crossAlign": "MIN"
+                    },
+                    "radius": 0,
+                    "children": [
+                      {
+                        "id": "I3:153;6:150",
+                        "name": "Vector",
+                        "type": "VECTOR",
+                        "x": 2.990142345428467,
+                        "y": 0.9090908765792847,
+                        "width": 14.019715309143066,
+                        "height": 18.18181800842285,
+                        "fills": [
+                          {
+                            "type": "SOLID",
+                            "visible": true,
+                            "opacity": 1,
+                            "blendMode": "NORMAL",
+                            "color": {
+                              "r": 0.8823529481887817,
+                              "g": 0.5803921818733215,
+                              "b": 0.3607843220233917
+                            },
+                            "boundVariables": {
+                              "color": {
+                                "type": "VARIABLE_ALIAS",
+                                "id": "VariableID:6:148"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "3:156",
+        "name": "Macronutrients / RTL",
+        "type": "FRAME",
+        "x": 20,
+        "y": 130,
+        "width": 350,
+        "height": 56,
+        "fills": [],
+        "layout": {
+          "direction": "HORIZONTAL",
+          "gap": 12,
+          "padding": {
+            "top": 0,
+            "right": 0,
+            "bottom": 0,
+            "left": 0
+          },
+          "primaryAlign": "MIN",
+          "crossAlign": "CENTER"
+        },
+        "radius": 0,
+        "children": [
+          {
+            "id": "3:157",
+            "name": "الدهون",
+            "type": "INSTANCE",
+            "x": 0,
+            "y": 0,
+            "width": 100,
+            "height": 56,
+            "fills": [],
+            "layout": {
+              "direction": "VERTICAL",
+              "gap": 4,
+              "padding": {
+                "top": 0,
+                "right": 0,
+                "bottom": 0,
+                "left": 0
+              },
+              "primaryAlign": "MIN",
+              "crossAlign": "CENTER"
+            },
+            "radius": 0,
+            "children": [
+              {
+                "id": "I3:157;6:151",
+                "name": "Nutrient label and icon / RTL",
+                "type": "FRAME",
+                "x": 17.5,
+                "y": 0,
+                "width": 65,
+                "height": 24,
+                "fills": [],
+                "layout": {
+                  "direction": "HORIZONTAL",
+                  "gap": 4,
+                  "padding": {
+                    "top": 0,
+                    "right": 0,
+                    "bottom": 0,
+                    "left": 0
+                  },
+                  "primaryAlign": "MIN",
+                  "crossAlign": "CENTER"
+                },
+                "radius": 0,
+                "children": [
+                  {
+                    "id": "I3:157;3:121",
+                    "name": "Nutrient",
+                    "type": "TEXT",
+                    "x": 0,
+                    "y": 0,
+                    "width": 41,
+                    "height": 24,
+                    "text": "الدهون",
+                    "font": {
+                      "family": "Changa",
+                      "style": "Medium",
+                      "variationSettings": {
+                        "wght": 500
+                      }
+                    },
+                    "fontSize": 13,
+                    "lineHeight": {
+                      "unit": "PIXELS",
+                      "value": 24
+                    },
+                    "textAlign": "RIGHT",
+                    "fills": [
+                      {
+                        "type": "SOLID",
+                        "visible": true,
+                        "opacity": 1,
+                        "blendMode": "NORMAL",
+                        "color": {
+                          "r": 0.729411780834198,
+                          "g": 0.7333333492279053,
+                          "b": 0.7450980544090271
+                        },
+                        "boundVariables": {
+                          "color": {
+                            "type": "VARIABLE_ALIAS",
+                            "id": "VariableID:3:66"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "I3:157;6:152",
+                    "name": "Nutrient icon",
+                    "type": "INSTANCE",
+                    "x": 45,
+                    "y": 2,
+                    "width": 20,
+                    "height": 20,
+                    "fills": [],
+                    "layout": {
+                      "direction": "NONE",
+                      "gap": 0,
+                      "padding": {
+                        "top": 0,
+                        "right": 0,
+                        "bottom": 0,
+                        "left": 0
+                      },
+                      "primaryAlign": "MIN",
+                      "crossAlign": "MIN"
+                    },
+                    "radius": 0,
+                    "children": [
+                      {
+                        "id": "I3:157;6:152;6:145",
+                        "name": "Frame",
+                        "type": "FRAME",
+                        "x": 0,
+                        "y": 0,
+                        "width": 20,
+                        "height": 20,
+                        "fills": [
+                          {
+                            "type": "SOLID",
+                            "visible": false,
+                            "opacity": 1,
+                            "blendMode": "NORMAL",
+                            "color": {
+                              "r": 1,
+                              "g": 1,
+                              "b": 1
+                            },
+                            "boundVariables": {}
+                          }
+                        ],
+                        "layout": {
+                          "direction": "NONE",
+                          "gap": 0,
+                          "padding": {
+                            "top": 0,
+                            "right": 0,
+                            "bottom": 0,
+                            "left": 0
+                          },
+                          "primaryAlign": "MIN",
+                          "crossAlign": "MIN"
+                        },
+                        "radius": 0,
+                        "children": [
+                          {
+                            "id": "I3:157;6:152;6:146",
+                            "name": "Vector",
+                            "type": "VECTOR",
+                            "x": 1.4067683219909668,
+                            "y": 0.9090907573699951,
+                            "width": 17.219642639160156,
+                            "height": 18.18181800842285,
+                            "fills": [
+                              {
+                                "type": "SOLID",
+                                "visible": true,
+                                "opacity": 1,
+                                "blendMode": "NORMAL",
+                                "color": {
+                                  "r": 0.5607843399047852,
+                                  "g": 0.7450980544090271,
+                                  "b": 0.38823530077934265
+                                },
+                                "boundVariables": {
+                                  "color": {
+                                    "type": "VARIABLE_ALIAS",
+                                    "id": "VariableID:6:143"
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "I3:157;3:118",
+                "name": "Amount",
+                "type": "FRAME",
+                "x": 19.5,
+                "y": 28,
+                "width": 61,
+                "height": 27,
+                "fills": [],
+                "layout": {
+                  "direction": "HORIZONTAL",
+                  "gap": 4,
+                  "padding": {
+                    "top": 0,
+                    "right": 0,
+                    "bottom": 0,
+                    "left": 0
+                  },
+                  "primaryAlign": "MIN",
+                  "crossAlign": "BASELINE"
+                },
+                "radius": 0,
+                "children": [
+                  {
+                    "id": "I3:157;3:119",
+                    "name": "Unit",
+                    "type": "TEXT",
+                    "x": 0,
+                    "y": 5,
+                    "width": 15,
+                    "height": 22,
+                    "text": "جم",
+                    "font": {
+                      "family": "Changa",
+                      "style": "Regular",
+                      "variationSettings": {
+                        "wght": 400
+                      }
+                    },
+                    "fontSize": 12,
+                    "lineHeight": {
+                      "unit": "PIXELS",
+                      "value": 22
+                    },
+                    "textAlign": "RIGHT",
+                    "fills": [
+                      {
+                        "type": "SOLID",
+                        "visible": true,
+                        "opacity": 1,
+                        "blendMode": "NORMAL",
+                        "color": {
+                          "r": 0.729411780834198,
+                          "g": 0.7333333492279053,
+                          "b": 0.7450980544090271
+                        },
+                        "boundVariables": {
+                          "color": {
+                            "type": "VARIABLE_ALIAS",
+                            "id": "VariableID:3:66"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "I3:157;3:120",
+                    "name": "Value",
+                    "type": "TEXT",
+                    "x": 19,
+                    "y": 0,
+                    "width": 42,
+                    "height": 26,
+                    "text": "36.5",
+                    "font": {
+                      "family": "Work Sans",
+                      "style": "SemiBold",
+                      "variationSettings": {
+                        "wght": 600
+                      }
+                    },
+                    "fontSize": 20,
+                    "lineHeight": {
+                      "unit": "PIXELS",
+                      "value": 26
+                    },
+                    "textAlign": "RIGHT",
+                    "fills": [
+                      {
+                        "type": "SOLID",
+                        "visible": true,
+                        "opacity": 1,
+                        "blendMode": "NORMAL",
+                        "color": {
+                          "r": 0.9529411792755127,
+                          "g": 0.9529411792755127,
+                          "b": 0.95686274766922
+                        },
+                        "boundVariables": {
+                          "color": {
+                            "type": "VARIABLE_ALIAS",
+                            "id": "VariableID:3:64"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "3:162",
+            "name": "Nutrient separator",
+            "type": "RECTANGLE",
+            "x": 112,
+            "y": 13,
+            "width": 1,
+            "height": 30,
+            "fills": [
+              {
+                "type": "SOLID",
+                "visible": true,
+                "opacity": 1,
+                "blendMode": "NORMAL",
+                "color": {
+                  "r": 0.2235294133424759,
+                  "g": 0.23529411852359772,
+                  "b": 0.26274511218070984
+                },
+                "boundVariables": {
+                  "color": {
+                    "type": "VARIABLE_ALIAS",
+                    "id": "VariableID:3:62"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "id": "3:163",
+            "name": "الكارب",
+            "type": "INSTANCE",
+            "x": 125,
+            "y": 0,
+            "width": 100,
+            "height": 56,
+            "fills": [],
+            "layout": {
+              "direction": "VERTICAL",
+              "gap": 4,
+              "padding": {
+                "top": 0,
+                "right": 0,
+                "bottom": 0,
+                "left": 0
+              },
+              "primaryAlign": "MIN",
+              "crossAlign": "CENTER"
+            },
+            "radius": 0,
+            "children": [
+              {
+                "id": "I3:163;6:151",
+                "name": "Nutrient label and icon / RTL",
+                "type": "FRAME",
+                "x": 19.5,
+                "y": 0,
+                "width": 61,
+                "height": 24,
+                "fills": [],
+                "layout": {
+                  "direction": "HORIZONTAL",
+                  "gap": 4,
+                  "padding": {
+                    "top": 0,
+                    "right": 0,
+                    "bottom": 0,
+                    "left": 0
+                  },
+                  "primaryAlign": "MIN",
+                  "crossAlign": "CENTER"
+                },
+                "radius": 0,
+                "children": [
+                  {
+                    "id": "I3:163;3:121",
+                    "name": "Nutrient",
+                    "type": "TEXT",
+                    "x": 0,
+                    "y": 0,
+                    "width": 37,
+                    "height": 24,
+                    "text": "الكارب",
+                    "font": {
+                      "family": "Changa",
+                      "style": "Medium",
+                      "variationSettings": {
+                        "wght": 500
+                      }
+                    },
+                    "fontSize": 13,
+                    "lineHeight": {
+                      "unit": "PIXELS",
+                      "value": 24
+                    },
+                    "textAlign": "RIGHT",
+                    "fills": [
+                      {
+                        "type": "SOLID",
+                        "visible": true,
+                        "opacity": 1,
+                        "blendMode": "NORMAL",
+                        "color": {
+                          "r": 0.729411780834198,
+                          "g": 0.7333333492279053,
+                          "b": 0.7450980544090271
+                        },
+                        "boundVariables": {
+                          "color": {
+                            "type": "VARIABLE_ALIAS",
+                            "id": "VariableID:3:66"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "I3:163;6:152",
+                    "name": "Nutrient icon",
+                    "type": "INSTANCE",
+                    "x": 41,
+                    "y": 2,
+                    "width": 20,
+                    "height": 20,
+                    "fills": [],
+                    "layout": {
+                      "direction": "NONE",
+                      "gap": 0,
+                      "padding": {
+                        "top": 0,
+                        "right": 0,
+                        "bottom": 0,
+                        "left": 0
+                      },
+                      "primaryAlign": "MIN",
+                      "crossAlign": "MIN"
+                    },
+                    "radius": 0,
+                    "children": [
+                      {
+                        "id": "I3:163;6:152;6:140",
+                        "name": "Frame",
+                        "type": "FRAME",
+                        "x": 0,
+                        "y": 0,
+                        "width": 20,
+                        "height": 20,
+                        "fills": [
+                          {
+                            "type": "SOLID",
+                            "visible": false,
+                            "opacity": 1,
+                            "blendMode": "NORMAL",
+                            "color": {
+                              "r": 1,
+                              "g": 1,
+                              "b": 1
+                            },
+                            "boundVariables": {}
+                          }
+                        ],
+                        "layout": {
+                          "direction": "NONE",
+                          "gap": 0,
+                          "padding": {
+                            "top": 0,
+                            "right": 0,
+                            "bottom": 0,
+                            "left": 0
+                          },
+                          "primaryAlign": "MIN",
+                          "crossAlign": "MIN"
+                        },
+                        "radius": 0,
+                        "children": [
+                          {
+                            "id": "I3:163;6:152;6:141",
+                            "name": "Vector",
+                            "type": "VECTOR",
+                            "x": 0.9090911746025085,
+                            "y": 0.9090911746025085,
+                            "width": 18.18181800842285,
+                            "height": 18.18181800842285,
+                            "fills": [
+                              {
+                                "type": "SOLID",
+                                "visible": true,
+                                "opacity": 1,
+                                "blendMode": "NORMAL",
+                                "color": {
+                                  "r": 0.9098039269447327,
+                                  "g": 0.7019608020782471,
+                                  "b": 0.2980392277240753
+                                },
+                                "boundVariables": {
+                                  "color": {
+                                    "type": "VARIABLE_ALIAS",
+                                    "id": "VariableID:6:138"
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "I3:163;3:118",
+                "name": "Amount",
+                "type": "FRAME",
+                "x": 19,
+                "y": 28,
+                "width": 62,
+                "height": 27,
+                "fills": [],
+                "layout": {
+                  "direction": "HORIZONTAL",
+                  "gap": 4,
+                  "padding": {
+                    "top": 0,
+                    "right": 0,
+                    "bottom": 0,
+                    "left": 0
+                  },
+                  "primaryAlign": "MIN",
+                  "crossAlign": "BASELINE"
+                },
+                "radius": 0,
+                "children": [
+                  {
+                    "id": "I3:163;3:119",
+                    "name": "Unit",
+                    "type": "TEXT",
+                    "x": 0,
+                    "y": 5,
+                    "width": 15,
+                    "height": 22,
+                    "text": "جم",
+                    "font": {
+                      "family": "Changa",
+                      "style": "Regular",
+                      "variationSettings": {
+                        "wght": 400
+                      }
+                    },
+                    "fontSize": 12,
+                    "lineHeight": {
+                      "unit": "PIXELS",
+                      "value": 22
+                    },
+                    "textAlign": "RIGHT",
+                    "fills": [
+                      {
+                        "type": "SOLID",
+                        "visible": true,
+                        "opacity": 1,
+                        "blendMode": "NORMAL",
+                        "color": {
+                          "r": 0.729411780834198,
+                          "g": 0.7333333492279053,
+                          "b": 0.7450980544090271
+                        },
+                        "boundVariables": {
+                          "color": {
+                            "type": "VARIABLE_ALIAS",
+                            "id": "VariableID:3:66"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "I3:163;3:120",
+                    "name": "Value",
+                    "type": "TEXT",
+                    "x": 19,
+                    "y": 0,
+                    "width": 43,
+                    "height": 26,
+                    "text": "26.0",
+                    "font": {
+                      "family": "Work Sans",
+                      "style": "SemiBold",
+                      "variationSettings": {
+                        "wght": 600
+                      }
+                    },
+                    "fontSize": 20,
+                    "lineHeight": {
+                      "unit": "PIXELS",
+                      "value": 26
+                    },
+                    "textAlign": "RIGHT",
+                    "fills": [
+                      {
+                        "type": "SOLID",
+                        "visible": true,
+                        "opacity": 1,
+                        "blendMode": "NORMAL",
+                        "color": {
+                          "r": 0.9529411792755127,
+                          "g": 0.9529411792755127,
+                          "b": 0.95686274766922
+                        },
+                        "boundVariables": {
+                          "color": {
+                            "type": "VARIABLE_ALIAS",
+                            "id": "VariableID:3:64"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "3:168",
+            "name": "Nutrient separator",
+            "type": "RECTANGLE",
+            "x": 237,
+            "y": 13,
+            "width": 1,
+            "height": 30,
+            "fills": [
+              {
+                "type": "SOLID",
+                "visible": true,
+                "opacity": 1,
+                "blendMode": "NORMAL",
+                "color": {
+                  "r": 0.2235294133424759,
+                  "g": 0.23529411852359772,
+                  "b": 0.26274511218070984
+                },
+                "boundVariables": {
+                  "color": {
+                    "type": "VARIABLE_ALIAS",
+                    "id": "VariableID:3:62"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "id": "3:169",
+            "name": "البروتين",
+            "type": "INSTANCE",
+            "x": 250,
+            "y": 0,
+            "width": 100,
+            "height": 56,
+            "fills": [],
+            "layout": {
+              "direction": "VERTICAL",
+              "gap": 4,
+              "padding": {
+                "top": 0,
+                "right": 0,
+                "bottom": 0,
+                "left": 0
+              },
+              "primaryAlign": "MIN",
+              "crossAlign": "CENTER"
+            },
+            "radius": 0,
+            "children": [
+              {
+                "id": "I3:169;6:151",
+                "name": "Nutrient label and icon / RTL",
+                "type": "FRAME",
+                "x": 17,
+                "y": 0,
+                "width": 66,
+                "height": 24,
+                "fills": [],
+                "layout": {
+                  "direction": "HORIZONTAL",
+                  "gap": 4,
+                  "padding": {
+                    "top": 0,
+                    "right": 0,
+                    "bottom": 0,
+                    "left": 0
+                  },
+                  "primaryAlign": "MIN",
+                  "crossAlign": "CENTER"
+                },
+                "radius": 0,
+                "children": [
+                  {
+                    "id": "I3:169;3:121",
+                    "name": "Nutrient",
+                    "type": "TEXT",
+                    "x": 0,
+                    "y": 0,
+                    "width": 42,
+                    "height": 24,
+                    "text": "البروتين",
+                    "font": {
+                      "family": "Changa",
+                      "style": "Medium",
+                      "variationSettings": {
+                        "wght": 500
+                      }
+                    },
+                    "fontSize": 13,
+                    "lineHeight": {
+                      "unit": "PIXELS",
+                      "value": 24
+                    },
+                    "textAlign": "RIGHT",
+                    "fills": [
+                      {
+                        "type": "SOLID",
+                        "visible": true,
+                        "opacity": 1,
+                        "blendMode": "NORMAL",
+                        "color": {
+                          "r": 0.729411780834198,
+                          "g": 0.7333333492279053,
+                          "b": 0.7450980544090271
+                        },
+                        "boundVariables": {
+                          "color": {
+                            "type": "VARIABLE_ALIAS",
+                            "id": "VariableID:3:66"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "I3:169;6:152",
+                    "name": "Recipe / Icon / Protein",
+                    "type": "INSTANCE",
+                    "x": 46,
+                    "y": 2,
+                    "width": 20,
+                    "height": 20,
+                    "fills": [],
+                    "layout": {
+                      "direction": "NONE",
+                      "gap": 0,
+                      "padding": {
+                        "top": 0,
+                        "right": 0,
+                        "bottom": 0,
+                        "left": 0
+                      },
+                      "primaryAlign": "MIN",
+                      "crossAlign": "MIN"
+                    },
+                    "radius": 0,
+                    "children": [
+                      {
+                        "id": "I3:169;6:152;6:135",
+                        "name": "Frame",
+                        "type": "FRAME",
+                        "x": 0,
+                        "y": 0,
+                        "width": 20,
+                        "height": 20,
+                        "fills": [
+                          {
+                            "type": "SOLID",
+                            "visible": false,
+                            "opacity": 1,
+                            "blendMode": "NORMAL",
+                            "color": {
+                              "r": 1,
+                              "g": 1,
+                              "b": 1
+                            },
+                            "boundVariables": {}
+                          }
+                        ],
+                        "layout": {
+                          "direction": "NONE",
+                          "gap": 0,
+                          "padding": {
+                            "top": 0,
+                            "right": 0,
+                            "bottom": 0,
+                            "left": 0
+                          },
+                          "primaryAlign": "MIN",
+                          "crossAlign": "MIN"
+                        },
+                        "radius": 0,
+                        "children": [
+                          {
+                            "id": "I3:169;6:152;6:136",
+                            "name": "Vector",
+                            "type": "VECTOR",
+                            "x": 1.354099988937378,
+                            "y": 0.9090903997421265,
+                            "width": 17.291799545288086,
+                            "height": 18.15003204345703,
+                            "fills": [
+                              {
+                                "type": "SOLID",
+                                "visible": true,
+                                "opacity": 1,
+                                "blendMode": "NORMAL",
+                                "color": {
+                                  "r": 0.9372549057006836,
+                                  "g": 0.4745098054409027,
+                                  "b": 0.5568627715110779
+                                },
+                                "boundVariables": {
+                                  "color": {
+                                    "type": "VARIABLE_ALIAS",
+                                    "id": "VariableID:6:133"
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "I3:169;3:118",
+                "name": "Amount",
+                "type": "FRAME",
+                "x": 19.5,
+                "y": 28,
+                "width": 61,
+                "height": 27,
+                "fills": [],
+                "layout": {
+                  "direction": "HORIZONTAL",
+                  "gap": 4,
+                  "padding": {
+                    "top": 0,
+                    "right": 0,
+                    "bottom": 0,
+                    "left": 0
+                  },
+                  "primaryAlign": "MIN",
+                  "crossAlign": "BASELINE"
+                },
+                "radius": 0,
+                "children": [
+                  {
+                    "id": "I3:169;3:119",
+                    "name": "Unit",
+                    "type": "TEXT",
+                    "x": 0,
+                    "y": 5,
+                    "width": 15,
+                    "height": 22,
+                    "text": "جم",
+                    "font": {
+                      "family": "Changa",
+                      "style": "Regular",
+                      "variationSettings": {
+                        "wght": 400
+                      }
+                    },
+                    "fontSize": 12,
+                    "lineHeight": {
+                      "unit": "PIXELS",
+                      "value": 22
+                    },
+                    "textAlign": "RIGHT",
+                    "fills": [
+                      {
+                        "type": "SOLID",
+                        "visible": true,
+                        "opacity": 1,
+                        "blendMode": "NORMAL",
+                        "color": {
+                          "r": 0.729411780834198,
+                          "g": 0.7333333492279053,
+                          "b": 0.7450980544090271
+                        },
+                        "boundVariables": {
+                          "color": {
+                            "type": "VARIABLE_ALIAS",
+                            "id": "VariableID:3:66"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "I3:169;3:120",
+                    "name": "Value",
+                    "type": "TEXT",
+                    "x": 19,
+                    "y": 0,
+                    "width": 42,
+                    "height": 26,
+                    "text": "35.9",
+                    "font": {
+                      "family": "Work Sans",
+                      "style": "SemiBold",
+                      "variationSettings": {
+                        "wght": 600
+                      }
+                    },
+                    "fontSize": 20,
+                    "lineHeight": {
+                      "unit": "PIXELS",
+                      "value": 26
+                    },
+                    "textAlign": "RIGHT",
+                    "fills": [
+                      {
+                        "type": "SOLID",
+                        "visible": true,
+                        "opacity": 1,
+                        "blendMode": "NORMAL",
+                        "color": {
+                          "r": 0.9529411792755127,
+                          "g": 0.9529411792755127,
+                          "b": 0.95686274766922
+                        },
+                        "boundVariables": {
+                          "color": {
+                            "type": "VARIABLE_ALIAS",
+                            "id": "VariableID:3:64"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "3:174",
+        "name": "إضافة حصة",
+        "type": "INSTANCE",
+        "x": 20,
+        "y": 202,
+        "width": 350,
+        "height": 48,
+        "fills": [
+          {
+            "type": "SOLID",
+            "visible": true,
+            "opacity": 1,
+            "blendMode": "NORMAL",
+            "color": {
+              "r": 0.9764705896377563,
+              "g": 0.45098039507865906,
+              "b": 0.08627451211214066
+            },
+            "boundVariables": {
+              "color": {
+                "type": "VARIABLE_ALIAS",
+                "id": "VariableID:3:68"
+              }
+            }
+          }
+        ],
+        "layout": {
+          "direction": "HORIZONTAL",
+          "gap": 8,
+          "padding": {
+            "top": 0,
+            "right": 0,
+            "bottom": 0,
+            "left": 0
+          },
+          "primaryAlign": "CENTER",
+          "crossAlign": "CENTER"
+        },
+        "radius": 12,
+        "children": [
+          {
+            "id": "I3:174;3:109",
+            "name": "Label",
+            "type": "TEXT",
+            "x": 123.5,
+            "y": 11,
+            "width": 75,
+            "height": 26,
+            "text": "إضافة حصة",
+            "font": {
+              "family": "Changa",
+              "style": "SemiBold",
+              "variationSettings": {
+                "wght": 600
+              }
+            },
+            "fontSize": 15,
+            "lineHeight": {
+              "unit": "PIXELS",
+              "value": 26
+            },
+            "textAlign": "RIGHT",
+            "fills": [
+              {
+                "type": "SOLID",
+                "visible": true,
+                "opacity": 1,
+                "blendMode": "NORMAL",
+                "color": {
+                  "r": 0.06666667014360428,
+                  "g": 0.07058823853731155,
+                  "b": 0.0784313753247261
+                },
+                "boundVariables": {
+                  "color": {
+                    "type": "VARIABLE_ALIAS",
+                    "id": "VariableID:3:58"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "id": "I3:174;3:110",
+            "name": "Recipe / Icon / Plus",
+            "type": "INSTANCE",
+            "x": 206.5,
+            "y": 14,
+            "width": 20,
+            "height": 20,
+            "fills": [],
+            "layout": {
+              "direction": "NONE",
+              "gap": 0,
+              "padding": {
+                "top": 0,
+                "right": 0,
+                "bottom": 0,
+                "left": 0
+              },
+              "primaryAlign": "MIN",
+              "crossAlign": "MIN"
+            },
+            "radius": 0,
+            "children": [
+              {
+                "id": "I3:174;3:110;3:95",
+                "name": "Frame",
+                "type": "FRAME",
+                "x": 0,
+                "y": 0,
+                "width": 20,
+                "height": 20,
+                "fills": [
+                  {
+                    "type": "SOLID",
+                    "visible": false,
+                    "opacity": 1,
+                    "blendMode": "NORMAL",
+                    "color": {
+                      "r": 1,
+                      "g": 1,
+                      "b": 1
+                    },
+                    "boundVariables": {}
+                  }
+                ],
+                "layout": {
+                  "direction": "NONE",
+                  "gap": 0,
+                  "padding": {
+                    "top": 0,
+                    "right": 0,
+                    "bottom": 0,
+                    "left": 0
+                  },
+                  "primaryAlign": "MIN",
+                  "crossAlign": "MIN"
+                },
+                "radius": 0,
+                "children": [
+                  {
+                    "id": "I3:174;3:110;3:96",
+                    "name": "Vector",
+                    "type": "VECTOR",
+                    "x": 4.1666669845581055,
+                    "y": 4.1666669845581055,
+                    "width": 11.666666030883789,
+                    "height": 11.666666030883789,
+                    "fills": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -38,6 +38,9 @@
 	<string>Dark</string>
 	<key>UIAppFonts</key>
 	<array>
+		<string>Changa-Regular.ttf</string>
+		<string>Changa-Medium.ttf</string>
+		<string>Changa-SemiBold.ttf</string>
 		<string>Changa-Bold.ttf</string>
 		<string>Tajawal-Light.ttf</string>
 		<string>Tajawal-Regular.ttf</string>

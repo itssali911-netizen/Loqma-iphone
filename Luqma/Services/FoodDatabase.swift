@@ -6,6 +6,11 @@ import FoundationNetworking
 actor FoodDatabase {
     static let shared = FoodDatabase()
     static let searchSummarySourceDescription = "openfoodfacts-search-summary"
+    static let catalogSummarySourceDescription = "luqma-off-catalog-search-summary"
+    static func requiresDetails(_ food: Food) -> Bool {
+        food.sourceDescription == searchSummarySourceDescription || food.sourceDescription == catalogSummarySourceDescription
+    }
+    private let hostedCatalog: URL?
     private var catalog = FoodSearch.Index([])
     private var catalogReady = false
     private var cachedFoods: [Food] = []
@@ -21,9 +26,11 @@ actor FoodDatabase {
     private var barcodeBlockedUntil: TimeInterval = 0
     private var pages: [String: (saved: TimeInterval, page: FoodSearchPage)] = [:]
     private static let pageSize = 50
-    private static let fields = ["code", "product_name", "product_name_ar", "product_name_en", "brands", "nutriments", "nutrition", "nutrition_data_per", "serving_size", "serving_quantity", "serving_quantity_unit", "product_quantity_unit"]
+    private static let fields = ["code", "product_name", "product_name_ar", "product_name_en", "brands", "nutriments", "nutrition", "nutrition_data_per", "no_nutrition_data", "serving_size", "serving_quantity", "serving_quantity_unit", "product_quantity_unit", "last_modified_t", "countries_tags", "ingredients_text", "allergens_tags", "image_front_url"]
 
-    init() {}
+    init() {
+        hostedCatalog = FoodCatalogConfiguration.baseURL(Bundle.main.object(forInfoDictionaryKey: "LUQMAFoodCatalogBaseURL"))
+    }
 
     /// Constructing `shared` on a UI task stays cheap. File reads and preparing
     /// the bundled index happen only inside the actor's first isolated call.
@@ -169,7 +176,7 @@ actor FoodDatabase {
             throw AppError.invalid("أدخل رقم باركود من ٨ إلى ١٤ رقمًا.", "Enter a barcode of 8 to 14 digits.")
         }
         if let saved = cached.last(where: { $0.barcode == code && FoodSearch.isOpenFoodFacts($0) }) {
-            if saved.sourceDescription == Self.searchSummarySourceDescription { return try await details(for: saved) }
+            if Self.requiresDetails(saved) { return try await details(for: saved) }
             if saved.per100 != nil || saved.servingNutrition != nil { return saved }
         }
         return try await loadProduct(code)
@@ -180,7 +187,7 @@ actor FoodDatabase {
     /// nutrition in the diary; old saved foods remain usable offline.
     func details(for food: Food) async throws -> Food {
         try Task.checkCancellation()
-        guard food.sourceDescription == Self.searchSummarySourceDescription else { return food }
+        guard Self.requiresDetails(food) else { return food }
         guard food.source == "OpenFoodFacts", let code = food.sourceId ?? food.barcode,
               let resolved = try await loadProduct(code) else {
             throw AppError.invalid("تعذّر تحميل تفاصيل المنتج. أعد المحاولة أو أدخل بيانات ملصقه يدويًا.", "Product details could not be loaded. Retry or enter its label nutrition manually.")
@@ -197,13 +204,25 @@ actor FoodDatabase {
               code.allSatisfy({ "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_".contains($0) }) else {
             throw AppError.invalid("تعذّر قراءة معرّف المنتج. أدخل بيانات ملصقه يدويًا.", "The product identifier could not be read. Enter its label nutrition manually.")
         }
+        if let hostedCatalog, let url = FoodCatalogConfiguration.productURL(base: hostedCatalog, code: code) {
+            let json = try await request(URLRequest(url: url), allowMissing: true)
+            if json["status"] as? Int != 0 {
+                let data = try JSONSerialization.data(withJSONObject: json)
+                let response = try JSONDecoder().decode(FoodCatalogConfiguration.ProductResponse.self, from: data)
+                if let food = try response.validated(code: code) { return food }
+            }
+            // Newer products may postdate the pinned export. A genuine missing
+            // catalogue record can still use the existing current OFF lookup.
+        }
         try reserveBarcode()
         var url = URLComponents(string: "https://world.openfoodfacts.org")!
         url.path = "/api/v3.6/product/\(code).json"
         url.queryItems = [URLQueryItem(name: "fields", value: Self.fields.joined(separator: ","))]
         let json = try await request(URLRequest(url: url.url!), allowMissing: true)
         guard json["status"] as? String == "success", let product = json["product"] as? [String: Any] else { return nil }
-        return OpenFoodFactsProduct.parse(product)
+        var food = OpenFoodFactsProduct.parse(product)
+        food?.sourceMetadata?.retrievedAt = ISO8601DateFormatter().string(from: Date())
+        return food
     }
 
     func remote(_ query: String, page: Int = 1) async throws -> FoodSearchPage {
@@ -211,7 +230,7 @@ actor FoodDatabase {
         guard !term.isEmpty else { return FoodSearchPage(foods: [], nextPage: nil, sourceTotal: 0) }
         // Search-a-licious exposes an explicit 10,000-result window. Local
         // catalog matches are not subject to this external API limit.
-        guard term.count <= 180, page >= 1, page <= 10_000 / Self.pageSize else {
+        guard term.count <= 180, page >= 1, hostedCatalog != nil || page <= 10_000 / Self.pageSize else {
             throw AppError.invalid("اختصر كلمات البحث لتظهر نتائج أدق.", "Use a more specific search to find the relevant foods.")
         }
         try Task.checkCancellation()
@@ -219,6 +238,12 @@ actor FoodDatabase {
         let now = ProcessInfo.processInfo.systemUptime
         pages = pages.filter { now - $0.value.saved < 300 }
         if let cached = pages[key] { return cached.page }
+        if let hostedCatalog {
+            let result = try await hostedPage(base: hostedCatalog, query: query, page: page)
+            try Task.checkCancellation()
+            cache(result, key: key)
+            return result
+        }
         let variants = page == 1 ? FoodSearch.onlineQueries(query) : [resolvedQueries[term] ?? FoodSearch.onlineQueries(query).first ?? query]
         var selected: FoodSearchPage?
         var selectedScore = -1
@@ -247,10 +272,32 @@ actor FoodDatabase {
         var result = selected ?? FoodSearchPage(foods: [], nextPage: nil, sourceTotal: 0)
         result.foods = collected
         try Task.checkCancellation()
+        cache(result, key: key)
+        return result
+    }
+
+    private func cache(_ result: FoodSearchPage, key: String) {
         pages[key] = (ProcessInfo.processInfo.systemUptime, result)
         if pages.count > 24, let oldest = pages.min(by: { $0.value.saved < $1.value.saved })?.key {
             pages.removeValue(forKey: oldest)
             resolvedQueries.removeValue(forKey: String(oldest.split(separator: "|").first ?? ""))
+        }
+    }
+
+    private func hostedPage(base: URL, query: String, page: Int) async throws -> FoodSearchPage {
+        guard let url = FoodCatalogConfiguration.searchURL(base: base, query: query, page: page, pageSize: Self.pageSize) else {
+            throw AppError.invalid("اختصر كلمات البحث لتظهر نتائج أدق.", "Use a more specific search to find the relevant foods.")
+        }
+        let json = try await request(URLRequest(url: url), searching: true)
+        let data = try JSONSerialization.data(withJSONObject: json)
+        let response = try JSONDecoder().decode(FoodCatalogConfiguration.SearchResponse.self, from: data)
+        guard var result = response.validated(requestedPage: page, size: Self.pageSize) else {
+            throw AppError.invalid("لم تكتمل نتائج البحث. جرّب مرة أخرى.", "The search did not complete. Retry.")
+        }
+        result.foods = result.foods.map { product in
+            var summary = product
+            summary.sourceDescription = Self.catalogSummarySourceDescription
+            return summary
         }
         return result
     }
@@ -272,6 +319,7 @@ actor FoodDatabase {
         let summaries = hits.compactMap(OpenFoodFactsProduct.parse).map { product -> Food in
             var summary = product
             summary.sourceDescription = Self.searchSummarySourceDescription
+            summary.sourceMetadata?.retrievedAt = ISO8601DateFormatter().string(from: Date())
             return summary
         }
         let result = FoodSearchPage(foods: summaries,

@@ -1,0 +1,69 @@
+name: Luqma approved recipe card and macro review
+on:
+  push:
+    branches: [feature/recipe-macros-catalog-20261103]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: luqma-recipe-card-review-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+  BUNDLE_ID: app.luqma.diary
+  BUILD_NUMBER: '125'
+jobs:
+  native-review:
+    runs-on: macos-26
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+      - name: Run current Core and BuildTests and compile iPhone and Simulator SDKs
+        id: build
+        run: python3 Scripts/recipe_card_review.py check
+      - name: Preserve actual build and test evidence immediately
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-Recipe-Checks-${{ github.run_id }}
+          path: |
+            BuildOutput/build-summary.json
+            BuildOutput/toolchain.json
+            BuildOutput/*.log
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Capture real product screens and 390/320 long-text accessibility card fixtures
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: python3 Scripts/recipe_card_review.py screenshots
+      - name: Preserve unretouched native screenshots and per-launch font audits
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-Recipe-Screens-${{ github.run_id }}
+          path: |
+            Recipe-Review-Screens/*.json
+            Recipe-Review-Screens/*/*.png
+            Recipe-Review-Screens/*/*.json
+            Recipe-Review-Screens/*/*.log
+            Recipe-Review-Screens/*/font-audits/
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Exercise real recipe card actions and preserved food diary flows
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: python3 Scripts/recipe_card_review.py controls
+      - name: Preserve native interaction reports and exact XCTest results even when failed
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-Recipe-Controls-${{ github.run_id }}
+          path: |
+            Recipe-Review-Controls/*.json
+            Recipe-Review-Controls/*.log
+            Recipe-Review-Controls/*/*.json
+            Recipe-Review-Controls/*/*.log
+            Recipe-Review-Controls/*/interactions.xcresult/
+          if-no-files-found: warn
+          retention-days: 30

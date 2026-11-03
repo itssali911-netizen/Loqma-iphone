@@ -199,7 +199,10 @@ class CaptureRetryTests(unittest.TestCase):
         extra = [case for case in cases.values() if "assessment_page" in case]
         self.assertEqual({case["assessment_page"] for case in extra} | {0,2,7,9,10}, set(range(11)))
         self.assertEqual(len(extra),9)
-        self.assertEqual(EXPECTED_SCREEN_COUNT,51)
+        self.assertEqual(EXPECTED_SCREEN_COUNT,48)
+        # The removed home carousel must not survive as dead capture routes:
+        # these would launch duplicate Today frames and mislabel the evidence.
+        self.assertTrue({"editorial-dinner", "editorial-snack", "accessibility-editorial"}.isdisjoint(cases))
         self.assertEqual(dict(ASSESSMENT_EXTRA_ROUTES),{
             "assessment-age":3,"assessment-height":4,"assessment-weight":5,
             "assessment-target":6,"assessment-training":8,"assessment-safety":1})

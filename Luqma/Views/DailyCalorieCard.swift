@@ -9,14 +9,7 @@ private enum CalorieCardStyle {
     static let secondary = Color(red: 176/255.0, green: 179/255.0, blue: 189/255.0)
     static let accent = Color(red: 1, green: 117/255.0, blue: 21/255.0)
     static func color(_ key: MacroKey) -> Color {
-        switch key {
-        case .protein: return Color(red: 239/255.0, green: 121/255.0, blue: 142/255.0)
-        case .carbs: return Color(red: 232/255.0, green: 179/255.0, blue: 76/255.0)
-        case .fat: return Color(red: 143/255.0, green: 190/255.0, blue: 99/255.0)
-        }
-    }
-    static func icon(_ key: MacroKey) -> String {
-        switch key { case .protein: return "CalorieCardProtein"; case .carbs: return "CalorieCardCarbs"; case .fat: return "CalorieCardFat" }
+        LuqmaMacroStyle.color(key)
     }
 }
 
@@ -144,8 +137,7 @@ struct DailyCalorieCard: View {
     private func macro(_ key: MacroKey) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
-                Image(CalorieCardStyle.icon(key)).renderingMode(.template).resizable().scaledToFit()
-                    .frame(width: 18, height: 18).foregroundStyle(CalorieCardStyle.color(key)).accessibilityHidden(true)
+                LuqmaMacroIcon(key: key, size: 18)
                 Text(key.label(language)).luqmaFont(size: 12, weight: .medium, relativeTo: .caption)
                     .foregroundStyle(CalorieCardStyle.secondary).fixedSize(horizontal: false, vertical: true)
             }.frame(maxWidth: .infinity, alignment: .leading)

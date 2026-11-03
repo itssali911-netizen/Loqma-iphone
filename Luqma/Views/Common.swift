@@ -1,5 +1,36 @@
 import SwiftUI
 
+/// One source of truth for the approved macro vectors and their semantic tints.
+/// The supplied vectors are derived reference artwork, not original Figma exports.
+enum LuqmaMacroStyle {
+    static func color(_ key: MacroKey) -> Color {
+        switch key {
+        case .protein: return Color(hex: 0xEF798E)
+        case .carbs: return Color(hex: 0xE8B34C)
+        case .fat: return Color(hex: 0x8FBE63)
+        }
+    }
+    static func asset(_ key: MacroKey) -> String {
+        switch key {
+        case .protein: return "CalorieCardProtein"
+        case .carbs: return "CalorieCardCarbs"
+        case .fat: return "CalorieCardFat"
+        }
+    }
+}
+
+/// Native asset-catalog rendering preserves the supplied SVG paths and padding.
+/// Size belongs to each existing screen; only the glyph and tint are shared.
+struct LuqmaMacroIcon: View {
+    let key: MacroKey
+    var size: CGFloat = 20
+    var body: some View {
+        Image(LuqmaMacroStyle.asset(key)).renderingMode(.template).resizable().scaledToFit()
+            .frame(width: size, height: size).foregroundStyle(LuqmaMacroStyle.color(key))
+            .accessibilityHidden(true)
+    }
+}
+
 enum Theme {
     // Sandow Community dark file: Sandow Gray/100 and Pulse Orange/50.
     private static func color(_ value:VisualRGB)->Color {Color(.sRGB,red:value.red,green:value.green,blue:value.blue,opacity:1)}
@@ -175,7 +206,10 @@ struct NutritionView:View {
     private func macro(_ ar:String,_ en:String,_ n:Double) -> some View {VStack(alignment:.leading,spacing:6){Text(diary.t(ar,en)).luqmaFont(.caption).foregroundStyle(Theme.muted);Text(decimal(n)+" "+diary.t("جم","g")).luqmaFont(size:15,weight:.bold,relativeTo:.subheadline).monospacedDigit().luqmaNumericMotion(value:n)}.frame(maxWidth:.infinity,alignment:.leading)}
 }
 struct FoodRow:View {
-    var food:Food;var action:()->Void
+    var food:Food
+    // Search hides provenance labels; other uses retain their existing metadata.
+    var showsSource=true
+    var action:()->Void
     @EnvironmentObject var diary:DiaryStore
     private var reference:String {
         if food.sourceDescription==FoodDatabase.searchSummarySourceDescription {return diary.t("لكل ١٠٠","per 100")}
@@ -191,7 +225,7 @@ struct FoodRow:View {
         }
     }
     private var metadata:String{
-        [food.brand.map(DisplayFormat.westernDigits),sourceTitle]
+        [food.brand.map(DisplayFormat.westernDigits),showsSource ? sourceTitle:nil]
             .compactMap{$0}.filter{!$0.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty}.joined(separator:" · ")
     }
     var body:some View {

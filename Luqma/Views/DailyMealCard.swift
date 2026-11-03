@@ -114,8 +114,7 @@ struct DailyMealCard: View {
     }
     private func macroName(_ key: MacroKey) -> some View {
         HStack(spacing: 3) {
-            Image(icon(key)).renderingMode(.template).resizable().scaledToFit()
-                .frame(width: 11, height: 11).foregroundStyle(color(key))
+            LuqmaMacroIcon(key: key, size: 11)
             Text(key == .carbs ? language.text("الكارب", "Carbs") : key.label(language))
                 .luqmaFont(size: 12, relativeTo: .caption).foregroundStyle(Color(hex: 0xD3D4D9))
                 .fixedSize(horizontal: false, vertical: true)
@@ -128,12 +127,6 @@ struct DailyMealCard: View {
                 .luqmaNumericMotion(value: summary.nutrition[key])
             Text(language.text("جم", "g")).luqmaFont(size: 12, relativeTo: .caption)
         }.foregroundStyle(Color(hex: 0xF7F8FA))
-    }
-    private func icon(_ key: MacroKey) -> String {
-        switch key { case .protein: return "AddMealProtein"; case .carbs: return "AddMealCarbs"; case .fat: return "AddMealFat" }
-    }
-    private func color(_ key: MacroKey) -> Color {
-        switch key { case .protein: return Color(hex: 0xC48794); case .carbs: return Color(hex: 0xCEA46E); case .fat: return Color(hex: 0x92A37E) }
     }
     private var mealCount: String {
         let count = summary.entries.count

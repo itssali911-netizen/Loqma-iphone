@@ -23,7 +23,9 @@ enum OpenFoodFactsProduct {
             (text("product_quantity_unit") == "ml" || portion?.unit == "ml" ? .ml : .g)
         var per100: Nutrition?, direct: Nutrition?, origin: String?
         var label = serving
-        if let nutrition = product["nutrition"] as? [String: Any] {
+        if product["no_nutrition_data"] as? String == "on" || product["no_nutrition_data"] as? Bool == true {
+            // An explicit absent-label marker must not revive stale nutrients.
+        } else if let nutrition = product["nutrition"] as? [String: Any] {
             // Use label/manufacturer data only. OFF can also contain USDA and
             // model estimate sets; those are not this app's nutrient sources.
             let sets = (nutrition["input_sets"] as? [[String: Any]] ?? []).enumerated().compactMap { offset, raw -> NutrientSet? in
@@ -65,8 +67,11 @@ enum OpenFoodFactsProduct {
             // rows as summaries and loads current v3.6 details before adding.
             let nutrients = product["nutriments"] as? [String: Any] ?? [:]
             func legacy(_ suffix: String) -> Nutrition? {
+                let unit = (nutrients["energy_unit"] as? String)?.lowercased()
+                let energy = number(nutrients["energy_" + suffix])
+                let genericKcal = unit == "kcal" ? energy : unit == "kj" ? energy.map { $0 / 4.184 } : nil
                 guard let kcal = number(nutrients["energy-kcal_" + suffix]) ??
-                        ((number(nutrients["energy-kj_" + suffix]) ?? number(nutrients["energy_" + suffix])).map { $0 / 4.184 }),
+                        number(nutrients["energy-kj_" + suffix]).map({ $0 / 4.184 }) ?? genericKcal,
                       let protein = number(nutrients["proteins_" + suffix]),
                       let carbs = number(nutrients["carbohydrates_" + suffix]), let fat = number(nutrients["fat_" + suffix]) else { return nil }
                 return Nutrition(kcal: kcal, protein: protein, carbs: carbs, fat: fat)
@@ -80,6 +85,16 @@ enum OpenFoodFactsProduct {
                         servingQuantity: portion?.quantity, servingUnit: portion?.unit, servingNutrition: direct, source: "OpenFoodFacts")
         food.sourceId = code
         food.sourceDescription = origin.map { "Open Food Facts · " + $0 + " · as sold" }
+        food.sourceMetadata = FoodSourceMetadata(url: "https://world.openfoodfacts.org/product/" + code,
+            databaseLicense: "ODbL-1.0", contentsLicense: "DbCL-1.0", imageLicense: "CC-BY-SA-3.0")
+        if let modified = product["last_modified_t"] as? NSNumber,
+           CFGetTypeID(modified) != CFBooleanGetTypeID(), modified.doubleValue.isFinite, modified.doubleValue >= 0 {
+            food.sourceMetadata?.lastModified = modified.doubleValue
+        }
+        food.sourceMetadata?.countries = product["countries_tags"] as? [String]
+        food.sourceMetadata?.allergens = product["allergens_tags"] as? [String]
+        food.sourceMetadata?.ingredients = product["ingredients_text"] as? String
+        food.sourceMetadata?.imageURL = product["image_front_url"] as? String
         food.aliases = [text("product_name_ar"), text("product_name_en"), text("product_name")]
             .compactMap { $0 }.filter { $0 != name && $0 != food.nameEn }.joined(separator: " | ")
         return food

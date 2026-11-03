@@ -69,6 +69,8 @@ enum LTypography {
     // every current custom text role below resolves to the approved Bold face.
     static let bundledFontNames=[
         "Changa-Bold",
+        // The approved recipe card alone uses its supplied mixed-weight typography.
+        "Changa-Regular","Changa-Medium","Changa-SemiBold",
         "WorkSans-Light","WorkSans-Regular","WorkSans-Medium","WorkSans-SemiBold","WorkSans-Bold","WorkSans-ExtraBold",
         "Tajawal-Light","Tajawal-Regular","Tajawal-Medium","Tajawal-Bold","Tajawal-ExtraBold"
     ]

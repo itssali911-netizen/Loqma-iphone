@@ -3,7 +3,7 @@ import UIKit
 
 // Scoped to the eight-screen review. Existing approved screens keep their
 // drawing instructions. Geometry is reused from Common.swift, KitchenView and
-// LTypography; macro colors/icons come from the approved DailyCalorieCard.
+// LTypography; macro colors/icons share the approved package's central mapping.
 enum LuqmaReviewStyle {
     static let margin:CGFloat=16
     static let gap:CGFloat=16
@@ -11,14 +11,7 @@ enum LuqmaReviewStyle {
     static let controlRadius:CGFloat=12
     static let controlHeight:CGFloat=44
     static func macroColor(_ key:MacroKey)->Color {
-        switch key {
-        case .protein:return Color(red:239/255.0,green:121/255.0,blue:142/255.0)
-        case .carbs:return Color(red:232/255.0,green:179/255.0,blue:76/255.0)
-        case .fat:return Color(red:143/255.0,green:190/255.0,blue:99/255.0)
-        }
-    }
-    static func macroIcon(_ key:MacroKey)->String {
-        switch key {case .protein:return "CalorieCardProtein";case .carbs:return "CalorieCardCarbs";case .fat:return "CalorieCardFat"}
+        LuqmaMacroStyle.color(key)
     }
 }
 
@@ -132,8 +125,7 @@ struct LuqmaReviewMacro:View {
     var body:some View {
         VStack(alignment:.leading,spacing:6){
             HStack(spacing:6){
-                Image(LuqmaReviewStyle.macroIcon(key)).renderingMode(.template).resizable().scaledToFit()
-                    .frame(width:20,height:20).foregroundStyle(LuqmaReviewStyle.macroColor(key)).accessibilityHidden(true)
+                LuqmaMacroIcon(key:key,size:20)
                 Text(key.label(diary.language)).luqmaFont(.caption).foregroundStyle(Theme.muted)
             }
             Text(decimal(amount)+" "+diary.t("جم","g")).luqmaFont(.subheadline).monospacedDigit().luqmaNumericMotion(value:amount)

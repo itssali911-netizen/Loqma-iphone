@@ -1,0 +1,21 @@
+{
+  "package_filename": "recipe-card-edit-package.zip",
+  "package_sha256": "3780114a49dad1571e17f5acebf91639a7271807077eed9e44789b9dfbf32cb6",
+  "reference_card": {
+    "logical_width": 390,
+    "logical_height": 272,
+    "png_card_bounds": [
+      48,
+      48,
+      780,
+      544
+    ],
+    "export_scale": 2
+  },
+  "assets": {
+    "README-recipe-card.md": "bb6deb2a7c235ca12d092b68929461e1ebc8c296db78514795707ca24a7aed05",
+    "recipe-card-data.json": "c79f378f06dbe877f80c2d0a430403bd2db49965ce3d0f36885e9cc289f8c352",
+    "recipe-card-editable.svg": "f9a82457f8d4dedcb4840a1e2dc584f1142b2f685169c2699efff4b62a69cae5",
+    "recipe-card-preview.png": "82e0c5fe9df92686bee0e3a054a65915cc2783a6fc6f4a53af9f2850e0675065"
+  }
+}

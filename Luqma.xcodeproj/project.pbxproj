@@ -45,6 +45,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = 5A0ABF3DBFCA20B5BE141F63;
 		};
+		"DD30AA012032B3B555492542" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "FoodCatalogConfiguration.swift";
+			"sourceTree" = "<group>";
+		};
+		"6A58DCF7024C8DD2D0CA1DD1" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = DD30AA012032B3B555492542;
+		};
 		"2ECB783C34025DBA1C241410" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -312,6 +322,7 @@
 				6A4E15D7BD914BF2527B4EB9,
 				C582391896B1B5EDEAF33DA4,
 				5A0ABF3DBFCA20B5BE141F63,
+				DD30AA012032B3B555492542,
 				2ECB783C34025DBA1C241410,
 				E8DD42DB1882CEAEA133F9E1,
 				74C56B1CBE9C6CCA11BD8B6B,
@@ -732,6 +743,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = 5C02F1157765366584590F41;
 		};
+		"2135A0B497CCFC3747713A09" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "RecipeNutritionCard.swift";
+			"sourceTree" = "<group>";
+		};
+		"476661972310FF71F751ED4A" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 2135A0B497CCFC3747713A09;
+		};
 		"0DC7750E4D067B660A016E59" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -779,6 +800,7 @@
 				6AA0F6F5943EA02A7C69472C,
 				1942CD841AB8DB0F4FE9F7B9,
 				5C02F1157765366584590F41,
+				2135A0B497CCFC3747713A09,
 				0DC7750E4D067B660A016E59,
 				75B59B168AF09D5CFEC51FE7,
 			);
@@ -815,6 +837,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = 0A820FB0FD060225F6D6D907;
 		};
+		"98662C07CBC7305BFE77E162" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "file";
+			"path" = "Changa-Medium.ttf";
+			"sourceTree" = "<group>";
+		};
+		"90F48B754BAAB99978BCE5EA" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 98662C07CBC7305BFE77E162;
+		};
 		"7136F474E8C49E9404DD236A" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "text";
@@ -824,6 +856,26 @@
 		"953E8DDF86EC1D8793E5F147" = {
 			"isa" = "PBXBuildFile";
 			"fileRef" = 7136F474E8C49E9404DD236A;
+		};
+		"9A875133F9ADDB8DA7D72090" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "file";
+			"path" = "Changa-Regular.ttf";
+			"sourceTree" = "<group>";
+		};
+		"274BC331C5A2AAC78899B87D" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 9A875133F9ADDB8DA7D72090;
+		};
+		"0158C91702A45240EC0D7A74" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "file";
+			"path" = "Changa-SemiBold.ttf";
+			"sourceTree" = "<group>";
+		};
+		"998A7E80DFFDB00B71485648" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 0158C91702A45240EC0D7A74;
 		};
 		"0E3E686E8841E556D7858E05" = {
 			"isa" = "PBXFileReference";
@@ -1128,7 +1180,10 @@
 				533F31325E8554224FE2A0B9,
 				BDC8DA6D3BF6A4846A20F814,
 				0A820FB0FD060225F6D6D907,
+				98662C07CBC7305BFE77E162,
 				7136F474E8C49E9404DD236A,
+				9A875133F9ADDB8DA7D72090,
+				0158C91702A45240EC0D7A74,
 				0E3E686E8841E556D7858E05,
 				3AEDFABCA989F7EFF159C0F7,
 				9F009A6C67366BC5A119C002,
@@ -1274,6 +1329,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = C6ADEE133957FDCE7D5EBDD8;
 		};
+		"017115D1976BAF603A972862" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "RecipeCardInteractionTests.swift";
+			"sourceTree" = "<group>";
+		};
+		"5CBCC3743317CF158BCFF641" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = 017115D1976BAF603A972862;
+		};
 		"2676C1C3130EC43A71AB56D8" = {
 			"isa" = "PBXGroup";
 			"children" = (
@@ -1284,6 +1349,7 @@
 				110A69DC2B0C1B39C63965B6,
 				2D46157C2E316391A61CE9CD,
 				C6ADEE133957FDCE7D5EBDD8,
+				017115D1976BAF603A972862,
 			);
 			"path" = "TestsUI";
 			"sourceTree" = "<group>";
@@ -1409,6 +1475,7 @@
 				E426F7E1598FC1DD6397C156,
 				B7659DD38FE8292038D80A9B,
 				6DA1C50FF7065D5F543426B3,
+				6A58DCF7024C8DD2D0CA1DD1,
 				3EDA8A4C501C62EEB05D1D6E,
 				C55DF2F794C732F66CD6E4AA,
 				5BDADAD2DF61A0105EC508F9,
@@ -1472,6 +1539,7 @@
 				3F6D0EF991AE340530BAC8B3,
 				D7BD3726F8D6F2D8A0BD724C,
 				87CF7C538FEC6AF6817AB068,
+				476661972310FF71F751ED4A,
 				A620381A817597859F0DE55C,
 				9B489DAD5039E24C37A2B5F5,
 				D157A1D7B85C6A507F2273F7,
@@ -1497,7 +1565,10 @@
 				79E83529B9FD0CACD752FFFF,
 				FA202DFDE17D86164D9301B4,
 				F3FAFC69A246E6B046B814D6,
+				90F48B754BAAB99978BCE5EA,
 				953E8DDF86EC1D8793E5F147,
+				274BC331C5A2AAC78899B87D,
+				998A7E80DFFDB00B71485648,
 				DA3647F9CB736D8F0382E59E,
 				558092EFE7694C557ED1DFBE,
 				7E6FAD56D1119F7C653B7501,
@@ -1748,6 +1819,7 @@
 				529F5DF0462DAC3C0CEE547A,
 				C5EC5412326B83BF13F78F24,
 				80E91734893555C1ABAEFFBE,
+				5CBCC3743317CF158BCFF641,
 			);
 			"runOnlyForDeploymentPostprocessing" = 0;
 		};

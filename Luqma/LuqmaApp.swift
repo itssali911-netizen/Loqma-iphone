@@ -88,7 +88,7 @@ struct RootView:View {
     #if DEBUG
     @Environment(\.dynamicTypeSize) private var typeSize
     private enum TemplatePreviewRoute:String,Identifiable {
-        case goals,portion,recipe,recipeDetail,plan,weight,connection,backup,about,barcode,language,notifications,reminders,stateError,stateLoading,stateEmpty,stateSuccess
+        case goals,portion,recipe,recipeDetail,recipeCard,plan,weight,connection,backup,about,barcode,language,notifications,reminders,stateError,stateLoading,stateEmpty,stateSuccess
         case assessmentGoal,assessmentGender,assessmentActivity,assessmentDetails,assessmentReview,fitnessProfile,fitnessPlan
         case approvedHome,calorieDetails,approvedPhotoScan,approvedPhotoResults
         var id:String{rawValue}
@@ -188,6 +188,7 @@ struct RootView:View {
             case .portion:FoodPortionView(food:previewPortionFood,initialMeal:ProcessInfo.processInfo.arguments.contains("-loqma-approved-capture") ? .lunch:nil,onAnalyze:{templatePreview=nil;photoPreview=true}){_,_,_,_ in false}
             case .recipe:RecipeEditor(recipe:previewRecipe)
             case .recipeDetail:RecipeDetailView(recipeID:previewRecipe.id,previewRecipe:previewRecipe)
+            case .recipeCard:RecipeCardReviewView()
             case .plan:NavigationStack{PlanView().navigationBarTitleDisplayMode(.inline)}
             case .weight:WeightEditor()
             case .connection:GeminiSettingsView()
@@ -217,7 +218,7 @@ struct RootView:View {
                     .safeAreaInset(edge:.bottom){Text(diary.t("معاينة للمؤشر فقط؛ الكاميرا غير مشغّلة","Guide preview only; camera is inactive")).luqmaFont(.caption).foregroundStyle(Theme.text).multilineTextAlignment(.center).padding(16).frame(maxWidth:.infinity).background(Theme.background)}
             }
             }
-        }.allowsHitTesting(false)
+        }.allowsHitTesting(route == .recipeCard)
     }
     private func fitnessFixture<Content:View>(@ViewBuilder content:()->Content)->some View {
         NavigationStack{VStack(spacing:0){

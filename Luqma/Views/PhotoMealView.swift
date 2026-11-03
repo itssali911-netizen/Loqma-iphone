@@ -352,6 +352,7 @@ import AVFoundation
         }.accessibilityElement(children:.combine)
     }
     private func macroColor(_ key:MacroKey)->Color {
+        // Preserve the approved chart fills; only its glyphs use the unified tint.
         switch key {
         case .protein:return Theme.muted
         case .carbs:return Theme.accent
@@ -368,8 +369,7 @@ import AVFoundation
                 RoundedRectangle(cornerRadius:24,style:.continuous).fill(macroColor(key))
                     .frame(height:geometry.size.height*CGFloat(fraction)).luqmaMotion(.progress,value:fraction)
                 VStack {
-                    Image(macroIcon(key)).renderingMode(.original).resizable().scaledToFit().frame(width:20,height:20)
-                        .foregroundStyle(Theme.textSecondary).padding(.top,16)
+                    LuqmaMacroIcon(key:key,size:20).padding(.top,16)
                     Spacer(minLength:0)
                 }.accessibilityHidden(true)
                 VStack(spacing:2) {
@@ -381,13 +381,6 @@ import AVFoundation
             .accessibilityElement(children:.ignore).accessibilityLabel(key.label(diary.language))
             .accessibilityValue(decimal(amount)+" "+diary.t("جم","g"))
             .accessibilityHint(diary.t("ارتفاع العمود يوضح كمية المغذي مقارنة ببقية مكونات التغذية في الوجبة.","Bar height compares the macro's grams with the other macros in this meal."))
-    }
-    private func macroIcon(_ key:MacroKey)->String {
-        switch key {
-        case .protein:return "DNMVerticalProteinIcon"
-        case .carbs:return "DNMVerticalCarbsIcon"
-        case .fat:return "DNMVerticalFatIcon"
-        }
     }
     private func macroGoal(_ key:MacroKey,nutrition:Nutrition)->some View {
         let goal=diary.state.goals[key]

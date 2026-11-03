@@ -36,7 +36,12 @@ final class FoodCatalogIntegrationTests: XCTestCase {
         let raw = try JSONSerialization.jsonObject(with: Data(contentsOf: root.appendingPathComponent("Scripts/Data/off-products-snapshot.json"))) as! [String: Any]
         for row in raw["responses"] as! [[String: Any]] where row["included"] as? Bool == true {
             let response = try JSONSerialization.jsonObject(with: Data((row["raw"] as! String).utf8)) as! [String: Any]
-            let parsed = try XCTUnwrap(OpenFoodFactsProduct.parse(response["product"] as! [String: Any]))
+            var parsed = try XCTUnwrap(OpenFoodFactsProduct.parse(response["product"] as! [String: Any]))
+            XCTAssertEqual(parsed.sourceMetadata?.url, "https://world.openfoodfacts.org/product/" + (parsed.sourceId ?? ""))
+            XCTAssertEqual(parsed.sourceMetadata?.databaseLicense, "ODbL-1.0")
+            // The frozen seed predates the additive provenance field. Its
+            // nutritional/source identity payload must still match exactly.
+            parsed.sourceMetadata = nil
             XCTAssertEqual(parsed, foods.first { $0.id == parsed.id }, parsed.id)
         }
         let index = FoodSearch.Index(foods)

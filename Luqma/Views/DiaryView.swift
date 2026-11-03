@@ -14,33 +14,9 @@ struct DiaryView:View {
     @State private var editing:DiaryEntry?
     @State private var chosenMeal:Meal?
     @State private var searchQuery=""
-    @State private var category="meat"
     @State private var expandedMeals:Set<Meal>=[]
-    @State private var expandedRoutine=false
-    #if DEBUG
-    @State private var routineCapturePosition:Meal? = {
-        if CommandLine.arguments.contains("-loqma-preview-routine-dinner"){return .dinner}
-        if CommandLine.arguments.contains("-loqma-preview-routine-snack"){return .snack}
-        return nil
-    }()
-    #endif
     private var day:String {DayKey.string(date)}
-    var body:some View {
-        #if DEBUG
-        ScrollViewReader { scroll in
-            diaryScroll.task {
-                if routinePreviewMeal != nil {
-                    // Capture the real carousel after it moved below the meals.
-                    // Do not replace the native framebuffer or weaken its audit.
-                    await Task.yield()
-                    scroll.scrollTo("diary.routine",anchor:.top)
-                }
-            }
-        }
-        #else
-        diaryScroll
-        #endif
-    }
+    var body:some View {diaryScroll}
     private var diaryScroll:some View {
         ScrollView{diaryContent.padding(.horizontal,16).padding(.bottom,24)}.appBackground()
             .navigationTitle(diary.t("اليوم","Today"))
@@ -70,9 +46,6 @@ struct DiaryView:View {
                         .sandowNavigation(diary.t("اختيار التاريخ","Choose date"),backLabel:diary.t("تم","Done"),onBack:{selectingDate=false})
             }.presentationDetents([.medium,.large])
             }
-            #if DEBUG
-            .allowsHitTesting(routinePreviewMeal == nil)
-            #endif
     }
     @ViewBuilder private var diaryContent:some View {
         #if DEBUG
@@ -90,8 +63,6 @@ struct DiaryView:View {
         return VStack(alignment:.leading,spacing:20){
             summary
             mealList(meals)
-            foodCategories
-            dailyRoutine(meals).id("diary.routine")
         }.padding(.top,16)
     }
     #if DEBUG
@@ -103,8 +74,6 @@ struct DiaryView:View {
     }
     private var overviewPreviewContent:some View {
         VStack(alignment:.leading,spacing:20){
-            foodCategories
-            dailyRoutine(MealDiarySummary.forDay(DayKey.today,entries:mealPreviewEntries))
             dailySummary(mealPreviewEntries.reduce(.zero){$0+$1.nutrition},diary.dailyGoals(day),showHistory:false)
             mealList(MealDiarySummary.forDay(DayKey.today,entries:mealPreviewEntries),showEntries:false)
         }.padding(.top,16).allowsHitTesting(false)
@@ -169,131 +138,6 @@ struct DiaryView:View {
             .accessibilityLabel(diary.t("خطتك الشخصية — ملف اللياقة","Personal plan — Fitness profile"))
     }
     private func openSearch(_ query:String="",meal:Meal?=nil){searchQuery=query;chosenMeal=meal;adding=true}
-    private var foodCategories:some View {
-        VStack(alignment:.leading,spacing:10){
-            HStack{Text(diary.t("بحث سريع","Quick search")).luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline);Spacer();Button{openSearch()}label:{Text(diary.t("عرض الكل","See all")).luqmaFont(size:11,weight:.medium,relativeTo:.caption).foregroundStyle(Theme.link)}.buttonStyle(LuqmaPressStyle())}
-            ScrollView(.horizontal,showsIndicators:false){HStack(spacing:6){
-                categoryChip("vegetables",ar:"خيار",en:"Cucumber",symbol:"carrot",query:diary.t("خيار","cucumber"))
-                categoryChip("meat",ar:"دجاج",en:"Chicken",symbol:"fork.knife",query:diary.t("دجاج","chicken"))
-                categoryChip("fruit",ar:"تفاح",en:"Apple",symbol:"leaf",query:diary.t("تفاح","apple"))
-                categoryChip("grains",ar:"أرز",en:"Rice",symbol:"takeoutbag.and.cup.and.straw",query:diary.t("أرز","rice"))
-            }}
-        }
-    }
-    private func categoryChip(_ id:String,ar:String,en:String,symbol:String,query:String)->some View {
-        Button{category=id;openSearch(query)}label:{Label(diary.t(ar,en),systemImage:symbol).luqmaFont(size:11,weight:.semibold,relativeTo:.caption).foregroundStyle(Theme.text).padding(.horizontal,10).frame(minHeight:36).background(category == id ? Theme.secondaryAccent:Theme.card,in:RoundedRectangle(cornerRadius:9,style:.continuous))
-            .luqmaMotion(.selection,value:category == id)}.buttonStyle(LuqmaPressStyle())
-    }
-    private func dailyRoutine(_ summaries:[MealDiarySummary])->some View {
-        VStack(alignment:.leading,spacing:10){
-            HStack{Text(diary.t("وجبات اليوم","Daily routine")).luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline);Spacer();Text(diary.t("اختر وجبتك","Choose a meal")).luqmaFont(size:11,relativeTo:.caption).foregroundStyle(Theme.accent)}
-            if typeSize.isAccessibilitySize{
-                DisclosureGroup(diary.t("عرض الوجبات الأربع","Show the four meals"),isExpanded:$expandedRoutine){
-                    VStack(spacing:10){ForEach(summaries){routineCard($0)}}.padding(.top,10)
-                }.luqmaFont(.subheadline).tint(Theme.accent)
-                    .luqmaMotion(.content,value:expandedRoutine)
-            }else{
-                #if DEBUG
-                if routinePreviewMeal != nil{
-                    ScrollView(.horizontal,showsIndicators:false){
-                        LazyHStack(spacing:12){
-                            ForEach(summaries){summary in
-                                routineCard(summary)
-                                    .containerRelativeFrame(.horizontal){width,_ in width*0.72}
-                                    .id(summary.meal)
-                            }
-                        }.scrollTargetLayout()
-                    }.scrollTargetBehavior(.viewAligned)
-                        .scrollPosition(id:$routineCapturePosition,anchor:.leading)
-                        .transaction{$0.animation=nil;$0.disablesAnimations=true}
-                }else{
-                    ScrollView(.horizontal,showsIndicators:false){
-                        HStack(spacing:12){
-                            ForEach(summaries){summary in
-                                routineCard(summary)
-                                    .containerRelativeFrame(.horizontal){width,_ in width*0.72}
-                            }
-                        }.scrollTargetLayout()
-                    }.scrollTargetBehavior(.viewAligned)
-                }
-                #else
-                ScrollView(.horizontal,showsIndicators:false){
-                    HStack(spacing:12){
-                        ForEach(summaries){summary in
-                            routineCard(summary)
-                                .containerRelativeFrame(.horizontal){width,_ in width*0.72}
-                        }
-                    }.scrollTargetLayout()
-                }.scrollTargetBehavior(.viewAligned)
-                #endif
-            }
-        }
-        #if DEBUG
-        .onAppear{if CommandLine.arguments.contains("-loqma-preview-editorial-expanded"){expandedRoutine=true}}
-        .allowsHitTesting(!CommandLine.arguments.contains("-loqma-preview-editorial-expanded"))
-        #endif
-    }
-    private func routineCard(_ summary:MealDiarySummary)->some View {
-        Button{openSearch(meal:summary.meal)}label:{
-            VStack(alignment:.leading,spacing:9){
-                    HStack{
-                        Image(systemName:"fork.knife").font(.system(size:13,weight:.semibold))
-                            .foregroundStyle(Theme.onAccent).frame(width:30,height:30)
-                            .background(Theme.accent,in:RoundedRectangle(cornerRadius:9))
-                        Spacer(minLength:0)
-                        Image(systemName:"plus").font(.system(size:12,weight:.semibold))
-                            .frame(width:28,height:28).background(Theme.background.opacity(0.55),in:Circle())
-                    }
-                    Spacer(minLength:12)
-                    Text(summary.meal.label(diary.language))
-                        .luqmaFont(size:17,weight:.bold,relativeTo:.headline)
-                    if summary.entries.isEmpty{
-                        Text(diary.t("صورة توضيحية","Illustrative photo"))
-                            .luqmaFont(size:10,weight:.medium,relativeTo:.caption2)
-                            .foregroundStyle(Theme.text.opacity(0.8))
-                        Label(diary.t("سجّل وجبتك","Log your meal"),systemImage:"plus")
-                            .luqmaFont(size:11,weight:.medium,relativeTo:.caption)
-                            .foregroundStyle(Theme.text.opacity(0.8))
-                    }else{
-                        if let first=summary.entries.first{
-                            Text(DisplayFormat.westernDigits(first.name))
-                                .luqmaFont(size:11,relativeTo:.caption).lineLimit(1)
-                                .foregroundStyle(Theme.text.opacity(0.8))
-                        }
-                        Label(decimal(summary.nutrition.kcal,0)+" "+diary.t("سعرة","kcal"),systemImage:"flame.fill")
-                            .luqmaNumericMotion(value:summary.nutrition.kcal)
-                            .luqmaFont(size:11,weight:.medium,relativeTo:.caption)
-                            .foregroundStyle(Theme.text.opacity(0.8))
-                    }
-            }.padding(14).frame(maxWidth:.infinity,minHeight:164,alignment:.leading)
-                .frame(height:typeSize.isAccessibilitySize ? nil:164)
-                .foregroundStyle(Theme.text)
-                .background{
-                    if summary.entries.isEmpty{
-                        ZStack{
-                            EditorialFill(artwork:routineArtwork(summary.meal))
-                            LinearGradient(colors:[.black.opacity(0.12),.black.opacity(0.45),.black.opacity(0.92)],startPoint:.top,endPoint:.bottom)
-                        }
-                    }else{Theme.card}
-                }.clipShape(RoundedRectangle(cornerRadius:18,style:.continuous))
-        }.buttonStyle(LuqmaPressStyle()).accessibilityLabel(diary.t("إضافة إلى ","Add to ")+summary.meal.label(diary.language))
-            .accessibilityValue(summary.entries.isEmpty ? diary.t("صورة توضيحية. سجّل وجبتك.","Illustrative photo. Log your meal."):decimal(summary.nutrition.kcal,0)+" "+diary.t("سعرة","kcal"))
-    }
-    private func routineArtwork(_ meal:Meal)->EditorialArtwork {
-        switch meal{
-        case .breakfast:return .breakfast
-        case .lunch:return .lunch
-        case .dinner:return .dinner
-        case .snack:return .snack
-        }
-    }
-    #if DEBUG
-    private var routinePreviewMeal:Meal? {
-        if CommandLine.arguments.contains("-loqma-preview-routine-dinner"){return .dinner}
-        if CommandLine.arguments.contains("-loqma-preview-routine-snack"){return .snack}
-        return nil
-    }
-    #endif
     private var weekDates:[Date] {
         let calendar=DisplayFormat.calendar(diary.language)
         let start=calendar.dateInterval(of:.weekOfYear,for:date)?.start ?? calendar.startOfDay(for:date)
@@ -645,23 +489,17 @@ struct CalorieIntakeDetailView: View {
                     // Bottom Floating 3-Column Macro Card (Carbs | Protein | Fat) Matching dnm_03.png 1:1
                     HStack(spacing: 0) {
                         intakeMacroColumn(
-                            iconName: "DNMCarbsToastIcon",
-                            systemFallback: "takeoutbag.and.cup.and.straw.fill",
-                            iconColor: Color(hex: 0xF97316),
+                            key: .carbs,
                             grams: item.carbs,
                             title: diary.t("الكارب", "Carbs")
                         )
                         intakeMacroColumn(
-                            iconName: "DNMProteinBlueIcon",
-                            systemFallback: "drop.fill",
-                            iconColor: Color(hex: 0x2563EB),
+                            key: .protein,
                             grams: item.protein,
                             title: diary.t("البروتين", "Protein")
                         )
                         intakeMacroColumn(
-                            iconName: "DNMFatBoneIcon",
-                            systemFallback: "circle.hexagongrid.fill",
-                            iconColor: Color(hex: 0xD7D8D9),
+                            key: .fat,
                             grams: item.fat,
                             title: diary.t("الدهون", "Fat")
                         )
@@ -699,12 +537,12 @@ struct CalorieIntakeDetailView: View {
         }
     }
 
-    private func intakeMacroColumn(iconName: String, systemFallback: String, iconColor: Color, grams: Double, title: String) -> some View {
+    private func intakeMacroColumn(key: MacroKey, grams: Double, title: String) -> some View {
         VStack(spacing: 6) {
-            Image(iconName).renderingMode(.original).resizable().scaledToFit().frame(width:22,height:22)
+            LuqmaMacroIcon(key:key,size:22)
             Text("\(decimal(grams, 0))" + diary.t("جم", "g"))
                 .luqmaFont(size: 28, weight: .heavy, relativeTo: .title)
-                .accessibilityIdentifier("calorie.macro." + (iconName == "DNMCarbsToastIcon" ? "carbs" : iconName == "DNMProteinBlueIcon" ? "protein" : "fat"))
+                .accessibilityIdentifier("calorie.macro." + key.rawValue)
                 .monospacedDigit().luqmaNumericMotion(value:grams)
                 .foregroundStyle(Color.white)
             Text(title)

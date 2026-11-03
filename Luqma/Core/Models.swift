@@ -42,6 +42,21 @@ struct FoodPortionChoice: Codable, Equatable, Identifiable {
         (nutrition == nil || nutrition?.valid == true)
     }
 }
+/// Public catalogue provenance travels with a saved product. Optional decoding
+/// preserves older backups; historical diary nutrition remains a value snapshot.
+struct FoodSourceMetadata: Codable, Equatable {
+    var url: String
+    var databaseLicense: String
+    var contentsLicense: String
+    var imageLicense: String?
+    var exportID: String?
+    var retrievedAt: String?
+    var lastModified: Double?
+    var countries: [String]?
+    var imageURL: String?
+    var ingredients: String?
+    var allergens: [String]?
+}
 struct Food: Codable, Equatable, Identifiable {
     var catalogID: String?; var name: String; var nameEn: String?; var aliases: String?; var brand: String?; var barcode: String?
     var unit: FoodUnit; var kcal: Double?; var protein: Double?; var carbs: Double?; var fat: Double?
@@ -50,6 +65,7 @@ struct Food: Codable, Equatable, Identifiable {
     var portions: [FoodPortionChoice]?
     var selectedPortionID: String?
     var source: String?; var sourceId: String?; var sourceDescription: String?
+    var sourceMetadata: FoodSourceMetadata? = nil
     var id: String { barcode.map { "barcode:"+$0 } ?? catalogID ?? TextSearch.normalized(name + (brand ?? "")) }
     var per100: Nutrition? { guard let k=kcal,let p=protein,let c=carbs,let f=fat else { return nil }; let v=Nutrition(kcal:k,protein:p,carbs:c,fat:f); return v.valid ? v : nil }
     func label(_ l: AppLanguage) -> String { DisplayFormat.westernDigits(l == .en ? nameEn ?? name : name) }
@@ -112,7 +128,7 @@ struct Food: Codable, Equatable, Identifiable {
         guard amount.isFinite,amount>0,amount<=10000,let values=values(for:u),values.valid else { throw AppError.invalid("أكمل القيم الغذائية وأدخل كمية صحيحة.","Complete nutrition and enter a valid amount.") }
         return values.scaled(u == .serving ? amount : amount/100)
     }
-    enum CodingKeys: String, CodingKey { case catalogID="id", name,nameEn,aliases,brand,barcode,unit,kcal,protein,carbs,fat,serving,servingQuantity,servingUnit,servingNutrition,servings,portions,selectedPortionID,source,sourceId,sourceDescription }
+    enum CodingKeys: String, CodingKey { case catalogID="id", name,nameEn,aliases,brand,barcode,unit,kcal,protein,carbs,fat,serving,servingQuantity,servingUnit,servingNutrition,servings,portions,selectedPortionID,source,sourceId,sourceDescription,sourceMetadata }
     init(catalogID:String?=nil,name:String,nameEn:String?=nil,aliases:String?=nil,brand:String?=nil,barcode:String?=nil,unit:FoodUnit = .g,nutrition:Nutrition?=nil,serving:String?=nil,servingQuantity:Double?=nil,servingUnit:String?=nil,servingNutrition:Nutrition?=nil,source:String?=nil) {
         self.catalogID=catalogID;self.name=name;self.nameEn=nameEn;self.aliases=aliases;self.brand=brand;self.barcode=barcode;self.unit=unit;self.kcal=nutrition?.kcal;self.protein=nutrition?.protein;self.carbs=nutrition?.carbs;self.fat=nutrition?.fat;self.serving=serving;self.servingQuantity=servingQuantity;self.servingUnit=servingUnit;self.servingNutrition=servingNutrition;self.source=source
     }
