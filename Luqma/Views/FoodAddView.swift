@@ -91,7 +91,8 @@ typealias PhotoFoodCommit = ([(Food,Double,FoodUnit)],Meal) -> Bool
                                     .luqmaFont(.caption).foregroundStyle(Theme.muted).frame(minHeight:44)
                             }.buttonStyle(LuqmaPressStyle()).accessibilityIdentifier("search.dataLicence")
                         }
-                    }.padding(SearchLayout.margin)
+                    }.frame(maxWidth:.infinity,alignment:.leading)
+                        .padding(SearchLayout.margin)
                         .luqmaMotion(.content,value:busy || choosingFood)
                         .luqmaMotion(.content,value:notice != nil)
                 }.scrollDismissesKeyboard(.interactively)
@@ -466,10 +467,16 @@ private struct LuqmaExpandableSearchBar: View {
         GeometryReader { proxy in
             let width = max(44, proxy.size.width)
             HStack(spacing:0) {
-                input.frame(width:max(0,width-44))
-                    .opacity(expanded ? 1 : 0)
-                    .animation(reduceMotion ? nil : .easeOut(duration:0.14),value:expanded)
-                    .allowsHitTesting(expanded).accessibilityHidden(!expanded)
+                // Reserve the final width so the field doesn't reflow while the
+                // shell morphs. Mount the input only when it can receive focus.
+                Color.clear
+                    .frame(width:max(0,width-44))
+                    .overlay {
+                        if expanded {
+                            input.transition(reduceMotion ? .identity : .opacity.animation(.easeOut(duration:0.14)))
+                        }
+                    }
+                    .allowsHitTesting(expanded)
                 Button {
                     if expanded { if canSubmit { focused=false;onSubmit() } }
                     else { open(focus:true) }

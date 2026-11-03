@@ -23,16 +23,19 @@ final class MotionInteractionTests:XCTestCase {
         XCTAssertTrue(app.buttons["nav.today"].waitForExistence(timeout:20))
         app.buttons["nav.add"].tap()
         let open=app.buttons["search.expand"]
+        let field=app.textFields["search.query"]
         XCTAssertTrue(open.waitForExistence(timeout:20))
+        XCTAssertTrue(field.waitForNonExistence(timeout:5))
         XCTAssertGreaterThan(open.frame.midX,app.frame.midX,"Arabic search starts at the RTL leading edge")
         capture("motion-ar-collapsed")
         open.tap()
-        XCTAssertTrue(app.textFields["search.query"].waitForExistence(timeout:20))
-        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout:20))
+        XCTAssertTrue(field.waitForExistence(timeout:20))
+        confirmKeyboard()
         XCTAssertLessThan(app.buttons["search.submit"].frame.midX,app.frame.midX)
         capture("motion-ar-expanded")
         app.buttons["search.collapse"].tap()
         XCTAssertTrue(open.waitForExistence(timeout:20))
+        XCTAssertTrue(field.waitForNonExistence(timeout:5))
         app.buttons["search.close"].tap()
         XCTAssertTrue(app.buttons["nav.settings"].waitForExistence(timeout:20))
         app.buttons["nav.settings"].tap()
@@ -66,22 +69,25 @@ final class MotionInteractionTests:XCTestCase {
                 button.tap();XCTAssertTrue(button.isSelected)
             }
         }
-        for query in ["milk","rice"] {
+        for query in ["Nutella","Almarai"] {
             app.buttons["nav.add"].tap()
             let field=app.textFields["search.query"]
             let open=app.buttons["search.expand"]
             XCTAssertTrue(open.waitForExistence(timeout:20))
-            XCTAssertFalse(field.exists)
+            XCTAssertTrue(field.waitForNonExistence(timeout:5))
             XCTAssertGreaterThanOrEqual(open.frame.width,43.99)
             capture(reduced ? "motion-reduced-collapsed":"motion-standard-collapsed")
             open.tap()
             XCTAssertTrue(field.waitForExistence(timeout:20))
-            XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout:20))
+            confirmKeyboard()
             field.typeText(query)
             XCTAssertEqual(field.value as? String,query,"Animation must not swallow keyboard input")
+            let resultCount=app.staticTexts.matching(NSPredicate(format:"label ENDSWITH %@"," results shown")).firstMatch
+            XCTAssertTrue(resultCount.waitForExistence(timeout:15),"A real bundled product search must show results")
             capture(reduced ? "motion-reduced-search":"motion-standard-search")
             app.buttons["search.collapse"].tap()
             XCTAssertTrue(open.waitForExistence(timeout:20))
+            XCTAssertTrue(field.waitForNonExistence(timeout:5))
             XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout:20))
             open.tap()
             XCTAssertTrue(field.waitForExistence(timeout:20))
@@ -127,6 +133,19 @@ final class MotionInteractionTests:XCTestCase {
             return row.exists && row.isHittable && (!manage.exists || !manage.isHittable)
         },object:app)
         XCTAssertEqual(XCTWaiter.wait(for:[returned],timeout:10),.completed,"Back must return to the real Settings list, not merely leave an offscreen element in the hierarchy")
+    }
+    private func confirmKeyboard() {
+        let keyboard=app.keyboards.firstMatch
+        XCTAssertTrue(keyboard.waitForExistence(timeout:20))
+        let continueTyping=app.buttons["Continue"].firstMatch
+        // Fresh simulators can show the system's QuickPath introduction over
+        // the first keyboard. Only dismiss it within the keyboard's region.
+        if continueTyping.exists,continueTyping.isHittable,
+           keyboard.frame.contains(CGPoint(x:continueTyping.frame.midX,y:continueTyping.frame.midY)) {
+            continueTyping.tap()
+            XCTAssertTrue(continueTyping.waitForNonExistence(timeout:10))
+        }
+        XCTAssertTrue(keyboard.isHittable)
     }
     private func capture(_ name:String) {
         let item=XCTAttachment(screenshot:app.screenshot());item.name=name;item.lifetime = .keepAlways;add(item)

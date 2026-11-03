@@ -52,6 +52,13 @@ final class MotionSystemSettingsTests: XCTestCase {
             let control = nativeSwitch.exists ? nativeSwitch : reduceMotion
             XCTAssertTrue(control.isHittable, "The real Reduce Motion toggle must be visible.")
             control.tap()
+            let applied = XCTNSPredicateExpectation(
+                predicate: NSPredicate(format: "exists == true AND value == %@", "1"), object: reduceMotion)
+            if XCTWaiter.wait(for: [applied], timeout: 3) != .completed, reduceMotion.value as? String == "0" {
+                // Some Settings builds expose a full-width accessibility row.
+                // Tap the visible trailing switch if the first tap missed it.
+                reduceMotion.coordinate(withNormalizedOffset: CGVector(dx: 0.94, dy: 0.5)).tap()
+            }
         }
         let enabled = XCTNSPredicateExpectation(
             predicate: NSPredicate(format: "exists == true AND value == %@", "1"), object: reduceMotion)
