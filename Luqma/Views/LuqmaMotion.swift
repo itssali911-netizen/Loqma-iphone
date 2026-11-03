@@ -50,25 +50,52 @@ enum LuqmaMotion {
 @MainActor enum LuqmaHapticManager {
     nonisolated static let preferenceKey = "luqma.interactionHaptics"
     #if canImport(UIKit)
-    private static let impact = UIImpactFeedbackGenerator(style: .light)
-    private static let selection = UISelectionFeedbackGenerator()
-    private static let notification = UINotificationFeedbackGenerator()
+    private struct Generators {
+        let impact:UIImpactFeedbackGenerator
+        let selection:UISelectionFeedbackGenerator
+        let notification:UINotificationFeedbackGenerator
+    }
+    private static weak var feedbackWindow:UIWindow?
+    private static var viewGenerators:Generators?
+    private static var compatibilityGenerators:Generators?
     private static var lastTap: TimeInterval = -.infinity
+
+    private static func generators() -> Generators? {
+        if #available(iOS 17.5, *) {
+            guard let window=UIApplication.shared.connectedScenes
+                .compactMap({$0 as? UIWindowScene})
+                .first(where:{$0.activationState == .foregroundActive})?.keyWindow else { return nil }
+            if window !== feedbackWindow || viewGenerators == nil {
+                feedbackWindow=window
+                viewGenerators=Generators(impact:UIImpactFeedbackGenerator(style:.light,view:window),
+                    selection:UISelectionFeedbackGenerator(view:window),notification:UINotificationFeedbackGenerator(view:window))
+            }
+            return viewGenerators
+        } else {
+            // The view-bound initializers are unavailable on iOS 17.0–17.4.
+            if compatibilityGenerators == nil {
+                compatibilityGenerators=Generators(impact:UIImpactFeedbackGenerator(style:.light),
+                    selection:UISelectionFeedbackGenerator(),notification:UINotificationFeedbackGenerator())
+            }
+            return compatibilityGenerators
+        }
+    }
     #endif
     static func play(_ feedback: LuqmaMotion.Feedback) {
         #if canImport(UIKit)
         guard UserDefaults.standard.object(forKey: preferenceKey) as? Bool ?? true,
-              UIApplication.shared.applicationState == .active else { return }
+              UIApplication.shared.applicationState == .active,
+              let generators=Self.generators() else { return }
         switch feedback {
         case .light, .selection, .toggle, .adjustment:
             let now = ProcessInfo.processInfo.systemUptime
             guard now - lastTap >= 0.075 else { return }
             lastTap = now
-            if feedback == .light { impact.impactOccurred(intensity: 0.5) }
-            else { selection.selectionChanged() }
-        case .success, .achievement: notification.notificationOccurred(.success)
-        case .warning: notification.notificationOccurred(.warning)
-        case .error: notification.notificationOccurred(.error)
+            if feedback == .light { generators.impact.impactOccurred(intensity: 0.5) }
+            else { generators.selection.selectionChanged() }
+        case .success, .achievement: generators.notification.notificationOccurred(.success)
+        case .warning: generators.notification.notificationOccurred(.warning)
+        case .error: generators.notification.notificationOccurred(.error)
         }
         #endif
     }
