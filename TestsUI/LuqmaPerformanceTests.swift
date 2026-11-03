@@ -75,6 +75,7 @@ final class LuqmaPerformanceTests: XCTestCase {
         measure(metrics: resourceMetrics(), options: options()) {
             startMeasuring()
             tap("nav.add")
+            tap("search.expand")
             XCTAssertTrue(app.textFields["search.query"].waitForExistence(timeout: 10))
             tap("search.close")
             XCTAssertTrue(app.buttons["nav.today"].waitForExistence(timeout: 10))

@@ -13,7 +13,12 @@ extension View {
             .background(HealthPalette.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 }
-struct HealthPrimaryButtonStyle: ButtonStyle {
+struct HealthPrimaryButtonStyle: PrimitiveButtonStyle {
+    func makeBody(configuration:Configuration)->some View {
+        LuqmaActionFeedbackStyle(appearance:HealthPrimaryAppearance()).makeBody(configuration:configuration)
+    }
+}
+private struct HealthPrimaryAppearance: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label.luqmaFont(.headline).frame(maxWidth: .infinity, minHeight: 48)
             .padding(.horizontal, 12).foregroundStyle(HealthPalette.background)

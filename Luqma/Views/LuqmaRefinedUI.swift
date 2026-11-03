@@ -66,7 +66,7 @@ struct LuqmaReviewSegments<Value:Hashable>:View {
                     .padding(.horizontal,6).padding(.vertical,4)
                     .frame(maxWidth:.infinity,minHeight:LuqmaReviewStyle.controlHeight)
                     .background(selection == value ? Theme.text:Color.clear,in:RoundedRectangle(cornerRadius:10,style:.continuous))
-            }.buttonStyle(LuqmaPressStyle()).accessibilityAddTraits(selection == value ? .isSelected:[])
+            }.buttonStyle(LuqmaPressStyle(feedback:nil)).accessibilityAddTraits(selection == value ? .isSelected:[])
         }
     }
 }

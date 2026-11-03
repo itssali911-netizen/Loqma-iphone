@@ -17,6 +17,40 @@ final class MotionInteractionTests:XCTestCase {
         app.terminate()
     }
     func testNativeTabsSearchAndDismissal() {exercise(reduced:false)}
+    func testArabicSearchAndHapticPreference() {
+        app.launchArguments=["-AppleLanguages","(ar)","-AppleLocale","ar_SA"]
+        app.launch()
+        XCTAssertTrue(app.buttons["nav.today"].waitForExistence(timeout:20))
+        app.buttons["nav.add"].tap()
+        let open=app.buttons["search.expand"]
+        XCTAssertTrue(open.waitForExistence(timeout:20))
+        XCTAssertGreaterThan(open.frame.midX,app.frame.midX,"Arabic search starts at the RTL leading edge")
+        capture("motion-ar-collapsed")
+        open.tap()
+        XCTAssertTrue(app.textFields["search.query"].waitForExistence(timeout:20))
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout:20))
+        XCTAssertLessThan(app.buttons["search.submit"].frame.midX,app.frame.midX)
+        capture("motion-ar-expanded")
+        app.buttons["search.collapse"].tap()
+        XCTAssertTrue(open.waitForExistence(timeout:20))
+        app.buttons["search.close"].tap()
+        XCTAssertTrue(app.buttons["nav.settings"].waitForExistence(timeout:20))
+        app.buttons["nav.settings"].tap()
+        let preference=app.switches["settings.interactionHaptics"]
+        for _ in 0..<4 {if preference.isHittable{break};app.swipeUp()}
+        XCTAssertTrue(preference.isHittable)
+        XCTAssertEqual(preference.value as? String,"1")
+        preference.tap()
+        XCTAssertEqual(preference.value as? String,"0")
+        capture("motion-ar-haptics-off")
+        app.terminate();app.launch()
+        XCTAssertTrue(app.buttons["nav.settings"].waitForExistence(timeout:20))
+        app.buttons["nav.settings"].tap()
+        for _ in 0..<4 {if preference.isHittable{break};app.swipeUp()}
+        XCTAssertTrue(preference.exists)
+        XCTAssertEqual(preference.value as? String,"0")
+        preference.tap()
+    }
     func testReduceMotionTabsSearchAndDismissal() throws {
         try MotionSystemSettingsTests.enableReduceMotion()
         exercise(reduced:true)
@@ -35,9 +69,26 @@ final class MotionInteractionTests:XCTestCase {
         for query in ["milk","rice"] {
             app.buttons["nav.add"].tap()
             let field=app.textFields["search.query"]
-            XCTAssertTrue(field.waitForExistence(timeout:10));field.tap();field.typeText(query)
+            let open=app.buttons["search.expand"]
+            XCTAssertTrue(open.waitForExistence(timeout:20))
+            XCTAssertFalse(field.exists)
+            XCTAssertGreaterThanOrEqual(open.frame.width,43.99)
+            capture(reduced ? "motion-reduced-collapsed":"motion-standard-collapsed")
+            open.tap()
+            XCTAssertTrue(field.waitForExistence(timeout:20))
+            XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout:20))
+            field.typeText(query)
             XCTAssertEqual(field.value as? String,query,"Animation must not swallow keyboard input")
             capture(reduced ? "motion-reduced-search":"motion-standard-search")
+            app.buttons["search.collapse"].tap()
+            XCTAssertTrue(open.waitForExistence(timeout:20))
+            XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout:20))
+            open.tap()
+            XCTAssertTrue(field.waitForExistence(timeout:20))
+            XCTAssertEqual(field.value as? String,query,"Collapse must preserve the query")
+            let clear=app.buttons["search.clear"]
+            XCTAssertTrue(clear.isHittable);clear.tap()
+            XCTAssertNotEqual(field.value as? String,query)
             let close=app.buttons["search.close"]
             XCTAssertTrue(close.isHittable);close.tap()
             XCTAssertTrue(app.buttons["nav.today"].waitForExistence(timeout:10))

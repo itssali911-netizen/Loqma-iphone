@@ -93,6 +93,12 @@ final class LuqmaMealCameraController:UIViewController,AVCapturePhotoCaptureDele
         guard session.canAddInput(input),session.canAddOutput(output) else{throw CocoaError(.featureUnsupported)}
         session.addInput(input);session.addOutput(output)
     }
+    nonisolated func photoOutput(_ output:AVCapturePhotoOutput,willCapturePhotoFor resolvedSettings:AVCaptureResolvedPhotoSettings) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self,self.visible,self.active,!self.disposed else { return }
+            LuqmaHapticManager.play(.light)
+        }
+    }
     func photoOutput(_ output:AVCapturePhotoOutput,didFinishProcessingPhoto photo:AVCapturePhoto,error:Error?){
         let data=error == nil ? photo.fileDataRepresentation():nil
         queue.async{[self] in

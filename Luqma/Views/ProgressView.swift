@@ -4,6 +4,7 @@ import Charts
 struct ProgressViewScreen:View {
     @EnvironmentObject var diary:DiaryStore
     @State private var range=90
+    @State private var selectedChartDate:Date?
     @State private var adding=false
     @State private var adaptiveDetails=false
     @State private var deleting:WeightReading?
@@ -80,7 +81,7 @@ struct ProgressViewScreen:View {
         }}.buttonStyle(LuqmaPressStyle())
         if diary.state.weightPlan != nil {
             Divider().overlay(Theme.stroke)
-            Toggle(diary.t("تحديث السعرات مع الوزن","Update calories with weight"),isOn:Binding(get:{diary.state.adaptive},set:{value in diary.change{$0.adaptive=value};diary.adapt()})).luqmaFont(size:14,relativeTo:.body).luqmaFeedback(.selection,trigger:diary.state.adaptive)
+            Toggle(diary.t("تحديث السعرات مع الوزن","Update calories with weight"),isOn:Binding(get:{diary.state.adaptive},set:{value in diary.change{$0.adaptive=value};diary.adapt()})).luqmaFont(size:14,relativeTo:.body)
             let average=DiaryValidation.average(diary.state.weights,ending:DayKey.today)
             if let kg=average.kg{Text("\(diary.t("متوسط الأسبوع","Weekly average")): \(decimal(kg)) \(diary.t("كجم","kg"))").luqmaFont(.footnote).foregroundStyle(Theme.muted).luqmaNumericMotion(value:kg)}
             DisclosureGroup(diary.t("كيف يعمل التحديث؟","How does it work?"),isExpanded:$adaptiveDetails){
@@ -101,7 +102,9 @@ struct ProgressViewScreen:View {
                 .overlay(alignment:.bottom){Rectangle().fill(Theme.stroke).frame(height:1)}.luqmaMotionTransition()}
         }.luqmaCard().luqmaMotion(.content,value:readings.suffix(30).map(\.id))}
     }
-    private func weightChart(_ snapshot:WeightProgressSnapshot)->some View {VStack(alignment:.leading,spacing:16){
+    private func weightChart(_ snapshot:WeightProgressSnapshot)->some View {
+        let chosen=selectedChartDate.flatMap{date in snapshot.points.min{abs($0.date.timeIntervalSince(date))<abs($1.date.timeIntervalSince(date))}}
+        return VStack(alignment:.leading,spacing:16){
         LuqmaReviewSegments(options:[7,30,90,0],selection:$range,label:rangeTitle)
             .accessibilityLabel(diary.t("مدة الرسم","Chart range"))
         if snapshot.points.isEmpty{
@@ -117,6 +120,14 @@ struct ProgressViewScreen:View {
                 PointMark(x:.value("Date",point.date),y:.value("Weight",point.reading.kg)).symbolSize(25).foregroundStyle(Theme.accent)
             }
             if let target=diary.state.weightPlan?.targetWeight{RuleMark(y:.value("Goal",target)).lineStyle(StrokeStyle(lineWidth:1,dash:[5])).foregroundStyle(Theme.muted)}
+            if let chosen {
+                RuleMark(x:.value("Selected date",chosen.date)).lineStyle(StrokeStyle(lineWidth:1,dash:[3]))
+                    .foregroundStyle(Theme.accent.opacity(0.65))
+                PointMark(x:.value("Date",chosen.date),y:.value("Weight",chosen.reading.kg))
+                    .symbolSize(60).foregroundStyle(Theme.accent)
+                    .accessibilityLabel(diary.t("الوزن المحدد","Selected weight"))
+                    .accessibilityValue(decimal(chosen.reading.kg)+" "+diary.t("كجم","kg"))
+            }
         }.chartYScale(domain:.automatic(includesZero:false)).chartLegend(.hidden)
             .chartXAxis{AxisMarks(values:.automatic(desiredCount:4)){tick in
                 AxisGridLine().foregroundStyle(Theme.stroke)
@@ -126,6 +137,10 @@ struct ProgressViewScreen:View {
                 AxisGridLine().foregroundStyle(Theme.stroke)
                 AxisValueLabel{if let weight=tick.as(Double.self){Text(decimal(weight)).luqmaFont(.caption2).foregroundStyle(Theme.muted)}}
             }}.frame(height:225)
+            .chartXSelection(value:$selectedChartDate)
+            .luqmaMotion(.selection,value:chosen?.id)
+            .luqmaFeedback(.selection,trigger:chosen?.id){_,id in id != nil}
+            .onChange(of:range){_,_ in selectedChartDate=nil}
             .luqmaMotion(.content,value:snapshot.readings.count)
             .luqmaMotion(.content,value:snapshot.readings.last)
             .accessibilityLabel(diary.t("رسم تغيّر الوزن بالكيلوجرام","Weight trend in kilograms"))}

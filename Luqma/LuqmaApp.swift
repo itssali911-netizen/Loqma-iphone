@@ -69,6 +69,7 @@ import UIKit
                 }
                 .onReceive(NotificationCenter.default.publisher(for:NSNotification.Name.NSCalendarDayChanged)){_ in Task{await health.calendarDidChange()}}
                 .onReceive(NotificationCenter.default.publisher(for:UIApplication.significantTimeChangeNotification)){_ in Task{await health.calendarDidChange()}}
+                .luqmaFeedback(.error,trigger:diary.error){_,message in message != nil}
                 .alert(diary.t("تنبيه","Notice"),isPresented:Binding(get:{diary.error != nil},set:{if !$0 {diary.error=nil}})) {Button(diary.t("حسنًا","OK")){diary.error=nil}} message:{Text(diary.error ?? "")}
         }
     }
@@ -78,6 +79,7 @@ struct RootView:View {
     @EnvironmentObject var reminders:ReminderService
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var tab:Int
+    @Namespace private var tabIndicator
     @State private var adding=false
     @State private var addingMeal:Meal?
     @State private var todayRouteID=0
@@ -120,8 +122,6 @@ struct RootView:View {
             NavigationStack{ProgressViewScreen().toolbar(.hidden,for:.tabBar)}.tabItem{Label(diary.t("تقدّمي","Progress"),systemImage:"chart.bar")}.tag(2)
             NavigationStack{SettingsView(onBack:{tab=0}).toolbar(.hidden,for:.tabBar)}.tabItem{Label(diary.t("الإعدادات","Settings"),systemImage:"gearshape")}.tag(3)
         }.toolbar(.hidden,for:.tabBar)
-            .luqmaFeedback(.selection,trigger:tab)
-            .luqmaFeedback(.success,trigger:diary.state.entries.count){old,new in new>old}
             .transaction { transaction in
                 if reduceMotion { transaction.animation=nil;transaction.disablesAnimations=true }
             }
@@ -129,10 +129,11 @@ struct RootView:View {
             .modifier(LuqmaPerformanceMarker())
             #endif
             .safeAreaInset(edge:.bottom,spacing:0){bottomNavigation}
+            .overlay(alignment:.bottom){LuqmaToastHost().padding(.horizontal,16).padding(.bottom,Theme.bottomBarItemHeight+22)}
             .fullScreenCover(isPresented:$adding,onDismiss:{addingMeal=nil;consumeReminderRoute()}){FoodAddView(initialMeal:addingMeal,onPhotoCommit:{foods,meal in
-                do{let entries=try foods.map{try DiaryEntry(food:$0.0,amount:$0.1,unit:$0.2,meal:meal,day:DayKey.today,language:diary.language)};return diary.add(entries,foods:foods.map{$0.0})}catch{diary.report(error);return false}
+                do{let entries=try foods.map{try DiaryEntry(food:$0.0,amount:$0.1,unit:$0.2,meal:meal,day:DayKey.today,language:diary.language)};guard diary.add(entries,foods:foods.map{$0.0}) else{return false};LuqmaFeedbackCenter.shared.saved(diary.t("تمت إضافة الوجبة","Meal added"));return true}catch{diary.report(error);return false}
             }){food,amount,unit,meal in
-                do{return diary.add([try DiaryEntry(food:food,amount:amount,unit:unit,meal:meal,day:DayKey.today,language:diary.language)],foods:[food])}catch{diary.report(error);return false}
+                do{guard diary.add([try DiaryEntry(food:food,amount:amount,unit:unit,meal:meal,day:DayKey.today,language:diary.language)],foods:[food]) else{return false};LuqmaFeedbackCenter.shared.saved(diary.t("تمت إضافة الوجبة","Meal added"));return true}catch{diary.report(error);return false}
             }}
             .sheet(isPresented:$photoPreview){
                 #if DEBUG
@@ -286,20 +287,25 @@ struct RootView:View {
             Button{addingMeal=nil;adding=true}label:{Image(systemName:"plus").font(.system(size:27,weight:.medium)).foregroundStyle(Theme.onAccent).frame(width:Theme.bottomBarItemHeight,height:Theme.bottomBarItemHeight).background(Theme.accent,in:RoundedRectangle(cornerRadius:17,style:.continuous))}.buttonStyle(LuqmaPressStyle()).frame(maxWidth:.infinity,minHeight:Theme.bottomBarItemHeight).accessibilityLabel(diary.t("إضافة طعام إلى اليوم","Add food to today")).accessibilityIdentifier("nav.add")
             navigationButton(2,title:diary.t("تقدّمي","Progress"),symbol:"chart.bar")
             navigationButton(3,title:diary.t("الإعدادات","Settings"),symbol:"gearshape")
-        }.padding(.horizontal,10).padding(.vertical,Theme.bottomBarPadding)
+        }.luqmaMotion(.tab,value:tab).padding(.horizontal,10).padding(.vertical,Theme.bottomBarPadding)
             .background(Theme.surface,in:RoundedRectangle(cornerRadius:24,style:.continuous))
             .padding(.horizontal,16).padding(.top,Theme.bottomBarTopGap).padding(.bottom,Theme.bottomBarBottomGap).background(Theme.background)
     }
     private func navigationButton(_ value:Int,title:String,symbol:String)->some View {
-        Button{tab=value}label:{VStack(spacing:3){
+        Button{guard tab != value else{return};LuqmaHapticManager.play(.selection);tab=value}label:{VStack(spacing:3){
             Image(systemName:tab == value && value == 0 ? "house.fill":symbol).font(.system(size:21,weight:.regular))
+                .luqmaTabIconMotion(selected:tab == value)
                 .foregroundStyle(tab == value ? Theme.text:Theme.muted).frame(width:44,height:34)
                 .background(tab == value ? Theme.background:Color.clear,in:RoundedRectangle(cornerRadius:12,style:.continuous))
                 .contentTransition(reduceMotion ? .identity:.symbolEffect(.replace))
                 .luqmaMotion(.selection,value:tab == value)
-            Capsule().fill(tab == value ? Theme.accent:Color.clear).frame(width:18,height:3)
-                .luqmaMotion(.selection,value:tab == value)
-        }.frame(maxWidth:.infinity,minHeight:Theme.bottomBarItemHeight).contentShape(Rectangle())}.buttonStyle(LuqmaPressStyle()).accessibilityLabel(title).accessibilityAddTraits(tab == value ? .isSelected:[])
+            Color.clear.frame(width:18,height:3).overlay {
+                if tab == value {
+                    if reduceMotion { Capsule().fill(Theme.accent) }
+                    else { Capsule().fill(Theme.accent).matchedGeometryEffect(id:"selected-tab",in:tabIndicator).transition(.identity) }
+                }
+            }.accessibilityHidden(true)
+        }.frame(maxWidth:.infinity,minHeight:Theme.bottomBarItemHeight).contentShape(Rectangle())}.buttonStyle(LuqmaPressStyle(feedback:nil)).accessibilityLabel(title).accessibilityAddTraits(tab == value ? .isSelected:[])
             .accessibilityIdentifier(["nav.today","nav.kitchen","nav.progress","nav.settings"][value])
     }
 }

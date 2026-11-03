@@ -13,6 +13,7 @@ struct SettingsView:View {
     @EnvironmentObject var diary:DiaryStore
     @State private var goals=false
     @State private var gemini=false
+    @AppStorage(LuqmaHapticManager.preferenceKey) private var interactionHaptics=true
     var body:some View {
         ScrollView{VStack(alignment:.leading,spacing:24){
             settingsGroup(diary.t("أهدافي","My goals")){
@@ -22,6 +23,15 @@ struct SettingsView:View {
             }
             settingsGroup(diary.t("التفضيلات","Preferences")){
                 languageRow
+                Toggle(isOn:$interactionHaptics) {
+                    HStack(spacing:10) {
+                        settingsIcon("waveform")
+                        Text(diary.t("الاستجابة اللمسية","Interaction haptics"))
+                            .luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline)
+                    }
+                }.padding(.horizontal,10).padding(.vertical,8).frame(minHeight:64)
+                    .background(Theme.card,in:RoundedRectangle(cornerRadius:20,style:.continuous))
+                    .accessibilityIdentifier("settings.interactionHaptics")
                 NavigationLink{NotificationsView()}label:{settingsRow(diary.t("الإشعارات","Notifications"),symbol:"bell")}.accessibilityIdentifier("settings.notifications")
                 NavigationLink{RemindersView()}label:{settingsRow(diary.t("التذكيرات","Reminders"),symbol:"clock")}.accessibilityIdentifier("settings.reminders")
             }

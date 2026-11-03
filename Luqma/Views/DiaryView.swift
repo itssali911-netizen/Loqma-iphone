@@ -14,6 +14,7 @@ struct DiaryView:View {
     @State private var editing:DiaryEntry?
     @State private var chosenMeal:Meal?
     @State private var searchQuery=""
+    @State private var focusSearchOnOpen=false
     @State private var expandedMeals:Set<Meal>=[]
     private var day:String {DayKey.string(date)}
     var body:some View {diaryScroll}
@@ -29,7 +30,7 @@ struct DiaryView:View {
                 header
                 #endif
             }
-            .fullScreenCover(isPresented:$adding){FoodAddView(initialQuery:searchQuery,initialMeal:chosenMeal,onPhotoCommit:{foods,meal in do{let entries=try foods.map{try DiaryEntry(food:$0.0,amount:$0.1,unit:$0.2,meal:meal,day:day,language:diary.language)};return diary.add(entries,foods:foods.map{$0.0})}catch{diary.report(error);return false}}){food,amount,unit,meal in do{let entry=try DiaryEntry(food:food,amount:amount,unit:unit,meal:meal,day:day,language:diary.language);return diary.add([entry],foods:[food])}catch{diary.report(error);return false}}}
+            .fullScreenCover(isPresented:$adding){FoodAddView(initialQuery:searchQuery,initialMeal:chosenMeal,onPhotoCommit:{foods,meal in do{let entries=try foods.map{try DiaryEntry(food:$0.0,amount:$0.1,unit:$0.2,meal:meal,day:day,language:diary.language)};guard diary.add(entries,foods:foods.map{$0.0}) else{return false};showMealSaved();return true}catch{diary.report(error);return false}},autoFocusSearch:focusSearchOnOpen){food,amount,unit,meal in do{let entry=try DiaryEntry(food:food,amount:amount,unit:unit,meal:meal,day:day,language:diary.language);guard diary.add([entry],foods:[food]) else{return false};showMealSaved();return true}catch{diary.report(error);return false}}}
             .sheet(item:$editing){EntryEditor(entry:$0)}
             .sheet(isPresented:$goals){GoalEditor()}
             .sheet(isPresented:$showingCalorieIntake){
@@ -118,12 +119,13 @@ struct DiaryView:View {
                 }
             }
             HStack{Spacer(minLength:0);compactPersonalizedPlanBadge}
-            Button{openSearch()}label:{
-                HStack(spacing:8){Text(diary.t("ابحث في قاعدة الطعام…","Search our food database…")).luqmaFont(size:13,relativeTo:.subheadline);Spacer(minLength:0);Image(systemName:"magnifyingglass").font(.system(size:16))}
-                    .foregroundStyle(Theme.text.opacity(0.85)).padding(.horizontal,16).frame(minHeight:46)
-                    .background(Theme.background,in:RoundedRectangle(cornerRadius:12))
-                    .overlay{RoundedRectangle(cornerRadius:12).strokeBorder(Theme.stroke,lineWidth:1)}
-            }.buttonStyle(LuqmaPressStyle()).accessibilityIdentifier("diary.search")
+            Button{openSearch(focus:true)}label:{
+                Image(systemName:"magnifyingglass").font(.system(size:16))
+                    .foregroundStyle(Theme.text.opacity(0.85)).frame(width:44,height:44)
+                    .background(Theme.background,in:Circle())
+                    .overlay{Circle().strokeBorder(Theme.stroke,lineWidth:1)}
+            }.buttonStyle(LuqmaPressStyle(scale:0.96))
+                .accessibilityLabel(diary.t("بحث عن طعام","Search for food")).accessibilityIdentifier("diary.search")
         }.padding(16).background{Theme.surface.clipShape(UnevenRoundedRectangle(bottomLeadingRadius:24,bottomTrailingRadius:24,style:.continuous)).ignoresSafeArea(edges:.top)}
     }
     private var compactPersonalizedPlanBadge:some View {
@@ -137,7 +139,8 @@ struct DiaryView:View {
         }.buttonStyle(LuqmaPressStyle()).accessibilityIdentifier("diary.fitnessProfile")
             .accessibilityLabel(diary.t("خطتك الشخصية — ملف اللياقة","Personal plan — Fitness profile"))
     }
-    private func openSearch(_ query:String="",meal:Meal?=nil){searchQuery=query;chosenMeal=meal;adding=true}
+    private func openSearch(_ query:String="",meal:Meal?=nil,focus:Bool=false){searchQuery=query;chosenMeal=meal;focusSearchOnOpen=focus;adding=true}
+    private func showMealSaved(){LuqmaFeedbackCenter.shared.saved(diary.t("تمت إضافة الوجبة","Meal added"))}
     private var weekDates:[Date] {
         let calendar=DisplayFormat.calendar(diary.language)
         let start=calendar.dateInterval(of:.weekOfYear,for:date)?.start ?? calendar.startOfDay(for:date)
@@ -198,7 +201,11 @@ struct DiaryView:View {
             .background(Theme.card,in:RoundedRectangle(cornerRadius:18,style:.continuous))
     }
     private func mealEntryDetails(_ summary:MealDiarySummary)->some View {
-        DisclosureGroup(isExpanded:Binding(get:{expandedMeals.contains(summary.meal)},set:{if $0{expandedMeals.insert(summary.meal)}else{expandedMeals.remove(summary.meal)}})){
+        DisclosureGroup(isExpanded:Binding(get:{expandedMeals.contains(summary.meal)},set:{
+            guard $0 != expandedMeals.contains(summary.meal) else{return}
+            LuqmaHapticManager.play(.light)
+            if $0{expandedMeals.insert(summary.meal)}else{expandedMeals.remove(summary.meal)}
+        })){
             // CI95's expanded meal exposes 200 eagerly created row buttons.
             // Keep stable entry identities and identical row layout, but build
             // offscreen rows on demand in the containing diary ScrollView.
@@ -568,8 +575,15 @@ struct EntryEditor:View {
             Section{Button(diary.t("حذف الطعام","Delete food"),role:.destructive){deleting=true}.accessibilityIdentifier("entry.delete")}.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
         }.sandowForm().sandowNavigation(diary.t("تعديل الطعام","Edit food"),backLabel:diary.t("إلغاء","Cancel"),onBack:{dismiss()},
             actionLabel:diary.t("حفظ التعديل","Save changes"),actionEnabled:!(value == nil || (value ?? 0)<=0 || (value ?? 0)>10000),actionIdentifier:"entry.save",
-            onAction:{if let value,diary.resize(entry.id,value){dismiss()}})
-            .confirmationDialog(diary.t("حذف الطعام من اليوم؟","Delete this diary entry?"),isPresented:$deleting,titleVisibility:.visible){Button(diary.t("حذف","Delete"),role:.destructive){diary.remove(entry.id);dismiss()}}
+            onAction:{if let value,diary.resize(entry.id,value){LuqmaFeedbackCenter.shared.saved(diary.t("تم حفظ التعديلات","Changes saved"));dismiss()}})
+            .confirmationDialog(diary.t("حذف الطعام من اليوم؟","Delete this diary entry?"),isPresented:$deleting,titleVisibility:.visible){
+                Button(diary.t("حذف","Delete"),role:.destructive){
+                    let existed=diary.state.entries.contains{$0.id==entry.id}
+                    diary.remove(entry.id)
+                    if existed,!diary.state.entries.contains(where:{$0.id==entry.id}){LuqmaFeedbackCenter.shared.saved(diary.t("تم حذف الطعام","Food deleted"))}
+                    dismiss()
+                }
+            }
         }.onAppear{amount=decimal(entry.amount,entry.amount.rounded()==entry.amount ? 0:2)}
     }
 }

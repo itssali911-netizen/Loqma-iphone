@@ -71,7 +71,6 @@ struct PlanView:View {
                     .padding(16).background(Theme.background)
             }
             .luqmaMotion(.content,value:result != nil)
-            .luqmaFeedback(.light,trigger:calculating){_,value in value}
             .luqmaFeedback(.success,trigger:applied){_,didApply in didApply}
             .onAppear{guard !initialized else{return};initialized=true;if let saved=diary.state.weightPlan{plan=saved}else{plan.sex="";plan.weight=diary.state.weights.last?.kg ?? 0};bodyFat=plan.bodyFat != nil;resting=plan.restingCalories != nil}
             .onChange(of:plan){_,_ in result=nil;applied=false}

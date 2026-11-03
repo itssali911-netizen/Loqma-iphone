@@ -73,3 +73,32 @@ struct SandowSavedConfirmation:View {
             .luqmaMotionTransition()
     }
 }
+
+/// Eight small accents, once after a real first plan commit. No idle renderer.
+struct LuqmaAchievementBurst: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var phase
+    @State private var dispersed=false
+    @State private var finished=false
+    var body: some View {
+        Group {
+            if !reduceMotion,phase == .active,!finished {
+                ZStack {
+                    ForEach(0..<8) { index in
+                        let angle=Double(index)*Double.pi/4
+                        Capsule().fill(index.isMultiple(of:2) ? Theme.accent : Theme.muted)
+                            .frame(width:3,height:6)
+                            .rotationEffect(.radians(angle))
+                            .offset(x:dispersed ? CGFloat(cos(angle)*42) : 0,
+                                    y:dispersed ? CGFloat(sin(angle)*18) : 0)
+                            .opacity(dispersed ? 0 : 0.72)
+                    }
+                }.onAppear {
+                    withAnimation(.easeOut(duration:0.40),completionCriteria:.logicallyComplete) {
+                        dispersed=true
+                    } completion: { finished=true }
+                }
+            }
+        }.allowsHitTesting(false).accessibilityHidden(true)
+    }
+}

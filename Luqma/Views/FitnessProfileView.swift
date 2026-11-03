@@ -166,6 +166,7 @@ struct FitnessPlanReviewView: View {
     @EnvironmentObject private var diary: DiaryStore
     @Environment(\.dismiss) private var dismiss
     @State private var applied = false
+    @State private var firstPlanAchievement = false
     @State private var assumptionsExpanded = false
     @State private var calorieOverride:Double?
     @State private var calorieUnit:ApprovedCalorieUnit = .kcal
@@ -185,6 +186,7 @@ struct FitnessPlanReviewView: View {
                     planHeading(plan).frame(minHeight:max(540,geometry.size.height-40))
                     if applied {
                         SandowSavedConfirmation(text: diary.t("حُفظت الخطة واعتُمدت أهدافها في سجل الطعام دون حذف أي سجل سابق.", "Plan saved. Its targets are now used in your food diary, with all previous entries preserved."))
+                            .overlay { if firstPlanAchievement { LuqmaAchievementBurst() } }
                             .accessibilityIdentifier("fitness.appliedConfirmation")
                     }
                     if plan.calorieFloorApplied {
@@ -215,17 +217,21 @@ struct FitnessPlanReviewView: View {
                     Button {
                         guard !applyBusy,canApply else{return}
                         applyBusy=true
+                        let firstPlan=diary.state.appliedFitnessPlan == nil
                         applied=diary.applyFitnessPlan(calorieOverride:calorieOverride)
+                        if applied {
+                            firstPlanAchievement=firstPlan
+                            LuqmaHapticManager.play(firstPlan ? .achievement : .success)
+                        }
                         Task{@MainActor in try? await Task.sleep(for:.milliseconds(250));applyBusy=false}
                     } label:{
                         HStack(spacing:12){Text(diary.t("اعتماد الخطة والبدء","Apply plan and start"));Image(systemName:"checkmark").font(.system(size:16,weight:.bold))}
-                    }.buttonStyle(ApprovedAssessmentButtonStyle()).disabled(!canApply || applyBusy)
+                    }.buttonStyle(ApprovedAssessmentButtonStyle(feedback:nil)).disabled(!canApply || applyBusy)
                         .accessibilityIdentifier("fitness.apply").padding(.horizontal,16).padding(.top,8).padding(.bottom,16)
                         .background(Color(hex:0x111214))
                 }
             }
             .luqmaMotion(.success,value:applied)
-            .luqmaFeedback(.success,trigger:applied){_,didApply in didApply}
             .onChange(of:plan?.id){_,_ in calorieOverride=nil}
     }
     private var approvedPlanHeader:some View {

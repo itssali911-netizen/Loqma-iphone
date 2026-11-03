@@ -50,16 +50,23 @@ struct KitchenView:View {
         }
         }
             .navigationTitle(diary.t("مطبخي","My kitchen"))
-            .luqmaFeedback(.light,trigger:creating){_,value in value}
-            .luqmaFeedback(.success,trigger:diary.state.recipes.count){old,new in new>old}
             .toolbar(.hidden,for:.navigationBar)
             .background{KitchenCinematicBackgroundView()}
             .sheet(isPresented:$creating){RecipeEditor(recipe:Recipe(id:UUID(),name:"",type:"recipe",ingredients:[],portions:1,cookedWeight:nil,notes:""))}
             .sheet(isPresented:$importingRecipe){RecipeImportView()}
             .sheet(item:$editing){RecipeEditor(recipe:$0)}
             .sheet(item:$viewing){RecipeDetailView(recipeID:$0.id)}
-            .sheet(item:$selected){f in FoodPortionView(food:f){food,amount,unit,meal in do{return diary.add([try DiaryEntry(food:food,amount:amount,unit:unit,meal:meal,day:DayKey.today,language:diary.language)],foods:[food])}catch{diary.report(error);return false}}}
-            .confirmationDialog(diary.t("حذف الوصفة؟","Delete recipe?"),isPresented:Binding(get:{deleting != nil},set:{if !$0{deleting=nil}}),titleVisibility:.visible){Button(diary.t("حذف","Delete"),role:.destructive){if let r=deleting{diary.removeRecipe(r.id)};deleting=nil}}
+            .sheet(item:$selected){f in FoodPortionView(food:f){food,amount,unit,meal in do{guard diary.add([try DiaryEntry(food:food,amount:amount,unit:unit,meal:meal,day:DayKey.today,language:diary.language)],foods:[food]) else{return false};LuqmaFeedbackCenter.shared.saved(diary.t("تمت إضافة الوجبة","Meal added"));return true}catch{diary.report(error);return false}}}
+            .confirmationDialog(diary.t("حذف الوصفة؟","Delete recipe?"),isPresented:Binding(get:{deleting != nil},set:{if !$0{deleting=nil}}),titleVisibility:.visible){
+                Button(diary.t("حذف","Delete"),role:.destructive){
+                    if let r=deleting{
+                        let existed=diary.state.recipes.contains{$0.id==r.id}
+                        diary.removeRecipe(r.id)
+                        if existed,!diary.state.recipes.contains(where:{$0.id==r.id}){LuqmaFeedbackCenter.shared.saved(diary.t("تم حذف الوصفة","Recipe deleted"))}
+                    }
+                    deleting=nil
+                }
+            }
     }
     private var kitchenHeader:some View {
         VStack(spacing:8){
@@ -222,7 +229,7 @@ struct RecipeDetailView:View {
                 }
                 .sheet(isPresented:$editing){if let recipe{RecipeEditor(recipe:recipe)}}
                 .sheet(item:$selected){food in FoodPortionView(food:food,initialUnit:food.unit){value,amount,unit,meal in
-                    do{return diary.add([try DiaryEntry(food:value,amount:amount,unit:unit,meal:meal,day:DayKey.today,language:diary.language)],foods:[value])}
+                    do{guard diary.add([try DiaryEntry(food:value,amount:amount,unit:unit,meal:meal,day:DayKey.today,language:diary.language)],foods:[value]) else{return false};LuqmaFeedbackCenter.shared.saved(diary.t("تمت إضافة الوجبة","Meal added"));return true}
                     catch{diary.report(error);return false}
                 }}
                 #if DEBUG
@@ -388,7 +395,7 @@ struct RecipeEditor:View {
             }
         }.sandowForm().luqmaReviewKeyboard().sandowNavigation(diary.t("حفظ في مطبخي","Save to kitchen"),backLabel:diary.t("إلغاء","Cancel"),onBack:{dismiss()},
             actionLabel:diary.t("حفظ","Save"),actionEnabled:!recipe.name.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty && !recipe.ingredients.isEmpty && recipe.portions.isFinite && recipe.portions>0 && (!byWeight || (recipe.cookedWeight.map{$0.isFinite && $0>0} ?? false)),
-            onAction:{if !byWeight{recipe.cookedWeight=nil};if diary.saveRecipe(recipe){dismiss()}})
+            onAction:{if !byWeight{recipe.cookedWeight=nil};if diary.saveRecipe(recipe){LuqmaFeedbackCenter.shared.saved(diary.t("تم حفظ الوصفة","Recipe saved"));dismiss()}})
             .fullScreenCover(isPresented:$adding){FoodAddView{f,a,u,_ in do{let n=try f.total(a,unit:u);recipe.ingredients.append(Ingredient(id:UUID(),name:f.label(diary.language),amount:a,unit:u,kcal:n.kcal,protein:n.protein,carbs:n.carbs,fat:n.fat))
                 if MealPhotoEstimate.isValidPhotoEstimate(f) || f.sourceDescription=="luqma:estimated-components"{let note=diary.t("تحتوي الوصفة على قيم مقدّرة من صورة؛ راجعها قبل الاستخدام.","This recipe includes photo estimates; review them before use.");if !recipe.notes.contains(note){recipe.notes=String((recipe.notes+"\n"+note).trimmingCharacters(in:.whitespacesAndNewlines).prefix(2000))}}
                 return true}catch{diary.report(error);return false}}}

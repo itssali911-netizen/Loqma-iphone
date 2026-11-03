@@ -65,13 +65,13 @@ struct RecipeNutritionCard:View {
                         // Only this directional chevron mirrors in English.
                         .scaleEffect(x:language == .ar ? 1:-1,y:1)
                         .frame(width:44,height:44).contentShape(Rectangle())
-                }.buttonStyle(.plain)
+                }.buttonStyle(LuqmaPressStyle())
                     .accessibilityLabel(t("تفاصيل الوصفة","Recipe details"))
                     .accessibilityHint(t("عرض المكونات والتفاصيل وخطوات التحضير","View ingredients, details and preparation steps"))
                     .accessibilityIdentifier("recipeCard.details."+recipe.id.uuidString)
                 Menu{
-                    Button(t("تعديل","Edit"),action:onEdit)
-                    Button(t("حذف","Delete"),role:.destructive,action:onDelete)
+                    Button(t("تعديل","Edit")){LuqmaHapticManager.play(.light);onEdit()}
+                    Button(t("حذف","Delete"),role:.destructive){LuqmaHapticManager.play(.light);onDelete()}
                 }label:{
                     Image("RecipeCardMore").resizable().scaledToFit().frame(width:20,height:20)
                         .frame(width:44,height:44).contentShape(Rectangle())
@@ -230,10 +230,16 @@ private enum RecipeCardStyle {
     static let buttonText=Color(red:17/255,green:18/255,blue:20/255)
     static let calories=Color(red:225/255,green:148/255,blue:92/255)
 }
-private struct RecipeCardAddStyle:ButtonStyle {
+private struct RecipeCardAddStyle:PrimitiveButtonStyle {
+    func makeBody(configuration:Configuration)->some View {
+        LuqmaActionFeedbackStyle(appearance:RecipeCardAddAppearance()).makeBody(configuration:configuration)
+    }
+}
+private struct RecipeCardAddAppearance:ButtonStyle {
     func makeBody(configuration:Configuration)->some View {
         configuration.label.background(configuration.isPressed ? RecipeCardStyle.buttonPressed:RecipeCardStyle.button,
                                        in:RoundedRectangle(cornerRadius:12,style:.circular))
+            .luqmaPressFeedback(configuration.isPressed)
     }
 }
 

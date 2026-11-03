@@ -36,7 +36,13 @@ struct CFARadioIndicator: View {
     }
 }
 
-struct ApprovedAssessmentButtonStyle: ButtonStyle {
+struct ApprovedAssessmentButtonStyle: PrimitiveButtonStyle {
+    var feedback:LuqmaMotion.Feedback? = .light
+    func makeBody(configuration:Configuration)->some View {
+        LuqmaActionFeedbackStyle(appearance:ApprovedAssessmentButtonAppearance(),feedback:feedback).makeBody(configuration:configuration)
+    }
+}
+private struct ApprovedAssessmentButtonAppearance: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     func makeBody(configuration: Configuration) -> some View {

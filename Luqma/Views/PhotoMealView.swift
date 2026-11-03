@@ -26,7 +26,6 @@ import AVFoundation
     @State private var error:String?
     @State private var cameraMessage:String?
     @State private var cameraAccessBlocked=false
-    @State private var cancellationMessage:String?
     @State private var parts:[PhotoPart]=[]
     private struct ProductSelection:Identifiable {var id:UUID;var name:String}
     private struct EstimateSelection:Identifiable {var id:UUID;var estimate:MealPhotoEstimate}
@@ -41,6 +40,7 @@ import AVFoundation
     @State private var previewGeneration=UUID()
     @State private var photoGeneration=UUID()
     @State private var analysisGeneration=UUID()
+    @State private var analysisFeedback=LuqmaOperationFeedback()
     @State private var loadingPhoto=false
     @State private var ready=GeminiCredentialStore.isConfigured
     @FocusState private var descriptionFocused:Bool
@@ -65,19 +65,16 @@ import AVFoundation
         VStack(alignment:.leading,spacing:20){
             if parts.isEmpty{analysisHeader;photoInput}
             else{
-                review
+                review.luqmaMotionTransition()
                 DisclosureGroup(isExpanded:$showingPhotoInput){photoInput.padding(.top,12)}label:{
                     Label(diary.t("الصورة وإعادة التحليل","Photo and reanalysis"),systemImage:"camera")
                         .luqmaFont(.subheadline).foregroundStyle(Theme.text)
                 }.luqmaCard()
             }
         }
-        .luqmaMotion(.content,value:parts.isEmpty)
+        .luqmaMotion(.success,value:parts.isEmpty)
         .luqmaMotion(.content,value:loadingPhoto)
         .luqmaMotion(.content,value:busy)
-        .luqmaFeedback(.light,trigger:captureID)
-        .luqmaFeedback(.success,trigger:parts.isEmpty){old,new in old && !new}
-        .luqmaFeedback(.error,trigger:error){_,message in message != nil}
         .sheet(isPresented:$showingSetup,onDismiss:{ready=GeminiCredentialStore.isConfigured}){GeminiSettingsView()}
         .sheet(item:$editing){request in PhotoEstimateEditor(title:componentName(request.id),estimate:request.estimate){updated in
             guard let index=parts.firstIndex(where:{$0.id==request.id}) else{return false}
@@ -95,12 +92,12 @@ import AVFoundation
             };products[request.id]=(food,amount,unit);selection=nil;return true
         })}
         .onChange(of:item){_,value in loadPhoto(value)}
-        .onChange(of:imageData){_,data in analysisGeneration=UUID();analysisTask?.cancel();analysisTask=nil;busy=false;parts=[];products.removeAll();detailedComponents=false;showingPhotoInput=false;preparePhotoPreview(data);if analyzingCapture{analyzingCapture=false;if ready{analyze()}else{showingSetup=true}}}
+        .onChange(of:imageData){_,data in stopAnalysis();parts=[];products.removeAll();detailedComponents=false;showingPhotoInput=false;preparePhotoPreview(data);if analyzingCapture{analyzingCapture=false;if ready{analyze()}else{showingSetup=true}}}
         .onChange(of:phase){_,value in
-            if value != .active,busy{cancellationMessage=diary.t("توقف التحليل عند مغادرة الشاشة. افتح التطبيق وحاول مجددًا.","Analysis stopped when the app left the foreground. Reopen the app and retry.");analysisTask?.cancel()}
+            if value != .active,busy{stopAnalysis(message:diary.t("توقف التحليل عند مغادرة الشاشة. افتح التطبيق وحاول مجددًا.","Analysis stopped when the app left the foreground. Reopen the app and retry."))}
             if value == .active,AVCaptureDevice.authorizationStatus(for:.video) == .authorized,UIImagePickerController.isSourceTypeAvailable(.camera){cameraAccessBlocked=false;cameraMessage=nil;liveCamera=true}
         }
-        .onReceive(NotificationCenter.default.publisher(for:UIApplication.didReceiveMemoryWarningNotification)){_ in if busy{cancellationMessage=diary.t("توقف التحليل بسبب ضغط الذاكرة. حاول مجددًا.","Analysis stopped because of memory pressure. Retry.");analysisTask?.cancel()}}
+        .onReceive(NotificationCenter.default.publisher(for:UIApplication.didReceiveMemoryWarningNotification)){_ in if busy{stopAnalysis(message:diary.t("توقف التحليل بسبب ضغط الذاكرة. حاول مجددًا.","Analysis stopped because of memory pressure. Retry."))}}
         .onAppear{
             if !initialized{initialized=true;if let initialMeal{meal=initialMeal}}
             ready=GeminiCredentialStore.isConfigured
@@ -111,7 +108,7 @@ import AVFoundation
             #endif
             if let data=imageData,preview==nil,previewTask==nil{preparePhotoPreview(data)}
         }
-        .onDisappear{photoGeneration=UUID();analysisGeneration=UUID();previewGeneration=UUID();photoLoadTask?.cancel();analysisTask?.cancel();previewTask?.cancel();previewTask=nil}
+        .onDisappear{photoGeneration=UUID();previewGeneration=UUID();photoLoadTask?.cancel();stopAnalysis();previewTask?.cancel();previewTask=nil}
     }
     private var analysisHeader:some View {
         HStack(spacing:8){
@@ -147,15 +144,15 @@ import AVFoundation
                     cameraControl("photo.on.rectangle",size:48,radius:16)
                 }.buttonStyle(LuqmaPressStyle()).disabled(busy).accessibilityLabel(diary.t("رفع صورة","Choose photo"))
                 Button {
-                    if imageData != nil {if ready{analyze()}else{showingSetup=true}}
-                    else if liveCamera{captureID += 1}else{openCamera()}
+                    if imageData != nil {LuqmaHapticManager.play(.light);if ready{analyze()}else{showingSetup=true}}
+                    else if liveCamera{captureID += 1}else{LuqmaHapticManager.play(.light);openCamera()}
                 }label:{
                     ZStack{
                         Circle().strokeBorder(Theme.text,lineWidth:3).frame(width:72,height:72)
                         Circle().fill(Theme.text).frame(width:56,height:56)
                         Image(systemName:imageData == nil ? "camera":"sparkles").font(.system(size:22,weight:.regular)).foregroundStyle(Theme.background)
                     }
-                }.buttonStyle(LuqmaPressStyle()).disabled(busy || loadingPhoto)
+                }.buttonStyle(LuqmaPressStyle(feedback:nil)).disabled(busy || loadingPhoto)
                     .accessibilityLabel(imageData == nil ? diary.t("الكاميرا","Camera"):diary.t("تحليل الوجبة","Meal analysis"))
                     .accessibilityIdentifier("photo.shutter")
                 Button{imageData=nil;error=nil;openCamera()}label:{cameraControl("arrow.triangle.2.circlepath.camera",size:48,radius:16)}
@@ -178,7 +175,7 @@ import AVFoundation
             }.luqmaFont(.subheadline)
             Notice(text:diary.t("تُرسل الصورة والوصف إلى خدمة التحليل فقط؛ يبقى سجلك على جهازك.","Only the photo and description are sent to the analysis service; your diary stays on your device."))
             if loadingPhoto{SandowOperationState(title:diary.t("تجهيز الصورة…","Preparing photo…"),cancelLabel:diary.t("إلغاء","Cancel"),onCancel:{cancelPhotoLoad()})}
-            if busy{SandowOperationState(title:diary.t("تقدير المكونات والسعرات…","Estimating components and calories…"),cancelLabel:diary.t("إلغاء","Cancel"),onCancel:{analysisTask?.cancel()})}
+            if busy{SandowOperationState(title:diary.t("تقدير المكونات والسعرات…","Estimating components and calories…"),cancelLabel:diary.t("إلغاء","Cancel"),onCancel:{stopAnalysis()})}
             if let error{SandowStateAlert(text:error).luqmaMotionTransition()}
         }
     }
@@ -191,7 +188,7 @@ import AVFoundation
         GeometryReader{geometry in
             let width=geometry.size.width,height=geometry.size.height
             ZStack{
-                Theme.card
+                Theme.card.luqmaShimmer(active:preview == nil && (loadingPhoto || imageData != nil))
                 if let preview{Image(uiImage:preview).resizable().scaledToFill().frame(width:width,height:height).clipped()}
                 else if imageData == nil,liveCamera{
                     LuqmaMealCamera(captureID:captureID,active:phase == .active,onCapture:{data in
@@ -216,7 +213,7 @@ import AVFoundation
                     CFAScanBracketsShape().stroke(Theme.text,style:StrokeStyle(lineWidth:2,lineCap:.round,lineJoin:.round))
                         .frame(width:width*0.78,height:height*0.69).allowsHitTesting(false).accessibilityHidden(true)
                     if busy{
-                        Rectangle().fill(Theme.accent).frame(width:width*0.78,height:2)
+                        Rectangle().fill(Theme.accent.opacity(0.72)).frame(width:width*0.78,height:2)
                             .luqmaScanSweep(active:busy,travel:height*0.22).allowsHitTesting(false).accessibilityHidden(true)
                         VStack{Text(diary.t("جارٍ التحليل…","Analyzing…")).luqmaFont(.caption)
                             .padding(12).foregroundStyle(Theme.onAccent).background(Theme.accent,in:Capsule());Spacer()}.padding(16)
@@ -552,14 +549,49 @@ import AVFoundation
             }
         }
     }
-    private func analyze(){guard let imageData,!loadingPhoto else{return};descriptionFocused=false;busy=true;error=nil;cancellationMessage=nil;parts=[];products=[:]
-        let token=UUID();analysisGeneration=token;let context=description,language=diary.language
-        analysisTask=Task{do{
-            let result=try await GeminiMealService.shared.analyze(imageData:imageData,context:context,language:language);try Task.checkCancellation();guard analysisGeneration==token else{return}
-            var prepared:[UUID:(Food,Double,FoodUnit)]=[:]
-            for part in result.parts{guard let e=part.mealEstimate else{throw AppError.invalid("تقدير الوجبة غير مكتمل. حاول مجددًا.","The meal estimate is incomplete. Retry.")};prepared[part.id]=(try e.food(name:part.food.name,nameEn:part.food.nameEn,identity:part.id,language:diary.language),1,.serving)}
-            parts=result.parts;products=prepared;showingPhotoInput=false;detailedComponents=false
-        }catch is CancellationError{if analysisGeneration==token{error=cancellationMessage}}catch{if analysisGeneration==token{self.error=Task.isCancelled ? cancellationMessage:((error as? AppError)?.message(diary.language) ?? diary.t("تعذّر التحليل. تحقق من الاتصال وحاول مجددًا.","Analysis failed. Check your connection and retry."))}};if analysisGeneration==token{busy=false;analysisTask=nil}}
+    private func stopAnalysis(message:String?=nil) {
+        analysisGeneration=UUID()
+        analysisFeedback.cancel()
+        analysisTask?.cancel()
+        analysisTask=nil
+        busy=false
+        if let message { error=message }
+    }
+
+    private func analyze() {
+        guard let imageData,!loadingPhoto,!busy else { return }
+        descriptionFocused=false;busy=true;error=nil;parts=[];products=[:]
+        let token=UUID(), context=description, language=diary.language
+        analysisGeneration=token
+        analysisFeedback.begin(token)
+        analysisTask=Task {
+            defer { if analysisGeneration==token { busy=false;analysisTask=nil } }
+            do {
+                let result=try await GeminiMealService.shared.analyze(imageData:imageData,context:context,language:language)
+                try Task.checkCancellation()
+                guard analysisGeneration==token else { return }
+                var prepared:[UUID:(Food,Double,FoodUnit)]=[:]
+                for part in result.parts {
+                    guard let estimate=part.mealEstimate else {
+                        throw AppError.invalid("تقدير الوجبة غير مكتمل. حاول مجددًا.","The meal estimate is incomplete. Retry.")
+                    }
+                    prepared[part.id]=(try estimate.food(name:part.food.name,nameEn:part.food.nameEn,identity:part.id,language:language),1,.serving)
+                }
+                guard !result.parts.isEmpty else {
+                    throw AppError.invalid("لم يرجع التحليل أي مكونات. حاول مجددًا.","The analysis returned no components. Retry.")
+                }
+                guard analysisFeedback.finish(token) else { return }
+                products=prepared;parts=result.parts;showingPhotoInput=false;detailedComponents=false;busy=false
+                LuqmaHapticManager.play(.success)
+            } catch is CancellationError {
+                if analysisGeneration==token { analysisFeedback.cancel() }
+            } catch {
+                guard !Task.isCancelled,analysisGeneration==token,analysisFeedback.finish(token) else { return }
+                self.error=(error as? AppError)?.message(language) ?? diary.t("تعذّر التحليل. تحقق من الاتصال وحاول مجددًا.","Analysis failed. Check your connection and retry.")
+                busy=false
+                LuqmaHapticManager.play(.error)
+            }
+        }
     }
     #if DEBUG
     private func prepareApprovedPreview(){

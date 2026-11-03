@@ -82,11 +82,11 @@ struct GoalEditor:View {
             .luqmaMotion(.selection,value:canSave)
     }
     private var saveButton:some View {
-        Button{if diary.setGoals(goals){dismiss()}}label:{
+        Button{if diary.setGoals(goals){LuqmaFeedbackCenter.shared.saved(diary.t("تم حفظ التعديلات","Changes saved"));dismiss()}}label:{
             HStack(spacing:12){Text(diary.t("حفظ هدف السعرات","Set calorie goal"));Image(systemName:"checkmark").font(.system(size:15,weight:.medium))}
                 .luqmaFont(size:14,weight:.semibold,relativeTo:.subheadline).foregroundStyle(Theme.background)
                 .frame(maxWidth:.infinity,minHeight:56).background(Theme.text,in:RoundedRectangle(cornerRadius:12,style:.continuous))
-        }.buttonStyle(LuqmaPressStyle()).disabled(!canSave).opacity(canSave ? 1:0.4).accessibilityIdentifier("goals.save")
+        }.buttonStyle(LuqmaPressStyle(feedback:nil)).disabled(!canSave).opacity(canSave ? 1:0.4).accessibilityIdentifier("goals.save")
     }
     private var calorieEditor:some View {
         NavigationStack{Form{

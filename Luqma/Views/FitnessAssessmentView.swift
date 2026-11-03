@@ -191,7 +191,7 @@ struct FitnessAssessmentView: View {
             }.padding(.horizontal,18).padding(.vertical, prefix == "goal" ? 0 : 12).frame(minHeight:56)
                 .background(selection.wrappedValue == option ? Color(hex:0x393C43):Color(hex:0x24262B),in:RoundedRectangle(cornerRadius:18))
                 .overlay{RoundedRectangle(cornerRadius:20).stroke(selection.wrappedValue == option ? Color(hex:0x81858D).opacity(0.28):Color.clear,lineWidth:4).padding(-2)}}
-                .buttonStyle(LuqmaPressStyle()).accessibilityAddTraits(selection.wrappedValue == option ? .isSelected:[])
+                .buttonStyle(LuqmaPressStyle(feedback:nil)).accessibilityAddTraits(selection.wrappedValue == option ? .isSelected:[])
                 .accessibilityIdentifier("assessment.\(prefix).\(option.rawValue)")
         }}.luqmaMotion(.selection,value:selection.wrappedValue)
             .luqmaFeedback(.selection,trigger:selection.wrappedValue){_,_ in !pickerInteraction}
@@ -218,7 +218,7 @@ struct FitnessAssessmentView: View {
                     .contentShape(RoundedRectangle(cornerRadius:24))
                     .overlay{RoundedRectangle(cornerRadius:24).stroke(answers.sex == sex ? Color(hex:0xF97316):Color.clear,lineWidth:1.5)}
                     .overlay{RoundedRectangle(cornerRadius:27).stroke(answers.sex == sex ? Color(hex:0x7C2D12).opacity(0.65):Color.clear,lineWidth:4).padding(-2)}
-            }.buttonStyle(LuqmaPressStyle()).accessibilityLabel(sex.title(diary.language))
+            }.buttonStyle(LuqmaPressStyle(feedback:nil)).accessibilityLabel(sex.title(diary.language))
                 .accessibilityIdentifier("assessment.sex.\(sex.rawValue)").accessibilityAddTraits(answers.sex == sex ? .isSelected:[])
         }
             Spacer(minLength:20)
@@ -229,7 +229,7 @@ struct FitnessAssessmentView: View {
                 HStack(spacing:10){Text(diary.t("أفضل التخطي، شكراً!","Prefer to skip, thanks!"));Image(systemName:"xmark").font(.system(size:13,weight:.bold))}
                     .luqmaFont(size:16,weight:.semibold,relativeTo:.body).foregroundStyle(Color(hex:0xF97316))
                     .frame(maxWidth:.infinity,minHeight:52).background(Color(hex:0x431407),in:RoundedRectangle(cornerRadius:18))
-            }.buttonStyle(LuqmaPressStyle()).accessibilityIdentifier("assessment.sex.skip")
+            }.buttonStyle(LuqmaPressStyle(feedback:nil)).accessibilityIdentifier("assessment.sex.skip")
         }.luqmaMotion(.selection,value:answers.sex)
             .luqmaFeedback(.selection,trigger:answers.sex)
     }
@@ -263,7 +263,7 @@ struct FitnessAssessmentView: View {
                         .background(selected ? Color(hex:0x393C43):Color(hex:0x24262B),in:RoundedRectangle(cornerRadius:20))
                         .overlay{RoundedRectangle(cornerRadius:20).stroke(selected ? Color.white:Color.clear,lineWidth:2)}
                         .overlay{RoundedRectangle(cornerRadius:22).stroke(selected ? Color(hex:0x81858D).opacity(0.5):Color.clear,lineWidth:3).padding(-2)}
-                }.buttonStyle(LuqmaPressStyle()).accessibilityIdentifier("assessment.pace.\(pace.rawValue)").accessibilityAddTraits(selected ? .isSelected:[])
+                }.buttonStyle(LuqmaPressStyle(feedback:nil)).accessibilityIdentifier("assessment.pace.\(pace.rawValue)").accessibilityAddTraits(selected ? .isSelected:[])
             }}.luqmaMotion(.selection,value:answers.pace)
                 .luqmaFeedback(.selection,trigger:answers.pace)
             Text(diary.t("التعديل البسيط هو الافتراضي. يمكنك ترك وزن الهدف فارغًا؛ لا نحدد موعدًا مضمونًا للوصول إليه.","Smaller adjustment is the default. You can leave target weight blank; we do not promise a date to reach it."))
@@ -309,7 +309,7 @@ struct FitnessAssessmentView: View {
                 HStack{dietIcon(option);Spacer();Image(answers.diet == option ? "AssessmentChecked":"AssessmentUnchecked").frame(width:24,height:24)}
             }.padding(16).background(answers.diet == option ? Theme.surface:Theme.card,in:RoundedRectangle(cornerRadius:24))
                 .overlay{RoundedRectangle(cornerRadius:24).stroke(answers.diet == option ? Theme.controlBorder:Color.clear,lineWidth:2)}}
-                .buttonStyle(LuqmaPressStyle()).accessibilityIdentifier("assessment.diet.\(option.rawValue)").accessibilityAddTraits(answers.diet == option ? .isSelected:[])
+                .buttonStyle(LuqmaPressStyle(feedback:nil)).accessibilityIdentifier("assessment.diet.\(option.rawValue)").accessibilityAddTraits(answers.diet == option ? .isSelected:[])
         }}.luqmaMotion(.selection,value:answers.diet)
             .luqmaFeedback(.selection,trigger:answers.diet)
     }

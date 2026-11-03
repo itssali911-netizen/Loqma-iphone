@@ -58,7 +58,7 @@ import SwiftUI
                     .luqmaMotion(.content,value:draft != nil)
             }.scrollDismissesKeyboard(.interactively).appBackground()
                 .sandowNavigation(diary.t("استيراد وصفة", "Import recipe"),backLabel:diary.t("إغلاق", "Close"),onBack:{cancel();dismiss()})
-        }.luqmaFeedback(.success,trigger:saved){_,new in new}
+        }
             .luqmaFeedback(.error,trigger:error){_,message in message != nil}
             .onAppear { loadPreviewFixture() }.onDisappear { cancel() }
     }
@@ -184,7 +184,7 @@ import SwiftUI
             }
             Button(action: save) {
                 Label(diary.t("حفظ في مطبخي", "Save to my kitchen"), systemImage: "book.closed")
-            }.buttonStyle(LuqmaPrimaryButtonStyle()).disabled(!result.readyToSave || busy || saved || !pendingIngredientEdits.isEmpty)
+            }.buttonStyle(LuqmaPrimaryButtonStyle(feedback:nil)).disabled(!result.readyToSave || busy || saved || !pendingIngredientEdits.isEmpty)
             if !pendingIngredientEdits.isEmpty {
                 Text(diary.t("طبّق تعديلات القيم في المكونات قبل حفظ الوصفة.", "Apply your ingredient value edits before saving the recipe."))
                     .luqmaFont(.caption).foregroundStyle(Theme.muted)
@@ -253,7 +253,7 @@ import SwiftUI
         guard let draft, draft.readyToSave, !busy, !saved, pendingIngredientEdits.isEmpty else { return }
         do {
             let recipe = try draft.recipe(language: diary.language)
-            if diary.saveRecipe(recipe) { saved = true; dismiss() }
+            if diary.saveRecipe(recipe) { saved = true; LuqmaFeedbackCenter.shared.saved(diary.t("تم حفظ الوصفة","Recipe saved"));dismiss() }
             else { error = diary.error ?? diary.t("تعذّر حفظ الوصفة. حاول مجددًا.", "The recipe could not be saved. Try again.") }
         } catch { self.error = (error as? AppError)?.message(diary.language) ?? diary.t("راجع المقادير والحصص قبل الحفظ.", "Review quantities and servings before saving.") }
     }

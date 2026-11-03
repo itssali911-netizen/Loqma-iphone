@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// One source of truth for the approved macro vectors and their semantic tints.
 /// The supplied vectors are derived reference artwork, not original Figma exports.
@@ -105,7 +106,13 @@ struct LuqmaSectionHeader:View {
     }
 }
 
-struct LuqmaPrimaryButtonStyle:ButtonStyle {
+struct LuqmaPrimaryButtonStyle:PrimitiveButtonStyle {
+    var feedback:LuqmaMotion.Feedback? = .light
+    func makeBody(configuration:Configuration)->some View {
+        LuqmaActionFeedbackStyle(appearance:LuqmaPrimaryButtonAppearance(),feedback:feedback).makeBody(configuration:configuration)
+    }
+}
+private struct LuqmaPrimaryButtonAppearance:ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
     func makeBody(configuration:Configuration)->some View {
         configuration.label.luqmaFont(.headline).foregroundStyle(Theme.onAccent)
@@ -116,7 +123,13 @@ struct LuqmaPrimaryButtonStyle:ButtonStyle {
     }
 }
 
-struct LuqmaSecondaryButtonStyle:ButtonStyle {
+struct LuqmaSecondaryButtonStyle:PrimitiveButtonStyle {
+    var feedback:LuqmaMotion.Feedback? = .light
+    func makeBody(configuration:Configuration)->some View {
+        LuqmaActionFeedbackStyle(appearance:LuqmaSecondaryButtonAppearance(),feedback:feedback).makeBody(configuration:configuration)
+    }
+}
+private struct LuqmaSecondaryButtonAppearance:ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
     func makeBody(configuration:Configuration)->some View {
         configuration.label.luqmaFont(.headline).foregroundStyle(Theme.text)
@@ -124,6 +137,48 @@ struct LuqmaSecondaryButtonStyle:ButtonStyle {
             .background(Theme.surface,in:RoundedRectangle(cornerRadius:16,style:.continuous))
             .opacity(!isEnabled ? 0.4:configuration.isPressed ? 0.75:1)
             .luqmaPressFeedback(configuration.isPressed)
+    }
+}
+
+@MainActor final class LuqmaFeedbackCenter: ObservableObject {
+    struct Message: Identifiable {
+        let id=UUID()
+        let text:String
+    }
+    static let shared=LuqmaFeedbackCenter()
+    @Published private(set) var message:Message?
+    private var expiry:Task<Void,Never>?
+
+    func saved(_ text:String) {
+        expiry?.cancel()
+        let next=Message(text:text)
+        message=next
+        LuqmaHapticManager.play(.success)
+        UIAccessibility.post(notification:.announcement,argument:text)
+        expiry=Task { [weak self] in
+            do { try await Task.sleep(for:.seconds(2.8)) } catch { return }
+            guard self?.message?.id==next.id else { return }
+            self?.message=nil
+        }
+    }
+}
+
+struct LuqmaToastHost: View {
+    @ObservedObject private var center=LuqmaFeedbackCenter.shared
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    var body: some View {
+        Group {
+            if let message=center.message {
+                Label(message.text,systemImage:"checkmark.circle")
+                    .luqmaFont(.subheadline).foregroundStyle(Theme.text)
+                    .padding(.horizontal,14).padding(.vertical,10)
+                    .background(Theme.surface,in:RoundedRectangle(cornerRadius:16))
+                    .overlay { RoundedRectangle(cornerRadius:16).strokeBorder(Theme.stroke,lineWidth:1) }
+                    .transition(reduceMotion ? .opacity : .offset(y:8).combined(with:.opacity))
+                    .id(message.id)
+            }
+        }.animation(reduceMotion ? .easeOut(duration:0.14) : LuqmaMotion.animation(.toast,reduceMotion:false),value:center.message?.id)
+            .allowsHitTesting(false).accessibilityHidden(true)
     }
 }
 
@@ -242,7 +297,7 @@ struct FoodRow:View {
             Image(systemName:"chevron.forward").font(.system(size:12,weight:.medium)).foregroundStyle(Theme.muted).frame(width:24,height:40).accessibilityHidden(true)
         }.padding(12).frame(maxWidth:.infinity,minHeight:64,alignment:.leading)
             .background(Theme.card,in:RoundedRectangle(cornerRadius:14,style:.continuous))
-            .contentShape(RoundedRectangle(cornerRadius:14,style:.continuous))}.buttonStyle(LuqmaPressStyle())
+            .contentShape(RoundedRectangle(cornerRadius:14,style:.continuous))}.buttonStyle(LuqmaPressStyle(feedback:.selection))
             .accessibilityHint(diary.t("اختيار الطعام والكمية","Choose food and quantity"))
             .accessibilityIdentifier("food.result."+food.id)
     }

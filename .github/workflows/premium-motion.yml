@@ -1,0 +1,94 @@
+name: Luqma premium motion verification
+on:
+  push:
+    branches: [feature/premium-motion-20261103]
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+  BUNDLE_ID: app.luqma.diary
+  BUILD_NUMBER: '126'
+jobs:
+  native:
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [device, simulator]
+    runs-on: macos-26
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Resolve pinned packages
+        run: |
+          mkdir -p Evidence
+          xcodebuild -version | tee Evidence/toolchain.log
+          xcodebuild -resolvePackageDependencies -project Luqma.xcodeproj -scheme Luqma -clonedSourcePackagesDirPath BuildOutput/Packages > Evidence/packages.log 2>&1
+          python3 - <<'PY'
+          import sys
+          from pathlib import Path
+          sys.path.insert(0,'Scripts')
+          from vision_compat import apply_vision_compat
+          apply_vision_compat(Path('BuildOutput/Packages').resolve())
+          PY
+      - name: Compile iPhone Release and run Core and motion policy checks
+        if: matrix.mode == 'device'
+        run: |
+          xcodebuild -project Luqma.xcodeproj -scheme Luqma -clonedSourcePackagesDirPath BuildOutput/Packages -disableAutomaticPackageResolution -destination 'generic/platform=iOS' -configuration Release -derivedDataPath BuildOutput/device-derived CODE_SIGNING_ALLOWED=NO CURRENT_PROJECT_VERSION=126 build > Evidence/device-build.log 2>&1
+          swift test -j 2 > Evidence/core-tests.log 2>&1
+          python3 -B -m unittest BuildTests.test_native_motion BuildTests.test_macro_asset_integrity -v > Evidence/motion-policy.log 2>&1
+      - name: Exercise real search, accessibility, tabs and diary controls
+        if: matrix.mode == 'simulator'
+        run: |
+          python3 - <<'PY'
+          import json,os,sys
+          from pathlib import Path
+          sys.path.insert(0,'Scripts')
+          from ui_preview import command,select_runtime
+          from ui_interactions import run_scenario
+          output=Path('Evidence').resolve()
+          packages=Path('BuildOutput/Packages').resolve()
+          derived=Path('BuildOutput/simulator-derived').resolve()
+          report=dict(source_commit=os.environ['GITHUB_SHA'],physical_haptics_verified=False,live_analysis_verified=False,measured_fps=False,scenarios={})
+          runtime=select_runtime(json.loads(command(['xcrun','simctl','list','--json'],output,'inventory')))
+          cases=(
+              ('motion','MotionInteractionTests',('testArabicSearchAndHapticPreference','testNativeTabsSearchAndDismissal','testReduceMotionTabsSearchAndDismissal'),True),
+              ('diary','LuqmaInteractionTests',('testHomeKeepsMealLoggingWithoutSupplementarySections','testFoodAddResizePersistenceAndDelete','testGramAndServingQuantityRecalculateStoredFood','testRecipeDraftSurvivesIngredientSearch'),False),
+          )
+          try:
+              for group,klass,methods,record in cases:
+                  scenario=report['scenarios'][group]=dict(required_cases=list(methods))
+                  try:
+                      run_scenario(output/group,packages,derived,runtime,methods,scenario,'126',
+                          signing_settings=['CODE_SIGNING_ALLOWED=YES','CODE_SIGN_IDENTITY=-'],
+                          test_class=klass,record_video=record,timeout_seconds=2400)
+                  except Exception as error:
+                      scenario.update(status='failed',error=str(error))
+              if any(s.get('status')!='passed' for s in report['scenarios'].values()):
+                  raise RuntimeError('See scenario results; not every test group passed')
+          finally:
+              (output/'motion-results.json').write_text(json.dumps(report,indent=2)+'\n')
+          PY
+      - name: Export XCTest screenshots
+        if: always() && matrix.mode == 'simulator'
+        run: |
+          for group in motion diary; do
+            result="Evidence/$group/interactions.xcresult"
+            if [ -d "$result" ]; then
+              xcrun xcresulttool export attachments --path "$result" --output-path "Evidence/$group/attachments"
+            fi
+          done
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: LUQMA-PremiumMotion-${{ matrix.mode }}-${{ github.run_id }}
+          path: |
+            Evidence/*.log
+            Evidence/*.json
+            Evidence/*/*.log
+            Evidence/*/*.json
+            Evidence/*/*.mov
+            Evidence/*/attachments/
+          retention-days: 30

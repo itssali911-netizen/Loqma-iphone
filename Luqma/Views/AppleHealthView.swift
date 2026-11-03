@@ -74,8 +74,6 @@ struct HealthSettingsView: View {
             }.padding(16).padding(.bottom, 20)
         }.background(HealthPalette.background.ignoresSafeArea()).sandowNavigation(diary.t("صحتي", "Apple Health"), backLabel: diary.t("رجوع", "Back"))
             .accessibilityIdentifier("health.screen")
-            .luqmaFeedback(.success,trigger:health.lastSuccessfulSync){_,date in date != nil && health.snapshot?.hasReadableData == true}
-            .luqmaFeedback(.error,trigger:health.issue){_,issue in issue != nil && issue != .cancelled}
             .sheet(isPresented: $showingAccessGuide) {
                 NavigationStack {
                     ScrollView { accessGuide.padding(16) }

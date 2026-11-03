@@ -23,11 +23,19 @@ PROBE=r'''import SwiftUI
   for active in [false,true] { for reduced in [false,true] { for scene in [false,true] {
    precondition(LuqmaMotion.permitsContinuousMotion(active:active,reduceMotion:reduced,sceneIsActive:scene)==(active && !reduced && scene))
   }}}
-  func success(_ old:Bool,_ new:Bool,_ reduced:Bool=false,_ active:Bool=true)->Bool {
-   LuqmaMotion.shouldPlayFeedback(old:old,new:new,reduceMotion:reduced,sceneIsActive:active){_,next in next}
+  func success(_ old:Bool,_ new:Bool,_ enabled:Bool=true,_ active:Bool=true)->Bool {
+   LuqmaMotion.shouldPlayFeedback(old:old,new:new,enabled:enabled,sceneIsActive:active){_,next in next}
   }
   precondition(success(false,true));precondition(!success(true,false));precondition(!success(true,true))
-  precondition(!success(false,true,true));precondition(!success(false,true,false,false))
+  precondition(!success(false,true,false));precondition(!success(false,true,true,false))
+  let original=UUID(),retry=UUID()
+  var operation=LuqmaOperationFeedback()
+  precondition(!operation.finish(original))
+  operation.begin(original);operation.begin(retry)
+  precondition(!operation.finish(original))
+  precondition(operation.finish(retry));precondition(!operation.finish(retry))
+  operation.begin(original);operation.cancel()
+  precondition(!operation.finish(original))
   print("Actual motion policy passed: rest identity, Reduce Motion, foreground-only loading and directional success feedback")
  }
 }'''
