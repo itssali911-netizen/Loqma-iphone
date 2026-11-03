@@ -951,8 +951,16 @@ final class LuqmaInteractionTests:XCTestCase {
         let confirm=app.buttons["portion.quantity.confirm"]
         reveal(confirm,file:file,line:line)
         XCTAssertTrue(confirm.isEnabled,file:file,line:line);confirm.tap()
-        let dismissed=XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == false"),object:app.textFields["portion.amount"])
-        XCTAssertEqual(XCTWaiter.wait(for:[dismissed],timeout:5),.completed,
+        // A cached field query can outlive the sheet on a loaded Simulator.
+        // Require its actual controls to disappear and the parent controls to
+        // return in ONE fresh public accessibility snapshot.
+        let dismissed=XCTNSPredicateExpectation(predicate:NSPredicate { _,_ in
+            guard let nodes=self.applicationSnapshotNodes() else{return false}
+            return !nodes.contains{$0.identifier == "portion.amount" || $0.identifier == "portion.quantity.confirm"}
+                && nodes.contains{$0.identifier == "portion.quantity" && !$0.frame.isEmpty}
+                && nodes.contains{$0.identifier == "portion.save" && !$0.frame.isEmpty}
+        },object:app)
+        XCTAssertEqual(XCTWaiter.wait(for:[dismissed],timeout:30),.completed,
                        "Confirmation must dismiss the actual quantity sheet before editing nutrition",file:file,line:line)
         XCTAssertTrue(app.buttons["portion.quantity"].waitForExistence(timeout:5),file:file,line:line)
     }

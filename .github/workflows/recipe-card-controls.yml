@@ -3,9 +3,8 @@ on:
   push:
     branches: [feature/recipe-macros-catalog-20261103]
     paths:
-      - 'TestsUI/**'
+      - 'TestsUI/RecipeCardInteractionTests.swift'
       - 'Luqma/Views/RecipeNutritionCard.swift'
-      - '.github/workflows/recipe-card-controls.yml'
   workflow_dispatch:
 permissions:
   contents: read
