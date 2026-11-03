@@ -173,7 +173,7 @@ struct DiaryView:View {
             Text(localizedDate(value,"EEEEE")).luqmaFont(size:11,relativeTo:.caption).foregroundStyle(selected ? Theme.background:Theme.muted)
             Text(localizedDate(value,"d")).luqmaFont(size:15,weight:.semibold,relativeTo:.subheadline).monospacedDigit().foregroundStyle(selected ? Theme.background:Theme.text)
         }.frame(maxWidth:.infinity,minHeight:48).background(selected ? Theme.accent:Theme.surface,in:RoundedRectangle(cornerRadius:12,style:.continuous))
-            .luqmaMotion(.selection,value:selected)}.buttonStyle(LuqmaPressStyle())
+            .luqmaMotion(.selection,value:selected)}.buttonStyle(LuqmaPressStyle(feedback:nil))
             .accessibilityLabel(localizedDate(value,"EEEE, d MMMM"))
             .accessibilityAddTraits(selected ? .isSelected:[])
     }
@@ -572,9 +572,9 @@ struct EntryEditor:View {
         NavigationStack{Form{
             Section{Text(DisplayFormat.westernDigits(entry.name)).luqmaFont(.headline);TextField(diary.t("الكمية","Amount"),text:$amount,prompt:Text(diary.t("الكمية","Amount")).foregroundColor(Theme.muted)).keyboardType(.decimalPad).accessibilityIdentifier("entry.amount");Text(entry.unitLabel(diary.language)).foregroundStyle(Theme.muted)}.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
             Section(diary.t("إجمالي هذه الكمية","Nutrition for this amount")){NutritionView(value:total)}.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
-            Section{Button(diary.t("حذف الطعام","Delete food"),role:.destructive){deleting=true}.accessibilityIdentifier("entry.delete")}.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
+            Section{Button(diary.t("حذف الطعام","Delete food"),role:.destructive){LuqmaHapticManager.play(.light);deleting=true}.accessibilityIdentifier("entry.delete")}.listRowBackground(Theme.card).listRowSeparatorTint(Theme.stroke)
         }.sandowForm().sandowNavigation(diary.t("تعديل الطعام","Edit food"),backLabel:diary.t("إلغاء","Cancel"),onBack:{dismiss()},
-            actionLabel:diary.t("حفظ التعديل","Save changes"),actionEnabled:!(value == nil || (value ?? 0)<=0 || (value ?? 0)>10000),actionIdentifier:"entry.save",
+            actionLabel:diary.t("حفظ التعديل","Save changes"),actionEnabled:!(value == nil || (value ?? 0)<=0 || (value ?? 0)>10000),actionIdentifier:"entry.save",actionFeedback:nil,
             onAction:{if let value,diary.resize(entry.id,value){LuqmaFeedbackCenter.shared.saved(diary.t("تم حفظ التعديلات","Changes saved"));dismiss()}})
             .confirmationDialog(diary.t("حذف الطعام من اليوم؟","Delete this diary entry?"),isPresented:$deleting,titleVisibility:.visible){
                 Button(diary.t("حذف","Delete"),role:.destructive){

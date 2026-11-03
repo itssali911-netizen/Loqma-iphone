@@ -455,6 +455,7 @@ private struct LuqmaExpandableSearchBar: View {
     let onSubmit: () -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scene
+    @ScaledMetric(relativeTo:.subheadline) private var expandedHeight:CGFloat=56
     @FocusState private var focused: Bool
     @State private var expanded = false
     @State private var initialized = false
@@ -480,11 +481,11 @@ private struct LuqmaExpandableSearchBar: View {
                     .accessibilityLabel(expanded ? language.text("بحث عن المنتجات","Search products") : language.text("فتح البحث","Open search"))
                     .accessibilityIdentifier(expanded ? "search.submit" : "search.expand")
             }.frame(width:expanded ? width : 44,alignment:.trailing)
-                .frame(height:expanded ? 56 : 44)
+                .frame(height:expanded ? expandedHeight : 44)
                 .background(Theme.background)
                 .clipShape(RoundedRectangle(cornerRadius:expanded ? cornerRadius : 22,style:.continuous))
                 .frame(maxWidth:.infinity,alignment:.leading)
-        }.frame(height:expanded ? 56 : 44)
+        }.frame(height:expanded ? expandedHeight : 44)
             .luqmaFont(size:14,relativeTo:.subheadline).foregroundStyle(Theme.text)
             .onAppear {
                 visible=true
@@ -538,15 +539,15 @@ private struct LuqmaSearchSkeleton: View {
     var body: some View {
         VStack(spacing:10) {
             ForEach(0..<2) { _ in
-                HStack(spacing:12) {
-                    RoundedRectangle(cornerRadius:12).fill(Theme.surface).frame(width:44,height:44)
+                HStack(spacing:10) {
+                    RoundedRectangle(cornerRadius:10).fill(Theme.surface).frame(width:40,height:40)
                     VStack(alignment:.leading,spacing:8) {
                         Capsule().fill(Theme.surface).frame(maxWidth:164).frame(height:10)
                         Capsule().fill(Theme.surface).frame(maxWidth:96).frame(height:8)
                     }
                     Spacer(minLength:0)
-                }.padding(12).frame(minHeight:68)
-                    .background(Theme.card,in:RoundedRectangle(cornerRadius:16))
+                }.padding(12).frame(minHeight:64)
+                    .background(Theme.card,in:RoundedRectangle(cornerRadius:14,style:.continuous))
             }
         }.luqmaShimmer().accessibilityHidden(true).allowsHitTesting(false)
     }
@@ -684,7 +685,7 @@ struct FoodPortionView:View {
             } label:{chipLabel(meal.label(diary.language))}
                 .accessibilityIdentifier("portion.meal").accessibilityLabel(diary.t("نوع الوجبة","Meal type"))
                 .accessibilityValue(meal.label(diary.language))
-            Button{focusedField=nil;showingQuantity=true}label:{chipLabel(quantityLabel).luqmaNumericMotion(value:quantity ?? 0)}
+            Button{focusedField=nil;quantityBeforeEditing=quantity;showingQuantity=true}label:{chipLabel(quantityLabel).luqmaNumericMotion(value:quantity ?? 0)}
                 .buttonStyle(LuqmaPressStyle()).accessibilityIdentifier("portion.quantity")
                 .accessibilityLabel(diary.t("تحديد الكمية","Set quantity")).accessibilityValue(quantityLabel)
         }.frame(maxWidth:.infinity).environment(\.layoutDirection,.leftToRight)
@@ -847,6 +848,14 @@ struct FoodPortionView:View {
         }.buttonStyle(LuqmaPressStyle()).accessibilityIdentifier("portion.meal."+value.rawValue).accessibilityAddTraits(meal == value ? .isSelected:[])
             .luqmaMotion(.selection,value:meal == value)
     }
+    @State private var quantityBeforeEditing:Double?
+
+    private func confirmQuantity() {
+        if quantityBeforeEditing != quantity { LuqmaHapticManager.play(.adjustment) }
+        focusedField=nil
+        showingQuantity=false
+    }
+
     private var quantityEditor:some View {
         NavigationStack {
             ScrollView {
@@ -874,14 +883,14 @@ struct FoodPortionView:View {
                         .luqmaFont(.subheadline).foregroundStyle(secondaryColor).monospacedDigit()
                         .luqmaNumericMotion(value:quantity ?? 0)
                     if !quantityIsValid {Text(diary.t("أدخل كمية أكبر من صفر ولا تتجاوز 10000.","Enter an amount above zero and no greater than 10000.")).luqmaFont(.caption).foregroundStyle(textColor)}
-                    Button{focusedField=nil;showingQuantity=false}label:{Text(diary.t("تأكيد الكمية","Confirm quantity"))
+                    Button(action:confirmQuantity){Text(diary.t("تأكيد الكمية","Confirm quantity"))
                         .luqmaFont(size:16,weight:.semibold,relativeTo:.headline).foregroundStyle(.white)
                         .frame(maxWidth:.infinity,minHeight:52).background(orange,in:RoundedRectangle(cornerRadius:14))
-                    }.buttonStyle(LuqmaPressStyle()).disabled(!quantityIsValid).opacity(quantityIsValid ? 1:0.45).accessibilityIdentifier("portion.quantity.confirm")
+                    }.buttonStyle(LuqmaPressStyle(feedback:nil)).disabled(!quantityIsValid).opacity(quantityIsValid ? 1:0.45).accessibilityIdentifier("portion.quantity.confirm")
                 }.padding(20)
             }.background(chromeColor.ignoresSafeArea()).navigationTitle(diary.t("تحديد الكمية","Set quantity"))
                 .navigationBarTitleDisplayMode(.inline)
-                .toolbar{ToolbarItem(placement:.confirmationAction){Button(diary.t("تم","Done")){focusedField=nil;showingQuantity=false}.disabled(!quantityIsValid)}}
+                .toolbar{ToolbarItem(placement:.confirmationAction){Button(diary.t("تم","Done"),action:confirmQuantity).disabled(!quantityIsValid)}}
                 .toolbar{ToolbarItemGroup(placement:.keyboard){Spacer();Button(diary.t("تم","Done")){focusedField=nil}}}
         }.presentationDetents([.medium,.large]).presentationDragIndicator(.visible).presentationCornerRadius(30)
     }

@@ -112,6 +112,7 @@ struct RecipeNutritionCard:View {
     private var calorieAmount:some View {
         Text(decimal(perServing.kcal,0))
             .modifier(RecipeCardTypography(face:"WorkSans-SemiBold",size:20,lineHeight:26,relativeTo:.caption))
+            .luqmaNumericMotion(value:perServing.kcal)
             .environment(\.layoutDirection,.leftToRight)
             .fixedSize(horizontal:false,vertical:true)
             .accessibilityIdentifier("recipeCard.calories."+recipe.id.uuidString)
@@ -135,6 +136,7 @@ struct RecipeNutritionCard:View {
     private var servingAmount:some View {
         Text(decimal(recipe.portions,1))
             .modifier(RecipeCardTypography(face:"WorkSans-Medium",size:14,lineHeight:22,relativeTo:.caption))
+            .luqmaNumericMotion(value:recipe.portions)
             .environment(\.layoutDirection,.leftToRight)
             .fixedSize(horizontal:false,vertical:true)
     }
@@ -191,6 +193,7 @@ struct RecipeNutritionCard:View {
     private func amount(_ key:MacroKey)->some View {
         Text(decimal(perServing[key],1))
             .modifier(RecipeCardTypography(face:"WorkSans-SemiBold",size:20,lineHeight:26,relativeTo:.caption))
+            .luqmaNumericMotion(value:perServing[key])
             .environment(\.layoutDirection,.leftToRight)
             .fixedSize(horizontal:true,vertical:true)
     }

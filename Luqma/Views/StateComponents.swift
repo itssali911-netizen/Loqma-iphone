@@ -34,7 +34,8 @@ struct SandowOperationState:View {
                     .foregroundStyle(Theme.text).frame(minWidth:44,minHeight:44).buttonStyle(LuqmaPressStyle())
             }
         }.padding(12).foregroundStyle(Theme.text)
-            .background(Theme.card,in:RoundedRectangle(cornerRadius:20)).accessibilityElement(children:.contain)
+            .background { RoundedRectangle(cornerRadius:20).fill(Theme.card).luqmaShimmer() }
+            .accessibilityElement(children:.contain)
             .luqmaMotionTransition()
     }
 }

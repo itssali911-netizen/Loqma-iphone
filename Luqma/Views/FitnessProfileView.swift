@@ -261,7 +261,7 @@ struct FitnessPlanReviewView: View {
                         .foregroundStyle(calorieUnit == unit ? Color.white:Color(hex:0x9EA0A5))
                         .frame(maxWidth:.infinity,minHeight:56)
                         .background(calorieUnit == unit ? Color(hex:0x676C75):Color.clear,in:RoundedRectangle(cornerRadius:16))
-                }.buttonStyle(LuqmaPressStyle()).accessibilityAddTraits(calorieUnit == unit ? .isSelected:[])
+                }.buttonStyle(LuqmaPressStyle(feedback:nil)).accessibilityAddTraits(calorieUnit == unit ? .isSelected:[])
                     .accessibilityIdentifier("fitness.plan.unit.\(unit.rawValue)")
             }}.padding(4).background(Color(hex:0x24262B),in:RoundedRectangle(cornerRadius:20))
                 .environment(\.layoutDirection,.leftToRight)

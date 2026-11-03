@@ -312,6 +312,7 @@ private struct SandowNavigationChrome:ViewModifier {
     var actionLabel:String?
     var actionEnabled:Bool
     var actionIdentifier:String?
+    var actionFeedback:LuqmaMotion.Feedback?
     var onAction:(()->Void)?
     @Environment(\.dismiss) private var dismiss
     func body(content:Content)->some View {
@@ -334,7 +335,7 @@ private struct SandowNavigationChrome:ViewModifier {
             }
             .safeAreaInset(edge:.bottom,spacing:0){
                 if let actionLabel,let onAction{
-                    Button(actionLabel,action:onAction).buttonStyle(LuqmaPrimaryButtonStyle()).disabled(!actionEnabled)
+                    Button(actionLabel,action:onAction).buttonStyle(LuqmaPrimaryButtonStyle(feedback:actionFeedback)).disabled(!actionEnabled)
                         .accessibilityIdentifier(actionIdentifier ?? "navigation.primaryAction")
                         .padding(.horizontal,16).padding(.top,10).padding(.bottom,8).background(Theme.background)
                 }
@@ -343,8 +344,10 @@ private struct SandowNavigationChrome:ViewModifier {
 }
 extension View {
     func sandowNavigation(_ title:String,backLabel:String,onBack:(()->Void)?=nil,
-                          actionLabel:String?=nil,actionEnabled:Bool=true,actionIdentifier:String?=nil,onAction:(()->Void)?=nil)->some View {
+                          actionLabel:String?=nil,actionEnabled:Bool=true,actionIdentifier:String?=nil,
+                          actionFeedback:LuqmaMotion.Feedback? = .light,onAction:(()->Void)?=nil)->some View {
         modifier(SandowNavigationChrome(title:title,backLabel:backLabel,onBack:onBack,
-                                        actionLabel:actionLabel,actionEnabled:actionEnabled,actionIdentifier:actionIdentifier,onAction:onAction))
+                                        actionLabel:actionLabel,actionEnabled:actionEnabled,actionIdentifier:actionIdentifier,
+                                        actionFeedback:actionFeedback,onAction:onAction))
     }
 }

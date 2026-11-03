@@ -221,7 +221,7 @@ private struct LuqmaShimmer: ViewModifier {
                         .phaseAnimator([false,true]) { view, end in
                             view.offset(x:end ? proxy.size.width : -band)
                         } animation:{_ in .linear(duration:1.25)}
-                }.clipped().mask(content).allowsHitTesting(false).accessibilityHidden(true)
+                }.clipped().mask { content }.allowsHitTesting(false).accessibilityHidden(true)
             }
         } else { content }
     }

@@ -327,7 +327,7 @@ struct RecipeDetailView:View {
                                 .luqmaFont(.caption).foregroundStyle(Theme.muted).monospacedDigit()
                         }.frame(maxWidth:.infinity,alignment:.leading)
                     }.frame(minHeight:44).contentShape(Rectangle())
-                }.buttonStyle(LuqmaPressStyle()).accessibilityLabel(DisplayFormat.westernDigits(ingredient.name)+", "+ingredientQuantity(ingredient,recipe:recipe))
+                }.buttonStyle(LuqmaPressStyle(feedback:nil)).accessibilityLabel(DisplayFormat.westernDigits(ingredient.name)+", "+ingredientQuantity(ingredient,recipe:recipe))
                     .accessibilityValue(isChecked ? diary.t("محدد","Checked"):diary.t("غير محدد","Unchecked"))
                     .accessibilityAddTraits(isChecked ? .isSelected:[]).accessibilityIdentifier("recipeDetail.check."+ingredient.id.uuidString)
                 VStack(alignment:.trailing,spacing:2){
@@ -395,7 +395,7 @@ struct RecipeEditor:View {
             }
         }.sandowForm().luqmaReviewKeyboard().sandowNavigation(diary.t("حفظ في مطبخي","Save to kitchen"),backLabel:diary.t("إلغاء","Cancel"),onBack:{dismiss()},
             actionLabel:diary.t("حفظ","Save"),actionEnabled:!recipe.name.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty && !recipe.ingredients.isEmpty && recipe.portions.isFinite && recipe.portions>0 && (!byWeight || (recipe.cookedWeight.map{$0.isFinite && $0>0} ?? false)),
-            onAction:{if !byWeight{recipe.cookedWeight=nil};if diary.saveRecipe(recipe){LuqmaFeedbackCenter.shared.saved(diary.t("تم حفظ الوصفة","Recipe saved"));dismiss()}})
+            actionFeedback:nil,onAction:{if !byWeight{recipe.cookedWeight=nil};if diary.saveRecipe(recipe){LuqmaFeedbackCenter.shared.saved(diary.t("تم حفظ الوصفة","Recipe saved"));dismiss()}})
             .fullScreenCover(isPresented:$adding){FoodAddView{f,a,u,_ in do{let n=try f.total(a,unit:u);recipe.ingredients.append(Ingredient(id:UUID(),name:f.label(diary.language),amount:a,unit:u,kcal:n.kcal,protein:n.protein,carbs:n.carbs,fat:n.fat))
                 if MealPhotoEstimate.isValidPhotoEstimate(f) || f.sourceDescription=="luqma:estimated-components"{let note=diary.t("تحتوي الوصفة على قيم مقدّرة من صورة؛ راجعها قبل الاستخدام.","This recipe includes photo estimates; review them before use.");if !recipe.notes.contains(note){recipe.notes=String((recipe.notes+"\n"+note).trimmingCharacters(in:.whitespacesAndNewlines).prefix(2000))}}
                 return true}catch{diary.report(error);return false}}}
