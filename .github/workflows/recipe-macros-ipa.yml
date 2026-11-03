@@ -1,0 +1,89 @@
+name: Luqma reviewed build125 re-signable IPA
+on:
+  push:
+    branches: [feature/recipe-macros-catalog-20261103]
+    paths: ['.github/workflows/recipe-macros-ipa.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+  BUNDLE_ID: app.luqma.diary
+  BUILD_NUMBER: '125'
+jobs:
+  device-ipa:
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+      - name: Preserve the exact reviewed application and test source
+        run: git diff --exit-code 781c63a729c4e60389581111017a064100a82d92 HEAD -- Luqma Luqma.xcodeproj Package.swift Tests TestsUI Scripts
+      - name: Run Core and BuildTests then build and package the real iPhone Release target
+        run: python3 Scripts/build_ios.py sideload --output BuildOutput
+      - name: Verify the actual device IPA and prepare the download
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,plistlib,shutil,subprocess,sys,zipfile
+          from pathlib import Path
+          sys.path.insert(0,'Scripts')
+          from verify_healthkit_signing import inspect_ipa
+          source=Path('BuildOutput/Luqma-Sideload.ipa')
+          summary=json.loads(Path('BuildOutput/build-summary.json').read_text())
+          assert summary['mode']=='sideload' and summary['commit']==os.environ['GITHUB_SHA']
+          assert summary['bundle_id']=='app.luqma.diary'
+          output=Path('Delivery')
+          output.mkdir()
+          with zipfile.ZipFile(source) as archive:
+              assert archive.testzip() is None
+              app='Payload/Luqma.app/'
+              info=plistlib.loads(archive.read(app+'Info.plist'))
+              assert info['CFBundleIdentifier']=='app.luqma.diary'
+              assert info['CFBundleVersion']=='125'
+              assert info['CFBundleSupportedPlatforms']==['iPhoneOS']
+              assert info['NSHealthShareUsageDescription']
+              assert archive.getinfo(app+'Assets.car').file_size>0
+              for font in info['UIAppFonts']:
+                  assert archive.read(app+font)==(Path('Luqma/Resources')/font).read_bytes(),font
+          target=output/f'LUQMA-{info["CFBundleShortVersionString"]}-build125-Resignable.ipa'
+          shutil.copy2(source,target)
+          report=inspect_ipa(target,'app.luqma.diary')
+          (output/'signing-report.json').write_text(json.dumps(report,indent=2)+'\n')
+          expected={'BuildIntegrity':'PASS','CodeSignature':'PASS','ProvisioningProfile':'ABSENT',
+                    'HealthKitEntitlement':'PRESENT','HealthKitProfileAuthorization':'NOTVERIFIED',
+                    'DeviceInstallation':'NOTTESTED','RealHealthData':'NOTTESTED'}
+          assert report['exit_code']==2 and all(report['statuses'].get(k)==v for k,v in expected.items()),report['statuses']
+          assert report['evidence']['signing']['signing_kind']=='ADHOC_HASH'
+          assert report['evidence']['signing']['apple_identity_verified'] is False
+          digest=hashlib.sha256(target.read_bytes()).hexdigest()
+          manifest=dict(source_commit=os.environ['GITHUB_SHA'],reviewed_app_source='781c63a729c4e60389581111017a064100a82d92',
+              production_source_unchanged=True,application_tree=subprocess.check_output(['git','rev-parse','HEAD:Luqma'],text=True).strip(),
+              bundle_identifier=info['CFBundleIdentifier'],version=info['CFBundleShortVersionString'],build=info['CFBundleVersion'],
+              ipa_file=target.name,ipa_sha256=digest,ipa_bytes=target.stat().st_size,platform='iPhoneOS',architecture='arm64',
+              signing_kind='ADHOC_HASH',apple_signed=False,provisioning_profile_present=False,requires_resigning=True,
+              physical_device_verified=False,healthkit_profile_authorization_verified=False)
+          (output/'delivery-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+          shutil.copy2('Luqma/Luqma.entitlements',output/'Requested-HealthKit.entitlements')
+          (output/'README-AR.txt').write_text('لُقمة 2.9 — بناء125، بآخر تعديلات الماكروز والرئيسية والبحث وبطاقة الوصفة.\n'
+              'هذا IPA لأجهزة iPhone الحقيقية، ويتطلب إعادة توقيع متوافقة قبل التثبيت عبر iLoader أو غيره.\n'
+              'التوقيع المحلي للتحقق من سلامة الملفات، وليس شهادة توزيع Apple.\n'
+              'HealthKit يتطلب ملف تزويد نهائيًا يسمح بصلاحيته مع احتفاظ أداة التوقيع بها؛ لم يُختبر على آيفون فعلي.\n'
+              'احفظ نسخة احتياطية من بياناتك داخل التطبيق قبل التحديث، وحافظ على نفس معرف التطبيق وفريق التوقيع.\n'
+              'لم يُستورد كتالوج OFF الكامل إلى خادم بعد؛ البحث الحالي يعمل بالمصدر السابق.\n',encoding='utf8')
+          (output/'SHA256SUMS.txt').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.name+'\n'
+              for p in sorted(output.iterdir()) if p.is_file() and p.name!='SHA256SUMS.txt'))
+          print(json.dumps(manifest,indent=2))
+          PY
+      - name: Preserve the IPA and actual build evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-build125-IPA-${{ github.run_id }}
+          path: |
+            Delivery/
+            BuildOutput/build-summary.json
+            BuildOutput/*.log
+          if-no-files-found: error
+          retention-days: 30
