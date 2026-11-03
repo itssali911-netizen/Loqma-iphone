@@ -10,6 +10,7 @@ on:
       - 'Scripts/**'
       - 'BuildTests/**'
       - '!BuildTests/test_off_catalog_server.py'
+      - '!Luqma/Views/RecipeNutritionCard.swift'
   workflow_dispatch:
 permissions:
   contents: read

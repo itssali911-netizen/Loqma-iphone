@@ -4,6 +4,7 @@ on:
     branches: [feature/recipe-macros-catalog-20261103]
     paths:
       - 'TestsUI/**'
+      - 'Luqma/Views/RecipeNutritionCard.swift'
       - '.github/workflows/recipe-card-controls.yml'
   workflow_dispatch:
 permissions:
@@ -24,8 +25,35 @@ jobs:
       - name: Resolve the unchanged native dependencies
         run: |
           xcodebuild -resolvePackageDependencies -project Luqma.xcodeproj -scheme Luqma -clonedSourcePackagesDirPath BuildOutput/Packages > resolve-packages.log 2>&1
+      - name: Compile the current real iPhone Release target
+        run: |
+          python3 - <<'PY'
+          import sys
+          from pathlib import Path
+          sys.path.insert(0,'Scripts')
+          from vision_compat import apply_vision_compat
+          apply_vision_compat(Path('BuildOutput/Packages'))
+          PY
+          xcodebuild -project Luqma.xcodeproj -scheme Luqma -clonedSourcePackagesDirPath BuildOutput/Packages -disableAutomaticPackageResolution -destination 'generic/platform=iOS' -configuration Release -derivedDataPath BuildOutput/device-derived CODE_SIGNING_ALLOWED=NO CURRENT_PROJECT_VERSION=125 build > device-build.log 2>&1
       - name: Run all nine native interaction cases on disposable Simulators
         run: python3 Scripts/recipe_card_review.py controls
+      - name: Capture the changed card at normal, narrow, long, large-value and accessibility sizes
+        if: ${{ !cancelled() }}
+        run: |
+          python3 - <<'PY'
+          import sys,json
+          from pathlib import Path
+          sys.path.insert(0,'Scripts')
+          import ui_preview
+          from recipe_card_review import review_routes,card_cases
+          app=Path('BuildOutput/simulator-derived/Build/Products/Debug-iphonesimulator/Luqma.app').resolve()
+          if not app.is_dir():
+              raise SystemExit('No current Simulator application exists; no screenshots can be claimed')
+          for language in ('ar','en'):
+              cases=card_cases(language)
+              with review_routes(cases):
+                  ui_preview.capture(Path('Verified-Card-'+language).resolve(),Path('BuildOutput/Packages').resolve(),app,'app.luqma.diary',6.0,language=language,screens=[case['screen'] for case in cases])
+          PY
       - name: Export genuine XCTest screenshots and geometry attachments
         if: always()
         run: |
@@ -42,6 +70,11 @@ jobs:
           name: LUQMA-Recipe-Control-Verification-${{ github.run_id }}
           path: |
             resolve-packages.log
+            device-build.log
+            Verified-Card-*/*.png
+            Verified-Card-*/*.json
+            Verified-Card-*/*.log
+            Verified-Card-*/font-audits/
             Recipe-Review-Controls/*.json
             Recipe-Review-Controls/*.log
             Recipe-Review-Controls/*/*.json

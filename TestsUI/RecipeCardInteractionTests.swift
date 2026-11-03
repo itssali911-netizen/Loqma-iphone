@@ -100,6 +100,11 @@ final class RecipeCardInteractionTests:XCTestCase {
         assertControlFrames(card:card)
         assertNutritionFrames(card:card)
         XCTAssertTrue(element("recipeCard.macro.protein."+id).label.contains("99999.9"))
+        let protein=element("recipeCard.macro.protein."+id)
+        let carbs=element("recipeCard.macro.carbs."+id)
+        let fat=element("recipeCard.macro.fat."+id)
+        XCTAssertLessThan(protein.frame.midY,carbs.frame.midY,"Whole macro groups must stack when the decimal values do not fit columns")
+        XCTAssertLessThan(carbs.frame.midY,fat.frame.midY)
         capture(name:"Recipe card — large values — native 320 points")
     }
     private func assertNutritionFrames(card:XCUIElement) {

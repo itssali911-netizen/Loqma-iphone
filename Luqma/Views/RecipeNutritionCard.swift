@@ -145,16 +145,25 @@ struct RecipeNutritionCard:View {
     }
     @ViewBuilder private var macros:some View {
         if typeSize.isAccessibilitySize {
-            VStack(spacing:16){ForEach(MacroKey.allCases){macro($0)}}
+            macroStack
         }else{
-            HStack(spacing:12){
-                macro(.protein)
-                separator
-                macro(.carbs)
-                separator
-                macro(.fat)
-            }.frame(minHeight:macroHeight)
+            // Fit the complete, unbroken numeric values before choosing columns.
+            // If they need more room, stack whole macros instead of splitting
+            // a decimal number or shrinking the reference typography.
+            ViewThatFits(in:.horizontal){
+                HStack(spacing:12){
+                    macro(.protein)
+                    separator
+                    macro(.carbs)
+                    separator
+                    macro(.fat)
+                }.frame(minHeight:macroHeight)
+                macroStack
+            }
         }
+    }
+    private var macroStack:some View {
+        VStack(spacing:16){ForEach(MacroKey.allCases){macro($0)}}
     }
     private var separator:some View {
         Rectangle().fill(RecipeCardStyle.divider).frame(width:1,height:30).accessibilityHidden(true)
@@ -183,6 +192,7 @@ struct RecipeNutritionCard:View {
         Text(decimal(perServing[key],1))
             .modifier(RecipeCardTypography(face:"WorkSans-SemiBold",size:20,lineHeight:26,relativeTo:.caption))
             .environment(\.layoutDirection,.leftToRight)
+            .fixedSize(horizontal:true,vertical:true)
     }
     private var unit:some View {
         Text(t("جم","g")).modifier(RecipeCardTypography(face:"Changa-Regular",size:12,lineHeight:22,relativeTo:.caption))
