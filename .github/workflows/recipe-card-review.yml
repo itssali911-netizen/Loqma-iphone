@@ -7,7 +7,6 @@ on:
       - 'Luqma.xcodeproj/**'
       - 'Package.swift'
       - 'Tests/**'
-      - 'TestsUI/**'
       - 'Scripts/**'
       - 'BuildTests/**'
       - '!BuildTests/test_off_catalog_server.py'

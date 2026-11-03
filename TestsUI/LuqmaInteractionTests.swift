@@ -198,13 +198,13 @@ final class LuqmaInteractionTests:XCTestCase {
         XCTAssertTrue(name.waitForExistence(timeout:10));name.tap();name.typeText("Recipe review")
         let keyboardDone=app.buttons["Dismiss keyboard"]
         XCTAssertTrue(keyboardDone.waitForExistence(timeout:5));keyboardDone.tap()
-        XCTAssertEqual(XCTWaiter.wait(for:[XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == false"),object:app.keyboards.firstMatch)],timeout:5),.completed)
+        waitForRecipeKeyboardDismissal()
         let toggle=app.switches["recipe.byWeight"]
         reveal(toggle);toggle.switches.firstMatch.tap()
         let cooked=app.textFields["Cooked weight"]
         reveal(cooked);replace(cooked,with:"100")
         XCTAssertTrue(keyboardDone.waitForExistence(timeout:5));keyboardDone.tap()
-        XCTAssertEqual(XCTWaiter.wait(for:[XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == false"),object:app.keyboards.firstMatch)],timeout:5),.completed)
+        waitForRecipeKeyboardDismissal()
         reveal(app.buttons["recipe.addIngredient"]);app.buttons["recipe.addIngredient"].tap()
         let personal=app.buttons["search.filter.3"]
         XCTAssertTrue(personal.waitForExistence(timeout:15));personal.tap()
@@ -547,6 +547,17 @@ final class LuqmaInteractionTests:XCTestCase {
         XCTAssertEqual(XCTWaiter.wait(for:[dismissed],timeout:5),.completed,"Saving must dismiss the actual goal sheet before the next diary action.\n"+app.debugDescription)
         XCTAssertTrue(app.buttons["nav.today"].waitForExistence(timeout:10))
         return value
+    }
+
+    private func waitForRecipeKeyboardDismissal(file:StaticString=#filePath,line:UInt=#line) {
+        // A single native AX snapshot avoids retrying a stale FirstMatch query
+        // while iOS removes the keyboard window. Still require actual absence.
+        let gone=XCTNSPredicateExpectation(predicate:NSPredicate { _,_ in
+            guard let nodes=self.applicationSnapshotNodes() else{return false}
+            return !nodes.contains{$0.elementType == .keyboard}
+        },object:app)
+        XCTAssertEqual(XCTWaiter.wait(for:[gone],timeout:10),.completed,
+                       "The actual keyboard must close before using recipe controls",file:file,line:line)
     }
 
     private func numeric(_ value:String)->Double? {Double(value.replacingOccurrences(of:",",with:"").replacingOccurrences(of:" ",with:""))}

@@ -124,8 +124,10 @@ final class RecipeCardInteractionTests:XCTestCase {
         for role in ["add","details","more"] {
             let control=app.buttons["recipeCard."+role+"."+id]
             XCTAssertTrue(control.exists && control.isEnabled)
-            XCTAssertGreaterThanOrEqual(control.frame.width,44)
-            XCTAssertGreaterThanOrEqual(control.frame.height,44)
+            // AX frames use floating-point transforms (e.g. 43.999999999999986).
+            // A hundredth of a point is far below one Retina pixel.
+            XCTAssertGreaterThanOrEqual(control.frame.width,44-0.01)
+            XCTAssertGreaterThanOrEqual(control.frame.height,44-0.01)
             XCTAssertGreaterThanOrEqual(control.frame.minX,card.frame.minX)
             XCTAssertLessThanOrEqual(control.frame.maxX,card.frame.maxX)
             XCTAssertLessThanOrEqual(control.frame.maxY,card.frame.maxY)

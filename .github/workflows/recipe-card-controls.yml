@@ -1,0 +1,51 @@
+name: Luqma focused recipe interaction verification
+on:
+  push:
+    branches: [feature/recipe-macros-catalog-20261103]
+    paths:
+      - 'TestsUI/**'
+      - '.github/workflows/recipe-card-controls.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+  BUNDLE_ID: app.luqma.diary
+  BUILD_NUMBER: '125'
+jobs:
+  native-controls:
+    runs-on: macos-26
+    timeout-minutes: 80
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+      - name: Resolve the unchanged native dependencies
+        run: |
+          xcodebuild -resolvePackageDependencies -project Luqma.xcodeproj -scheme Luqma -clonedSourcePackagesDirPath BuildOutput/Packages > resolve-packages.log 2>&1
+      - name: Run all nine native interaction cases on disposable Simulators
+        run: python3 Scripts/recipe_card_review.py controls
+      - name: Export genuine XCTest screenshots and geometry attachments
+        if: always()
+        run: |
+          for group in card production-flows; do
+            result="Recipe-Review-Controls/$group/interactions.xcresult"
+            if [ -d "$result" ]; then
+              xcrun xcresulttool export attachments --path "$result" --output-path "Recipe-Review-Controls/$group/attachments"
+            fi
+          done
+      - name: Preserve actual native test reports and screenshots
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-Recipe-Control-Verification-${{ github.run_id }}
+          path: |
+            resolve-packages.log
+            Recipe-Review-Controls/*.json
+            Recipe-Review-Controls/*.log
+            Recipe-Review-Controls/*/*.json
+            Recipe-Review-Controls/*/*.log
+            Recipe-Review-Controls/*/attachments/
+            Recipe-Review-Controls/*/interactions.xcresult/
+          retention-days: 30
