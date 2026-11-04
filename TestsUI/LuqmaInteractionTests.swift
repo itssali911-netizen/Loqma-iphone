@@ -31,12 +31,13 @@ final class LuqmaInteractionTests:XCTestCase {
         XCTAssertFalse(app.staticTexts["Quick search"].exists)
         XCTAssertFalse(app.staticTexts["Daily routine"].exists)
         XCTAssertTrue(app.buttons["nav.add"].isHittable)
-        XCTAssertTrue(app.buttons["diary.search"].isHittable,"The fixed original search must survive pruning the supplementary sections")
+        XCTAssertTrue(app.buttons["diary.search"].isHittable,"The compact search remains available from Today")
         let proof=XCTAttachment(screenshot:app.screenshot())
         proof.name="Actual home after removal of supplementary sections"
         proof.lifetime = .keepAlways;add(proof)
         app.buttons["diary.search"].tap()
-        XCTAssertTrue(app.textFields["search.query"].waitForExistence(timeout:10))
+        XCTAssertTrue(app.buttons["search.close"].waitForExistence(timeout:10))
+        XCTAssertTrue(app.textFields["search.query"].waitForExistence(timeout:10),"The Today shortcut must open the editable field in one tap")
         XCTAssertTrue(app.buttons["search.filter.1"].exists)
         app.buttons["search.close"].tap()
     }

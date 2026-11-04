@@ -6,15 +6,18 @@ struct DiaryView:View {
     @EnvironmentObject var diary:DiaryStore
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var date=Date()
-    @State private var adding=false
     @State private var goals=false
     @State private var selectingDate=false
     @State private var showingCalorieIntake=false
     @State private var showingNotifications=false
     @State private var editing:DiaryEntry?
-    @State private var chosenMeal:Meal?
-    @State private var searchQuery=""
-    @State private var focusSearchOnOpen=false
+    private struct FoodSearchPresentation: Identifiable {
+        let id = UUID()
+        let query: String
+        let meal: Meal?
+        let focus: Bool
+    }
+    @State private var foodSearch: FoodSearchPresentation?
     @State private var expandedMeals:Set<Meal>=[]
     private var day:String {DayKey.string(date)}
     var body:some View {diaryScroll}
@@ -30,7 +33,31 @@ struct DiaryView:View {
                 header
                 #endif
             }
-            .fullScreenCover(isPresented:$adding){FoodAddView(initialQuery:searchQuery,initialMeal:chosenMeal,onPhotoCommit:{foods,meal in do{let entries=try foods.map{try DiaryEntry(food:$0.0,amount:$0.1,unit:$0.2,meal:meal,day:day,language:diary.language)};guard diary.add(entries,foods:foods.map{$0.0}) else{return false};showMealSaved();return true}catch{diary.report(error);return false}},autoFocusSearch:focusSearchOnOpen){food,amount,unit,meal in do{let entry=try DiaryEntry(food:food,amount:amount,unit:unit,meal:meal,day:day,language:diary.language);guard diary.add([entry],foods:[food]) else{return false};showMealSaved();return true}catch{diary.report(error);return false}}}
+            .fullScreenCover(item:$foodSearch) { request in
+                FoodAddView(initialQuery:request.query,initialMeal:request.meal,onPhotoCommit:{ foods,meal in
+                    do {
+                        let entries = try foods.map {
+                            try DiaryEntry(food:$0.0,amount:$0.1,unit:$0.2,meal:meal,day:day,language:diary.language)
+                        }
+                        guard diary.add(entries,foods:foods.map { $0.0 }) else { return false }
+                        showMealSaved()
+                        return true
+                    } catch {
+                        diary.report(error)
+                        return false
+                    }
+                },autoFocusSearch:request.focus) { food,amount,unit,meal in
+                    do {
+                        let entry = try DiaryEntry(food:food,amount:amount,unit:unit,meal:meal,day:day,language:diary.language)
+                        guard diary.add([entry],foods:[food]) else { return false }
+                        showMealSaved()
+                        return true
+                    } catch {
+                        diary.report(error)
+                        return false
+                    }
+                }
+            }
             .sheet(item:$editing){EntryEditor(entry:$0)}
             .sheet(isPresented:$goals){GoalEditor()}
             .sheet(isPresented:$showingCalorieIntake){
@@ -139,7 +166,10 @@ struct DiaryView:View {
         }.buttonStyle(LuqmaPressStyle()).accessibilityIdentifier("diary.fitnessProfile")
             .accessibilityLabel(diary.t("خطتك الشخصية — ملف اللياقة","Personal plan — Fitness profile"))
     }
-    private func openSearch(_ query:String="",meal:Meal?=nil,focus:Bool=false){searchQuery=query;chosenMeal=meal;focusSearchOnOpen=focus;adding=true}
+    private func openSearch(_ query: String = "", meal: Meal? = nil, focus: Bool = false) {
+        guard foodSearch == nil else { return }
+        foodSearch = FoodSearchPresentation(query:query,meal:meal,focus:focus)
+    }
     private func showMealSaved(){LuqmaFeedbackCenter.shared.saved(diary.t("تمت إضافة الوجبة","Meal added"))}
     private var weekDates:[Date] {
         let calendar=DisplayFormat.calendar(diary.language)
