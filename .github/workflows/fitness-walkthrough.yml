@@ -1,0 +1,79 @@
+name: Luqma native Arabic fitness walkthrough
+on:
+  push:
+    branches: [review/fitness-walkthrough-20261104]
+    paths: ['.github/workflows/fitness-walkthrough.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+jobs:
+  record:
+    runs-on: macos-26
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Resolve the reviewed app source and pinned dependencies
+        run: |
+          git diff --exit-code c2494a15f9eb8e1933ef9f32951cd4a82bd4fbb2 HEAD -- . ':(exclude).github/workflows/fitness-walkthrough.yml' ':(exclude)TestsUI/LuqmaInteractionTests.swift'
+          mkdir -p Evidence
+          xcodebuild -version > Evidence/toolchain.log
+          xcodebuild -resolvePackageDependencies -project Luqma.xcodeproj -scheme Luqma -clonedSourcePackagesDirPath BuildOutput/Packages > Evidence/packages.log 2>&1
+          PYTHONPATH=Scripts python3 -c 'from pathlib import Path; from vision_compat import apply_vision_compat; apply_vision_compat(Path("BuildOutput/Packages").resolve())'
+      - name: Record actual Arabic fitness onboarding from Settings to the plan
+        run: |
+          PYTHONPATH=Scripts python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          from simulator_support import SimulatorSetupError
+          from ui_interactions import run_scenario
+          from ui_preview import command, select_runtime
+
+          evidence = Path('Evidence').resolve()
+          runtime = select_runtime(json.loads(command(['xcrun','simctl','list','--json'],evidence,'inventory')))
+          report = dict(
+              source_commit=os.environ['GITHUB_SHA'],
+              reviewed_app_source='c2494a15f9eb8e1933ef9f32951cd4a82bd4fbb2',
+              language='ar',
+              capture='Actual Simulator recording with native taps and a real personalized plan computed from test inputs',
+          )
+          try:
+              for attempt in (1,2):
+                  try:
+                      run_scenario(evidence/'fitness',Path('BuildOutput/Packages').resolve(),Path('BuildOutput/simulator-derived').resolve(),
+                                   runtime,('testFitnessWalkthroughArabic',),report,'126',
+                                   signing_settings=['CODE_SIGNING_ALLOWED=YES','CODE_SIGN_IDENTITY=-'],
+                                   record_video=True,timeout_seconds=2100)
+                      break
+                  except SimulatorSetupError as error:
+                      if attempt == 2:
+                          raise
+                      (evidence/'fitness').rename(evidence/'fitness-initial-startup')
+                      report['initial_startup_failure']=str(error)
+          finally:
+              (evidence/'fitness-results.json').write_text(json.dumps(report,indent=2)+'\n')
+          PY
+      - name: Export native screen checkpoints
+        if: always()
+        run: |
+          if test -d Evidence/fitness/interactions.xcresult; then
+            xcrun xcresulttool export attachments --path Evidence/fitness/interactions.xcresult --output-path Evidence/fitness/attachments
+          fi
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: LUQMA-Arabic-Fitness-Walkthrough-${{ github.run_id }}
+          path: |
+            Evidence/*.log
+            Evidence/*.json
+            Evidence/*/*.log
+            Evidence/*/*.json
+            Evidence/*/*.mov
+            Evidence/fitness/attachments/*.png
+            Evidence/fitness/attachments/manifest.json
+          retention-days: 30

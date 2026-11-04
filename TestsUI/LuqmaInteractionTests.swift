@@ -7,7 +7,9 @@ final class LuqmaInteractionTests:XCTestCase {
 
     override func setUpWithError() throws {
         continueAfterFailure=false
-        app.launchArguments=["-loqma-ui-test-en","-AppleLanguages","(en)","-AppleLocale","en_US"]
+        app.launchArguments = name.contains("testFitnessWalkthroughArabic")
+            ? ["-AppleLanguages","(ar)","-AppleLocale","ar_SA"]
+            : ["-loqma-ui-test-en","-AppleLanguages","(en)","-AppleLocale","en_US"]
         app.launch()
         XCTAssertTrue(app.buttons["nav.today"].waitForExistence(timeout:20))
     }
@@ -309,6 +311,77 @@ final class LuqmaInteractionTests:XCTestCase {
         app.buttons["goals.save"].tap()
     }
 
+    func testFitnessWalkthroughArabic() throws {
+        #if !targetEnvironment(simulator)
+        throw XCTSkip("The walkthrough requires a disposable Simulator.")
+        #endif
+        openFitnessProfile()
+        fitnessVideoFrame("01-profile")
+        let edit = app.buttons["fitness.edit"]
+        reveal(edit)
+        edit.tap()
+        assertAssessmentStep(1)
+        tapAssessmentOption("assessment.goal.fatLoss")
+        fitnessVideoFrame("02-goal")
+        advanceAssessment(to:2)
+        tapAssessmentOption("assessment.safety.generalAdult")
+        fitnessVideoFrame("03-suitability")
+        advanceAssessment(to:3)
+        tapAssessmentOption("assessment.sex.male")
+        fitnessVideoFrame("04-gender")
+        advanceAssessment(to:4)
+        for (index, field) in ["age","height","weight"].enumerated() {
+            let increase = app.buttons["assessment.\(field).increase"]
+            revealAssessmentControl(increase)
+            increase.tap()
+            let input = app.textFields["assessment." + field]
+            let measured = XCTNSPredicateExpectation(predicate:NSPredicate { _,_ in
+                self.numeric(input.value as? String ?? "") != nil
+            },object:input)
+            XCTAssertEqual(XCTWaiter.wait(for:[measured],timeout:5),.completed)
+            fitnessVideoFrame("0\(index+5)-" + field)
+            advanceAssessment(to:index+5)
+        }
+        tapAssessmentOption("assessment.pace.gentle")
+        fitnessVideoFrame("08-target")
+        advanceAssessment(to:8)
+        let arc = app.descendants(matching:.any).matching(identifier:"assessment.activity.slider").firstMatch
+        revealAssessmentControl(arc)
+        let start = arc.coordinate(withNormalizedOffset:CGVector(dx:0.4,dy:0.74))
+        let end = arc.coordinate(withNormalizedOffset:CGVector(dx:0.5,dy:0.56))
+        start.press(forDuration:0.1,thenDragTo:end)
+        let selected = XCTNSPredicateExpectation(
+            predicate:NSPredicate(format:"value CONTAINS %@", "·"),object:arc)
+        XCTAssertEqual(XCTWaiter.wait(for:[selected],timeout:5),.completed)
+        fitnessVideoFrame("09-activity")
+        advanceAssessment(to:9)
+        tapAssessmentOption("assessment.experience.beginner")
+        fitnessVideoFrame("10-training")
+        skipAssessment(to:10)
+        fitnessVideoFrame("11-details")
+        skipAssessment(to:11)
+        fitnessVideoFrame("12-review")
+        let preview = app.buttons["assessment.review"]
+        reveal(preview)
+        waitUntilEnabled(preview)
+        preview.tap()
+        XCTAssertTrue(app.scrollViews["fitness.review"].waitForExistence(timeout:12),app.debugDescription)
+        fitnessVideoFrame("13-plan")
+        let calories = app.staticTexts["fitness.review.calories.proposed"]
+        reveal(calories)
+        XCTAssertGreaterThan(numeric(calories.label) ?? 0,0)
+        fitnessVideoFrame("14-calories")
+    }
+
+    private func fitnessVideoFrame(_ id: String) {
+        let frame = XCTAttachment(screenshot:app.screenshot())
+        frame.name = "fitness-walkthrough-" + id
+        frame.lifetime = .keepAlways
+        add(frame)
+        // A short hold makes this page readable in the continuous recording.
+        RunLoop.current.run(until: Date().addingTimeInterval(1.15))
+    }
+
     func testFitnessDraftApplyAndDeletePreserveDiary() throws {
         let originalGoal=readCalorieGoal()
         let historyName="Fitness History Oats"
@@ -565,7 +638,8 @@ final class LuqmaInteractionTests:XCTestCase {
 
     private func assertAssessmentStep(_ number:Int,file:StaticString=#filePath,line:UInt=#line) {
         let step=app.staticTexts["assessment.step"]
-        let ready=XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == true AND label == %@","\(number) of 11"),object:step)
+        let label = name.contains("testFitnessWalkthroughArabic") ? "\(number) من 11" : "\(number) of 11"
+        let ready=XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == true AND label == %@",label),object:step)
         XCTAssertEqual(XCTWaiter.wait(for:[ready],timeout:10),.completed,app.debugDescription,file:file,line:line)
     }
 
