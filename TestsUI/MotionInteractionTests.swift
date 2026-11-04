@@ -81,7 +81,7 @@ final class MotionInteractionTests:XCTestCase {
             XCTAssertTrue(field.waitForExistence(timeout:20))
             confirmKeyboard()
             field.typeText(query)
-            XCTAssertEqual(field.value as? String,query,"Animation must not swallow keyboard input")
+            waitForValue(query,in:field,message:"Animation must not swallow keyboard input")
             let resultCount=app.staticTexts.matching(NSPredicate(format:"label ENDSWITH %@"," results shown")).firstMatch
             XCTAssertTrue(resultCount.waitForExistence(timeout:15),"A real bundled product search must show results")
             capture(reduced ? "motion-reduced-search":"motion-standard-search")
@@ -91,7 +91,7 @@ final class MotionInteractionTests:XCTestCase {
             XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout:20))
             open.tap()
             XCTAssertTrue(field.waitForExistence(timeout:20))
-            XCTAssertEqual(field.value as? String,query,"Collapse must preserve the query")
+            waitForValue(query,in:field,message:"Collapse must preserve the query")
             let clear=app.buttons["search.clear"]
             XCTAssertTrue(clear.isHittable);clear.tap()
             XCTAssertNotEqual(field.value as? String,query)
@@ -137,15 +137,24 @@ final class MotionInteractionTests:XCTestCase {
     private func confirmKeyboard() {
         let keyboard=app.keyboards.firstMatch
         XCTAssertTrue(keyboard.waitForExistence(timeout:20))
-        let continueTyping=app.buttons["Continue"].firstMatch
-        // Fresh simulators can show the system's QuickPath introduction over
-        // the first keyboard. Only dismiss it within the keyboard's region.
-        if continueTyping.exists,continueTyping.isHittable,
-           keyboard.frame.contains(CGPoint(x:continueTyping.frame.midX,y:continueTyping.frame.midY)) {
+        // The first QuickPath tip is a system overlay. Its Continue button
+        // sits below the keyboard's accessibility frame on iOS 26.5.
+        let tip=app.staticTexts.matching(NSPredicate(format:"label BEGINSWITH %@","Speed up your typing by sliding your finger")).firstMatch
+        if tip.exists {
+            let continueTyping=app.buttons["Continue"].firstMatch
+            XCTAssertTrue(continueTyping.waitForExistence(timeout:10))
+            XCTAssertTrue(continueTyping.isHittable)
             continueTyping.tap()
-            XCTAssertTrue(continueTyping.waitForNonExistence(timeout:10))
+            XCTAssertTrue(tip.waitForNonExistence(timeout:10))
         }
-        XCTAssertTrue(keyboard.isHittable)
+        XCTAssertTrue(keyboard.waitForExistence(timeout:10))
+    }
+    private func waitForValue(_ value: String, in field: XCUIElement, message: String) {
+        // XCUITest can snapshot a partial value before the keyboard's queued
+        // events and the accessibility tree catch up, even after typeText.
+        let ready=XCTNSPredicateExpectation(
+            predicate:NSPredicate(format:"exists == true AND value == %@",value),object:field)
+        XCTAssertEqual(XCTWaiter.wait(for:[ready],timeout:10),.completed,message)
     }
     private func capture(_ name:String) {
         let item=XCTAttachment(screenshot:app.screenshot());item.name=name;item.lifetime = .keepAlways;add(item)
