@@ -1,0 +1,121 @@
+name: Luqma premium motion build126 IPA
+on:
+  push:
+    branches: [distribution/premium-motion-ipa-20261104]
+    paths: ['.github/workflows/premium-motion-ipa.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+  BUNDLE_ID: app.luqma.diary
+  BUILD_NUMBER: '126'
+  VERIFIED_SOURCE: c2494a15f9eb8e1933ef9f32951cd4a82bd4fbb2
+  VERIFIED_APP_TREE: c5e95bde9d669476c36bf3739c65adea30d9366e
+jobs:
+  device-ipa:
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verify the reviewed source and compile iPhone Release
+        run: |
+          git diff --exit-code "$VERIFIED_SOURCE" HEAD -- . ':(exclude).github/workflows/premium-motion-ipa.yml'
+          test "$(git rev-parse HEAD:Luqma)" = "$VERIFIED_APP_TREE"
+          mkdir -p BuildOutput
+          xcodebuild -version > BuildOutput/toolchain.log
+          xcodebuild -resolvePackageDependencies -project Luqma.xcodeproj -scheme Luqma -clonedSourcePackagesDirPath BuildOutput/Packages > BuildOutput/packages.log 2>&1
+          PYTHONPATH=Scripts python3 -c 'from pathlib import Path; from vision_compat import apply_vision_compat; apply_vision_compat(Path("BuildOutput/Packages").resolve())'
+          xcodebuild -project Luqma.xcodeproj -scheme Luqma -clonedSourcePackagesDirPath BuildOutput/Packages -disableAutomaticPackageResolution -destination 'generic/platform=iOS' -configuration Release -derivedDataPath BuildOutput/device-derived -resultBundlePath BuildOutput/device.xcresult CODE_SIGNING_ALLOWED=NO "CURRENT_PROJECT_VERSION=$BUILD_NUMBER" build > BuildOutput/device.log 2>&1
+          PYTHONPATH=Scripts python3 -c 'from pathlib import Path; from vision_compat import apply_vision_compat; apply_vision_compat(Path("BuildOutput/Packages").resolve(), verify_only=True)'
+      - name: Package and validate the IPA for re-signing
+        run: |
+          PYTHONPATH=Scripts python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          import plistlib
+          import shutil
+          import zipfile
+          from pathlib import Path
+
+          from build_ios import prepare_sideload
+          from verify_healthkit_signing import inspect_ipa
+
+          build = Path('BuildOutput').resolve()
+          app = build / 'device-derived/Build/Products/Release-iphoneos/Luqma.app'
+          output = Path('Delivery').resolve()
+          output.mkdir()
+          bundle = os.environ['BUNDLE_ID']
+          number = os.environ['BUILD_NUMBER']
+          ipa = prepare_sideload(app, output, bundle)
+          with zipfile.ZipFile(ipa) as archive:
+              assert archive.testzip() is None
+              prefix = 'Payload/Luqma.app/'
+              info = plistlib.loads(archive.read(prefix + 'Info.plist'))
+              assert info['CFBundleIdentifier'] == bundle
+              assert info['CFBundleVersion'] == number
+              assert info['CFBundleSupportedPlatforms'] == ['iPhoneOS']
+              assert info['MinimumOSVersion'] == '17.0'
+              assert info['NSHealthShareUsageDescription']
+              assert archive.getinfo(prefix + 'Assets.car').file_size > 0
+              for font in info['UIAppFonts']:
+                  assert archive.read(prefix + font) == (Path('Luqma/Resources') / font).read_bytes(), font
+          version = info['CFBundleShortVersionString']
+          target = ipa.rename(output / f'LUQMA-{version}-build{number}-Resignable.ipa')
+          report = inspect_ipa(target, bundle)
+          (output / 'signing-report.json').write_text(json.dumps(report, indent=2) + '\n')
+          expected = {
+              'BuildIntegrity': 'PASS',
+              'CodeSignature': 'PASS',
+              'ProvisioningProfile': 'ABSENT',
+              'HealthKitEntitlement': 'PRESENT',
+              'HealthKitProfileAuthorization': 'NOTVERIFIED',
+              'DeviceInstallation': 'NOTTESTED',
+              'RealHealthData': 'NOTTESTED',
+          }
+          assert report['exit_code'] == 2 and all(report['statuses'].get(k) == v for k, v in expected.items()), report['statuses']
+          assert report['evidence']['signing']['signing_kind'] == 'ADHOC_HASH'
+          assert report['evidence']['signing']['apple_identity_verified'] is False
+          manifest = {
+              'source_commit': os.environ['GITHUB_SHA'],
+              'reviewed_app_source': os.environ['VERIFIED_SOURCE'],
+              'application_tree': os.environ['VERIFIED_APP_TREE'],
+              'native_test_run': 41750596637,
+              'bundle_identifier': bundle,
+              'version': version,
+              'build': number,
+              'minimum_ios': info['MinimumOSVersion'],
+              'ipa_file': target.name,
+              'ipa_sha256': hashlib.sha256(target.read_bytes()).hexdigest(),
+              'ipa_bytes': target.stat().st_size,
+              'platform': 'iPhoneOS',
+              'architecture': 'arm64',
+              'signing_kind': 'ADHOC_HASH',
+              'apple_signed': False,
+              'provisioning_profile_present': False,
+              'requires_resigning': True,
+              'physical_device_verified': False,
+              'healthkit_profile_authorization_verified': False,
+          }
+          (output / 'delivery-manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
+          shutil.copy2('Luqma/Luqma.entitlements', output / 'Requested-HealthKit.entitlements')
+          (output / 'SHA256SUMS.txt').write_text(''.join(
+              f'{hashlib.sha256(file.read_bytes()).hexdigest()}  {file.name}\n'
+              for file in sorted(output.iterdir()) if file.is_file()
+          ))
+          print(json.dumps(manifest, indent=2))
+          PY
+      - name: Store the IPA and verification evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: LUQMA-build126-IPA-${{ github.run_id }}
+          path: |
+            Delivery/
+            BuildOutput/*.log
+          if-no-files-found: error
+          retention-days: 30
